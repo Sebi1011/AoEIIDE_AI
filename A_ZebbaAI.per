@@ -1,6 +1,6 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 0.17.3
+;Version: 0.17.4
 ;last update: 20th February 2023
 
 ;Civs: Can play all civilizations
@@ -41,21 +41,23 @@
 ;ToDo: 
 
 ;what's up next:
-; - check mongol dark-age economy and decrease d-villager-goal if they can go up faster
+; - expand tc-shooting problem for every tc-upgrade
+; - fix retreating of towers (testing)
 ; - implement attack-now-goal to prevent spamming of attack-now
 ; - switch off builder assistance in dark-age, activate in feudal-age 
-; - adjust archerrush-bo to put only 7 vils on gold instead of 8
 ; - assign every build order to current-age
 ; - build feudal-age production buildings in safer spots when being drushed
 ; - assign foragers on boar if there is a dead boar under tc
-; - improve defensive tower placement to select dangerous areas more precisely
+; - add escrow rules for the first 1/2/3 trebs
 ; - fix boar-luring to select only one villager
 ; - improve dark-age builder selection for building resource drop-off points
 ; - Eat only one sheep at a time
 ; - implement scouting-pattern for scouting own base
-; - add escrow rules for the first 1/2/3 trebs
+; - decrease d-villager-goal for mongols when scout/archer-rushing, in addition changes need to be made to 
+; constructions of buildings connected to villager count
 ; - fix problem that causes boar luring villagers being retasked to build non-duc buildings
 ; - find rules to make a switch to main-gold-unit later/ at a suitable time
+; - improve defensive tower placement to select dangerous areas more precisely
 
 ;improving trush:
 ; - add villagers ability to fight back when tower is under attack
@@ -6771,7 +6773,8 @@
 (defrule
 	(current-age >= castle-age)
 	(can-research ri-light-cavalry)
-	(unit-type-count scout-cavalry-line >= 4)
+	(or (unit-type-count scout-cavalry-line >= 4)
+	(food-amount >= 1500))
 =>
 	(research ri-light-cavalry)
 )
@@ -13964,6 +13967,23 @@
 	(up-jump-rule 13)
 )	
 
+; (defrule
+	; (players-building-type-count focus-player town-center >= 1)
+; =>	
+	; (up-full-reset-search)
+	; (up-filter-status c: status-pending c: list-active)
+    ; (up-find-status-remote c: town-center c: 1)
+	; (up-get-search-state gl-local-total)
+; )
+
+; (defrule
+	; (players-building-type-count focus-player town-center >= 1)
+	; (up-compare-goal gl-remote-total > 0)
+	; (up-set-target-object remote-search c: 0)
+; =>
+	; (up-jump-rule 13)
+; )
+
 ;loop through enemy tcs
 
 (defrule
@@ -14035,7 +14055,7 @@
 =>	
 	(up-full-reset-search)	
 	(up-set-target-point enemy-point-x)
-	(up-filter-distance c: -1 c: 11)
+	(up-filter-distance c: -1 c: 8)
 	(up-filter-include cmdid-military -1 -1 -1)	
 	(up-filter-exclude -1 -1 -1 siege-weapon-class)
 	(up-filter-exclude -1 -1 -1 armored-elephant-line)
@@ -14087,7 +14107,7 @@
 =>	
 	(up-full-reset-search)	
 	(up-set-target-point enemy-point-x)
-	(up-filter-distance c: -1 c: 11)
+	(up-filter-distance c: -1 c: 9)
 	(up-filter-include cmdid-military -1 -1 -1)	
 	(up-filter-exclude -1 -1 -1 siege-weapon-class)
 	(up-filter-exclude -1 -1 -1 armored-elephant-line)
@@ -14116,17 +14136,33 @@
 	
 ; Retreating from Castle 
 
-(defrule										
-	(or	(current-age > castle-age)						
-		(or	(military-population > 25)					
-			(or(unit-type-count trebuchet > 0)
-				(or(unit-type-count-total armored-elephant-line >= 1)
-					(or(unit-type-count-total battering-ram-line >= 1)
-						(or(unit-type-count-total bombard-cannon >= 1)
-							(unit-type-count-total cannon-galleon-line >= 1)))))))	
+(defrule															
+	(or	(military-population > 25)					
+		(or(unit-type-count trebuchet > 0)
+			(or(unit-type-count-total armored-elephant-line >= 1)
+				(or(unit-type-count-total battering-ram-line >= 1)
+					(or(unit-type-count-total bombard-cannon >= 1)
+						(unit-type-count-total cannon-galleon-line >= 1))))))
 =>	
-	(up-jump-rule 8)
+	(up-jump-rule 10)
 )	
+
+(defrule
+	(players-building-type-count focus-player castle >= 1)
+=>	
+	(up-full-reset-search)
+	(up-filter-status c: status-pending c: list-active)
+    (up-find-status-remote c: castle c: 1)
+	(up-get-search-state gl-local-total)
+)
+
+(defrule
+	(players-building-type-count focus-player castle >= 1)
+	(up-compare-goal gl-remote-total > 0)
+	(up-set-target-object remote-search c: 0)
+=>
+	(up-jump-rule 8)
+)
 
 ;loop through enemy castles
 
@@ -14188,7 +14224,7 @@
 =>	
 	(up-full-reset-search)	
 	(up-set-target-point enemy-castle-point-x)
-	(up-filter-distance c: -1 c: 11)
+	(up-filter-distance c: -1 c: 13)
 	(up-filter-include cmdid-military -1 -1 -1)	
 	(up-filter-exclude -1 -1 -1 siege-weapon-class)
 	(up-filter-exclude -1 -1 -1 armored-elephant-line)
@@ -14227,9 +14263,25 @@
 						(or (unit-type-count cavalry-class >= 4)
 							(unit-type-count infantry-class >= 6)))))))
 =>	
-	(up-jump-rule 11)
+	(up-jump-rule 13)
 )	
 
+(defrule
+	(players-building-type-count focus-player watch-tower >= 1)
+=>	
+	(up-full-reset-search)
+	(up-filter-status c: status-pending c: list-active)
+    (up-find-status-remote c: watch-tower c: 1)
+	(up-get-search-state gl-local-total)
+)
+
+(defrule
+	(players-building-type-count focus-player watch-tower >= 1)
+	(up-compare-goal gl-remote-total > 0)
+	(up-set-target-object remote-search c: 0)
+=>
+	(up-jump-rule 11)
+)
 ;loop through enemy towers
 
 (defrule
@@ -14270,7 +14322,7 @@
 =>
 	(up-full-reset-search)
 	(up-set-target-point enemy-tower-point-x)
-	(up-filter-distance c: -1 c: 10)
+	(up-filter-distance c: -1 c: 11)
 	(up-filter-include cmdid-military -1 -1 -1)
 	(up-filter-exclude -1 -1 -1 siege-weapon-class)
 	(up-filter-exclude -1 -1 -1 armored-elephant-line)
@@ -19316,7 +19368,7 @@
 	(or (building-type-count-total archery-range >= 2)
 	(wood-amount > 250)))
 	(building-type-count-total lumber-camp > 0)
-	(building-type-count-total archery-range >= 1)
+	(building-type-count-total archery-range >= 2)
 	(idle-farm-count < 1)
 	(can-build farm)
 	(up-compare-goal gl-water-on-map != 1)
@@ -20118,6 +20170,14 @@
 	(goal strategy-goal sg-scoutrush)
 	(not (building-available stable))
 	(current-age >= feudal-age)
+	(building-type-count-total blacksmith == 0)
+	(can-build blacksmith)
+=>
+	(build blacksmith)
+)
+
+(defrule
+	(current-age >= castle-age)
 	(building-type-count-total blacksmith == 0)
 	(can-build blacksmith)
 =>
@@ -21222,7 +21282,7 @@
 	(current-age >= castle-age)
 	(can-build town-center)
 	; (up-compare-goal gl-military-advantage < 18)
-	; (up-compare-goal gl-military-advantage >= -7)
+	(up-compare-goal gl-military-advantage >= -15)
 	(building-type-count-total town-center == 1)
 	(building-type-count-total town-center < 3)
 	(nand (goal strategy-goal sg-fastcastle-uu)
@@ -21240,7 +21300,7 @@
 	(current-age >= castle-age)
 	(can-build town-center)
 	; (up-compare-goal gl-military-advantage < 18)
-	; (up-compare-goal gl-military-advantage >= -7)
+	(up-compare-goal gl-military-advantage >= -15)
 	(building-type-count-total town-center == 1)
 	(building-type-count-total town-center < 3)
 	(nand (goal strategy-goal sg-fastcastle-uu)
@@ -21258,7 +21318,7 @@
 	(current-age >= castle-age)
 	(can-build town-center)
 	; (up-compare-goal gl-military-advantage < 18)
-	; (up-compare-goal gl-military-advantage >= -7)
+	(up-compare-goal gl-military-advantage >= -15)
 	(building-type-count-total town-center == 2)
 	(building-type-count-total town-center < 3)
 	(nand (goal strategy-goal sg-fastcastle-uu)
@@ -21276,7 +21336,7 @@
 	(current-age >= castle-age)
 	(can-build town-center)
 	; (up-compare-goal gl-military-advantage < 18)
-	; (up-compare-goal gl-military-advantage >= -7)
+	(up-compare-goal gl-military-advantage >= -15)
 	(building-type-count-total town-center == 2)
 	(building-type-count-total town-center < 3)
 	(nand (goal strategy-goal sg-fastcastle-uu)
@@ -22693,7 +22753,7 @@
 )
 
 (defrule
-	(unit-type-count-total archer-line > 5)
+	(unit-type-count-total archer-line >= 3)
 	(can-research-with-escrow ri-bodkin-arrow)
 	(goal gl-gold-saving 14)
 	(goal gl-food-saving 14)
@@ -22708,7 +22768,7 @@
 )
 
 (defrule
-	(unit-type-count-total archer-line > 5)
+	(unit-type-count-total archer-line >= 3)
 	(can-research-with-escrow ri-bracer)
 	(goal gl-gold-saving 14)
 	(goal gl-food-saving 14)
@@ -22723,7 +22783,7 @@
 )
 
 (defrule
-	(unit-type-count-total archer-line > 5)
+	(unit-type-count-total archer-line >= 3)
 	(research-completed ri-fletching)
 	(can-research ri-padded-archer-armor)
 =>
@@ -22731,7 +22791,7 @@
 )
 
 (defrule
-	(unit-type-count-total archer-line > 5)
+	(unit-type-count-total archer-line >= 3)
 	(research-completed ri-bodkin-arrow)
 	(can-research ri-leather-archer-armor)
 =>
@@ -22739,7 +22799,7 @@
 )
 
 (defrule
-	(unit-type-count-total archer-line > 5)
+	(unit-type-count-total archer-line >= 3)
 	(research-completed ri-bracer)
 	(can-research ri-ring-archer-armor)
 =>
@@ -22747,7 +22807,7 @@
 )
 
 (defrule
-	(unit-type-count-total archer-line > 5)
+	(unit-type-count-total archer-line >= 3)
 	(building-type-count-total archery-range == 0)
 	(building-type-count-total town-center >= 1)
 	(research-available ri-thumb-ring)
@@ -22760,14 +22820,14 @@
 )
 
 (defrule
-	(unit-type-count-total archer-line > 5)
+	(unit-type-count-total archer-line >= 3)
 	(can-research ri-thumb-ring)
 =>
 	(research ri-thumb-ring)
 )
 
 (defrule
-	(unit-type-count-total archer-line > 5)
+	(unit-type-count-total archer-line >= 3)
 	(can-build-with-escrow university)
 	(building-type-count-total university < 1)
 =>
@@ -22776,7 +22836,7 @@
 )
 
 (defrule
-	(unit-type-count-total archer-line > 5)
+	(unit-type-count-total archer-line >= 3)
 	(can-research-with-escrow ri-ballistics)
 	(goal gl-wood-saving 10)
 	(goal gl-gold-saving 10)
@@ -22791,7 +22851,7 @@
 )
 
 (defrule
-	(unit-type-count-total archer-line > 5)
+	(unit-type-count-total archer-line >= 3)
 	(can-research ri-chemistry)
 =>
 	(research ri-chemistry)
@@ -22813,7 +22873,7 @@
 )
 
 (defrule
-	(unit-type-count-total skirmisher-line > 5)
+	(unit-type-count-total skirmisher-line >= 3)
 	(can-research-with-escrow ri-bodkin-arrow)
 	(goal gl-gold-saving 14)
 	(goal gl-food-saving 14)
@@ -22828,7 +22888,7 @@
 )
 
 (defrule
-	(unit-type-count-total skirmisher-line > 5)
+	(unit-type-count-total skirmisher-line >= 3)
 	(can-research-with-escrow ri-bracer)
 	(goal gl-gold-saving 14)
 	(goal gl-food-saving 14)
@@ -22845,27 +22905,27 @@
 
 (defrule
 	(can-research ri-fletching)
-	(unit-type-count-total skirmisher-line > 5)
+	(unit-type-count-total skirmisher-line >= 3)
 =>
 	(research ri-fletching)
 )
 
 (defrule
-	(unit-type-count-total skirmisher-line > 5)
+	(unit-type-count-total skirmisher-line >= 3)
 	(can-research ri-bodkin-arrow)
 =>
 	(research ri-bodkin-arrow)
 )
 
 (defrule
-	(unit-type-count-total skirmisher-line > 5)
+	(unit-type-count-total skirmisher-line >= 3)
 	(can-research ri-bracer)
 =>
 	(research ri-bracer)
 )
 
 (defrule
-	(unit-type-count-total skirmisher-line > 5)
+	(unit-type-count-total skirmisher-line >= 3)
 	(research-completed ri-fletching)
 	(can-research ri-padded-archer-armor)
 =>
@@ -22873,7 +22933,7 @@
 )
 
 (defrule
-	(unit-type-count-total skirmisher-line > 5)
+	(unit-type-count-total skirmisher-line >= 3)
 	(research-completed ri-bodkin-arrow)
 	(can-research ri-leather-archer-armor)
 =>
@@ -22881,7 +22941,7 @@
 )
 
 (defrule
-	(unit-type-count-total skirmisher-line > 5)
+	(unit-type-count-total skirmisher-line >= 3)
 	(research-completed ri-bracer)
 	(can-research ri-ring-archer-armor)
 =>
@@ -22889,7 +22949,7 @@
 )
 
 (defrule
-	(unit-type-count-total skirmisher-line > 5)
+	(unit-type-count-total skirmisher-line >= 3)
 	(building-type-count-total archery-range == 0)
 	(building-type-count-total town-center >= 1)
 	(research-available ri-thumb-ring)
@@ -22902,14 +22962,14 @@
 )
 
 (defrule
-	(unit-type-count-total skirmisher-line > 5)
+	(unit-type-count-total skirmisher-line >= 3)
 	(can-research ri-thumb-ring)
 =>
 	(research ri-thumb-ring)
 )
 
 (defrule
-	(unit-type-count-total skirmisher-line > 5)
+	(unit-type-count-total skirmisher-line >= 3)
 	(can-build-with-escrow university)
 	(building-type-count-total university < 1)
 =>
@@ -22918,7 +22978,7 @@
 )
 
 (defrule
-	(unit-type-count-total skirmisher-line > 5)
+	(unit-type-count-total skirmisher-line >= 3)
 	(can-research-with-escrow ri-ballistics)
 	(goal gl-wood-saving 10)
 	(goal gl-gold-saving 10)
@@ -22933,7 +22993,7 @@
 )
 
 (defrule
-	(unit-type-count-total skirmisher-line > 5)
+	(unit-type-count-total skirmisher-line >= 3)
 	(can-research ri-chemistry)
 =>
 	(research ri-chemistry)
@@ -25970,7 +26030,7 @@
 (defrule
 	(game-time > 3000)
 	(can-build lumber-camp)
-	(building-type-count-total lumber-camp < 6)
+	(building-type-count-total lumber-camp < 7)
 	(resource-found wood)
 	;(dropsite-min-distance wood > 4)
 	(dropsite-min-distance wood < 255)
@@ -29889,9 +29949,9 @@
 	(goal strategy-goal sg-archerrush)
 	(civilian-population == 25)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 40)
-	(set-strategic-number sn-food-gatherer-percentage 32)
-	(set-strategic-number sn-gold-gatherer-percentage 28)
+	(set-strategic-number sn-wood-gatherer-percentage 40) ;10 vills on wood, add more on wood now
+	(set-strategic-number sn-food-gatherer-percentage 32) ;8 vills on food
+	(set-strategic-number sn-gold-gatherer-percentage 28) ;7 vills on gold, not more
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -29899,9 +29959,9 @@
 	(goal strategy-goal sg-archerrush)
 	(civilian-population == 26)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 38)
+	(set-strategic-number sn-wood-gatherer-percentage 42)
 	(set-strategic-number sn-food-gatherer-percentage 31)
-	(set-strategic-number sn-gold-gatherer-percentage 31)
+	(set-strategic-number sn-gold-gatherer-percentage 27)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -29912,9 +29972,9 @@
 	(goal strategy-goal sg-archerrush)
 	(civilian-population == 27)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 41)
-	(set-strategic-number sn-food-gatherer-percentage 29)
-	(set-strategic-number sn-gold-gatherer-percentage 30)
+	(set-strategic-number sn-wood-gatherer-percentage 44)
+	(set-strategic-number sn-food-gatherer-percentage 30)
+	(set-strategic-number sn-gold-gatherer-percentage 26)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -29922,9 +29982,9 @@
 	(goal strategy-goal sg-archerrush)
 	(civilian-population == 28)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 43)
+	(set-strategic-number sn-wood-gatherer-percentage 46)
 	(set-strategic-number sn-food-gatherer-percentage 29)
-	(set-strategic-number sn-gold-gatherer-percentage 28)
+	(set-strategic-number sn-gold-gatherer-percentage 25)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -29932,9 +29992,9 @@
 	(goal strategy-goal sg-archerrush)
 	(civilian-population == 29)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 45)
-	(set-strategic-number sn-food-gatherer-percentage 24)
-	(set-strategic-number sn-gold-gatherer-percentage 31)
+	(set-strategic-number sn-wood-gatherer-percentage 48) 
+	(set-strategic-number sn-food-gatherer-percentage 28)
+	(set-strategic-number sn-gold-gatherer-percentage 24)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -29942,9 +30002,9 @@
 	(goal strategy-goal sg-archerrush)
 	(civilian-population == 30)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 47)
-	(set-strategic-number sn-food-gatherer-percentage 26)
-	(set-strategic-number sn-gold-gatherer-percentage 27)
+	(set-strategic-number sn-wood-gatherer-percentage 50) ;15 on wood, not more
+	(set-strategic-number sn-food-gatherer-percentage 27)  
+	(set-strategic-number sn-gold-gatherer-percentage 23)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -29953,8 +30013,8 @@
 	(civilian-population == 31)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 48)
-	(set-strategic-number sn-food-gatherer-percentage 26)
-	(set-strategic-number sn-gold-gatherer-percentage 26)
+	(set-strategic-number sn-food-gatherer-percentage 29) ;add more on food now
+	(set-strategic-number sn-gold-gatherer-percentage 23)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -29962,9 +30022,9 @@
 	(goal strategy-goal sg-archerrush)
 	(civilian-population == 32)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 50)
-	(set-strategic-number sn-food-gatherer-percentage 25)
-	(set-strategic-number sn-gold-gatherer-percentage 25)
+	(set-strategic-number sn-wood-gatherer-percentage 47)
+	(set-strategic-number sn-food-gatherer-percentage 31)
+	(set-strategic-number sn-gold-gatherer-percentage 22)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -29972,9 +30032,9 @@
 	(goal strategy-goal sg-archerrush)
 	(civilian-population == 33)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 49)
-	(set-strategic-number sn-food-gatherer-percentage 27)
-	(set-strategic-number sn-gold-gatherer-percentage 24)
+	(set-strategic-number sn-wood-gatherer-percentage 45)
+	(set-strategic-number sn-food-gatherer-percentage 33)
+	(set-strategic-number sn-gold-gatherer-percentage 22)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -29982,9 +30042,9 @@
 	(goal strategy-goal sg-archerrush)
 	(civilian-population == 34)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 47)
-	(set-strategic-number sn-food-gatherer-percentage 29)
-	(set-strategic-number sn-gold-gatherer-percentage 24)
+	(set-strategic-number sn-wood-gatherer-percentage 44)
+	(set-strategic-number sn-food-gatherer-percentage 35)
+	(set-strategic-number sn-gold-gatherer-percentage 21)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )		
 
@@ -31889,7 +31949,7 @@
 (defrule
     (food-amount > 700)
 	(wood-amount < 200)
-	(gold-amount < 400)
+	(gold-amount > 400)
     (current-age == castle-age)
     (building-type-count market >= 1)
 	(up-research-status c: imperial-age != research-pending)
@@ -31949,6 +32009,27 @@
 =>
 	(sell-commodity food)
     (chat-to-player my-player-number "Verkaufe Nahrung")
+)
+
+(defrule
+	(wood-amount < 100)
+	(gold-amount < 400)
+	(food-amount > 1200)
+    (current-age == imperial-age)
+    (building-type-count market >= 1)
+=>
+	(sell-commodity food)
+    (chat-to-player my-player-number "Kaufe Holz")
+)
+
+(defrule
+	(wood-amount < 100)
+	(gold-amount > 400)
+    (current-age == imperial-age)
+    (building-type-count market >= 1)
+=>
+	(buy-commodity wood)
+    (chat-to-player my-player-number "Kaufe Holz")
 )
 
 ;endregion
