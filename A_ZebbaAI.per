@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 0.17.4
-;last update: 20th February 2023
+;Version: 0.17.5
+;last update: 21st February 2023
 
 ;Civs: Can play all civilizations
 ;Maps: besides standard maps like arabia, ZebbaAI can play nomad and other hybrid maps and custom maps. (Not optimized on water-maps though)
@@ -674,6 +674,7 @@
 
 (defrule
 	(goal strategy-goal sg-drush)
+	(current-age == dark-age)
 	(up-compare-goal gl-priority-goal != 1)
 =>
 	(set-goal gl-priority-goal 1)
@@ -708,13 +709,13 @@
 (defrule
 	(goal gl-priority-goal 1)
 =>
-	(up-set-offense-priority c: villager c: -1)
-	(up-set-offense-priority c: militia-line c: 5)
-	(up-set-offense-priority c: spearman-line c: 8)
-	(up-set-offense-priority c: eagle-warrior-line c: 8)
-    (up-set-offense-priority c: archer-line c: 3)
-	(up-set-offense-priority c: skirmisher-line c: 4)
-	(up-set-offense-priority c: scout-cavalry-line c: 8)
+	(up-set-offense-priority c: villager c: 7)
+	(up-set-offense-priority c: militia-line c: 11)
+	(up-set-offense-priority c: spearman-line c: 9)
+	(up-set-offense-priority c: eagle-warrior-line c: 9)
+    (up-set-offense-priority c: archer-line c: 8)
+	(up-set-offense-priority c: skirmisher-line c: 8)
+	(up-set-offense-priority c: scout-cavalry-line c: 9)
     (up-set-offense-priority c: knight-line c: 1)
 	(up-set-offense-priority c: camel-line c: 2)
 	(up-set-offense-priority c: battle-elephant-line c: 1)
@@ -738,6 +739,7 @@
 
 (defrule
 	(goal strategy-goal sg-archerrush)
+	(current-age == feudal-age)
 	(up-compare-goal gl-priority-goal != 2)
 =>
 	(set-goal gl-priority-goal 2)
@@ -772,7 +774,7 @@
 (defrule
 	(goal gl-priority-goal 2)
 =>
-	(up-set-offense-priority c: villager c: -1)
+	(up-set-offense-priority c: villager c: 6)
 	(up-set-offense-priority c: militia-line c: 8)
 	(up-set-offense-priority c: spearman-line c: 10)
 	(up-set-offense-priority c: eagle-warrior-line c: 8)
@@ -802,6 +804,7 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
+	(current-age == feudal-age)
 	(up-compare-goal gl-priority-goal != 3)
 =>
 	(set-goal gl-priority-goal 3)
@@ -836,13 +839,13 @@
 (defrule
 	(goal gl-priority-goal 3)
 =>
-	(up-set-offense-priority c: villager c: -1)
-	(up-set-offense-priority c: militia-line c: 5)
-	(up-set-offense-priority c: spearman-line c: 3)
-	(up-set-offense-priority c: eagle-warrior-line c: 8)
-    (up-set-offense-priority c: archer-line c: 7)
-	(up-set-offense-priority c: skirmisher-line c: 10)
-	(up-set-offense-priority c: scout-cavalry-line c: 8)
+	(up-set-offense-priority c: villager c: 7)
+	(up-set-offense-priority c: militia-line c: 8)
+	(up-set-offense-priority c: spearman-line c: 6)
+	(up-set-offense-priority c: eagle-warrior-line c: 9)
+    (up-set-offense-priority c: archer-line c: 10)
+	(up-set-offense-priority c: skirmisher-line c: 7)
+	(up-set-offense-priority c: scout-cavalry-line c: 9)
     (up-set-offense-priority c: knight-line c: 2)
 	(up-set-offense-priority c: camel-line c: 1)
 	(up-set-offense-priority c: battle-elephant-line c: 1)
@@ -866,6 +869,7 @@
 
 (defrule
 	(goal strategy-goal sg-towerrush)
+	(current-age == feudal-age)
 	(up-compare-goal gl-priority-goal != 4)
 =>
 	(set-goal gl-priority-goal 4)
@@ -904,8 +908,8 @@
 	(up-set-offense-priority c: militia-line c: 5)
 	(up-set-offense-priority c: spearman-line c: 8)
 	(up-set-offense-priority c: eagle-warrior-line c: 8)
-    (up-set-offense-priority c: archer-line c: 3)
-	(up-set-offense-priority c: skirmisher-line c: 4)
+    (up-set-offense-priority c: archer-line c: 4)
+	(up-set-offense-priority c: skirmisher-line c: 3)
 	(up-set-offense-priority c: scout-cavalry-line c: 8)
     (up-set-offense-priority c: knight-line c: 1)
 	(up-set-offense-priority c: camel-line c: 2)
@@ -967,17 +971,17 @@
 (defrule
 	(goal gl-priority-goal 5)
 =>
-	(up-set-offense-priority c: villager c: -1)
-	(up-set-offense-priority c: militia-line c: 4)
+	(up-set-offense-priority c: villager c: 6)
+	(up-set-offense-priority c: militia-line c: 6)
 	(up-set-offense-priority c: spearman-line c: 7)
-	(up-set-offense-priority c: eagle-warrior-line c: 7)
+	(up-set-offense-priority c: eagle-warrior-line c: 8)
     (up-set-offense-priority c: archer-line c: 10)
-	(up-set-offense-priority c: skirmisher-line c: 9)
-	(up-set-offense-priority c: scout-cavalry-line c: 6)
-    (up-set-offense-priority c: knight-line c: 5)
-	(up-set-offense-priority c: camel-line c: 6)
+	(up-set-offense-priority c: skirmisher-line c: 7)
+	(up-set-offense-priority c: scout-cavalry-line c: 9)
+    (up-set-offense-priority c: knight-line c: 6)
+	(up-set-offense-priority c: camel-line c: 9)
 	(up-set-offense-priority c: battle-elephant-line c: 2)
-	(up-set-offense-priority c: cavalry-archer-line c: 7)
+	(up-set-offense-priority c: cavalry-archer-line c: 9)
 	(up-set-offense-priority c: monk c: 11)
 	(up-set-offense-priority c: battering-ram-line c: 10)
 	(up-set-offense-priority c: armored-elephant-line c: 9)
@@ -1032,15 +1036,15 @@
 (defrule
 	(goal gl-priority-goal 6)
 =>
-	(up-set-offense-priority c: villager c: -1)
-	(up-set-offense-priority c: militia-line c: 5)
-	(up-set-offense-priority c: spearman-line c: 4)
-	(up-set-offense-priority c: eagle-warrior-line c: 8)
-    (up-set-offense-priority c: archer-line c: 7)
-	(up-set-offense-priority c: skirmisher-line c: 6)
-	(up-set-offense-priority c: scout-cavalry-line c: 8)
+	(up-set-offense-priority c: villager c: 6)
+	(up-set-offense-priority c: militia-line c: 7)
+	(up-set-offense-priority c: spearman-line c: 8)
+	(up-set-offense-priority c: eagle-warrior-line c: 11)
+    (up-set-offense-priority c: archer-line c: 10)
+	(up-set-offense-priority c: skirmisher-line c: 7)
+	(up-set-offense-priority c: scout-cavalry-line c: 6)
     (up-set-offense-priority c: knight-line c: 7)
-	(up-set-offense-priority c: camel-line c: 6)
+	(up-set-offense-priority c: camel-line c: 8)
 	(up-set-offense-priority c: battle-elephant-line c: 4)
 	(up-set-offense-priority c: cavalry-archer-line c: 5)
 	(up-set-offense-priority c: monk c: 11)
@@ -1097,19 +1101,19 @@
 (defrule
 	(goal gl-priority-goal 7)
 =>
-	(up-set-offense-priority c: villager c: -1)
-	(up-set-offense-priority c: militia-line c: 10)
+	(up-set-offense-priority c: villager c: 6)
+	(up-set-offense-priority c: militia-line c: 11)
 	(up-set-offense-priority c: spearman-line c: 6)
 	(up-set-offense-priority c: eagle-warrior-line c: 9)
     (up-set-offense-priority c: archer-line c: 8)
 	(up-set-offense-priority c: skirmisher-line c: 7)
 	(up-set-offense-priority c: scout-cavalry-line c: 8)
     (up-set-offense-priority c: knight-line c: 9)
-	(up-set-offense-priority c: camel-line c: 9)
+	(up-set-offense-priority c: camel-line c: 10)
 	(up-set-offense-priority c: battle-elephant-line c: 3)
 	(up-set-offense-priority c: cavalry-archer-line c: 8)
-	(up-set-offense-priority c: battering-ram-line c: -1)
-	(up-set-offense-priority c: armored-elephant-line c: -1)
+	(up-set-offense-priority c: battering-ram-line c: 1)
+	(up-set-offense-priority c: armored-elephant-line c: 1)
 	(up-set-offense-priority c: mangonel-line c: 3)
 	(up-set-offense-priority c: scorpion-line c: 3)
 	(up-set-offense-priority c: bombard-cannon-line c: 3)	
@@ -7022,6 +7026,7 @@
 	(can-train battering-ram-line)
 	(not (research-available ri-capped-ram))
 	(unit-type-count-total battering-ram-line < 6)
+	(up-compare-goal gl-military-advantage >= 4)
 =>
 	(train battering-ram-line)
 	(chat-to-player my-player-number "Produziere Rammboecke gegen feindliche Befestigungen")
@@ -7057,6 +7062,7 @@
 	(can-train battering-ram-line)
 	(research-available ri-capped-ram)
 	(unit-type-count-total battering-ram-line < 1)
+	(up-compare-goal gl-military-advantage >= 4)
 =>
 	(train battering-ram-line)
 	(chat-to-player my-player-number "Produziere Rammboecke gegen feindliche Befestigungen")
@@ -7069,6 +7075,7 @@
 	(can-train battering-ram-line)
 	(research-completed ri-capped-ram)
 	(unit-type-count-total battering-ram-line < 8)
+	(up-compare-goal gl-military-advantage >= 4)
 =>
 	(train battering-ram-line)
 	(chat-to-player my-player-number "Produziere Sturmboecke gegen feindliche Befestigungen")
@@ -7080,6 +7087,7 @@
 	(players-building-type-count focus-player krepost >= 1))
 	(can-train armored-elephant-line)
 	(unit-type-count-total armored-elephant-line < 6)
+	(up-compare-goal gl-military-advantage >= 4)
 =>
 	(train armored-elephant-line)
 	(chat-to-player my-player-number "Produziere Belagerungselefanten gegen feindliche Befestigungen")
@@ -7115,6 +7123,7 @@
 	(players-building-type-count focus-player krepost >= 1))
 	(can-research ri-capped-ram)
 	(research-available ri-capped-ram)
+	(up-compare-goal gl-military-advantage >= 4)
 =>
 	(research ri-capped-ram)
 	(chat-to-player my-player-number "Entwickle Sturmbock gegen feindliche Befestigungen")
@@ -7656,6 +7665,25 @@
 	(or (players-unit-type-count focus-player boyar-line >= 5)
 	(players-unit-type-count focus-player knight-line >= 5)))))))))
 	(building-type-count-total monastery == 0)
+	(can-build-with-escrow monastery)
+=>
+	(up-modify-escrow wood c:- 175)
+	(build monastery)
+	(chat-to-player my-player-number "Baue Kloster, um feindliche Kavallerie zu kontern")
+)
+
+(defrule
+	(current-age >= castle-age)
+	(or (players-unit-type-count focus-player camel-line >= 12)
+	(or (players-unit-type-count focus-player battle-elephant-line >= 12)
+	(or (players-unit-type-count focus-player war-elephant-line >= 12)
+	(or (players-unit-type-count focus-player konnik-line >= 12)
+	(or (players-unit-type-count focus-player cataphract-line >= 12)
+	(or (players-unit-type-count focus-player war-wagon-line >= 12)
+	(or (players-unit-type-count focus-player leitis-line >= 12)
+	(or (players-unit-type-count focus-player boyar-line >= 12)
+	(players-unit-type-count focus-player knight-line >= 12)))))))))
+	(building-type-count-total monastery < 2)
 	(can-build-with-escrow monastery)
 =>
 	(up-modify-escrow wood c:- 175)
@@ -14159,7 +14187,7 @@
 (defrule
 	(players-building-type-count focus-player castle >= 1)
 	(up-compare-goal gl-remote-total > 0)
-	(up-set-target-object remote-search c: 0)
+	(up-set-target-object search-remote c: 0)
 =>
 	(up-jump-rule 8)
 )
@@ -14278,7 +14306,7 @@
 (defrule
 	(players-building-type-count focus-player watch-tower >= 1)
 	(up-compare-goal gl-remote-total > 0)
-	(up-set-target-object remote-search c: 0)
+	(up-set-target-object search-remote c: 0)
 =>
 	(up-jump-rule 11)
 )
@@ -19454,6 +19482,7 @@
 	(up-research-status c: feudal-age >= research-pending)
 	(current-age == dark-age)
 	(building-type-count-total lumber-camp > 0)
+	(building-type-count-total farm < 6)
 	(idle-farm-count < 1)
 	(can-build farm)
 =>
@@ -19676,8 +19705,8 @@
 	(goal strategy-goal sg-scoutrush)
 	(can-train scout-cavalry-line)
 	(civilian-population g:< f-villager-goal)
-	(and (unit-type-count-total scout-cavalry-line < 20)
-	(up-compare-goal gl-military-advantage >= 10))
+	(or (unit-type-count-total scout-cavalry-line < 20)
+	(up-compare-goal gl-military-advantage < 10))
 	(or (unit-type-count-total scout-cavalry-line >= 4)
 	(game-time >= 1000))
 =>
@@ -20514,12 +20543,10 @@
 (defrule
 	(or (goal strategy-goal sg-fastcastle-gu)
 	(goal strategy-goal sg-fastcastle-uu))
-	(or (up-research-status c: feudal-age >= research-pending)
-		(and (building-type-count-total farm < 6)
-		(and (building-type-count-total blacksmith >= 1)
-		(building-type-count-total market >= 1)))
-	)
-	(current-age < castle-age)
+	(building-type-count-total farm < 10)
+	(building-type-count-total blacksmith >= 1)
+	(building-type-count-total market >= 1)
+	(current-age == feudal-age)
 	(idle-farm-count < 1)
 	(can-build farm)
 	(up-compare-goal gl-water-on-map != 1)
@@ -20530,12 +20557,10 @@
 (defrule
 	(or (goal strategy-goal sg-fastcastle-gu)
 	(goal strategy-goal sg-fastcastle-uu))
-	(or (up-research-status c: feudal-age >= research-pending)
-		(and (building-type-count-total farm < 6)
-		(and (building-type-count-total blacksmith >= 1)
-		(building-type-count-total market >= 1)))
-	)
-	(current-age < castle-age)
+	(building-type-count-total farm < 10)
+	(building-type-count-total blacksmith >= 1)
+	(building-type-count-total market >= 1)
+	(current-age == feudal-age)
 	(idle-farm-count < 1)
 	(can-build farm)
 	(up-compare-goal gl-water-on-map == 1)
@@ -29161,12 +29186,12 @@
 =>
     (set-strategic-number sn-focus-player-number 1)    ;always start with player 1
     (set-goal TCgarrisonGoal 0)
-	(set-goal TowerGarrisonGoal 0)
 )
 
 (defrule
     (stance-toward focus-player enemy)    ;we are looking for enemy units only
-	(dropsite-min-distance live-boar > 8)
+	(or (dropsite-min-distance live-boar > 8)
+	(dropsite-min-distance live-boar <= -1))
 =>
     (up-full-reset-search)
     (up-set-target-point gl-starting-tc-x)
@@ -31888,6 +31913,32 @@
 =>
     (buy-commodity food)
     (chat-to-player my-player-number "Kaufe Nahrung")
+)
+
+(defrule
+    (gold-amount > 500)
+	(food-amount < 100)
+	(wood-amount < 100)
+	(up-compare-goal gl-gold-saving == 0)
+    (current-age == castle-age)
+    (building-type-count market >= 1)
+	(up-research-status c: imperial-age != research-pending)
+=>
+    (buy-commodity wood)
+    (chat-to-player my-player-number "Kaufe Nahrung und Holz")
+)
+
+(defrule
+    (gold-amount > 400)
+	(food-amount < 100)
+	(wood-amount >= 100)
+	(up-compare-goal gl-gold-saving == 0)
+    (current-age == castle-age)
+    (building-type-count market >= 1)
+	(up-research-status c: imperial-age != research-pending)
+=>
+    (buy-commodity food)
+    (chat-to-player my-player-number "Kaufe Nahrung und Holz")
 )
 
 (defrule
