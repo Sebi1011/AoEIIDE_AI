@@ -42,12 +42,13 @@
 
 ;what's up next:
 ; - expand tc-shooting problem for every tc-upgrade
+; - retreat with militias in dark-age if villager number is to high
 ; - fix retreating of towers (testing)
 ; - implement attack-now-goal to prevent spamming of attack-now
 ; - switch off builder assistance in dark-age, activate in feudal-age 
 ; - assign every build order to current-age
 ; - build feudal-age production buildings in safer spots when being drushed
-; - assign foragers on boar if there is a dead boar under tc
+; - assign foragers on boar/sheep if there is a dead boar/sheep under tc
 ; - add escrow rules for the first 1/2/3 trebs
 ; - fix boar-luring to select only one villager
 ; - improve dark-age builder selection for building resource drop-off points
@@ -11304,7 +11305,7 @@
 (defrule
 	(current-age == feudal-age)
 	(timer-triggered 8)
-	(food-amount >= 600)
+	(food-amount >= 550) ;600
 	(up-modify-goal gl-feudalup-compare g:= f-villager-goal)
 	(up-modify-goal gl-feudalup-compare c:- 5)
 	(unit-type-count-total villager g:< gl-feudalup-compare)
@@ -11319,7 +11320,7 @@
 (defrule
 	(current-age == feudal-age)
 	(timer-triggered 8)
-	(gold-amount >= 375)
+	(gold-amount >= 325) ;375
 	(building-type-count market >= 1)
 	(up-modify-goal gl-feudalup-compare g:= f-villager-goal)
 	(up-modify-goal gl-feudalup-compare c:- 5)
@@ -11350,8 +11351,8 @@
 (defrule
 	(current-age == feudal-age)
 	(timer-triggered 8)
-	(food-amount < 600)
-	(gold-amount < 375)
+	(food-amount < 550) ;600
+	(gold-amount < 325) ;375
 	(up-modify-goal gl-feudalup-compare g:= f-villager-goal)
 	(up-modify-goal gl-feudalup-compare c:- 1)
 	(unit-type-count-total villager g:== gl-feudalup-compare)
@@ -11366,8 +11367,8 @@
 (defrule
 	(current-age == feudal-age)
 	(timer-triggered 8)
-	(food-amount < 600)
-	(gold-amount >= 375)
+	(food-amount < 550) ;600
+	(gold-amount >= 325) ;375
 	(building-type-count market == 0)
 	(up-modify-goal gl-feudalup-compare g:= f-villager-goal)
 	(up-modify-goal gl-feudalup-compare c:- 1)
@@ -14126,7 +14127,7 @@
 	(up-cross-tiles object-point-x enemy-point-x c: 9)
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
-	(enable-timer retreating-timer 2)
+	(enable-timer retreating-timer 4)
 	(set-goal split-rule-goal 48)
 )
 
@@ -15816,7 +15817,7 @@
 	(can-build house)
 	(game-time > 10)
 	(civilian-population > 5)
-	(housing-headroom < 3)
+	(housing-headroom < 4)
 	(building-type-count-total town-center > 0)
 	(up-pending-objects c: house < 1)
 =>
@@ -15829,7 +15830,7 @@
 	(can-build house)
 	(game-time > 10)
 	(civilian-population > 5)
-	(housing-headroom < 4)
+	(housing-headroom < 5)
 	(building-type-count-total town-center > 0)
 	(up-pending-objects c: house < 1)
 =>
@@ -19845,7 +19846,9 @@
 	(up-research-status c: castle-age == research-pending))
 	(can-train skirmisher-line)
 	(players-unit-type-count focus-player skirmisher-line >= 4)
+	(players-unit-type-count focus-player skirmisher-line < 8)
 	(unit-type-count-total scout-cavalry-line < 1)
+	(unit-type-count-total skirmisher-line < 8)
 	(players-current-age focus-player == feudal-age)
 =>
 	(train skirmisher-line)
@@ -20543,9 +20546,10 @@
 (defrule
 	(or (goal strategy-goal sg-fastcastle-gu)
 	(goal strategy-goal sg-fastcastle-uu))
-	(building-type-count-total farm < 10)
 	(building-type-count-total blacksmith >= 1)
-	(building-type-count-total market >= 1)
+	(or (building-type-count-total market >= 1)
+	(or (building-type-count-total archery-range >= 1)
+	(building-type-count-total stable >= 1)))
 	(current-age == feudal-age)
 	(idle-farm-count < 1)
 	(can-build farm)
@@ -20559,7 +20563,9 @@
 	(goal strategy-goal sg-fastcastle-uu))
 	(building-type-count-total farm < 10)
 	(building-type-count-total blacksmith >= 1)
-	(building-type-count-total market >= 1)
+	(or (building-type-count-total market >= 1)
+	(or (building-type-count-total archery-range >= 1)
+	(building-type-count-total stable >= 1)))
 	(current-age == feudal-age)
 	(idle-farm-count < 1)
 	(can-build farm)
