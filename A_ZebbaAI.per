@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 0.17.5
-;last update: 21st February 2023
+;Version: 0.17.6
+;last update: 23rd February 2023
 
 ;Civs: Can play all civilizations
 ;Maps: besides standard maps like arabia, ZebbaAI can play nomad and other hybrid maps and custom maps. (Not optimized on water-maps though)
@@ -41,24 +41,22 @@
 ;ToDo: 
 
 ;what's up next:
-; - expand tc-shooting problem for every tc-upgrade
-; - retreat with militias in dark-age if villager number is to high
-; - fix retreating of towers (testing)
-; - implement attack-now-goal to prevent spamming of attack-now
+; - expand tc-shooting debugging for every tc-upgrade
+; - retreat with army in dark-age in drushes if villager number is to high (bug potential)
+; - fix retreating of towers, use different goal for spotting a tower and tower-retreat rules (testing)
+; - implement attack-now-goal to prevent spamming of attack-now (bug potential)
 ; - switch off builder assistance in dark-age, activate in feudal-age 
 ; - assign every build order to current-age
 ; - build feudal-age production buildings in safer spots when being drushed
 ; - assign foragers on boar/sheep if there is a dead boar/sheep under tc
 ; - add escrow rules for the first 1/2/3 trebs
-; - fix boar-luring to select only one villager
+; - fix boar-luring to select only one villager 
 ; - improve dark-age builder selection for building resource drop-off points
-; - Eat only one sheep at a time
-; - implement scouting-pattern for scouting own base
+; - Eat only one sheep at a time (bug potential)
+; - implement scouting-pattern for scouting own base (bug potential)
 ; - decrease d-villager-goal for mongols when scout/archer-rushing, in addition changes need to be made to 
-; constructions of buildings connected to villager count
-; - fix problem that causes boar luring villagers being retasked to build non-duc buildings
-; - find rules to make a switch to main-gold-unit later/ at a suitable time
-; - improve defensive tower placement to select dangerous areas more precisely
+; constructions of buildings connected to villager count (bug potential)
+; - fix problem that causes boar luring villagers being retasked to build non-duc buildings 
 
 ;improving trush:
 ; - add villagers ability to fight back when tower is under attack
@@ -80,7 +78,7 @@
 ;improving scoutrush:
 ; - use one scout to block villagers for other scout
 ; - retreat with scouts when villager numbers are too high
-; - build farms faster
+; - build farms faster (tested)
 
 ;improving archerrush:
 ; - set up groups of archers to attack at multiple locations
@@ -94,6 +92,11 @@
 ; - start training army faster
 
 ;general improvements
+; - find rules to make a switch to main-gold-unit later/ at a suitable time
+; - improve defensive tower placement to select dangerous areas more precisely
+; - change fcgu builds to build stable/archery-range instead of a market
+; - add a new strategy "defensive fast-feudal", change to this strategy in fc builds if researching to castle-age 
+; does not work due to enemy pressure
 ; - implement taunt "31" ("Attack an enemy now!") and taunt reaction to enable combined attacks in teamgames
 ; - Saving resources for upgrades/buildings (work in progress) (missing: Capped/Siege Ram/Elephant, Onager, Siege Engineers, UTs, Redemption)
 ; - improve military-management for producing, select 1 main-gold unit and produce at least 20 of this type
@@ -105,9 +108,9 @@
 ; - Retreating from Enemy TCs, Castles, Towers and similar (-works, but only retreats from one TC/Castle/etc. obtained by an opponent. Not tested for Donjons & Kreposts) (fixed, being monitored)
 ; - More accurate scouting
 ; - using scouting info for strategic decisions --> saving expected opponents strategy in a goal
-; - improve logic of building outposts
+; - improve rules of building outposts
 ; - rework boar-hunting
-; - more strategies(smush, waterplay, feudal eco-approach & spear/skirm-rush are planned)
+; - more strategies(smush (needs deer pushing), build-order for water-maps, defensive feudal & spear/skirm-rush are planned)
 ; - use sheep to scout
 ; - implement deer-pushing
 ; - implement build order for hybrid-maps (nomad excluded) to build fishing ships efficiently (work in progress)
@@ -653,6 +656,7 @@
 	(set-strategic-number sn-minimum-attack-group-size 1)
 	(set-strategic-number sn-maximum-attack-group-size 1)
 	(set-strategic-number sn-attack-group-gather-spacing 7)
+	(set-strategic-number sn-filter-under-attack 1)
 	(disable-self)
 )
 
@@ -3180,6 +3184,7 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train trebuchet)
+	(unit-type-count trebuchet-set >= 3)
 	(unit-type-count trebuchet-set < 8)
 =>
 	(train trebuchet)
@@ -19710,6 +19715,7 @@
 	(up-compare-goal gl-military-advantage < 10))
 	(or (unit-type-count-total scout-cavalry-line >= 4)
 	(game-time >= 1000))
+	(players-unit-type-count focus-player spearman-line < 5)
 =>
 	(train scout-cavalry-line)
 )
@@ -21952,8 +21958,9 @@
 	(unit-type-count-total knight-line >= 20))
 	(or
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
-		(nor (players-unit-type-count focus-player scorpion-line >= 3) 
-		(players-unit-type-count focus-player eagle-warrior-line >= 8)))
+		(nor (players-unit-type-count focus-player scorpion-line >= 3)
+		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
 		(or (unit-type-count-total cavalry-class < 3)
 		(unit-type-count-total siege-weapon-class < 2))
 	)
@@ -26787,21 +26794,24 @@
 
 #load-if-defined MONGOL-CIV
 
-(defrule
-	(players-unit-type-count focus-player skirmisher-line >= 10)
-	(or (unit-type-count-total cavalry-class < 4)
-	(unit-type-count-total siege-weapon-class < 2))
-=>
-	(up-jump-rule 2)
-)
 
 (defrule
 	(current-age == castle-age)
 	(can-train cavalry-archer-line)
-	(unit-type-count archer-line < 5)
-	(unit-type-count mangudai-line == 0)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
+	(unit-type-count-total archer-line < 1)
+	(unit-type-count-total mangudai-line < 1)
+	(or (unit-type-count-total knight-line < 3)
+	(unit-type-count-total knight-line >= 20))
+	(or 
+		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
+		(nor (players-unit-type-count focus-player scorpion-line >= 3)
+		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (unit-type-count-total cavalry-class >= 3)
+		(unit-type-count-total siege-weapon-class >= 2))
+	)
 =>
 	(train cavalry-archer-line)
 )
@@ -26829,19 +26839,21 @@
 #load-if-defined BULGARIANS-CIV
 
 (defrule
-	(players-unit-type-count focus-player skirmisher-line >= 10)
-	(or (unit-type-count-total cavalry-class < 4)
-	(unit-type-count-total siege-weapon-class < 2))
-=>
-	(up-jump-rule 2)
-)
-
-(defrule
 	(current-age == castle-age)
 	(can-train cavalry-archer-line)
-	(unit-type-count archer-line < 5)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
+	(unit-type-count-total archer-line < 1)
+	(or (unit-type-count-total knight-line < 3)
+	(unit-type-count-total knight-line >= 20))
+	(or 
+		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
+		(nor (players-unit-type-count focus-player scorpion-line >= 3)
+		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (unit-type-count-total cavalry-class >= 3)
+		(unit-type-count-total siege-weapon-class >= 2))
+	)
 =>
 	(train cavalry-archer-line)
 )
@@ -26860,21 +26872,24 @@
 
 #load-if-defined CUMANS-CIV
 
-(defrule
-	(players-unit-type-count focus-player skirmisher-line >= 10)
-	(or (unit-type-count-total cavalry-class < 4)
-	(unit-type-count-total siege-weapon-class < 2))
-=>
-	(up-jump-rule 2)
-)
 
 (defrule
 	(current-age == castle-age)
 	(can-train cavalry-archer-line)
-	(unit-type-count archer-line < 5)
-	(unit-type-count kipchak-line == 0)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
+	(unit-type-count-total archer-line < 1)
+	(unit-type-count-total kipchak-set < 1)
+	(or (unit-type-count-total knight-line < 3)
+	(unit-type-count-total knight-line >= 20))
+	(or 
+		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
+		(nor (players-unit-type-count focus-player scorpion-line >= 3)
+		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (unit-type-count-total cavalry-class >= 3)
+		(unit-type-count-total siege-weapon-class >= 2))
+	)
 =>
 	(train cavalry-archer-line)
 )
@@ -26884,7 +26899,7 @@
 	(can-train cavalry-archer-line)
 	(research-completed ri-heavy-cavalry-archer)
 	(unit-type-count archer-line < 5)
-	(unit-type-count kipchak-line == 0)
+	(unit-type-count kipchak-set == 0)
 =>
 	(train cavalry-archer-line)
 )
@@ -26909,20 +26924,24 @@
 
 #load-if-defined HUN-CIV
 
-(defrule
-	(players-unit-type-count focus-player skirmisher-line >= 10)
-	(or (unit-type-count-total cavalry-class < 4)
-	(unit-type-count-total siege-weapon-class < 2))
-=>
-	(up-jump-rule 2)
-)
 
 (defrule
 	(current-age == castle-age)
 	(can-train cavalry-archer-line)
-	(unit-type-count archer-line < 5)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
+	(unit-type-count-total archer-line < 1)
+	(unit-type-count-total kipchak-set < 1)
+	(or (unit-type-count-total knight-line < 3)
+	(unit-type-count-total knight-line >= 20))
+	(or 
+		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
+		(nor (players-unit-type-count focus-player scorpion-line >= 3)
+		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (unit-type-count-total cavalry-class >= 3)
+		(unit-type-count-total siege-weapon-class >= 2))
+	)
 =>
 	(train cavalry-archer-line)
 )
@@ -26941,19 +26960,22 @@
 #load-if-defined JAPANESE-CIV
 
 (defrule
-	(players-unit-type-count focus-player skirmisher-line >= 10)
-	(or (unit-type-count-total cavalry-class < 4)
-	(unit-type-count-total siege-weapon-class < 2))
-=>
-	(up-jump-rule 2)
-)
-
-(defrule
 	(current-age == castle-age)
 	(can-train cavalry-archer-line)
-	(unit-type-count archer-line < 5)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
+	(unit-type-count-total archer-line < 1)
+	(unit-type-count-total kipchak-set < 1)
+	(or (unit-type-count-total knight-line < 3)
+	(unit-type-count-total knight-line >= 20))
+	(or 
+		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
+		(nor (players-unit-type-count focus-player scorpion-line >= 3)
+		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (unit-type-count-total cavalry-class >= 3)
+		(unit-type-count-total siege-weapon-class >= 2))
+	)
 =>
 	(train cavalry-archer-line)
 )
@@ -26974,19 +26996,22 @@
 #load-if-defined MAGYAR-CIV
 
 (defrule
-	(players-unit-type-count focus-player skirmisher-line >= 10)
-	(or (unit-type-count-total cavalry-class < 4)
-	(unit-type-count-total siege-weapon-class < 2))
-=>
-	(up-jump-rule 2)
-)
-
-(defrule
 	(current-age == castle-age)
 	(can-train cavalry-archer-line)
-	(unit-type-count archer-line < 5)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
+	(unit-type-count-total archer-line < 1)
+	(unit-type-count-total kipchak-set < 1)
+	(or (unit-type-count-total knight-line < 3)
+	(unit-type-count-total knight-line >= 20))
+	(or 
+		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
+		(nor (players-unit-type-count focus-player scorpion-line >= 3)
+		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (unit-type-count-total cavalry-class >= 3)
+		(unit-type-count-total siege-weapon-class >= 2))
+	)
 =>
 	(train cavalry-archer-line)
 )
@@ -27006,20 +27031,24 @@
 
 #load-if-defined SARACEN-CIV
 
-(defrule
-	(players-unit-type-count focus-player skirmisher-line >= 10)
-	(or (unit-type-count-total cavalry-class < 4)
-	(unit-type-count-total siege-weapon-class < 2))
-=>
-	(up-jump-rule 2)
-)
 
 (defrule
 	(current-age == castle-age)
 	(can-train cavalry-archer-line)
-	(unit-type-count archer-line < 5)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
+	(unit-type-count-total archer-line < 1)
+	(unit-type-count-total kipchak-set < 1)
+	(or (unit-type-count-total knight-line < 3)
+	(unit-type-count-total knight-line >= 20))
+	(or 
+		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
+		(nor (players-unit-type-count focus-player scorpion-line >= 3)
+		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (unit-type-count-total cavalry-class >= 3)
+		(unit-type-count-total siege-weapon-class >= 2))
+	)
 =>
 	(train cavalry-archer-line)
 )
@@ -27039,19 +27068,22 @@
 #load-if-defined TATAR-CIV
 
 (defrule
-	(players-unit-type-count focus-player skirmisher-line >= 10)
-	(or (unit-type-count-total cavalry-class < 4)
-	(unit-type-count-total siege-weapon-class < 2))
-=>
-	(up-jump-rule 2)
-)
-
-(defrule
 	(current-age == castle-age)
 	(can-train cavalry-archer-line)
-	(unit-type-count archer-line < 5)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
+	(unit-type-count-total archer-line < 1)
+	(unit-type-count-total kipchak-set < 1)
+	(or (unit-type-count-total knight-line < 3)
+	(unit-type-count-total knight-line >= 20))
+	(or 
+		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
+		(nor (players-unit-type-count focus-player scorpion-line >= 3)
+		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (unit-type-count-total cavalry-class >= 3)
+		(unit-type-count-total siege-weapon-class >= 2))
+	)
 =>
 	(train cavalry-archer-line)
 )
@@ -27071,19 +27103,22 @@
 #load-if-defined TURK-CIV
 
 (defrule
-	(players-unit-type-count focus-player skirmisher-line >= 10)
-	(or (unit-type-count-total cavalry-class < 4)
-	(unit-type-count-total siege-weapon-class < 2))
-=>
-	(up-jump-rule 2)
-)
-
-(defrule
 	(current-age == castle-age)
 	(can-train cavalry-archer-line)
-	(unit-type-count archer-line < 5)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
+	(unit-type-count-total archer-line < 1)
+	(unit-type-count-total kipchak-set < 1)
+	(or (unit-type-count-total knight-line < 3)
+	(unit-type-count-total knight-line >= 20))
+	(or 
+		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
+		(nor (players-unit-type-count focus-player scorpion-line >= 3)
+		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (unit-type-count-total cavalry-class >= 3)
+		(unit-type-count-total siege-weapon-class >= 2))
+	)
 =>
 	(train cavalry-archer-line)
 )
@@ -27101,20 +27136,24 @@
 
 #load-if-defined VIETNAMESE-CIV
 
-(defrule
-	(players-unit-type-count focus-player skirmisher-line >= 10)
-	(or (unit-type-count-total cavalry-class < 4)
-	(unit-type-count-total siege-weapon-class < 2))
-=>
-	(up-jump-rule 2)
-)
 
 (defrule
 	(current-age == castle-age)
 	(can-train cavalry-archer-line)
-	(unit-type-count archer-line < 5)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
+	(unit-type-count-total archer-line < 1)
+	(unit-type-count-total kipchak-set < 1)
+	(or (unit-type-count-total knight-line < 3)
+	(unit-type-count-total knight-line >= 20))
+	(or 
+		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
+		(nor (players-unit-type-count focus-player scorpion-line >= 3)
+		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (unit-type-count-total cavalry-class >= 3)
+		(unit-type-count-total siege-weapon-class >= 2))
+	)
 =>
 	(train cavalry-archer-line)
 )
