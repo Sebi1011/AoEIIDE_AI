@@ -44,7 +44,6 @@
 ; - expand tc-shooting debugging for every tc-upgrade
 ; - retreat with army in dark-age in drushes if villager number is to high (bug potential)
 ; - fix retreating of towers, use different goal for spotting a tower and tower-retreat rules (testing)
-; - implement attack-now-goal to prevent spamming of attack-now (bug potential)
 ; - switch off builder assistance in dark-age, activate in feudal-age 
 ; - assign every build order to current-age
 ; - build feudal-age production buildings in safer spots when being drushed
@@ -413,7 +412,7 @@
 (defconst amnt-escrow-wood 136)
 (defconst amnt-escrow-gold 137)
 (defconst amnt-escrow-stone 138)
-
+(defconst meso-civ 140)
 (defconst gl-food-saving 143)
 (defconst gl-wood-saving 144)
 (defconst gl-gold-saving 145)
@@ -1231,9 +1230,9 @@
 )
 
 (defrule
-	(up-compare-goal gl-military-advantage <= -10)
+	(up-compare-goal gl-military-advantage <= -15)
 =>
-	(set-strategic-number sn-percent-building-cancellation 95)
+	(set-strategic-number sn-percent-building-cancellation 90)
 )
 
 (defrule
@@ -1252,6 +1251,22 @@
 =>
 	(set-strategic-number sn-percent-building-cancellation -1)
 )
+
+(defrule
+    (nor    (civ-selected aztec)
+    (nor    (civ-selected mayan)
+        (civ-selected incan)))
+=>
+	(set-goal meso-civ NO)
+	(disable-self)
+)
+
+(defrule
+    (or    (civ-selected aztec)
+    (or    (civ-selected mayan)
+        (civ-selected incan)))
+=>    (set-goal meso-civ YES)
+    (disable-self))
 
 ; (defrule
 	; (game-time > 10)
@@ -6883,6 +6898,7 @@
 	(can-train-with-escrow skirmisher-line)
 	(research-completed ri-elite-skirmisher)
 	(not (unit-available genitour-line))
+	(not (goal gl-food-saving 23))
 =>
 	(up-modify-escrow food c:- 25)
 	(up-modify-escrow wood c:- 35)
@@ -7831,6 +7847,7 @@
 	(players-unit-type-count focus-player camel-archer-line >= 5))))))
 	(can-train-with-escrow skirmisher-line)
 	(research-completed ri-elite-skirmisher)
+	(not (goal gl-food-saving 23))
 =>
 	(up-modify-escrow food c:- 25)
 	(up-modify-escrow wood c:- 35)
@@ -8637,6 +8654,7 @@
 	(research-completed ri-elite-skirmisher)
 	(research-completed ri-bodkin-arrow)
 	(building-type-count-total archery-range > 0)
+	(not (goal gl-food-saving 23))
 =>
 	(up-modify-escrow food c:- 25)
 	(up-modify-escrow wood c:- 35)
@@ -8999,6 +9017,7 @@
 	(research-completed ri-elite-skirmisher)
 	(research-completed ri-bodkin-arrow)
 	(building-type-count-total archery-range > 0)
+	(not (goal gl-food-saving 23))
 =>
 	(up-modify-escrow food c:- 25)
 	(up-modify-escrow wood c:- 35)
@@ -9055,6 +9074,7 @@
 	(research-completed ri-bodkin-arrow)
 	(building-type-count-total archery-range > 0)
 	(not (unit-available camel-line))
+	(not (goal gl-food-saving 23))
 =>
 	(up-modify-escrow food c:- 25)
 	(up-modify-escrow wood c:- 35)
@@ -11574,9 +11594,7 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
-	(not (civ-selected mayan))
-	(not (civ-selected incan))
-	(not (civ-selected aztec))
+	(goal meso-civ NO)
 	(current-age <= feudal-age)
 	(building-type-count-total barracks >= 1)
 	(civilian-population >= 19)
@@ -11591,10 +11609,7 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
-	(or 
-		(or (civ-selected mayan)
-			(or (civ-selected incan)
-				(civ-selected aztec)))
+	(or (goal meso-civ YES)
 	(or (current-age > feudal-age)
 	(or (building-type-count-total barracks < 1)
 	(or (civilian-population < 19)
@@ -11611,9 +11626,7 @@
 	(goal strategy-goal sg-scoutrush)
 	(civilian-population >= 19)
 	(current-age <= feudal-age)
-	(or (civ-selected mayan)
-	(or (civ-selected incan)
-	(civ-selected aztec)))
+	(goal meso-civ YES)
 	(building-type-count-total barracks < 2)
 	(goal gl-wood-saving 0)
 =>
@@ -11625,10 +11638,7 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
-	(or 
-		(nor (civ-selected mayan)
-			(nor (civ-selected incan)
-				(civ-selected aztec)))
+	(or (goal meso-civ NO)
 	(or (civilian-population < 19)
 	(or (building-type-count-total barracks >= 2)
 	(current-age > feudal-age))))
@@ -17396,9 +17406,7 @@
 	(can-build-with-escrow barracks)
 	(civilian-population >= 20)
 	(building-type-count-total barracks < 1)
-	(or (civ-selected mayan)
-	(or (civ-selected incan)
-	(civ-selected aztec)))
+	(goal meso-civ YES)
 	(goal gl-wood-saving 5)
 =>
 	(release-escrow wood)
@@ -17718,14 +17726,13 @@
 
 (defrule
 	;(goal strategy-goal sg-drush)
-	(not (goal retreat-now-goal 1))
-	;(goal attack-now-goal 0)
+	(goal attack-now-goal 0)
 	(current-age == dark-age)
 	;(civilian-population g:< d-villager-goal)
 	(unit-type-count militiaman-line >= 3)
 	;(unit-type-count-total militiaman-line g:== gl-drush-militia-count)
 =>
-	;(set-goal attack-now-goal 1)
+	(set-goal attack-now-goal 1)
 	(set-strategic-number sn-number-explore-groups 0)
 	(set-strategic-number sn-total-number-explorers 0)
 	(up-reset-scouts)
@@ -19754,9 +19761,7 @@
 (defrule
 	(goal strategy-goal sg-scoutrush)
 	(current-age == feudal-age)
-	(or (civ-selected mayan)
-	(or (civ-selected incan)
-	(civ-selected aztec)))
+	(goal meso-civ YES)
 	(building-type-count-total barracks < 2)
 	(building-type-count-total town-center >= 1)
 	(can-build-with-escrow barracks)
@@ -19934,12 +19939,13 @@
 )
 
 (defrule
-	(up-compare-goal retreat-now-goal != 0)
+	(goal retreat-now-goal 1)
 	(military-population >= 3)
 	(up-compare-goal gl-military-advantage >= 0)
 	(current-age == feudal-age)
 =>
 	(set-goal retreat-now-goal 0)
+	(set-goal attack-now-goal 0)
 	(up-reset-unit c: -1)
 	(chat-to-player my-player-number "Stop retreating")
 )
@@ -19960,7 +19966,7 @@
 (defrule
 	(not (goal strategy-goal sg-scoutrush))
 	(not (goal strategy-goal sg-towerrush)) ;archer-rush
-	(goal retreat-now-goal 0)
+	(goal attack-now-goal 0)
 	(not (town-under-attack))
 	(current-age == feudal-age)
 	(civilian-population g:< f-villager-goal)
@@ -19969,7 +19975,7 @@
 	(up-compare-goal gl-military-advantage >= 4))
 	(up-compare-goal gl-military-advantage > -2)
 =>
-	;(up-reset-unit c: -1)
+	(set-goal attack-now-goal 1)
 	(set-strategic-number sn-number-explore-groups 0)
 	(set-strategic-number sn-total-number-explorers 0)
 	(up-reset-scouts)
@@ -19990,15 +19996,15 @@
 (defrule
 	(not (goal strategy-goal sg-scoutrush))
 	(not (goal strategy-goal sg-towerrush))
-	(goal retreat-now-goal 0)
 	(town-under-attack)
+	(goal attack-now-goal 0)
 	(current-age == feudal-age)
 	(civilian-population g:< f-villager-goal)
 	(or (military-population >= 10)
 	(up-compare-goal gl-military-advantage >= 5))
 	(up-compare-goal gl-military-advantage > -2)
 =>
-	;(up-reset-unit c: -1)
+	(set-goal attack-now-goal 1)
 	(set-strategic-number sn-number-explore-groups 0)
 	(set-strategic-number sn-total-number-explorers 0)
 	(up-reset-scouts)
@@ -20018,10 +20024,8 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
-	(goal retreat-now-goal 0)
-	(nor (civ-selected mayan)
-	(nor (civ-selected incan)
-	(civ-selected aztec)))
+	(goal attack-now-goal 0)
+	(goal meso-civ NO)
 	(current-age == feudal-age)
 	(not (town-under-attack))
 	(players-building-count focus-player > 0)
@@ -20030,7 +20034,7 @@
 	(up-compare-goal gl-military-advantage >= 3))
 	(up-compare-goal gl-military-advantage >= -3)
 =>
-	;(up-reset-unit c: -1)
+	(set-goal attack-now-goal 1)
 	(set-strategic-number sn-number-explore-groups 0)
 	(set-strategic-number sn-total-number-explorers 0)
 	(up-reset-scouts)
@@ -20050,39 +20054,8 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
-	(goal retreat-now-goal 0)
-	(or (civ-selected mayan)
-	(or (civ-selected incan)
-	(civ-selected aztec)))
-	(current-age == feudal-age)
-	(not (town-under-attack))
-	(players-building-count focus-player > 0)
-	(not (up-research-status c: castle-age >= research-pending))
-	(or (military-population >= 4)
-	(up-compare-goal gl-military-advantage >= 3))
-	(up-compare-goal gl-military-advantage >= -3)
-	(or (research-completed ri-scale-mail)
-	(research-completed ri-forging))
-=>
-	;(up-reset-unit c: -1)
-	(set-strategic-number sn-number-explore-groups 0)
-	(set-strategic-number sn-total-number-explorers 0)
-	(up-reset-scouts)
-	(up-gather-inside c: barracks c: 0)
-	(up-gather-inside c: archery-range c: 0)
-	(up-gather-inside c: stable c: 0)
-	(up-gather-inside c: siege-workshop c: 0)
-	(up-gather-inside c: donjon c: 0)
-	(attack-now)
-	;(chat-to-allies "31")
-)
-
-(defrule
-	(goal strategy-goal sg-scoutrush)
-	(goal retreat-now-goal 0)
-	(or (civ-selected mayan)
-	(or (civ-selected incan)
-	(civ-selected aztec)))
+	(goal attack-now-goal 0)
+	(goal meso-civ YES)
 	(current-age == feudal-age)
 	(not (town-under-attack))
 	(players-building-count focus-player > 0)
@@ -20093,6 +20066,41 @@
 	(or (research-completed ri-scale-mail)
 	(research-completed ri-forging))
 =>
+	(set-goal attack-now-goal 1)
+	(set-strategic-number sn-number-explore-groups 0)
+	(set-strategic-number sn-total-number-explorers 0)
+	(up-reset-scouts)
+	(up-gather-inside c: barracks c: 0)
+	(up-gather-inside c: archery-range c: 0)
+	(up-gather-inside c: stable c: 0)
+	(up-gather-inside c: siege-workshop c: 0)
+	(up-gather-inside c: donjon c: 0)
+	(attack-now)
+	;(chat-to-allies "31")
+)
+
+(defrule
+	(goal strategy-goal sg-scoutrush)
+	(goal attack-now-goal 0)
+	(goal meso-civ YES)
+	(current-age == feudal-age)
+	(not (town-under-attack))
+	(players-building-count focus-player > 0)
+	(not (up-research-status c: castle-age >= research-pending))
+	(or (military-population >= 4)
+	(up-compare-goal gl-military-advantage >= 3))
+	(up-compare-goal gl-military-advantage >= -3)
+	(or (research-completed ri-scale-mail)
+	(research-completed ri-forging))
+=>
+	(set-goal attack-now-goal 1)
+	(set-strategic-number sn-number-explore-groups 0)
+	(set-strategic-number sn-total-number-explorers 0)
+	(up-reset-scouts)
+	(up-gather-inside c: barracks c: 0)
+	(up-gather-inside c: archery-range c: 0)
+	(up-gather-inside c: siege-workshop c: 0)
+	(attack-now)
 	(up-ungarrison c: barracks)
 	(up-ungarrison c: archery-range)
 	(up-ungarrison c: stable)
@@ -20103,15 +20111,15 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
-	(goal retreat-now-goal 0)
 	(current-age == feudal-age)
 	(town-under-attack)
+	(goal attack-now-goal 0)
 	(civilian-population g:< f-villager-goal)
 	(or (military-population >= 5)
 	(up-compare-goal gl-military-advantage >= 3))
 	(up-compare-goal gl-military-advantage >= -3)
 =>
-	;(up-reset-unit c: -1)
+	(set-goal attack-now-goal 1)
 	(set-strategic-number sn-number-explore-groups 0)
 	(set-strategic-number sn-total-number-explorers 0)
 	(up-reset-scouts)
@@ -20131,15 +20139,15 @@
 
 (defrule
 	(goal strategy-goal sg-towerrush)
-	(goal retreat-now-goal 0)
+	(goal attack-now-goal 0)
 	(current-age == feudal-age)
 	(civilian-population g:< f-villager-goal)
 	(military-population >= 2)
 =>
-	;(up-reset-unit c: -1)
-	(set-strategic-number sn-number-explore-groups 1)
-	(set-strategic-number sn-total-number-explorers 1)
-	;(up-reset-scouts)
+	(set-goal attack-now-goal 1)
+	(set-strategic-number sn-number-explore-groups 0)
+	(set-strategic-number sn-total-number-explorers 0)
+	(up-reset-scouts)
 	(up-gather-inside c: barracks c: 0)
 	(up-gather-inside c: archery-range c: 0)
 	(up-gather-inside c: stable c: 0)
@@ -21216,8 +21224,8 @@
 	(can-build-with-escrow town-center)
 	(goal gl-wood-saving 7)
 	(goal gl-stone-saving 7)
-	(up-compare-goal gl-military-advantage < 18)
-	(up-compare-goal gl-military-advantage >= -7)
+	(up-compare-goal gl-military-advantage < 23)
+	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 1)
 	(building-type-count-total town-center < 3)
 	(nand (goal strategy-goal sg-fastcastle-uu)
@@ -21242,8 +21250,8 @@
 	(can-build-with-escrow town-center)
 	(goal gl-wood-saving 7)
 	(goal gl-stone-saving 7)
-	(up-compare-goal gl-military-advantage < 18)
-	(up-compare-goal gl-military-advantage >= -7)
+	(up-compare-goal gl-military-advantage < 23)
+	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 1)
 	(building-type-count-total town-center < 3)
 	(nand (goal strategy-goal sg-fastcastle-uu)
@@ -21268,8 +21276,8 @@
 	(can-build-with-escrow town-center)
 	(goal gl-wood-saving 7)
 	(goal gl-stone-saving 7)
-	(up-compare-goal gl-military-advantage < 18)
-	(up-compare-goal gl-military-advantage >= -7)
+	(up-compare-goal gl-military-advantage < 23)
+	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 2)
 	(building-type-count-total town-center < 3)
 	(nand (goal strategy-goal sg-fastcastle-uu)
@@ -21294,8 +21302,8 @@
 	(can-build-with-escrow town-center)
 	(goal gl-wood-saving 7)
 	(goal gl-stone-saving 7)
-	(up-compare-goal gl-military-advantage < 18)
-	(up-compare-goal gl-military-advantage >= -7)
+	(up-compare-goal gl-military-advantage < 23)
+	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 2)
 	(building-type-count-total town-center < 3)
 	(nand (goal strategy-goal sg-fastcastle-uu)
@@ -21318,8 +21326,7 @@
 (defrule
 	(current-age >= castle-age)
 	(can-build town-center)
-	; (up-compare-goal gl-military-advantage < 18)
-	(up-compare-goal gl-military-advantage >= -15)
+	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 1)
 	(building-type-count-total town-center < 3)
 	(nand (goal strategy-goal sg-fastcastle-uu)
@@ -21336,8 +21343,7 @@
 (defrule
 	(current-age >= castle-age)
 	(can-build town-center)
-	; (up-compare-goal gl-military-advantage < 18)
-	(up-compare-goal gl-military-advantage >= -15)
+	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 1)
 	(building-type-count-total town-center < 3)
 	(nand (goal strategy-goal sg-fastcastle-uu)
@@ -21354,8 +21360,7 @@
 (defrule
 	(current-age >= castle-age)
 	(can-build town-center)
-	; (up-compare-goal gl-military-advantage < 18)
-	(up-compare-goal gl-military-advantage >= -15)
+	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 2)
 	(building-type-count-total town-center < 3)
 	(nand (goal strategy-goal sg-fastcastle-uu)
@@ -21372,8 +21377,7 @@
 (defrule
 	(current-age >= castle-age)
 	(can-build town-center)
-	; (up-compare-goal gl-military-advantage < 18)
-	(up-compare-goal gl-military-advantage >= -15)
+	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 2)
 	(building-type-count-total town-center < 3)
 	(nand (goal strategy-goal sg-fastcastle-uu)
@@ -21392,8 +21396,8 @@
 	(game-time >= 2400)
 	(can-build town-center)
 	(building-type-count-total town-center == 3)
-	(up-compare-goal gl-military-advantage < 18)
-	(up-compare-goal gl-military-advantage >= -7)
+	(up-compare-goal gl-military-advantage < 23)
+	(up-compare-goal gl-military-advantage >= -12)
 =>
 	(up-assign-builders c: town-center-foundation c: 6)
 	(up-assign-builders c: town-center c: 6)
@@ -21406,8 +21410,8 @@
 	(can-build town-center)
 	(building-type-count-total town-center == 4)
 	(building-type-count-total town-center < 5)
-	(up-compare-goal gl-military-advantage < 18)
-	(up-compare-goal gl-military-advantage >= -7)
+	(up-compare-goal gl-military-advantage < 23)
+	(up-compare-goal gl-military-advantage >= -12)
 =>
 	(up-assign-builders c: town-center-foundation c: 6)
 	(up-assign-builders c: town-center c: 6)
@@ -21435,7 +21439,7 @@
 	(can-build town-center)
 	(building-type-count-total castle >= 1)
 	(building-type-count-total town-center < 7)
-	(up-compare-goal gl-military-advantage >= -7)
+	(up-compare-goal gl-military-advantage >= -12)
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 1)
 	(up-assign-builders c: town-center-foundation c: 6)
@@ -22031,12 +22035,13 @@
 )
 
 (defrule
-	(up-compare-goal retreat-now-goal != 0)
+	(goal retreat-now-goal 1)
 	(or (military-population >= 18)
 	(up-compare-goal gl-military-advantage >= 0))
 	(current-age == castle-age)
 =>
 	(set-goal retreat-now-goal 0)
+	(set-goal attack-now-goal 0)
 	(chat-to-player my-player-number "Stop retreating")
 )
 
@@ -22056,12 +22061,13 @@
 
 (defrule
 	(current-age == castle-age)
-	(goal retreat-now-goal 0)
+	(goal attack-now-goal 0)
 	(or (military-population >= 18)
 	(up-compare-goal gl-military-advantage >= 8))
 	(up-compare-goal gl-military-advantage >= -6)
 	(civilian-population g:< c-villager-goal)
 =>
+	(set-goal attack-now-goal 1)
 	(up-gather-inside c: barracks c: 0)
 	(up-gather-inside c: archery-range c: 0)
 	(up-gather-inside c: stable c: 0)
@@ -25087,7 +25093,7 @@
 	(current-age == imperial-age)
 	(can-build town-center)
 	(building-type-count-total town-center < 5)
-	(up-compare-goal gl-military-advantage >= -5)
+	(up-compare-goal gl-military-advantage >= -10)
 =>
 	(up-assign-builders c: town-center c: 6)
 	(up-assign-builders c: town-center-foundation c: 6)
@@ -25407,12 +25413,13 @@
 )
 
 (defrule
-	(up-compare-goal retreat-now-goal != 0)
+	(goal retreat-now-goal 1)
 	(or (military-population >= 23)
 	(up-compare-goal gl-military-advantage >= 0))
 	(current-age == imperial-age)
 =>
 	(set-goal retreat-now-goal 0)
+	(set-goal attack-now-goal 0)
 	(chat-to-player my-player-number "Stop retreating")
 )
 
@@ -25432,11 +25439,12 @@
 
 (defrule
 	(current-age == imperial-age)
-	(goal retreat-now-goal 0)
+	(goal attack-now-goal 0)
 	(or (military-population >= 23)
 	(up-compare-goal gl-military-advantage >= 10))
 	(up-compare-goal gl-military-advantage >= -6)
 =>
+	(set-goal attack-now-goal 1)
 	(up-gather-inside c: barracks c: 0)
 	(up-gather-inside c: archery-range c: 0)
 	(up-gather-inside c: stable c: 0)
@@ -29926,9 +29934,7 @@
 	(goal strategy-goal sg-scoutrush)
 	(civilian-population == 20)
 	(up-research-status c: feudal-age >= research-pending)
-	(nor (civ-selected mayan)
-	(nor (civ-selected incan)
-	(civ-selected aztec)))
+	(goal meso-civ NO)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 50)
 	(set-strategic-number sn-food-gatherer-percentage 50)
@@ -29940,9 +29946,7 @@
 	(goal strategy-goal sg-scoutrush)
 	(civilian-population == 20)
 	(up-research-status c: feudal-age >= research-pending)
-	(or (civ-selected mayan)
-	(or (civ-selected incan)
-	(civ-selected aztec)))
+	(goal meso-civ YES)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 35)
 	(set-strategic-number sn-food-gatherer-percentage 50)
@@ -30798,9 +30802,7 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
-	(or (civ-selected mayan)
-	(or (civ-selected incan)
-	(civ-selected aztec)))
+	(goal meso-civ YES)
 	(civilian-population == 20)
 	(up-compare-goal gl-water-on-map != 1)
 =>
