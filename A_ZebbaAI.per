@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 0.17.6
-;last update: 23rd February 2023
+;Version: 0.17.7
+;last update: 24th February 2023
 
 ;Civs: Can play all civilizations
 ;Maps: besides standard maps like arabia, ZebbaAI can play nomad and other hybrid maps and custom maps. (Not optimized on water-maps though)
@@ -41,21 +41,20 @@
 ;ToDo: 
 
 ;what's up next:
+; - try do disable offensive priorities
 ; - split up tc retreat rules into feudal-age and post castle-age
 ; - change escrow-rules for counter units, skirmisher production delays upgrades and building placements a lot
 ; - fix attack-rules, AI seems to not retreat at any time
 ; - add "closest-player-next" and set it to focus-players for team-game pocket-players
 ; - add market-price check before buying/selling resources
-; - remake towerrush completely due to high number of bugs
-; - expand tc-shooting debugging for every tc-upgrade
+; - remake towerrush completely due to several number of bugs
 ; - retreat with army in dark-age in drushes if villager number is to high (bug potential)
 ; - fix retreating from enemy towers, use different goal for spotting a tower and tower-retreat rules (testing)
-; - switch off builder assistance in dark-age, activate in feudal-age 
 ; - assign every build order to current-age
 ; - build feudal-age production buildings in safer spots when being drushed
-; - assign foragers on boar/sheep if there is a dead boar/sheep under tc
 ; - add escrow rules for the first 1/2/3 trebs
-; - fix boar-luring to select only one villager 
+; - expand boar-luring code with selection of boar-luring villager (without "sn-enable-boar-hunting 2"), a timer 
+; for shooting the boar and running back to tc (bug potential)
 ; - improve dark-age builder selection for building resource drop-off points
 ; - Eat only one sheep at a time (bug potential)
 ; - implement scouting-pattern for scouting own base (bug potential)
@@ -318,7 +317,7 @@
 
 (defconst FDrop 14)
 (defconst MinVillsToGarrison 3)    ;number of vills that must be near the TC in order to garrison
-(defconst GarrisonSearchDistance 6)    ;how far from the TC an enemy unit has to be to trigger the garrisoning
+(defconst GarrisonSearchDistance 7)    ;how far from the TC an enemy unit has to be to trigger the garrisoning
 (defconst NumberVillsToGarrison 10)    ;how many villagers should be put inside the TC
 (defconst TCgarrisonGoal 69)
 (defconst gl-garrison-tc 71)
@@ -662,6 +661,7 @@
 	(set-strategic-number sn-maximum-attack-group-size 1)
 	(set-strategic-number sn-attack-group-gather-spacing 7)
 	(set-strategic-number sn-filter-under-attack 1)
+	(set-strategic-number sn-disable-builder-assistance 1)
 	(disable-self)
 )
 
@@ -982,13 +982,13 @@
 	(goal gl-priority-goal 5)
 =>
 	(up-set-offense-priority c: villager c: 6)
-	(up-set-offense-priority c: militia-line c: 6)
-	(up-set-offense-priority c: spearman-line c: 7)
-	(up-set-offense-priority c: eagle-warrior-line c: 8)
+	(up-set-offense-priority c: militia-line c: 7)
+	(up-set-offense-priority c: spearman-line c: 8)
+	(up-set-offense-priority c: eagle-warrior-line c: 9)
     (up-set-offense-priority c: archer-line c: 10)
-	(up-set-offense-priority c: skirmisher-line c: 7)
+	(up-set-offense-priority c: skirmisher-line c: 5)
 	(up-set-offense-priority c: scout-cavalry-line c: 9)
-    (up-set-offense-priority c: knight-line c: 6)
+    (up-set-offense-priority c: knight-line c: 7)
 	(up-set-offense-priority c: camel-line c: 9)
 	(up-set-offense-priority c: battle-elephant-line c: 2)
 	(up-set-offense-priority c: cavalry-archer-line c: 9)
@@ -1677,54 +1677,54 @@
 	(set-goal gl-scout-map NO)
 )
 
-(defrule
-	(goal gl-scout-map YES)
-	(unit-type-count scout-type > 0)
-=>
-	(up-full-reset-search)
-	(up-find-local c: scout-type c: 1)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object gl-scout-x)
-)
+; (defrule
+	; (goal gl-scout-map YES)
+	; (unit-type-count scout-type > 0)
+; =>
+	; (up-full-reset-search)
+	; (up-find-local c: scout-type c: 1)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object gl-scout-x)
+; )
+
+; ; (defrule
+	; ; (goal gl-scout-map YES)
+	; ; (unit-type-count scout-type > 0)
+	; ; (up-point-distance gl-scout-x gl-center-x < 20)
+; ; =>	
+	; ; (up-lerp-tiles gl-scout-x gl-center-x c: -30)
+	; ; (up-bound-point gl-scout-x gl-scout-x)
+	; ; (up-full-reset-search)
+	; ; (up-find-local c: scout-type c: 1)
+	; ; (up-target-point gl-scout-x action-move -1 -1)
+	; ; (chat-to-player my-player-number "Too close to center")
+; ; )
 
 ; (defrule
 	; (goal gl-scout-map YES)
 	; (unit-type-count scout-type > 0)
-	; (up-point-distance gl-scout-x gl-center-x < 20)
+; =>
+	; (up-modify-goal gl-temp1 c:= FULL-MAP-SIZE)
+	; (up-modify-goal gl-temp1 c:- 6)
+	; ;(up-chat-data-to-self "gl-temp1: %d" g: gl-temp1)
+	; (disable-self)
+; )
+	
+; (defrule
+	; (goal gl-scout-map YES)
+	; (unit-type-count scout-type > 0)
+	; (or	(up-compare-goal gl-scout-x c:< 6)
+	; (or	(up-compare-goal gl-scout-y c:< 6)
+	; (or	(up-compare-goal gl-scout-x g:> gl-temp1)
+		; (up-compare-goal gl-scout-y g:> gl-temp1))))
 ; =>	
-	; (up-lerp-tiles gl-scout-x gl-center-x c: -30)
+	; (up-lerp-tiles gl-scout-x gl-center-x c: 20)
 	; (up-bound-point gl-scout-x gl-scout-x)
 	; (up-full-reset-search)
 	; (up-find-local c: scout-type c: 1)
 	; (up-target-point gl-scout-x action-move -1 -1)
-	; (chat-to-player my-player-number "Too close to center")
+	; (chat-to-player my-player-number "Too close to edge of the map")
 ; )
-
-(defrule
-	(goal gl-scout-map YES)
-	(unit-type-count scout-type > 0)
-=>
-	(up-modify-goal gl-temp1 c:= FULL-MAP-SIZE)
-	(up-modify-goal gl-temp1 c:- 6)
-	;(up-chat-data-to-self "gl-temp1: %d" g: gl-temp1)
-	(disable-self)
-)
-	
-(defrule
-	(goal gl-scout-map YES)
-	(unit-type-count scout-type > 0)
-	(or	(up-compare-goal gl-scout-x c:< 6)
-	(or	(up-compare-goal gl-scout-y c:< 6)
-	(or	(up-compare-goal gl-scout-x g:> gl-temp1)
-		(up-compare-goal gl-scout-y g:> gl-temp1))))
-=>	
-	(up-lerp-tiles gl-scout-x gl-center-x c: 20)
-	(up-bound-point gl-scout-x gl-scout-x)
-	(up-full-reset-search)
-	(up-find-local c: scout-type c: 1)
-	(up-target-point gl-scout-x action-move -1 -1)
-	(chat-to-player my-player-number "Too close to edge of the map")
-)
 
 #end-if
 #end-if
@@ -1844,6 +1844,8 @@
 
 ;prevent overgathering of berries if farms are available
 
+;task foragers to farms
+
 (defrule ;find foragers
 	(idle-farm-count > 0)
 	(unit-type-count villager-forager > 4)
@@ -1887,6 +1889,51 @@
 	(chat-local-to-self "Microing foragers to farms")
 )
 
+; ;task foragers to boar (not safe, needs better conditions)
+
+; (defrule ;find foragers
+	; (unit-type-count villager-forager > 4)
+; =>
+	; (up-full-reset-search)
+	; ; (up-get-point position-self gl-self-x) ; finds home TC
+	; ; (up-set-target-point gl-self-x)
+	; (up-find-local c: 354 c: 240) ;female forager
+	; (up-find-local c: 120 c: 240) ;male forager
+	; (up-remove-objects search-local object-data-index > 3)
+	; (up-get-search-state gl-local-total)
+	; ;(up-chat-data-to-player my-player-number "Amount of foragers: %d" g: gl-local-total)
+; )
+
+; (defrule; find idle farms
+	; (up-compare-goal gl-local-total <= 4)
+	; (up-compare-goal gl-local-total > 0)
+	; (unit-type-count villager-forager > 4)
+; =>
+	; (up-modify-sn sn-focus-player-number c: 0)
+	; (up-filter-distance c: -1 c: 10) ; only finds dead boars within 10 tiles of home TC
+	; (up-filter-status c: status-gather c: list-inactive)
+	; (up-find-status-remote c: boar-class c: 1)
+	; (up-find-status-remote c: livestock-class c: 1)
+	; ;(up-remove-objects search-remote 32 > 6)
+	; (up-remove-objects search-remote 16 < 80) ;remove boars with less than 80 food on them
+	; (up-remove-objects search-remote -1 > 0) ;select only one object
+	; (up-clean-search search-remote 44 1) ; sort free farms closest to home TC
+	; (up-get-search-state gl-local-total)
+	; ;(up-chat-data-to-player my-player-number "Amount of dead boars: %d" g: gl-remote-total)
+; )
+
+; (defrule
+	; (up-compare-goal gl-local-total <= 4)
+	; (up-compare-goal gl-local-total > 0)
+	; (up-compare-goal gl-remote-total > 0); is there a free farm?
+	; ;(up-compare-goal gl-remote-total g:>= gl-local-total) ;are there more or equal free farms than foragers?
+	; (unit-type-count villager-forager > 4)
+; =>
+	; (up-remove-objects search-remote -1 g:>= gl-local-total) ; removes any excess idle farms
+	; (up-remove-objects search-local -1 g:>= gl-remote-total) ; removes any excess foragers
+	; (up-target-objects 0 action-default -1 -1) ; send idle villagers to idle farms
+	; (chat-local-to-self "Microing foragers to boar")
+; )
 
 ;endregion
 
@@ -6586,7 +6633,7 @@
 	(up-modify-escrow wood c:- 50)
 	(up-modify-escrow stone c:- 125)
 	(up-assign-builders c: watch-tower c: 6)
-	(up-set-placement-data my-player-number mining-camp c: -2)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
     (up-build place-control 0 c: watch-tower)
 	(chat-to-player my-player-number "Building defensive tower")
 )
@@ -6607,7 +6654,7 @@
 	(up-modify-escrow wood c:- 75)
 	(up-modify-escrow stone c:- 175)
 	(up-assign-builders c: donjon c: 6)
-	(up-set-placement-data my-player-number mining-camp c: -2)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
     (up-build place-control 0 c: donjon)
 	(chat-to-player my-player-number "Building defensive donjon")
 )
@@ -6627,7 +6674,7 @@
 =>
 	(up-modify-escrow wood c:- 50)
 	(up-modify-escrow stone c:- 125)
-	(up-set-placement-data my-player-number lumber-camp c: -2)
+	(up-set-placement-data my-player-number mining-camp c: -2)
 	(up-assign-builders c: watch-tower c: 6)
     (up-build place-control 0 c: watch-tower)
 	;(build watch-tower)
@@ -6649,7 +6696,7 @@
 =>
 	(up-modify-escrow wood c:- 75)
 	(up-modify-escrow stone c:- 175)
-	(up-set-placement-data my-player-number lumber-camp c: -2)
+	(up-set-placement-data my-player-number mining-camp c: -2)
 	(up-assign-builders c: donjon c: 6)
     (up-build place-control 0 c: donjon)
 	(chat-to-player my-player-number "Building defensive donjon")
@@ -6668,7 +6715,7 @@
 	(up-modify-escrow wood c:- 50)
 	(up-modify-escrow stone c:- 125)
 	(up-assign-builders c: watch-tower c: 6)
-	(up-set-placement-data my-player-number mining-camp c: -2)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
     (up-build place-control 0 c: watch-tower)
 	(chat-to-player my-player-number "Building defensive tower")
 )
@@ -6688,7 +6735,7 @@
 	(up-modify-escrow wood c:- 75)
 	(up-modify-escrow stone c:- 175)
 	(up-assign-builders c: donjon c: 6)
-	(up-set-placement-data my-player-number mining-camp c: -2)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
     (up-build place-control 0 c: donjon)
 	(chat-to-player my-player-number "Building defensive donjon")
 )
@@ -6707,7 +6754,7 @@
 =>
 	(up-modify-escrow wood c:- 50)
 	(up-modify-escrow stone c:- 125)
-	(up-set-placement-data my-player-number lumber-camp c: -2)
+	(up-set-placement-data my-player-number mining-camp c: -2)
 	(up-assign-builders c: watch-tower c: 6)
     (up-build place-control 0 c: watch-tower)
 	;(build watch-tower)
@@ -6728,7 +6775,7 @@
 =>
 	(up-modify-escrow wood c:- 75)
 	(up-modify-escrow stone c:- 175)
-	(up-set-placement-data my-player-number lumber-camp c: -2)
+	(up-set-placement-data my-player-number mining-camp c: -2)
 	(up-assign-builders c: donjon c: 6)
     (up-build place-control 0 c: donjon)
 	(chat-to-player my-player-number "Building defensive donjon")
@@ -7224,7 +7271,8 @@
 	(or (players-unit-type-count focus-player mangonel-line >= 1)
 	(or (players-unit-type-count focus-player scorpion-line >= 1)
 	(or (players-unit-type-count focus-player archer-line >= 10)
-	(players-unit-type-count focus-player battering-ram-line >= 1))))
+	(or (players-unit-type-count focus-player skirmisher-line >= 10)
+	(players-unit-type-count focus-player battering-ram-line >= 1)))))
 	(can-train-with-escrow mangonel-line)
 	(unit-type-count-total mangonel-line < 1)
 =>
@@ -7239,7 +7287,8 @@
 	(or (players-unit-type-count focus-player mangonel-line >= 1)
 	(or (players-unit-type-count focus-player scorpion-line >= 1)
 	(or (players-unit-type-count focus-player archer-line >= 10)
-	(players-unit-type-count focus-player battering-ram-line >= 1))))
+	(or (players-unit-type-count focus-player skirmisher-line >= 10)
+	(players-unit-type-count focus-player battering-ram-line >= 1)))))
 	(can-train mangonel-line)
 	(unit-type-count-total mangonel-line <= 5)
 =>
@@ -7252,7 +7301,8 @@
 	(or (players-unit-type-count focus-player scorpion-line >= 1)
 	(or (players-unit-type-count focus-player mangonel-line >= 1)
 	(or (players-unit-type-count focus-player battering-ram-line >= 1)
-	(players-unit-type-count focus-player archer-line >= 6))))
+	(or (players-unit-type-count focus-player archer-line >= 6)
+	(players-unit-type-count focus-player skirmisher-line >= 6)))))
 	(can-train mangonel-line)
 	(research-completed ri-onager)
 =>
@@ -11354,7 +11404,7 @@
 (defrule
 	(current-age == feudal-age)
 	(timer-triggered 8)
-	(food-amount >= 550) ;600
+	(food-amount >= 500) ;600
 	(up-modify-goal gl-feudalup-compare g:= f-villager-goal)
 	(up-modify-goal gl-feudalup-compare c:- 5)
 	(unit-type-count-total villager g:< gl-feudalup-compare)
@@ -11400,7 +11450,7 @@
 (defrule
 	(current-age == feudal-age)
 	(timer-triggered 8)
-	(food-amount < 550) ;600
+	(food-amount < 500) ;600
 	(gold-amount < 325) ;375
 	(up-modify-goal gl-feudalup-compare g:= f-villager-goal)
 	(up-modify-goal gl-feudalup-compare c:- 1)
@@ -11416,7 +11466,7 @@
 (defrule
 	(current-age == feudal-age)
 	(timer-triggered 8)
-	(food-amount < 550) ;600
+	(food-amount < 500) ;600
 	(gold-amount >= 325) ;375
 	(building-type-count market == 0)
 	(up-modify-goal gl-feudalup-compare g:= f-villager-goal)
@@ -11469,7 +11519,7 @@
 	(disable-timer 8)
 	(up-modify-goal c-villager-goal c:- 1)
 	(up-chat-data-to-self "Castle-Age villager goal: %d" g: c-villager-goal)
-	(enable-timer 8 25)
+	(enable-timer 8 10)
 )
 
 (defrule
@@ -11484,7 +11534,7 @@
 	(disable-timer 8)
 	(up-modify-goal c-villager-goal g:= civilian-pop)
 	(up-chat-data-to-self "Castle-Age villager goal: %d" g: c-villager-goal)
-	(enable-timer 8 25)
+	(enable-timer 8 10)
 )
 
 (defrule
@@ -15460,6 +15510,18 @@
 )
 
 (defrule
+	(goal strategy-goal sg-towerrush)
+	(can-research ri-loom)
+	(nor(civ-selected mayan)
+		(civ-selected chinese))
+	(civilian-population > 17)
+	(goal drush-goal 1)
+=>
+	(research ri-loom)
+)
+
+
+(defrule
 	(can-research ri-loom)
 	(or(civ-selected mayan)
 		(civ-selected chinese))
@@ -17241,6 +17303,23 @@
 )
 
 (defrule
+	(goal strategy-goal sg-scoutrush)
+	(goal meso-civ YES)
+	(current-age >= dark-age)
+	(civilian-population >= 21)
+	(building-type-count-total mining-camp == 0)
+	(resource-found gold)
+	(dropsite-min-distance gold < 255)
+;	(up-gaia-type-count c: gold-mine-class >= 1)
+	(can-build mining-camp)
+=>
+	(set-strategic-number sn-allow-adjacent-dropsites 0)
+    (set-strategic-number sn-gold-dropsite-distance 6)
+    (set-strategic-number sn-stone-dropsite-distance 200)
+	(build mining-camp)
+)
+
+(defrule
 	(goal strategy-goal sg-towerrush)
 	(current-age == dark-age)
 	(civilian-population >= 18)
@@ -17759,17 +17838,51 @@
 	(up-gather-inside c: barracks c: 0)
 	(up-ungarrison c: barracks)
 	(attack-now)
-	;(chat-to-allies "31")
+	(chat-to-player my-player-number "Starting an attack")
 )
 
 (defrule	
-	(or (up-research-status c: feudal-age == research-pending)
-	(or (up-research-status c: castle-age == research-pending)
-	(up-research-status c: imperial-age == research-pending)))
+	(up-research-status c: feudal-age == research-pending)
 	(town-under-attack)
 =>
 	(up-ungarrison c: town-center)
-	(chat-to-player my-player-number "Debug Garrisoned Town-Center during age-up")
+	(chat-to-player my-player-number "Debug garrisoned Town-Center during age-up")
+	(disable-self)
+)
+
+(defrule	
+	(up-research-status c: castle-age == research-pending)
+	(town-under-attack)
+=>
+	(up-ungarrison c: town-center)
+	(chat-to-player my-player-number "Debug garrisoned Town-Center during age-up")
+	(disable-self)
+)
+
+(defrule	
+	(up-research-status c: imperial-age == research-pending)
+	(town-under-attack)
+=>
+	(up-ungarrison c: town-center)
+	(chat-to-player my-player-number "Debug garrisoned Town-Center during age-up")
+	(disable-self)
+)
+
+(defrule	
+	(up-research-status c: ri-wheel-barrow == research-pending)
+	(town-under-attack)
+=>
+	(up-ungarrison c: town-center)
+	(chat-to-player my-player-number "Debug garrisoned Town-Center during age-up")
+	(disable-self)
+)
+
+(defrule	
+	(up-research-status c: ri-hand-cart == research-pending)
+	(town-under-attack)
+=>
+	(up-ungarrison c: town-center)
+	(chat-to-player my-player-number "Debug garrisoned Town-Center during age-up")
 	(disable-self)
 )
 
@@ -18076,7 +18189,7 @@
 (defrule
 	(current-age > dark-age)
 =>
-	(up-jump-rule 17)
+	(up-jump-rule 18) ;14 
 )
 
 
@@ -18130,7 +18243,8 @@
 
 (defrule
 	(nor (goal strategy-goal sg-scoutrush)
-	(goal strategy-goal sg-towerrush))
+	(nor (goal strategy-goal sg-towerrush)
+	(goal strategy-goal sg-drush)))
 	(unit-type-count villager >= 10) 
 	(goal boar-hunting 0)
 	(dropsite-min-distance live-boar < 32)
@@ -18138,7 +18252,7 @@
 	(goal g-boar-status 1)
 =>
 	(set-goal boar-hunting 1)
-	(set-strategic-number sn-enable-boar-hunting 2)
+	;(set-strategic-number sn-enable-boar-hunting 2)!
 	; (set-strategic-number sn-minimum-number-hunters 1)
 	; (set-strategic-number sn-maximum-food-drop-distance 15)
 	; (set-strategic-number sn-maximum-hunt-drop-distance 32)
@@ -18149,7 +18263,8 @@
 
 (defrule
 	(or (goal strategy-goal sg-scoutrush)
-	(goal strategy-goal sg-towerrush))
+	(or (goal strategy-goal sg-towerrush)
+	(goal strategy-goal sg-drush)))
 	(unit-type-count villager >= 9) 
 	(goal boar-hunting 0)
 	(dropsite-min-distance live-boar < 32)
@@ -18157,7 +18272,7 @@
 	(goal g-boar-status 1)
 =>
 	(set-goal boar-hunting 1)
-	(set-strategic-number sn-enable-boar-hunting 2)
+	;(set-strategic-number sn-enable-boar-hunting 2)!
 	; (set-strategic-number sn-minimum-number-hunters 1)
 	; (set-strategic-number sn-maximum-food-drop-distance 15)
 	; (set-strategic-number sn-maximum-hunt-drop-distance 32)
@@ -18181,7 +18296,7 @@
 	(up-find-local c: 122 c: 240) ;male hunter
 	(up-remove-objects search-local object-data-group-flag == 2)
 	(up-remove-objects search-local object-data-hitpoints < 25)
-	(up-remove-objects search-local -1 > 0) ;find one shepherd
+	(up-remove-objects search-local -1 > 0) ;find one shepherd/hunter
 	(up-reset-group c: 3)
 	(up-create-group 0 0 c: 3) ;boar-lurer ctrl-group
 	(up-modify-group-flag 1 c: 3)
@@ -18195,7 +18310,7 @@
 	(dropsite-min-distance live-boar < 32)
 	(dropsite-min-distance live-boar > 0)
 	(unit-type-count villager >= 9) 
-	(strategic-number sn-enable-boar-hunting != 1)
+	;(up-compare-sn sn-enable-boar-hunting != 1)!
 =>
 	(up-full-reset-search)
 	(up-find-local c: 590 c: 240) ;female shepherd
@@ -18215,9 +18330,9 @@
 
 (defrule
 	(goal boar-hunting 1)
-	(up-group-size c: 3 == 1)
-	(up-compare-goal gl-local-total == 1)
-	(strategic-number sn-enable-boar-hunting != 1)
+	(up-group-size c: 3 == 1) 
+	(up-compare-goal gl-local-total == 1) 
+	;(up-compare-sn sn-enable-boar-hunting != 1)!
 	(dropsite-min-distance live-boar < 32)
 	(dropsite-min-distance live-boar > 0)
 	(unit-type-count villager >= 9) 
@@ -18225,9 +18340,9 @@
 =>
 	(disable-timer 5)
 	(set-goal boar-hunting 2)
-	(up-set-group search-local c: 3)
-	(up-set-target-by-id g: g-boar-id)
-	(up-target-objects 1 action-default -1 -1)
+	(up-set-group search-local c: 3) 
+	(up-set-target-by-id g: g-boar-id) 
+	(up-target-objects 1 action-default -1 -1) 
 	(set-strategic-number sn-enable-boar-hunting 2)
 	(set-strategic-number sn-minimum-number-hunters 1)
 	(set-strategic-number sn-maximum-food-drop-distance 15)
@@ -18270,7 +18385,7 @@
 	(dropsite-min-distance live-boar > 0)
 =>
     (up-set-target-point gl-starting-tc-x)
-    (up-filter-distance c: -1 c: 5)
+    (up-filter-distance c: -1 c: 6)
 	;(up-filter-exclude -1 -1 orderid-hunt -1)
 	(up-find-local c: villager-class c: 10)
 	(up-remove-objects search-local object-data-group-flag == 3)
@@ -18342,7 +18457,7 @@
     (up-reset-search 0 0 1 1)
 	(set-strategic-number sn-focus-player-number 0)
 	(up-set-target-point gl-starting-tc-x)
-	(up-filter-distance c: -1 c: 6)
+	(up-filter-distance c: -1 c: 5)
 	(up-find-remote c: boar-class c: 20)
 	;(up-remove-objects search-remote object-data-hitpoints <= 20)
 	(up-find-local c: town-center c: 1) 
@@ -18408,7 +18523,7 @@
 	(dropsite-min-distance live-boar > 0)
 	(goal boar-hunting 2)
 	;(up-set-target-by-id g: g-boar-id)
-	(up-object-data object-data-carry < 100)
+	(up-object-data object-data-carry < 95)
 	(up-compare-sn sn-minimum-number-hunters != 1)
 	(up-compare-sn sn-disable-villager-garrison == 0) ;are we currently luring a boar?
 =>
@@ -18522,6 +18637,7 @@
 	(set-strategic-number sn-number-explore-groups 1)
 	(set-strategic-number sn-total-number-explorers 1)
 	(set-strategic-number sn-enable-research-queue 1)
+	(set-strategic-number sn-disable-builder-assistance 0)
 	(disable-self)
 )
 
@@ -19524,6 +19640,7 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
+	(goal meso-civ NO)
 	(current-age == feudal-age)
 	(civilian-population >= 20)
 	(or (building-type-count-total stable > 0)
@@ -19537,6 +19654,7 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
+	(goal meso-civ NO)
 	(current-age == feudal-age)
 	(civilian-population >= 20)
 	(or (building-type-count-total stable > 0)
@@ -19552,9 +19670,68 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
+	(goal meso-civ NO)
 	(current-age == feudal-age)
 	(civilian-population >= 20)
 	(or (building-type-count-total stable > 0)
+	(building-type-count-total barracks > 1))
+	(idle-farm-count < 1)
+	(can-build farm)
+	(up-compare-goal gl-water-on-map == 1)
+	(building-type-count-total dock < 1)
+=>
+	(build farm)
+)
+
+(defrule
+	(goal strategy-goal sg-scoutrush)
+	(goal meso-civ YES)
+	(current-age == feudal-age)
+	(civilian-population >= 20)
+	(building-type-count-total blacksmith < 1)
+	(idle-farm-count < 1)
+	(can-build farm)
+	(building-type-count-total farm < 8)
+	(up-compare-goal gl-water-on-map != 1)
+=>
+	(build farm)
+)
+
+(defrule
+	(goal strategy-goal sg-scoutrush)
+	(goal meso-civ YES)
+	(current-age == feudal-age)
+	(civilian-population >= 20)
+	(building-type-count-total blacksmith > 0)
+	(idle-farm-count < 1)
+	(can-build farm)
+	(up-compare-goal gl-water-on-map != 1)
+=>
+	(build farm)
+)
+
+(defrule
+	(goal strategy-goal sg-scoutrush)
+	(goal meso-civ YES)
+	(current-age == feudal-age)
+	(civilian-population >= 20)
+	(or (building-type-count-total blacksmith > 0)
+	(building-type-count-total barracks > 1))
+	(idle-farm-count < 1)
+	(can-build farm)
+	(up-compare-goal gl-water-on-map == 1)
+	(building-type-count-total dock > 0)
+	(wood-amount > 85)
+=>
+	(build farm)
+)
+
+(defrule
+	(goal strategy-goal sg-scoutrush)
+	(goal meso-civ YES)
+	(current-age == feudal-age)
+	(civilian-population >= 20)
+	(or (building-type-count-total blacksmith > 0)
 	(building-type-count-total barracks > 1))
 	(idle-farm-count < 1)
 	(can-build farm)
@@ -20793,7 +20970,6 @@
 
 ;region Build Order Castle =========================================
 
-;#load-if-defined UP-SCENARIO-GAME
 
 (defrule
 	(current-age == feudal-age)
@@ -20905,8 +21081,6 @@
 	;(up-modify-sn sn-camp-max-distance c:+ 10)
 	(disable-self)
 )
-
-;#end-if
 
 (defrule
 	(current-age == castle-age)
@@ -21592,6 +21766,7 @@
 	(current-age == castle-age)
 	(or (military-population >= 15)
 	(up-compare-goal gl-military-advantage >= 10))
+	(up-compare-goal gl-military-advantage >= -10)
 	(can-build-with-escrow castle)
 	(not (civ-selected slavic))
 	(goal gl-stone-saving 38)
@@ -21610,6 +21785,7 @@
 	(current-age == imperial-age)
 	(or (military-population >= 15)
 	(up-compare-goal gl-military-advantage >= 10))
+	(up-compare-goal gl-military-advantage >= -10)
 	(can-build castle)
 =>
 	(up-assign-builders c: castle c: 10)
@@ -21641,6 +21817,7 @@
 	(current-age == castle-age)
 	(or (military-population >= 15)
 	(up-compare-goal gl-military-advantage >= 10))
+	(up-compare-goal gl-military-advantage >= -10)
 	(can-build-with-escrow castle)
 	(civ-selected slavic)
 	(goal gl-stone-saving 38)
@@ -21682,6 +21859,7 @@
 	(current-age == castle-age)
 	(or (military-population >= 15)
 	(up-compare-goal gl-military-advantage >= 10))
+	(up-compare-goal gl-military-advantage >= -10)
 	(can-build-with-escrow castle)
 	(civ-selected slavic)
 	(goal gl-stone-saving 38)
@@ -21760,6 +21938,7 @@
 	(or (military-population >= 15)
 	(up-compare-goal gl-military-advantage >= 10))
 	(can-build castle)
+	(up-compare-goal gl-military-advantage >= -10)
 =>
 	(up-assign-builders c: castle c: 10)
 	(up-set-placement-data focus-player -1 c: 9)
@@ -21773,6 +21952,7 @@
 	(or (military-population >= 15)
 	(up-compare-goal gl-military-advantage >= 10))
 	(can-build castle)
+	(up-compare-goal gl-military-advantage >= -10)
 =>
 	(up-assign-builders c: castle c: 10)
 	(build-forward castle)
@@ -21828,6 +22008,7 @@
 	(current-age == castle-age)
 	(or (military-population >= 15)
 	(up-compare-goal gl-military-advantage >= 8))
+	(up-compare-goal gl-military-advantage >= -10)
 	(can-build-with-escrow krepost)
 	(goal strategy-goal sg-fastcastle-uu)
 	(goal gl-stone-saving 39)
@@ -21843,6 +22024,7 @@
 	(current-age == imperial-age)
 	(or (military-population >= 15)
 	(up-compare-goal gl-military-advantage >= 8))
+	(up-compare-goal gl-military-advantage >= -10)
 	(can-build krepost)
 	(building-type-count-total castle >= 1)
 =>
@@ -26671,6 +26853,7 @@
 	(up-research-status c: imperial-age == research-pending))
 	(or 
 		(nor (players-unit-type-count focus-player knight-line >= 6) 
+		(nor (players-unit-type-count focus-player battle-elephant-line >= 6) 
 		(nor (players-unit-type-count focus-player militiaman-line >= 6) 
 		(players-unit-type-count focus-player archery-cannon-class >= 3)))
 		(or (unit-type-count-total spearman-line >= 3)
@@ -26691,6 +26874,7 @@
 	(up-research-status c: imperial-age == research-pending))
 	(or 
 		(nor (players-unit-type-count focus-player knight-line >= 6) 
+		(nor (players-unit-type-count focus-player battle-elephant-line >= 6) 
 		(nor (players-unit-type-count focus-player militiaman-line >= 6) 
 		(players-unit-type-count focus-player archery-cannon-class >= 3)))
 		(or (unit-type-count-total infantry-class >= 3)
