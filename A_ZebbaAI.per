@@ -41,15 +41,15 @@
 ;ToDo: 
 
 ;what's up next:
-; - increase priority to target enemy siege units
-; - split up feudal-age and post castle-age tc retreat rules
-; - change escrow-rules for counter units, skirmisher production delay upgrades and building placements a lot
-; - modify rules to gather units inside production buildings when town not under attack and AI has a hug military
-; disadvantage
+; - split up tc retreat rules into feudal-age and post castle-age
+; - change escrow-rules for counter units, skirmisher production delays upgrades and building placements a lot
+; - fix attack-rules, AI seems to not retreat at any time
+; - add "closest-player-next" and set it to focus-players for team-game pocket-players
 ; - add market-price check before buying/selling resources
+; - remake towerrush completely due to high number of bugs
 ; - expand tc-shooting debugging for every tc-upgrade
 ; - retreat with army in dark-age in drushes if villager number is to high (bug potential)
-; - fix retreating of towers, use different goal for spotting a tower and tower-retreat rules (testing)
+; - fix retreating from enemy towers, use different goal for spotting a tower and tower-retreat rules (testing)
 ; - switch off builder assistance in dark-age, activate in feudal-age 
 ; - assign every build order to current-age
 ; - build feudal-age production buildings in safer spots when being drushed
@@ -854,7 +854,7 @@
 	(up-set-offense-priority c: spearman-line c: 6)
 	(up-set-offense-priority c: eagle-warrior-line c: 9)
     (up-set-offense-priority c: archer-line c: 10)
-	(up-set-offense-priority c: skirmisher-line c: 7)
+	(up-set-offense-priority c: skirmisher-line c: 5)
 	(up-set-offense-priority c: scout-cavalry-line c: 9)
     (up-set-offense-priority c: knight-line c: 2)
 	(up-set-offense-priority c: camel-line c: 1)
@@ -996,7 +996,7 @@
 	(up-set-offense-priority c: battering-ram-line c: 10)
 	(up-set-offense-priority c: armored-elephant-line c: 9)
 	(up-set-offense-priority c: mangonel-line c: 9)
-	(up-set-offense-priority c: scorpion-line c: 6)
+	(up-set-offense-priority c: scorpion-line c: 8)
 	(up-set-offense-priority c: bombard-cannon-line c: 9)	
 	(up-set-offense-priority c: fishing-ship c: 10)
 )
@@ -1060,7 +1060,7 @@
 	(up-set-offense-priority c: monk c: 11)
 	(up-set-offense-priority c: battering-ram-line c: 10)
 	(up-set-offense-priority c: armored-elephant-line c: 9)
-	(up-set-offense-priority c: mangonel-line c: 8)
+	(up-set-offense-priority c: mangonel-line c: 10)
 	(up-set-offense-priority c: scorpion-line c: 9)
 	(up-set-offense-priority c: bombard-cannon-line c: 9)	
 	(up-set-offense-priority c: fishing-ship c: 10)
@@ -1124,9 +1124,9 @@
 	(up-set-offense-priority c: cavalry-archer-line c: 8)
 	(up-set-offense-priority c: battering-ram-line c: 1)
 	(up-set-offense-priority c: armored-elephant-line c: 1)
-	(up-set-offense-priority c: mangonel-line c: 3)
-	(up-set-offense-priority c: scorpion-line c: 3)
-	(up-set-offense-priority c: bombard-cannon-line c: 3)	
+	(up-set-offense-priority c: mangonel-line c: 9)
+	(up-set-offense-priority c: scorpion-line c: 9)
+	(up-set-offense-priority c: bombard-cannon-line c: 9)	
 	(up-set-offense-priority c: fishing-ship c: 10)
 )
 
@@ -4826,6 +4826,16 @@
 	(train urumi-swordsman-line)
 )
 
+(defrule
+	(current-age >= castle-age)
+	(or (players-unit-type-count focus-player infantry-class >= 6)
+	(players-unit-type-count focus-player siege-weapon-class >= 4))
+	(can-train throwing-axeman-line)
+	(building-type-count-total castle > 0)
+=>
+	(train throwing-axeman-line)
+)
+
 
 (defrule
 	(current-age == castle-age)
@@ -6564,6 +6574,7 @@
 
 (defrule
 	(current-age == feudal-age)
+	(not (goal strategy-goal sg-towerrush))
 	(or (up-compare-goal gl-military-advantage <= -8)
 	(players-unit-type-count focus-player archer-line >= 6))
 	(or (military-population < 3)
@@ -6582,6 +6593,7 @@
 
 (defrule
 	(current-age == feudal-age)
+	(not (goal strategy-goal sg-towerrush))
 	(or (up-compare-goal gl-military-advantage <= -8)
 	(players-unit-type-count focus-player archer-line >= 6))
 	(or (military-population < 3)
@@ -6602,6 +6614,7 @@
 
 (defrule
 	(current-age == feudal-age)
+	(not (goal strategy-goal sg-towerrush))
 	(or (up-compare-goal gl-military-advantage <= -8)
 	(players-unit-type-count focus-player archer-line >= 6))
 	(or (military-population < 3)
@@ -6623,6 +6636,7 @@
 
 (defrule
 	(current-age == feudal-age)
+	(not (goal strategy-goal sg-towerrush))
 	(or (up-compare-goal gl-military-advantage <= -8)
 	(players-unit-type-count focus-player archer-line >= 6))
 	(or (military-population < 3)
@@ -11736,7 +11750,6 @@
 	(up-research-status c: castle-age >= research-pending)
 	(current-age < imperial-age)
 	(building-type-count-total town-center < 3)
-	(up-compare-goal gl-military-advantage < 18)
 	(up-compare-goal gl-military-advantage >= -10)
 	(goal gl-wood-saving 0)
 	(goal gl-stone-saving 0)
@@ -11754,8 +11767,7 @@
 	(up-research-status c: castle-age >= research-pending)
 	(or (building-type-count-total town-center >= 3)
 	(or (current-age >= imperial-age)
-	(or (up-compare-goal gl-military-advantage >= 23)
-	(up-compare-goal gl-military-advantage < -12))))
+	(up-compare-goal gl-military-advantage < -12)))
 	(goal gl-wood-saving 7)
 	(goal gl-stone-saving 7)
 	(not (goal strategy-goal sg-fastcastle-uu))
@@ -11774,7 +11786,6 @@
 	(current-age < imperial-age)
 	(building-type-count-total town-center < 3)
 	(building-type-count-total castle >= 1)
-	(up-compare-goal gl-military-advantage < 18)
 	(up-compare-goal gl-military-advantage >= -10)
 	(goal gl-wood-saving 0)
 	(goal gl-stone-saving 0)
@@ -11792,9 +11803,8 @@
 	(up-research-status c: castle-age >= research-pending)
 	(or (building-type-count-total town-center >= 3)
 	(or (current-age >= imperial-age)
-	(or (up-compare-goal gl-military-advantage >= 23)
 	(or (up-compare-goal gl-military-advantage < -12)
-	(building-type-count-total castle < 1)))))
+	(building-type-count-total castle < 1))))
 	(goal gl-wood-saving 7)
 	(goal gl-stone-saving 7)
 	(goal strategy-goal sg-fastcastle-uu)
@@ -11818,7 +11828,6 @@
 	(up-research-status c: castle-age >= research-pending)
 	(current-age < imperial-age)
 	(building-type-count-total town-center < 3)
-	(up-compare-goal gl-military-advantage < 18)
 	(up-compare-goal gl-military-advantage >= -10)
 	(goal gl-wood-saving 0)
 	(goal gl-stone-saving 0)
@@ -11835,9 +11844,8 @@
 (defrule
 	(up-research-status c: castle-age >= research-pending)
 	(or (current-age >= imperial-age)
-	(or (up-compare-goal gl-military-advantage >= 23)
 	(or (up-compare-goal gl-military-advantage < -12)
-	(building-type-count-total town-center >= 3))))
+	(building-type-count-total town-center >= 3)))
 	(goal gl-wood-saving 7)
 	(goal gl-stone-saving 7)
 	(not (goal strategy-goal sg-fastcastle-uu))
@@ -11856,7 +11864,6 @@
 	(current-age < imperial-age)
 	(building-type-count-total town-center < 3)
 	(building-type-count-total castle >= 1)
-	(up-compare-goal gl-military-advantage < 18)
 	(up-compare-goal gl-military-advantage >= -10)
 	(goal gl-wood-saving 0)
 	(goal gl-stone-saving 0)
@@ -11874,9 +11881,8 @@
 	(up-research-status c: castle-age >= research-pending)
 	(or (current-age >= imperial-age)
 	(or (building-type-count-total town-center >= 3)
-	(or (up-compare-goal gl-military-advantage >= 23)
 	(or (up-compare-goal gl-military-advantage < -12)
-	(building-type-count-total castle < 1)))))
+	(building-type-count-total castle < 1))))
 	(goal gl-wood-saving 7)
 	(goal gl-stone-saving 7)
 	(goal strategy-goal sg-fastcastle-uu)
@@ -20001,6 +20007,7 @@
 	(up-ungarrison c: siege-workshop)
 	(up-ungarrison c: donjon)
 	(attack-now)
+	(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
 
@@ -20030,6 +20037,7 @@
 	(up-ungarrison c: siege-workshop)
 	(up-ungarrison c: donjon)
 	(attack-now)
+	(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
 
@@ -20058,8 +20066,8 @@
 	(up-ungarrison c: archery-range)
 	(up-ungarrison c: stable)
 	(up-ungarrison c: siege-workshop)
-	(up-ungarrison c: donjon)
 	(attack-now)
+	(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
 
@@ -20087,6 +20095,9 @@
 	(up-gather-inside c: siege-workshop c: 0)
 	(up-gather-inside c: donjon c: 0)
 	(attack-now)
+	(up-ungarrison c: barracks)
+	(up-ungarrison c: archery-range)
+	(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
 
@@ -20117,6 +20128,7 @@
 	(up-ungarrison c: stable)
 	(up-ungarrison c: siege-workshop)
 	(up-ungarrison c: donjon)
+	(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
 
@@ -20145,6 +20157,7 @@
 	(up-ungarrison c: siege-workshop)
 	(up-ungarrison c: donjon)
 	(attack-now)
+	(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
 
@@ -20170,6 +20183,7 @@
 	(up-ungarrison c: siege-workshop)
 	(up-ungarrison c: donjon)
 	(attack-now)
+	(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
 
@@ -21250,7 +21264,6 @@
 	(can-build-with-escrow town-center)
 	(goal gl-wood-saving 7)
 	(goal gl-stone-saving 7)
-	(up-compare-goal gl-military-advantage < 23)
 	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 1)
 	(building-type-count-total town-center < 3)
@@ -21276,7 +21289,6 @@
 	(can-build-with-escrow town-center)
 	(goal gl-wood-saving 7)
 	(goal gl-stone-saving 7)
-	(up-compare-goal gl-military-advantage < 23)
 	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 1)
 	(building-type-count-total town-center < 3)
@@ -21302,7 +21314,6 @@
 	(can-build-with-escrow town-center)
 	(goal gl-wood-saving 7)
 	(goal gl-stone-saving 7)
-	(up-compare-goal gl-military-advantage < 23)
 	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 2)
 	(building-type-count-total town-center < 3)
@@ -21328,7 +21339,6 @@
 	(can-build-with-escrow town-center)
 	(goal gl-wood-saving 7)
 	(goal gl-stone-saving 7)
-	(up-compare-goal gl-military-advantage < 23)
 	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 2)
 	(building-type-count-total town-center < 3)
@@ -21422,10 +21432,9 @@
 	(game-time >= 2400)
 	(can-build town-center)
 	(building-type-count-total town-center == 3)
-	(up-compare-goal gl-military-advantage < 23)
 	(up-compare-goal gl-military-advantage >= -12)
 =>
-	(set-strategic-number sn-town-center-placement 0)
+	(set-strategic-number sn-town-center-placement lumber-camp)
 	(up-assign-builders c: town-center-foundation c: 6)
 	(up-assign-builders c: town-center c: 6)
 	(build town-center)
@@ -21437,10 +21446,9 @@
 	(can-build town-center)
 	(building-type-count-total town-center == 4)
 	(building-type-count-total town-center < 5)
-	(up-compare-goal gl-military-advantage < 23)
 	(up-compare-goal gl-military-advantage >= -12)
 =>
-	(set-strategic-number sn-town-center-placement 0)
+	(set-strategic-number sn-town-center-placement lumber-camp)
 	(up-assign-builders c: town-center-foundation c: 6)
 	(up-assign-builders c: town-center c: 6)
 	(build town-center)
@@ -21454,7 +21462,7 @@
 	(building-type-count-total town-center == 3)
 	(building-type-count-total town-center < 4)
 =>
-	(set-strategic-number sn-town-center-placement 0)
+	(set-strategic-number sn-town-center-placement lumber-camp)
 	(up-assign-builders c: town-center-foundation c: 6)
 	(up-assign-builders c: town-center c: 6)
 	(build town-center)
@@ -21470,7 +21478,7 @@
 	(building-type-count-total town-center < 7)
 	(up-compare-goal gl-military-advantage >= -12)
 =>
-	(set-strategic-number sn-town-center-placement 0)
+	(set-strategic-number sn-town-center-placement lumber-camp)
 	(set-strategic-number sn-allow-adjacent-dropsites 1)
 	(up-assign-builders c: town-center-foundation c: 6)
 	(up-assign-builders c: town-center c: 6)
@@ -22106,6 +22114,7 @@
 	(up-gather-inside c: donjon c: 0)
 	(up-gather-inside c: krepost c: 0)
 	(attack-now)
+	(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
 
@@ -25125,7 +25134,7 @@
 	(building-type-count-total town-center < 5)
 	(up-compare-goal gl-military-advantage >= -10)
 =>
-	(set-strategic-number sn-town-center-placement 0)
+	(set-strategic-number sn-town-center-placement lumber-camp)
 	(up-assign-builders c: town-center c: 6)
 	(up-assign-builders c: town-center-foundation c: 6)
 	(build town-center)
@@ -25484,6 +25493,7 @@
 	(up-gather-inside c: donjon c: 0)
 	(up-gather-inside c: krepost c: 0)
 	(attack-now)
+	(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
 
