@@ -18340,9 +18340,9 @@
 =>
 	(disable-timer 5)
 	(set-goal boar-hunting 2)
-	(up-set-group search-local c: 3) 
-	(up-set-target-by-id g: g-boar-id) 
-	(up-target-objects 1 action-default -1 -1) 
+	(up-set-group search-local c: 3)
+	(up-set-target-by-id g: g-boar-id)
+	(up-target-objects 1 action-default -1 -1)
 	(set-strategic-number sn-enable-boar-hunting 2)
 	(set-strategic-number sn-minimum-number-hunters 1)
 	(set-strategic-number sn-maximum-food-drop-distance 15)
@@ -18385,7 +18385,7 @@
 	(dropsite-min-distance live-boar > 0)
 =>
     (up-set-target-point gl-starting-tc-x)
-    (up-filter-distance c: -1 c: 6)
+    (up-filter-distance c: -1 c: 5)
 	;(up-filter-exclude -1 -1 orderid-hunt -1)
 	(up-find-local c: villager-class c: 10)
 	(up-remove-objects search-local object-data-group-flag == 3)
@@ -18457,7 +18457,7 @@
     (up-reset-search 0 0 1 1)
 	(set-strategic-number sn-focus-player-number 0)
 	(up-set-target-point gl-starting-tc-x)
-	(up-filter-distance c: -1 c: 5)
+	(up-filter-distance c: -1 c: 6)
 	(up-find-remote c: boar-class c: 20)
 	;(up-remove-objects search-remote object-data-hitpoints <= 20)
 	(up-find-local c: town-center c: 1) 
@@ -26855,7 +26855,7 @@
 		(nor (players-unit-type-count focus-player knight-line >= 6) 
 		(nor (players-unit-type-count focus-player battle-elephant-line >= 6) 
 		(nor (players-unit-type-count focus-player militiaman-line >= 6) 
-		(players-unit-type-count focus-player archery-cannon-class >= 3)))
+		(players-unit-type-count focus-player archery-cannon-class >= 3))))
 		(or (unit-type-count-total spearman-line >= 3)
 		(or (unit-type-count-total archer-line >= 3)
 		(unit-type-count-total monk >= 2)))
@@ -26876,7 +26876,7 @@
 		(nor (players-unit-type-count focus-player knight-line >= 6) 
 		(nor (players-unit-type-count focus-player battle-elephant-line >= 6) 
 		(nor (players-unit-type-count focus-player militiaman-line >= 6) 
-		(players-unit-type-count focus-player archery-cannon-class >= 3)))
+		(players-unit-type-count focus-player archery-cannon-class >= 3))))
 		(or (unit-type-count-total infantry-class >= 3)
 		(or (unit-type-count-total archer-line >= 3)
 		(unit-type-count-total monk >= 2)))
@@ -26918,6 +26918,14 @@
 	(set-escrow-percentage gold 0)
 	(set-goal gl-food-saving 0)
 	(set-goal gl-gold-saving 0)
+)
+
+(defrule
+	(current-age == castle-age)
+	(can-research ri-eagle-warrior)
+	(unit-type-count-total eagle-warrior-line >= 3)
+=>
+	(research ri-eagle-warrior)
 )
 
 (defrule
