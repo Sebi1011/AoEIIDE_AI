@@ -41,6 +41,12 @@
 ;ToDo: 
 
 ;what's up next:
+; - increase priority to target enemy siege units
+; - split up feudal-age and post castle-age tc retreat rules
+; - change escrow-rules for counter units, skirmisher production delay upgrades and building placements a lot
+; - modify rules to gather units inside production buildings when town not under attack and AI has a hug military
+; disadvantage
+; - add market-price check before buying/selling resources
 ; - expand tc-shooting debugging for every tc-upgrade
 ; - retreat with army in dark-age in drushes if villager number is to high (bug potential)
 ; - fix retreating of towers, use different goal for spotting a tower and tower-retreat rules (testing)
@@ -1253,20 +1259,22 @@
 )
 
 (defrule
-    (nor    (civ-selected aztec)
-    (nor    (civ-selected mayan)
-        (civ-selected incan)))
+    (not (civ-selected aztec))
+    (not (civ-selected mayan))
+    (not (civ-selected incan))
 =>
 	(set-goal meso-civ NO)
 	(disable-self)
 )
 
 (defrule
-    (or    (civ-selected aztec)
-    (or    (civ-selected mayan)
-        (civ-selected incan)))
-=>    (set-goal meso-civ YES)
-    (disable-self))
+    (or (civ-selected aztec)
+    (or (civ-selected mayan)
+    (civ-selected incan)))
+=>    
+	(set-goal meso-civ YES)
+    (disable-self)
+)
 
 ; (defrule
 	; (game-time > 10)
@@ -14008,11 +14016,11 @@
 
 (defrule										
 	(or	(current-age > castle-age)						
-		(or	(unit-type-count infantry-class > 15)				
+		(or	(unit-type-count infantry-class > 20)				
 			(or (unit-type-count cavalry-class > 15)
 				(or (unit-type-count battering-ram-line > 0)
 					(or (unit-type-count armored-elephant-line > 0)
-						(unit-type-count infantry-class > 20))))))	
+						(military-population > 25))))))	
 =>	
 	(up-jump-rule 13)
 )	
@@ -19664,11 +19672,8 @@
 	(building-type-count-total stable < 1)
 	(building-type-count-total town-center >= 1)
 	(can-build-with-escrow stable)
-	(wood-amount > 400)
 =>	
-	(release-escrow wood)
-	(set-escrow-percentage wood 0)
-	(set-goal gl-wood-saving 0)
+	(up-modify-escrow wood c:- 175)
 	(up-assign-builders c: stable c: 2)
 	; (set-strategic-number sn-placement-zone-size 0)
 	(up-set-placement-data my-player-number -1 c: 14)
@@ -21420,6 +21425,7 @@
 	(up-compare-goal gl-military-advantage < 23)
 	(up-compare-goal gl-military-advantage >= -12)
 =>
+	(set-strategic-number sn-town-center-placement 0)
 	(up-assign-builders c: town-center-foundation c: 6)
 	(up-assign-builders c: town-center c: 6)
 	(build town-center)
@@ -21434,6 +21440,7 @@
 	(up-compare-goal gl-military-advantage < 23)
 	(up-compare-goal gl-military-advantage >= -12)
 =>
+	(set-strategic-number sn-town-center-placement 0)
 	(up-assign-builders c: town-center-foundation c: 6)
 	(up-assign-builders c: town-center c: 6)
 	(build town-center)
@@ -21447,6 +21454,7 @@
 	(building-type-count-total town-center == 3)
 	(building-type-count-total town-center < 4)
 =>
+	(set-strategic-number sn-town-center-placement 0)
 	(up-assign-builders c: town-center-foundation c: 6)
 	(up-assign-builders c: town-center c: 6)
 	(build town-center)
@@ -21462,6 +21470,7 @@
 	(building-type-count-total town-center < 7)
 	(up-compare-goal gl-military-advantage >= -12)
 =>
+	(set-strategic-number sn-town-center-placement 0)
 	(set-strategic-number sn-allow-adjacent-dropsites 1)
 	(up-assign-builders c: town-center-foundation c: 6)
 	(up-assign-builders c: town-center c: 6)
@@ -25116,6 +25125,7 @@
 	(building-type-count-total town-center < 5)
 	(up-compare-goal gl-military-advantage >= -10)
 =>
+	(set-strategic-number sn-town-center-placement 0)
 	(up-assign-builders c: town-center c: 6)
 	(up-assign-builders c: town-center-foundation c: 6)
 	(build town-center)
@@ -27936,8 +27946,8 @@
 (defrule
 	(not (town-under-attack))
 	(current-age == feudal-age)
-	(or (military-population < 5)
-	(goal attack-now-goal 0))
+	(military-population < 4)
+	(not (goal strategy-goal sg-towerrush))
 =>
 	(up-gather-inside c: barracks c: 1)
 	(up-gather-inside c: archery-range c: 1)
@@ -27978,7 +27988,7 @@
 	(current-age == feudal-age)
 	(town-under-attack)
 	(building-type-count-total barracks > 0)
-	(or (military-population < 5)
+	(or (military-population < 4)
 	(military-population g:< enemy-military-pop))
 	(players-unit-type-count focus-player scout-cavalry-line < 2)
 =>
@@ -27991,7 +28001,7 @@
 	(current-age == feudal-age)
 	(town-under-attack)
 	(building-type-count-total barracks > 0)
-	(or (military-population >= 5)
+	(or (military-population >= 4)
 	(or (military-population g:>= enemy-military-pop)
 	(players-current-age focus-player < feudal-age)))
 	(players-unit-type-count focus-player scout-cavalry-line >= 2)
@@ -28018,7 +28028,7 @@
 	(current-age == feudal-age)
 	(town-under-attack)
 	(building-type-count-total barracks > 0)
-	(or (military-population >= 5)
+	(or (military-population >= 4)
 	(or (military-population g:>= enemy-military-pop)
 	(players-current-age focus-player < feudal-age)))
 =>
@@ -28031,7 +28041,7 @@
 	(current-age == feudal-age)
 	(not (town-under-attack))
 	(building-type-count-total barracks > 0)
-	(military-population < 5)
+	(military-population < 4)
 	(players-unit-type-count focus-player scout-cavalry-line >= 2)
 =>
 	(up-ungarrison c: barracks)
@@ -28043,7 +28053,7 @@
 	(current-age == feudal-age)
 	(town-under-attack)
 	(building-type-count-total archery-range > 0)
-	(or (military-population < 5)
+	(or (military-population < 6)
 	(military-population g:< enemy-military-pop))
 =>
 	(up-gather-inside c: archery-range c: 1)
@@ -28068,7 +28078,7 @@
 	(current-age == feudal-age)
 	(not (town-under-attack))
 	(building-type-count-total archery-range > 0)
-	(military-population >= 6)
+	(military-population >= 4)
 	(up-compare-goal gl-military-advantage >= -6)
 =>
 	(up-ungarrison c: archery-range)
@@ -28105,7 +28115,7 @@
 	(current-age == feudal-age)
 	(not (town-under-attack))
 	(building-type-count-total stable > 0)
-	(military-population >= 6)
+	(military-population >= 4)
 	(up-compare-goal gl-military-advantage >= -6)
 =>
 	(up-ungarrison c: stable)
@@ -28142,7 +28152,7 @@
 	(current-age == feudal-age)
 	(not (town-under-attack))
 	(building-type-count-total donjon > 0)
-	(military-population >= 6)
+	(military-population >= 4)
 =>
 	(up-ungarrison c: donjon)
 	(up-gather-inside c: donjon c: 0)
@@ -32033,7 +32043,7 @@
 )
 
 (defrule
-    (gold-amount > 900)
+    (gold-amount > 1000)
 	(food-amount < 100)
     (current-age == imperial-age)
     (building-type-count market >= 1)
@@ -32044,7 +32054,7 @@
 )
 
 (defrule
-    (gold-amount > 900)
+    (gold-amount > 1000)
 	(wood-amount < 100)
     (current-age >= castle-age)
     (building-type-count market >= 1)
@@ -32066,17 +32076,17 @@
     (chat-to-player my-player-number "Verkaufe Nahrung")
 )
 
-(defrule
-    (food-amount > 700)
-	(wood-amount < 200)
-	(gold-amount > 400)
-    (current-age == castle-age)
-    (building-type-count market >= 1)
-	(up-research-status c: imperial-age != research-pending)
-=>
-	(buy-commodity wood)
-    (chat-to-player my-player-number "Kaufe Holz")
-)
+; (defrule
+    ; (food-amount > 1100)
+	; (gold-amount > 400)
+	; (wood-amount < 200)
+    ; (current-age == castle-age)
+    ; (building-type-count market >= 1)
+	; (up-research-status c: imperial-age != research-pending)
+; =>
+	; (buy-commodity wood)
+    ; (chat-to-player my-player-number "Kaufe Holz")
+; )
 
 (defrule
     (stone-amount >= 500)
