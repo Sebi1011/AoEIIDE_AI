@@ -41,6 +41,7 @@
 ;ToDo: 
 
 ;what's up next:
+; - add production rules for mamelukes
 ; - try do disable offensive priorities
 ; - split up tc retreat rules into feudal-age and post castle-age
 ; - change escrow-rules for counter units, skirmisher production delays upgrades and building placements a lot
@@ -1118,10 +1119,11 @@
     (up-set-offense-priority c: archer-line c: 8)
 	(up-set-offense-priority c: skirmisher-line c: 7)
 	(up-set-offense-priority c: scout-cavalry-line c: 8)
-    (up-set-offense-priority c: knight-line c: 9)
-	(up-set-offense-priority c: camel-line c: 10)
+    (up-set-offense-priority c: knight-line c: 10)
+	(up-set-offense-priority c: camel-line c: 9)
 	(up-set-offense-priority c: battle-elephant-line c: 3)
 	(up-set-offense-priority c: cavalry-archer-line c: 8)
+	(up-set-offense-priority c: monk c: 11)
 	(up-set-offense-priority c: battering-ram-line c: 1)
 	(up-set-offense-priority c: armored-elephant-line c: 1)
 	(up-set-offense-priority c: mangonel-line c: 9)
@@ -1238,7 +1240,7 @@
 (defrule
 	(up-compare-goal gl-military-advantage <= -15)
 =>
-	(set-strategic-number sn-percent-building-cancellation 90)
+	(set-strategic-number sn-percent-building-cancellation 85)
 )
 
 (defrule
@@ -6626,6 +6628,7 @@
 	(players-unit-type-count focus-player archer-line >= 6))
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -6))
+	(military-population < 6)
 	;(town-under-attack)
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 2)
@@ -6645,6 +6648,7 @@
 	(players-unit-type-count focus-player archer-line >= 6))
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -6))
+	(military-population < 6)
 	;(town-under-attack)
 	(can-build-with-escrow donjon)
 	(building-type-count-total donjon < 2)
@@ -6666,6 +6670,7 @@
 	(players-unit-type-count focus-player archer-line >= 6))
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -6))
+	(military-population < 6)
 	(town-under-attack)
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 4)
@@ -6688,6 +6693,7 @@
 	(players-unit-type-count focus-player archer-line >= 6))
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -6))
+	(military-population < 6)
 	(town-under-attack)
 	(can-build-with-escrow donjon)
 	(building-type-count-total tower-class < 4)
@@ -6708,6 +6714,7 @@
 	(players-unit-type-count focus-player archer-line >= 6)
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -8))
+	(military-population < 8)
 	;(town-under-attack)
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 2)
@@ -6726,6 +6733,7 @@
 	(players-unit-type-count focus-player archer-line >= 6)
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -8))
+	(military-population < 8)
 	;(town-under-attack)
 	(can-build-with-escrow donjon)
 	(building-type-count-total donjon < 2)
@@ -6746,6 +6754,7 @@
 	(players-unit-type-count focus-player archer-line >= 6)
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -8))
+	(military-population < 8)
 	(town-under-attack)
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 4)
@@ -6767,6 +6776,7 @@
 	(players-unit-type-count focus-player archer-line >= 6)
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -8))
+	(military-population < 8)
 	(town-under-attack)
 	(can-build-with-escrow donjon)
 	(building-type-count-total tower-class < 4)
@@ -18634,13 +18644,37 @@
 (defrule
 	(current-age == feudal-age)
 =>
-	(set-strategic-number sn-number-explore-groups 1)
-	(set-strategic-number sn-total-number-explorers 1)
 	(set-strategic-number sn-enable-research-queue 1)
 	(set-strategic-number sn-disable-builder-assistance 0)
 	(disable-self)
 )
 
+
+(defrule
+	(current-age == feudal-age)
+	(up-compare-sn sn-number-explore-groups != 1)
+	(up-compare-sn sn-total-number-explorers != 1)
+	(or (unit-type-count scout-cavalry-line > 0)
+	(or (unit-type-count eagle-warrior-line > 0)
+	(or (unit-type-count camel-scout > 0)
+	(unit-type-count spearman-line > 0))))
+=>
+	(set-strategic-number sn-number-explore-groups 1)
+	(set-strategic-number sn-total-number-explorers 1)
+)
+
+(defrule
+	(current-age == feudal-age)
+	(up-compare-sn sn-number-explore-groups == 1)
+	(up-compare-sn sn-total-number-explorers == 1)
+	(nor (unit-type-count scout-cavalry-line > 0)
+	(nor (unit-type-count eagle-warrior-line > 0)
+	(nor (unit-type-count camel-scout > 0)
+	(unit-type-count spearman-line > 0))))
+=>
+	(set-strategic-number sn-number-explore-groups 0)
+	(set-strategic-number sn-total-number-explorers 0)
+)
 
 #load-if-defined UP-2-PLAYER-GAME
 (defrule 
