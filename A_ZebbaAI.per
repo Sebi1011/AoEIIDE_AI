@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 0.17.7
-;last update: 24th February 2023
+;Version: 0.18.1
+;last update: 26th February 2023
 
 ;Civs: Can play all civilizations
 ;Maps: besides standard maps like arabia, ZebbaAI can play nomad and other hybrid maps and custom maps. (Not optimized on water-maps though)
@@ -37,6 +37,7 @@
 ; - improved resource drop-off buildings in certain circumstances
 ; - added basic boar-hunting including tc-shooting
 ; - improved AIs resource saving system
+; - fixed several boar-hunting issues in dark-age
 
 ;ToDo: 
 
@@ -44,6 +45,7 @@
 ; - add production rules for mamelukes
 ; - try do disable offensive priorities
 ; - split up tc retreat rules into feudal-age and post castle-age
+; - put siege-units in a group and use them to attack certain buildings more precisely
 ; - change escrow-rules for counter units, skirmisher production delays upgrades and building placements a lot
 ; - fix attack-rules, AI seems to not retreat at any time
 ; - add "closest-player-next" and set it to focus-players for team-game pocket-players
@@ -54,8 +56,6 @@
 ; - assign every build order to current-age
 ; - build feudal-age production buildings in safer spots when being drushed
 ; - add escrow rules for the first 1/2/3 trebs
-; - expand boar-luring code with selection of boar-luring villager (without "sn-enable-boar-hunting 2"), a timer 
-; for shooting the boar and running back to tc (bug potential)
 ; - improve dark-age builder selection for building resource drop-off points
 ; - Eat only one sheep at a time (bug potential)
 ; - implement scouting-pattern for scouting own base (bug potential)
@@ -18293,7 +18293,7 @@
 	(up-remove-objects search-local object-data-action == actionid-build)
 	(up-set-target-by-id g: g-boar-id)
 	(up-target-objects 1 action-default -1 -1)
-	(chat-to-player my-player-number "enable boar-luring") 
+	;(chat-to-player my-player-number "enable boar-luring") 
 )
 
 (defrule
@@ -18331,7 +18331,7 @@
 	(up-remove-objects search-local object-data-action == actionid-build)
 	(up-set-target-by-id g: g-boar-id)
 	(up-target-objects 1 action-default -1 -1)
-	(chat-to-player my-player-number "enable boar-luring")
+	;(chat-to-player my-player-number "enable boar-luring")
 )
 
 (defrule ;find boar close to tc
@@ -18345,7 +18345,7 @@
 	(up-filter-distance c: -1 c: 5)
 	(up-find-remote c: boar-class c: 20)
 	(up-get-search-state gl-local-total)
-	(chat-to-player my-player-number "Boar Test")
+	;(chat-to-player my-player-number "Boar Test")
 )
 
 (defrule ;find villagers close to tc
@@ -18544,8 +18544,8 @@
 	(up-compare-sn sn-number-explore-groups == 1)
 	(up-compare-sn sn-total-number-explorers == 1)
 	(nor (unit-type-count scout-cavalry-line > 0)
-	(nor (unit-type-count eagle-warrior-line > 0)
-	(nor (unit-type-count camel-scout > 0)
+	(or (unit-type-count eagle-warrior-line > 0)
+	(or (unit-type-count camel-scout > 0)
 	(unit-type-count spearman-line > 0))))
 =>
 	(set-strategic-number sn-number-explore-groups 0)
@@ -20318,7 +20318,7 @@
 	(building-type-count-total blacksmith == 0)
 	(or (building-type-count-total archery-range >= 1)
 		(and (building-type-count-total stable >= 1)
-		(building-available stable)))
+		(goal meso-civ NO)))
 	(can-build blacksmith)
 =>
 	(build blacksmith)
@@ -20326,7 +20326,7 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
-	(not (building-available stable))
+	(goal meso-civ YES)
 	(current-age >= feudal-age)
 	(building-type-count-total blacksmith == 0)
 	(can-build blacksmith)
@@ -22075,8 +22075,8 @@
 	(unit-type-count-total knight-line >= 20))
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
-		(nor (players-unit-type-count focus-player scorpion-line >= 3)
-		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(or (players-unit-type-count focus-player scorpion-line >= 3)
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
 		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
@@ -22098,8 +22098,8 @@
 	(unit-type-count-total knight-line >= 20))
 	(or
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
-		(nor (players-unit-type-count focus-player scorpion-line >= 3)
-		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(or (players-unit-type-count focus-player scorpion-line >= 3)
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
 		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
 		(or (unit-type-count-total cavalry-class < 3)
 		(unit-type-count-total siege-weapon-class < 2))
@@ -22666,7 +22666,7 @@
 	(up-research-status c: imperial-age == research-pending))
 	(or 
 		(nor (players-unit-type-count focus-player spearman-line >= 15) 
-		(nor (players-unit-type-count focus-player monk >= 3) 
+		(or (players-unit-type-count focus-player monk >= 3) 
 		(players-unit-type-count focus-player camel-line >= 8)))
 		(or (unit-type-count-total infantry-class < 3)
 		(unit-type-count-total monk < 2))
@@ -22689,7 +22689,7 @@
 	(unit-type-count-total steppe-lancer-line <= 4)
 	(or 
 		(nor (players-unit-type-count focus-player spearman-line >= 15) 
-		(nor (players-unit-type-count focus-player monk >= 3) 
+		(or (players-unit-type-count focus-player monk >= 3) 
 		(players-unit-type-count focus-player camel-line >= 8)))
 		(or (unit-type-count-total infantry-class >= 3)
 		(unit-type-count-total monk >= 2))
@@ -22704,6 +22704,15 @@
 =>
 	(research ri-fletching)
 )
+
+(defrule
+	(unit-type-count-total archery-class >= 3)
+	(goal strategy-goal sg-archerrush)
+	(building-type-count-total blacksmith < 1)
+=>
+	(build blacksmith)
+)
+
 
 (defrule
 	(up-compare-goal gl-archery-class-units > 5)
@@ -26616,7 +26625,7 @@
 	(up-research-status c: imperial-age == research-pending))
 	(or 
 		(nor (players-unit-type-count focus-player spearman-line >= 15) 
-		(nor (players-unit-type-count focus-player monk >= 3) 
+		(or (players-unit-type-count focus-player monk >= 3) 
 		(players-unit-type-count focus-player archer-line >= 8)))
 		(or (unit-type-count-total skirmisher-line < 3)
 		(unit-type-count-total monk < 2))
@@ -26636,7 +26645,7 @@
 	(up-research-status c: imperial-age == research-pending))
 	(or 
 		(nor (players-unit-type-count focus-player spearman-line >= 15) 
-		(nor (players-unit-type-count focus-player monk >= 3) 
+		(or (players-unit-type-count focus-player monk >= 3) 
 		(players-unit-type-count focus-player archer-line >= 8)))
 		(or (unit-type-count-total skirmisher-line >= 3)
 		(unit-type-count-total monk >= 2))
@@ -26769,8 +26778,8 @@
 	(up-research-status c: imperial-age == research-pending))
 	(or 
 		(nor (players-unit-type-count focus-player knight-line >= 6) 
-		(nor (players-unit-type-count focus-player battle-elephant-line >= 6) 
-		(nor (players-unit-type-count focus-player militiaman-line >= 6) 
+		(or (players-unit-type-count focus-player battle-elephant-line >= 6) 
+		(or (players-unit-type-count focus-player militiaman-line >= 6) 
 		(players-unit-type-count focus-player archery-cannon-class >= 3))))
 		(or (unit-type-count-total spearman-line >= 3)
 		(or (unit-type-count-total archer-line >= 3)
@@ -26790,8 +26799,8 @@
 	(up-research-status c: imperial-age == research-pending))
 	(or 
 		(nor (players-unit-type-count focus-player knight-line >= 6) 
-		(nor (players-unit-type-count focus-player battle-elephant-line >= 6) 
-		(nor (players-unit-type-count focus-player militiaman-line >= 6) 
+		(or (players-unit-type-count focus-player battle-elephant-line >= 6) 
+		(or (players-unit-type-count focus-player militiaman-line >= 6) 
 		(players-unit-type-count focus-player archery-cannon-class >= 3))))
 		(or (unit-type-count-total infantry-class >= 3)
 		(or (unit-type-count-total archer-line >= 3)
@@ -26963,8 +26972,8 @@
 	(unit-type-count-total knight-line >= 20))
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
-		(nor (players-unit-type-count focus-player scorpion-line >= 3)
-		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(or (players-unit-type-count focus-player scorpion-line >= 3)
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
 		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
@@ -27005,8 +27014,8 @@
 	(unit-type-count-total knight-line >= 20))
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
-		(nor (players-unit-type-count focus-player scorpion-line >= 3)
-		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(or (players-unit-type-count focus-player scorpion-line >= 3)
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
 		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
@@ -27041,8 +27050,8 @@
 	(unit-type-count-total knight-line >= 20))
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
-		(nor (players-unit-type-count focus-player scorpion-line >= 3)
-		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(or (players-unit-type-count focus-player scorpion-line >= 3)
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
 		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
@@ -27093,8 +27102,8 @@
 	(unit-type-count-total knight-line >= 20))
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
-		(nor (players-unit-type-count focus-player scorpion-line >= 3)
-		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(or (players-unit-type-count focus-player scorpion-line >= 3)
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
 		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
@@ -27127,8 +27136,8 @@
 	(unit-type-count-total knight-line >= 20))
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
-		(nor (players-unit-type-count focus-player scorpion-line >= 3)
-		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(or (players-unit-type-count focus-player scorpion-line >= 3)
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
 		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
@@ -27163,8 +27172,8 @@
 	(unit-type-count-total knight-line >= 20))
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
-		(nor (players-unit-type-count focus-player scorpion-line >= 3)
-		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(or (players-unit-type-count focus-player scorpion-line >= 3)
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
 		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
@@ -27200,8 +27209,8 @@
 	(unit-type-count-total knight-line >= 20))
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
-		(nor (players-unit-type-count focus-player scorpion-line >= 3)
-		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(or (players-unit-type-count focus-player scorpion-line >= 3)
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
 		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
@@ -27235,8 +27244,8 @@
 	(unit-type-count-total knight-line >= 20))
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
-		(nor (players-unit-type-count focus-player scorpion-line >= 3)
-		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(or (players-unit-type-count focus-player scorpion-line >= 3)
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
 		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
@@ -27270,8 +27279,8 @@
 	(unit-type-count-total knight-line >= 20))
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
-		(nor (players-unit-type-count focus-player scorpion-line >= 3)
-		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(or (players-unit-type-count focus-player scorpion-line >= 3)
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
 		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
@@ -27305,8 +27314,8 @@
 	(unit-type-count-total knight-line >= 20))
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
-		(nor (players-unit-type-count focus-player scorpion-line >= 3)
-		(nor (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(or (players-unit-type-count focus-player scorpion-line >= 3)
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
 		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
