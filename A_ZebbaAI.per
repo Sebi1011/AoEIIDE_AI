@@ -289,8 +289,6 @@
 (defconst object-data-player 20)
 (defconst object-data-distance 44)
 
-(defconst boar-food 910)
-
 ;timers 
 
 (defconst retreating-timer 1)
@@ -484,7 +482,8 @@
 (defconst flare 274)
 (defconst g-boar-id 280)
 (defconst g-boar-status 281)
-
+(defconst remaining-boar-food 282)
+(defconst boar-food-amount 283)
 (defconst gl-distance-temp 289)
 (defconst gl-distance-temp-one 290)
 (defconst gl-distance-temp-two 291)
@@ -18159,144 +18158,68 @@
 
 ;region Hunting Boar (NEW, Still has some bugs) ====================
 
-; (defrule
-	; (unit-type-count villager >= 11)
-	; (dropsite-min-distance live-boar < 30)
-	; (dropsite-min-distance live-boar > 0)
-; =>
-	; (set-strategic-number sn-enable-boar-hunting 2)
-	; (set-strategic-number sn-minimum-number-hunters 1)
-	; (set-strategic-number sn-maximum-food-drop-distance 15)
-	; (set-strategic-number sn-maximum-hunt-drop-distance 30)
-	; (enable-timer tc-boar-shooting-timer 5)
-	; (disable-self)
-; )
-
-; (defrule
-	; (unit-type-count villager >= 11)
-	; (dropsite-min-distance live-boar < 9)
-	; (dropsite-min-distance live-boar > 0)
-	; (up-compare-sn sn-minimum-number-hunters != 5)
-; =>
-	; (set-strategic-number sn-minimum-number-hunters 5)
-	; (disable-self)
-; )
-
-; (defrule
-	; (unit-type-count villager >= 11)
-	; (dropsite-min-distance live-boar < 30)
-	; (dropsite-min-distance live-boar > 0)
-	; (up-remaining-boar-amount < 25)
-	; (up-compare-sn sn-minimum-number-hunters != 1)
-; =>
-	; (set-strategic-number sn-minimum-number-hunters 1)
-	; (enable-timer tc-boar-shooting-timer 5)
-	; (disable-self)
-; )
-
 ;shooting boar with tc code
 
 (defrule
 	(current-age > dark-age)
 =>
-	(up-jump-rule 18) ;14 
+	(up-jump-rule 15) ;18 
 )
 
-
 (defrule
-	(up-compare-sn sn-enable-boar-hunting != 2)
-	(up-compare-sn sn-minimum-number-hunters == 2)
 	(dropsite-min-distance live-boar < 32)
 	(dropsite-min-distance live-boar > 0)
-	(unit-type-count villager >= 10) 
 =>
-	(set-goal boar-hunting 2)
-	(set-goal g-boar-status 1)
-	(set-strategic-number sn-minimum-number-hunters 5)
-	(set-strategic-number sn-enable-boar-hunting 2)
-	(chat-to-player my-player-number "Spotted new boar, reset hunting restrictions")
+	(up-full-reset-search)	
+	(up-modify-sn sn-focus-player-number c:= 0)
+	(up-find-remote c: boar-class c: 1)
+	(up-set-target-object search-remote c: 0)
+	(up-get-object-data object-data-carry boar-food-amount)
+	(up-chat-data-to-self "Boars on this map have %d food" g: boar-food-amount) ;works
+	(disable-self)
 )
 	
 (defrule
-	(up-gaia-type-count c: boar-class > 0)
-	(unit-type-count villager-class >= 8)
+	(up-compare-goal g-boar-id != -1)						
+	(up-group-size c: 3 > 0)						
+=>	
+	(up-full-reset-search)					
+	(up-set-target-by-id g: g-boar-id)					
+	(up-get-object-data object-data-carry remaining-boar-food) ;get amount of food out target boar currently has
+	;(up-chat-data-to-self "Boar food remaining: %d" g: remaining-boar-food) ;works
+)	
+	
+(defrule
 	(dropsite-min-distance live-boar < 32)
 	(dropsite-min-distance live-boar > 0)
-	(goal boar-hunting 0)
-	(goal g-boar-status 0)
+	(or (and (unit-type-count villager-hunter < 1) 
+		(up-compare-goal g-boar-id == -1))	
+		(and (up-compare-goal remaining-boar-food c:<= 95)
+		(up-compare-goal remaining-boar-food > -1)))
 =>
 	(up-full-reset-search)
 	(up-modify-sn sn-focus-player-number c:= 0)
 	(up-set-target-point gl-starting-tc-x)
 	(up-filter-distance c: -1 c: 32)
-	(up-find-remote c: boar-class c: 1) ;Find a boar/elephant
-	(set-goal g-boar-status -2)
-)
-
-(defrule
-	(up-gaia-type-count c: boar-class > 0)
-	(unit-type-count villager-class >= 8)
+	(up-find-remote c: boar-class c: 4) ;find a boar
+	(up-remove-objects search-remote object-data-carry < 1) ;remove objects not carrying food
+	(up-clean-search search-remote object-data-distance search-order-desc)	;sort list to get most far away boar as first object
+	(up-remove-objects search-remote -1 > 0) ;remove all other boars in the list
 	(up-set-target-object search-remote c: 0)
-	(dropsite-min-distance live-boar < 32)
-	(dropsite-min-distance live-boar > 0)
-	(goal boar-hunting 0)
-	(goal g-boar-status -2)
-=>
-    (up-get-object-data object-data-id g-boar-id) ;Store the boar unique ID in a goal
-    (up-set-target-by-id g: g-boar-id)
-	(set-goal g-boar-status 1)
-	(enable-timer 5 1)
+	(up-get-object-data object-data-id g-boar-id) ;Store the boars ID in a goal
 	(chat-to-player my-player-number "Found a boar")
-	;(up-chat-data-to-player my-player-number "Boar id: %d " g: g-boar-id)
-)
-
-
-(defrule
-	(nor (goal strategy-goal sg-scoutrush)
-	(nor (goal strategy-goal sg-towerrush)
-	(goal strategy-goal sg-drush)))
-	(unit-type-count villager >= 10) 
-	(goal boar-hunting 0)
-	(dropsite-min-distance live-boar < 32)
-	(dropsite-min-distance live-boar > 0)
-	(goal g-boar-status 1)
-=>
-	(set-goal boar-hunting 1)
-	;(set-strategic-number sn-enable-boar-hunting 2)!
-	; (set-strategic-number sn-minimum-number-hunters 1)
-	; (set-strategic-number sn-maximum-food-drop-distance 15)
-	; (set-strategic-number sn-maximum-hunt-drop-distance 32)
-	; (set-strategic-number sn-minimum-boar-hunt-group-size 1)
-	; (set-strategic-number sn-minimum-boar-lure-group-size 1)
-	(chat-to-player my-player-number "Starting to lure a boar")
+	(up-chat-data-to-self "Boar id is: %d" g: g-boar-id) ;works
 )
 
 (defrule
-	(or (goal strategy-goal sg-scoutrush)
-	(or (goal strategy-goal sg-towerrush)
-	(goal strategy-goal sg-drush)))
-	(unit-type-count villager >= 9) 
-	(goal boar-hunting 0)
-	(dropsite-min-distance live-boar < 32)
-	(dropsite-min-distance live-boar > 0)
-	(goal g-boar-status 1)
-=>
-	(set-goal boar-hunting 1)
-	;(set-strategic-number sn-enable-boar-hunting 2)!
-	; (set-strategic-number sn-minimum-number-hunters 1)
-	; (set-strategic-number sn-maximum-food-drop-distance 15)
-	; (set-strategic-number sn-maximum-hunt-drop-distance 32)
-	; (set-strategic-number sn-minimum-boar-hunt-group-size 1)
-	; (set-strategic-number sn-minimum-boar-lure-group-size 1)
-	(chat-to-player my-player-number "Starting to lure a boar")
-)
-
-(defrule
-	(goal boar-hunting 1)
 	(up-group-size c: 3 == 1)
-	(current-age == dark-age)
+	(up-compare-goal g-boar-id != -1)	
+	(up-object-data object-data-action != actionid-attack)
 	(dropsite-min-distance live-boar < 32)
 	(dropsite-min-distance live-boar > 0)
+	(up-compare-goal remaining-boar-food c:<= 95)
+	(up-compare-goal remaining-boar-food > -1)
+	(unit-type-count villager >= 8) 
 =>
 	(up-full-reset-search)
 	(up-set-group search-local c: 3)
@@ -18310,17 +18233,16 @@
 	(up-reset-group c: 3)
 	(up-create-group 0 0 c: 3) ;boar-lurer ctrl-group
 	(up-modify-group-flag 1 c: 3)
-	(up-chat-data-to-player my-player-number "Number of boar lurers a: %d" g: gl-local-total)
+	(up-chat-data-to-player my-player-number "Number of boar lurers a: %d" g: gl-local-total) ;works
 )
 
 (defrule
-	(goal boar-hunting 1)
 	(up-group-size c: 3 != 1)
-	(timer-triggered 5)
+	(up-compare-goal g-boar-id != -1)	
+	(up-object-data object-data-action != actionid-attack)
 	(dropsite-min-distance live-boar < 32)
 	(dropsite-min-distance live-boar > 0)
-	(unit-type-count villager >= 9) 
-	;(up-compare-sn sn-enable-boar-hunting != 1)!
+	(unit-type-count villager >= 8) 
 =>
 	(up-full-reset-search)
 	(up-find-local c: 590 c: 240) ;female shepherd
@@ -18331,45 +18253,90 @@
 	(up-remove-objects search-local object-data-hitpoints < 25)
 	(up-remove-objects search-local -1 > 0) ;find one shepherd
 	(up-reset-group c: 3)
-	; (up-set-group search-local c: 3)
 	(up-create-group 0 0 c: 3) ;boar-lurer ctrl-group
 	(up-modify-group-flag 1 c: 3)
 	(up-get-search-state gl-local-total)
-	(up-chat-data-to-player my-player-number "Number of boar lurers b: %d" g: gl-local-total)
+	(up-chat-data-to-player my-player-number "Number of boar lurers b: %d" g: gl-local-total) ;works
 )
 
 (defrule
-	(goal boar-hunting 1)
+	(or (goal strategy-goal sg-drush)
+	(or (goal strategy-goal sg-scoutrush)
+	(goal strategy-goal sg-towerrush)))
 	(up-group-size c: 3 == 1) 
-	(up-compare-goal gl-local-total == 1) 
-	;(up-compare-sn sn-enable-boar-hunting != 1)!
 	(dropsite-min-distance live-boar < 32)
 	(dropsite-min-distance live-boar > 0)
+	(up-compare-goal g-boar-id != -1)		
 	(unit-type-count villager >= 9) 
-	(goal g-boar-status 1)
 =>
-	(disable-timer 5)
-	(set-goal boar-hunting 2)
+	(up-full-reset-search)
 	(up-set-group search-local c: 3)
+)
+
+(defrule
+	(or (goal strategy-goal sg-drush)
+	(or (goal strategy-goal sg-scoutrush)
+	(goal strategy-goal sg-towerrush)))
+	(up-group-size c: 3 == 1) 
+	(dropsite-min-distance live-boar < 32)
+	(dropsite-min-distance live-boar > 0)
+	(up-compare-goal g-boar-id != -1)	
+	;(up-set-target-by-id g: g-boar-id)	
+	(up-object-data object-data-action != actionid-attack)	
+	(up-set-target-object search-local c: 0)
+	(unit-type-count villager >= 9) 
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 3)
+	(up-remove-objects search-local object-data-tasks-count > 0)		
+	(up-remove-objects search-local object-data-next-attack > 0)		
+	(up-remove-objects search-local object-data-action == actionid-build)
 	(up-set-target-by-id g: g-boar-id)
 	(up-target-objects 1 action-default -1 -1)
-	(set-strategic-number sn-enable-boar-hunting 2)
-	(set-strategic-number sn-minimum-number-hunters 1)
-	(set-strategic-number sn-maximum-food-drop-distance 15)
-	(set-strategic-number sn-maximum-hunt-drop-distance 32)
-	(set-strategic-number sn-minimum-boar-hunt-group-size 1)
-	(set-strategic-number sn-minimum-boar-lure-group-size 1)	
-	(enable-timer 5 10)
+	(chat-to-player my-player-number "enable boar-luring") 
+)
+
+(defrule
+	(nor (goal strategy-goal sg-drush)
+	(or (goal strategy-goal sg-scoutrush)
+	(goal strategy-goal sg-towerrush)))
+	(up-group-size c: 3 == 1) 
+	(dropsite-min-distance live-boar < 32)
+	(dropsite-min-distance live-boar > 0)
+	(up-compare-goal g-boar-id != -1)		
+	(unit-type-count villager >= 10) 
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 3)
+	;(chat-to-player my-player-number "Test")
+)
+
+(defrule
+	(nor (goal strategy-goal sg-drush)
+	(or (goal strategy-goal sg-scoutrush)
+	(goal strategy-goal sg-towerrush)))
+	(up-group-size c: 3 == 1) 
+	(dropsite-min-distance live-boar < 32)
+	(dropsite-min-distance live-boar > 0)
+	(up-compare-goal g-boar-id != -1)
+	(up-object-data object-data-action != actionid-attack)	
+	(up-set-target-object search-local c: 0)
+	(unit-type-count villager >= 10) 
+=>
+	(enable-timer 6 1)
+	(up-full-reset-search)
+	(up-set-group search-local c: 3)
+	(up-remove-objects search-local object-data-tasks-count > 0)		
+	(up-remove-objects search-local object-data-next-attack > 0)		
+	(up-remove-objects search-local object-data-action == actionid-build)
+	(up-set-target-by-id g: g-boar-id)
+	(up-target-objects 1 action-default -1 -1)
 	(chat-to-player my-player-number "enable boar-luring")
 )
 
 (defrule ;find boar close to tc
-	(goal boar-hunting 2)
-	(goal g-boar-status 1)
 	(up-compare-goal gl-garrison-tc-two < 1)
-	(up-compare-sn sn-minimum-number-hunters == 1)
-	;(up-compare-sn sn-disable-villager-garrison == 0)
-	(dropsite-min-distance live-boar < 32)
+	(dropsite-min-distance live-boar < 10)
 	(dropsite-min-distance live-boar > 0)
 =>
 	(set-strategic-number sn-disable-villager-garrison 3)
@@ -18377,21 +18344,14 @@
 	(up-set-target-point gl-starting-tc-x)
 	(up-filter-distance c: -1 c: 5)
 	(up-find-remote c: boar-class c: 20)
-	;(up-remove-objects search-remote object-data-hitpoints <= 20)
-	;(up-add-object-by-id search-remote g: g-boar-id)
-    ;(up-set-target-by-id g: g-boar-id)
 	(up-get-search-state gl-local-total)
-	;(up-chat-data-to-player my-player-number "Found %d boar" g: gl-remote-total)
-	;(chat-to-player my-player-number "Boar Test")
+	(chat-to-player my-player-number "Boar Test")
 )
 
 (defrule ;find villagers close to tc
-	(goal boar-hunting 2)
-	(goal g-boar-status 1)
-	(up-compare-sn sn-minimum-number-hunters == 1)
 	(up-set-target-object search-remote c: 0)
 	(up-compare-goal gl-garrison-tc-two < 1)
-	(dropsite-min-distance live-boar < 32)
+	(dropsite-min-distance live-boar < 10)
 	(dropsite-min-distance live-boar > 0)
 =>
     (up-set-target-point gl-starting-tc-x)
@@ -18411,10 +18371,7 @@
 )
 
 (defrule ;find tc and garrison vills from local search
-	(goal boar-hunting 2)
-	(goal g-boar-status 1)
 	(up-set-target-object search-remote c: 0)
-	(up-compare-sn sn-minimum-number-hunters == 1)
 	(up-compare-sn sn-disable-villager-garrison == 3)
 	(up-compare-goal gl-local-total >= 4)
 	(up-compare-goal gl-garrison-tc-two < 1)
@@ -18428,40 +18385,38 @@
 	(up-gather-inside c: town-center c: -1)
 	(chat-to-player my-player-number "Garrison Test")
 	(set-goal gl-garrison-tc-two 1)
-	(enable-timer 6 5)
+	(enable-timer 6 10)
 )
 
-(defrule
-	(goal boar-hunting 2)
-	(up-compare-sn sn-disable-villager-garrison == 3)
-=>
-	(up-full-reset-search)
-	(up-set-group search-local c: 3)
-	;(chat-to-player my-player-number "Saving hunter") 
-)
+; (defrule
+	; (goal boar-hunting 2)
+	; (up-compare-sn sn-disable-villager-garrison == 3)
+; =>
+	; (up-full-reset-search)
+	; (up-set-group search-local c: 3)
+	; ;(chat-to-player my-player-number "Saving hunter") 
+; )
 
-(defrule
-	(goal boar-hunting 2)
-	(up-compare-sn sn-disable-villager-garrison == 3)
-	(up-set-target-object search-local c: 0)
-	(up-object-data object-data-hitpoints < 10)
-	(dropsite-min-distance live-boar < 7)
-	(dropsite-min-distance live-boar > 0)
-=>
-	(set-strategic-number sn-focus-player-number my-player-number)
-	(up-find-remote c: town-center c: 1)
-	(up-target-objects 0 action-garrison -1 -1)
-	;(up-gather-inside c: town-center c: -1)
-	(chat-to-player my-player-number "Saving hunter") 
-)
+; (defrule
+	; (goal boar-hunting 2)
+	; (up-compare-sn sn-disable-villager-garrison == 3)
+	; (up-set-target-object search-local c: 0)
+	; (up-object-data object-data-hitpoints < 10)
+	; (dropsite-min-distance live-boar < 7)
+	; (dropsite-min-distance live-boar > 0)
+; =>
+	; (set-strategic-number sn-focus-player-number my-player-number)
+	; (up-find-remote c: town-center c: 1)
+	; (up-target-objects 0 action-garrison -1 -1)
+	; ;(up-gather-inside c: town-center c: -1)
+	; (chat-to-player my-player-number "Saving hunter") 
+; )
 
 (defrule ;find tc and shoot boar
 	(dropsite-min-distance live-boar < 32)
 	(dropsite-min-distance live-boar > 0)
-	(goal boar-hunting 2)
 	;(up-set-target-object search-remote c: 0)
 	;(timer-triggered 6)
-	(goal g-boar-status 1)
 	(goal gl-garrison-tc-two 1)
 =>
     (up-reset-search 0 0 1 1)
@@ -18479,74 +18434,62 @@
 )
 
 (defrule ;ungarrison villagers after boar has been hit
-	(goal boar-hunting 2)
 	(goal gl-garrison-tc-two 1)
-	(up-compare-sn sn-minimum-number-hunters != 5)
 	(up-set-target-object search-remote c: 0)
-	(or (timer-triggered 6)
-	(up-object-data object-data-hitpoints <= 25))
-	;(goal g-boar-status 2)
+	(up-object-data object-data-hitpoints <= 25)
 =>
-	(disable-timer 6)
 	(up-gather-inside c: town-center c: 0)
     (up-ungarrison c: town-center)
 	(set-goal gl-garrison-tc-two 0)
-	(up-set-target-by-id g: g-boar-id)
 	(up-set-group search-local c: 2)
+	(up-set-target-by-id g: g-boar-id)
 	(up-target-objects 1 action-default -1 -1)
 	(chat-to-player my-player-number "ungarrison")
-	(set-strategic-number sn-minimum-number-hunters 5)
-	(enable-timer 6 5)
 )
 
-(defrule
+; (defrule
 	; (dropsite-min-distance live-boar < 32)
 	; (dropsite-min-distance live-boar > 0)
-	(up-compare-sn sn-minimum-number-hunters == 5)
-	(goal boar-hunting 2)
-	(goal g-boar-status 1)
-=>
-	(up-full-reset-search)
-    (up-modify-sn sn-focus-player-number c: 0)
-	(up-filter-status c: status-gather c: list-inactive)
-	(up-find-status-remote c: boar-class c: 1)
-	(up-get-search-state gl-local-total)
-	;(up-chat-data-to-player my-player-number "Number of dead boars: %d" g: gl-remote-total)
-)
+; =>
+	; (up-full-reset-search)
+    ; (up-modify-sn sn-focus-player-number c: 0)
+	; (up-filter-status c: status-gather c: list-inactive)
+	; (up-find-status-remote c: boar-class c: 1)
+	; (up-get-search-state gl-local-total)
+	; ;(up-chat-data-to-player my-player-number "Number of dead boars: %d" g: gl-remote-total)
+; )
 
 (defrule ;reset boar-hunting settings
-	(up-set-target-object search-remote c: 0)
-	(goal boar-hunting 2)
-	;(up-set-target-by-id g: g-boar-id)
-	(up-object-data object-data-carry < 399)
-	(up-object-data object-data-carry > 50)
-	(up-compare-sn sn-minimum-number-hunters != 1)
+	;(up-set-target-object search-remote c: 0)
+	(up-compare-goal remaining-boar-food g:< boar-food-amount)
+	;(up-object-data object-data-hitpoints < 1)
+	(up-compare-goal remaining-boar-food > 0)
 	(up-compare-sn sn-disable-villager-garrison != 0)
 =>
 	(set-strategic-number sn-disable-villager-garrison 0)
 	(chat-to-player my-player-number "villager garrisoning allowed")
 )
 
-(defrule ;reset boar-hunting settings
-	(up-set-target-object search-remote c: 0)
-	(dropsite-min-distance live-boar < 32)
-	(dropsite-min-distance live-boar > 0)
-	(goal boar-hunting 2)
-	;(up-set-target-by-id g: g-boar-id)
-	(up-object-data object-data-carry < 95)
-	(up-compare-sn sn-minimum-number-hunters != 1)
-	(up-compare-sn sn-disable-villager-garrison == 0) ;are we currently luring a boar?
-=>
-	(set-strategic-number sn-minimum-number-hunters 1)
-	(set-goal boar-hunting 0)
-	(set-goal g-boar-status 0)
-	(enable-timer 5 1)
-	(chat-to-player my-player-number "resetting")
-)
+; (defrule ;reset boar-hunting settings
+	; (up-set-target-object search-remote c: 0)
+	; (dropsite-min-distance live-boar < 32)
+	; (dropsite-min-distance live-boar > 0)
+	; (goal boar-hunting 2)
+	; ;(up-set-target-by-id g: g-boar-id)
+	; (up-object-data object-data-carry < 95)
+	; (up-compare-sn sn-minimum-number-hunters != 1)
+	; (up-compare-sn sn-disable-villager-garrison == 0) ;are we currently luring a boar?
+; =>
+	; (set-strategic-number sn-minimum-number-hunters 1)
+	; (set-goal boar-hunting 0)
+	; (set-goal g-boar-status 0)
+	; (enable-timer 5 1)
+	; (chat-to-player my-player-number "resetting")
+; )
 
 (defrule
 (or	(unit-type-count villager >= 30); test
-(or	(dropsite-min-distance live-boar > 32)
+(or	(dropsite-min-distance live-boar >= 32)
 	(dropsite-min-distance live-boar <= -1)))
 (or	(building-type-count-total mill >= 2)
 	(unit-type-count villager >= 12))
@@ -18569,73 +18512,6 @@
 ;	(up-modify-sn sn-maximum-hunt-drop-distance c:max 20)
 	(chat-local-to-self "Disabling hunting restrictions.")
 )
-
-; (defrule	
-	; (civ-selected gothic)
-	; (up-timer-status boar-timer != timer-running)
-	; (dropsite-min-distance live-boar <= 6) 
-	; (strategic-number sn-enable-boar-hunting >= 2); 1
-	; (unit-type-count 216 <= 2) ;hunter female
-	; (unit-type-count 122 <= 2) ;hunter male
-; (nand	(unit-type-count 216 >= 1)
-	; (unit-type-count 122 >= 1))
-; (or	(unit-type-count 216 >= 1)
-	; (unit-type-count 122 >= 1))
-; =>
-	; (enable-timer boar-timer 6)
-	; (set-strategic-number sn-minimum-number-hunters 6)
-	; (up-request-hunters c: 6)
-; ;	(chat-local-to-self "Requesting support hunter.")
-; )
-
-; (defrule
-	; (civ-selected gothic)
-	; (up-timer-status boar-timer != timer-running)
-; (or	(dropsite-min-distance live-boar s:> sn-maximum-hunt-drop-distance)
-	; (and	(or	(unit-type-count 216 >= 3); male hunter
-			; (unit-type-count 122 >= 3)); female hunter
-		; (and	(dropsite-min-distance live-boar >= 10)
-			; (dropsite-min-distance boar-hunting <= 9)))); eating a boar right now
-	; (strategic-number sn-minimum-number-hunters > 1)
-; =>
-	; (set-strategic-number sn-minimum-boar-hunt-group-size 1)
-	; (set-strategic-number sn-minimum-number-hunters 1)
-; ;	(chat-local-to-self "Lowering min-hunters.")
-; )
-
-; (defrule
-	; (civ-selected gothic)
-	; ; (dropsite-min-distance live-boar < 32)
-	; ; (dropsite-min-distance live-boar > 0)
-	; (up-compare-sn sn-minimum-number-hunters == 6)
-	; (goal boar-hunting 2)
-	; (goal g-boar-status 1)
-; =>
-	; (up-full-reset-search)
-    ; (up-modify-sn sn-focus-player-number c: 0)
-	; (up-filter-status c: status-gather c: list-inactive)
-	; (up-find-status-remote c: boar-class c: 1)
-	; (up-get-search-state gl-local-total)
-	; (up-chat-data-to-player my-player-number "Number of dead boars: %d" g: gl-local-total)
-; )
-
-; (defrule ;reset boar-hunting settings
-	; (civ-selected gothic)
-	; (up-set-target-object search-remote c: 0)
-	; (dropsite-min-distance live-boar < 32)
-	; (dropsite-min-distance live-boar > 0)
-	; (goal boar-hunting 2)
-	; ;(up-set-target-by-id g: g-boar-id)
-	; (up-object-data object-data-carry < 120)
-	; (up-compare-sn sn-minimum-number-hunters != 1)
-; =>
-	; (set-strategic-number sn-minimum-number-hunters 1)
-	; (set-goal boar-hunting 0)
-	; (set-goal g-boar-status 0)
-	; (enable-timer 5 1)
-	; (chat-to-player my-player-number "enable new boar lure")
-; )
-
 
 ;endregion
 
@@ -21004,6 +20880,12 @@
 
 ;region Build Order Castle =========================================
 
+(defrule
+	(current-age == dark-age)
+=>
+	(set-strategic-number sn-enable-boar-hunting 0)
+	(disable-self)
+)
 
 (defrule
 	(current-age == feudal-age)
