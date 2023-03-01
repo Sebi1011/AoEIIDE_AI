@@ -1,13 +1,13 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 0.18.1
-;last update: 26th February 2023
+;Version: 0.18.2
+;last update: 28th February 2023
 
 ;Civs: Can play all civilizations
 ;Maps: besides standard maps like arabia, ZebbaAI can play nomad and other hybrid maps and custom maps. (Not optimized on water-maps though)
 		;ZebbaAI can't play properly on island-like maps: It needs a map with land connection to the enemy
-;Taunts: AI reacts to following taunts: 3 ("food please"), 4("wood please"), 5("gold please"), 6("stone please"), 38("give me your extra resources"), Flare-Location + 48("I'm being attacked, please help")
-;Strategies: drush, archerrush, scoutrush, towerrush, fc into unique unit, fc into gold unit, fast-imp (only pockets in team-games)
+;Taunts in TGs: AI reacts to following taunts: 3 ("food please"), 4("wood please"), 5("gold please"), 6("stone please"), 38("give me your extra resources"), Flare-Location + 48("I'm being attacked, please help")
+;Strategies: Drush, Archerrush, Scoutrush, Towerrush, FC into Unique Unit, FC into Gold Unit, Fast-Imp (only pockets in team-games)
 ;Difficulty: there are no levels of difficulty for ZebbaAI. Its current level is comparable to the hard DE AI
 
 ;recently added:
@@ -53,7 +53,7 @@
 ; - add market-price check before buying/selling resources
 ; - remake towerrush completely due to several number of bugs
 ; - retreat with army in dark-age in drushes if villager number is to high (bug potential)
-; - fix retreating from enemy towers, use different goal for spotting a tower and tower-retreat rules (testing)
+; - fix retreating from enemy towers, use different goal for spotting a tower and tower-retreat rules (tested)
 ; - assign every build order to current-age
 ; - build feudal-age production buildings in safer spots when being drushed
 ; - add escrow rules for the first 1/2/3 trebs
@@ -62,7 +62,7 @@
 ; - implement scouting-pattern for scouting own base (bug potential)
 ; - decrease d-villager-goal for mongols when scout/archer-rushing, in addition changes need to be made to 
 ; constructions of buildings connected to villager count (bug potential)
-; - fix problem that causes boar luring villagers being retasked to build non-duc buildings 
+; - fix problem that causes boar luring villagers being retasked to build non-duc buildings (tested)
 
 ;improving trush:
 ; - add villagers ability to fight back when tower is under attack
@@ -102,7 +102,7 @@
 ; - improve defensive tower placement to select dangerous areas more precisely
 ; - improve retreating from enemy castles, even if it's not obtained by the focus-player
 ; - change fcgu builds to build stable/archery-range instead of a market
-; - add a new strategy "defensive fast-feudal", change to this strategy in fc builds if researching to castle-age 
+; - add a new strategy "defensive fast-feudal", 22-pop feudal, change to this strategy in fc builds if researching to castle-age 
 ; does not work due to enemy pressure
 ; - implement taunt "31" ("Attack an enemy now!") and taunt reaction to enable combined attacks in teamgames
 ; - Saving resources for upgrades/buildings (work in progress) (missing: Capped/Siege Ram/Elephant, Onager, Siege Engineers, UTs, Redemption)
@@ -2899,7 +2899,7 @@
 
 (defrule
 	(random-number > 30)
-	(random-number <= 55)
+	(random-number <= 60)
 =>
 	(set-goal strategy-goal sg-archerrush)	
 	(set-goal d-villager-goal 21)
@@ -2911,8 +2911,8 @@
 )
 
 (defrule
-	(random-number > 55)
-	(random-number <= 80)
+	(random-number > 60)
+	(random-number <= 84)
 =>
 	(set-goal strategy-goal sg-scoutrush)	
 	(set-goal d-villager-goal 20)
@@ -2924,8 +2924,8 @@
 )
 
 (defrule
-	(random-number > 80)
-	(random-number <= 90)
+	(random-number > 84)
+	(random-number <= 94)
 =>
 	(set-goal strategy-goal sg-towerrush)	
 	(set-goal d-villager-goal 18)
@@ -2937,8 +2937,8 @@
 )
 
 (defrule
-	(random-number > 90)
-	(random-number <= 95)
+	(random-number > 94)
+	(random-number <= 97)
 =>
 	(set-goal strategy-goal sg-fastcastle-gu)	
 	(set-goal d-villager-goal 26)
@@ -2950,7 +2950,7 @@
 )
 
 (defrule
-	(random-number > 95)
+	(random-number > 97)
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)	
 	(set-goal d-villager-goal 26)
@@ -6635,6 +6635,7 @@
 	;(town-under-attack)
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 2)
+	(not (goal gl-stone-saving 7))
 =>
 	(up-modify-escrow wood c:- 50)
 	(up-modify-escrow stone c:- 125)
@@ -6655,8 +6656,7 @@
 	;(town-under-attack)
 	(can-build-with-escrow donjon)
 	(building-type-count-total donjon < 2)
-	;(or (building-type-count-total archery-range == 0)
-	;	(building-type-count-total stable == 0))
+	(not (goal gl-stone-saving 7))
 =>
 	(up-modify-escrow wood c:- 75)
 	(up-modify-escrow stone c:- 175)
@@ -6677,8 +6677,7 @@
 	(town-under-attack)
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 4)
-	;(or (building-type-count-total archery-range == 0)
-	;	(building-type-count-total stable == 0))
+	(not (goal gl-stone-saving 7))
 =>
 	(up-modify-escrow wood c:- 50)
 	(up-modify-escrow stone c:- 125)
@@ -6700,8 +6699,7 @@
 	(town-under-attack)
 	(can-build-with-escrow donjon)
 	(building-type-count-total tower-class < 4)
-	;(or (building-type-count-total archery-range == 0)
-	;	(building-type-count-total stable == 0))
+	(not (goal gl-stone-saving 7))
 =>
 	(up-modify-escrow wood c:- 75)
 	(up-modify-escrow stone c:- 175)
@@ -6721,6 +6719,7 @@
 	;(town-under-attack)
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 2)
+	(not (goal gl-stone-saving 7))
 =>
 	(up-modify-escrow wood c:- 50)
 	(up-modify-escrow stone c:- 125)
@@ -6740,8 +6739,7 @@
 	;(town-under-attack)
 	(can-build-with-escrow donjon)
 	(building-type-count-total donjon < 2)
-	;(or (building-type-count-total archery-range == 0)
-	;	(building-type-count-total stable == 0))
+	(not (goal gl-stone-saving 7))
 =>
 	(up-modify-escrow wood c:- 75)
 	(up-modify-escrow stone c:- 175)
@@ -6761,8 +6759,7 @@
 	(town-under-attack)
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 4)
-	;(or (building-type-count-total archery-range == 0)
-	;	(building-type-count-total stable == 0))
+	(not (goal gl-stone-saving 7))
 =>
 	(up-modify-escrow wood c:- 50)
 	(up-modify-escrow stone c:- 125)
@@ -6783,8 +6780,7 @@
 	(town-under-attack)
 	(can-build-with-escrow donjon)
 	(building-type-count-total tower-class < 4)
-	;(or (building-type-count-total archery-range == 0)
-	;	(building-type-count-total stable == 0))
+	(not (goal gl-stone-saving 7))
 =>
 	(up-modify-escrow wood c:- 75)
 	(up-modify-escrow stone c:- 175)
@@ -18502,20 +18498,21 @@
     (up-reset-search 0 0 1 1)
 	(set-strategic-number sn-focus-player-number 0)
 	(up-set-target-point gl-starting-tc-x)
-	(up-filter-distance c: -1 c: 6)
-	(up-find-remote c: boar-class c: 20)
+	;(up-filter-distance c: -1 c: 6)
+	;(up-find-remote c: boar-class c: 20)
+	(up-set-target-by-id g: g-boar-id)
 	;(up-remove-objects search-remote object-data-hitpoints <= 20)
 	(up-find-local c: town-center c: 1) 
 	;(up-add-object-by-id search-remote g: g-boar-id)
-	;(up-set-target-by-id g: g-boar-id)
-	(up-target-objects 0 action-default -1 -1)
+	(up-target-objects 1 action-default -1 -1)
 	;(chat-to-player my-player-number "Shooting Boar")
 	;(set-goal g-boar-status 2)
 )
 
 (defrule ;ungarrison villagers after boar has been hit
 	(goal gl-garrison-tc-two 1)
-	(up-set-target-object search-remote c: 0)
+	;(up-set-target-object search-remote c: 0)
+	(up-set-target-by-id g: g-boar-id)
 	(up-object-data object-data-hitpoints <= 25)
 =>
 	(up-gather-inside c: town-center c: 0)
@@ -20169,12 +20166,10 @@
 	(up-gather-inside c: archery-range c: 0)
 	(up-gather-inside c: stable c: 0)
 	(up-gather-inside c: siege-workshop c: 0)
-	(up-gather-inside c: donjon c: 0)
 	(up-ungarrison c: barracks)
 	(up-ungarrison c: archery-range)
 	(up-ungarrison c: stable)
 	(up-ungarrison c: siege-workshop)
-	(up-ungarrison c: donjon)
 	(attack-now)
 	(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
@@ -20199,12 +20194,10 @@
 	(up-gather-inside c: archery-range c: 0)
 	(up-gather-inside c: stable c: 0)
 	(up-gather-inside c: siege-workshop c: 0)
-	(up-gather-inside c: donjon c: 0)
 	(up-ungarrison c: barracks)
 	(up-ungarrison c: archery-range)
 	(up-ungarrison c: stable)
 	(up-ungarrison c: siege-workshop)
-	(up-ungarrison c: donjon)
 	(attack-now)
 	(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
@@ -20230,7 +20223,6 @@
 	(up-gather-inside c: archery-range c: 0)
 	(up-gather-inside c: stable c: 0)
 	(up-gather-inside c: siege-workshop c: 0)
-	(up-gather-inside c: donjon c: 0)
 	(up-ungarrison c: barracks)
 	(up-ungarrison c: archery-range)
 	(up-ungarrison c: stable)
@@ -20260,9 +20252,6 @@
 	(up-reset-scouts)
 	(up-gather-inside c: barracks c: 0)
 	(up-gather-inside c: archery-range c: 0)
-	(up-gather-inside c: stable c: 0)
-	(up-gather-inside c: siege-workshop c: 0)
-	(up-gather-inside c: donjon c: 0)
 	(attack-now)
 	(up-ungarrison c: barracks)
 	(up-ungarrison c: archery-range)
@@ -20290,13 +20279,9 @@
 	(up-reset-scouts)
 	(up-gather-inside c: barracks c: 0)
 	(up-gather-inside c: archery-range c: 0)
-	(up-gather-inside c: siege-workshop c: 0)
 	(attack-now)
 	(up-ungarrison c: barracks)
 	(up-ungarrison c: archery-range)
-	(up-ungarrison c: stable)
-	(up-ungarrison c: siege-workshop)
-	(up-ungarrison c: donjon)
 	(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
@@ -20319,12 +20304,10 @@
 	(up-gather-inside c: archery-range c: 0)
 	(up-gather-inside c: stable c: 0)
 	(up-gather-inside c: siege-workshop c: 0)
-	(up-gather-inside c: donjon c: 0)
 	(up-ungarrison c: barracks)
 	(up-ungarrison c: archery-range)
 	(up-ungarrison c: stable)
 	(up-ungarrison c: siege-workshop)
-	(up-ungarrison c: donjon)
 	(attack-now)
 	(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
@@ -20345,12 +20328,10 @@
 	(up-gather-inside c: archery-range c: 0)
 	(up-gather-inside c: stable c: 0)
 	(up-gather-inside c: siege-workshop c: 0)
-	(up-gather-inside c: donjon c: 0)
 	(up-ungarrison c: barracks)
 	(up-ungarrison c: archery-range)
 	(up-ungarrison c: stable)
 	(up-ungarrison c: siege-workshop)
-	(up-ungarrison c: donjon)
 	(attack-now)
 	(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
@@ -20620,7 +20601,8 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
-	(food-amount >= 125)
+	(building-type-count-total stable > 0)
+	(up-research-status c: ri-double-bit-axe >= research-pending)
 	(can-research ri-horse-collar)
 =>
 	(research ri-horse-collar)
@@ -20642,6 +20624,7 @@
 	(food-amount >= 125)
 	(military-population >= 20)
 	(can-research ri-horse-collar)
+	(up-research-status c: ri-double-bit-axe >= research-pending)
 =>
 	(research ri-horse-collar)
 )
@@ -20712,11 +20695,11 @@
 
 (defrule
 	(goal strategy-goal sg-archerrush)
-	(current-age == feudal-age)
-	(civilian-population >= 33)
-	(food-amount >= 125)
+	(or (civilian-population >= 40)
+	(up-research-status c: castle-age >= research-pending))
 	(building-type-count-total farm >= 4)
 	(can-research ri-horse-collar)
+	(up-research-status c: ri-double-bit-axe >= research-pending)
 =>
 	(research ri-horse-collar)
 )
@@ -20749,6 +20732,7 @@
 	(not(goal strategy-goal sg-boom-imp))
 	(can-research ri-gold-mining)
 	(up-research-status c: castle-age >= research-pending)
+	(up-research-status c: ri-double-bit-axe >= research-pending)
 =>
 	(research ri-gold-mining)
 )
@@ -20758,6 +20742,7 @@
 	(current-age == imperial-age)
 	(military-population >= 20)
 	(can-research ri-gold-mining)
+	(up-research-status c: ri-double-bit-axe >= research-pending)
 =>
 	(research ri-gold-mining)
 )
@@ -20861,6 +20846,7 @@
 	(up-research-status c: castle-age >= research-pending)
 	(can-research ri-horse-collar)
 	(building-type-count-total farm >= 4)
+	(up-research-status c: ri-double-bit-axe >= research-pending)
 =>
 	(research ri-horse-collar)
 )
@@ -22290,9 +22276,6 @@
 	(up-gather-inside c: archery-range c: 0)
 	(up-gather-inside c: stable c: 0)
 	(up-gather-inside c: siege-workshop c: 0)
-	(up-gather-inside c: castle c: 0)
-	(up-gather-inside c: donjon c: 0)
-	(up-gather-inside c: krepost c: 0)
 	(attack-now)
 	(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
@@ -25678,9 +25661,6 @@
 	(up-gather-inside c: archery-range c: 0)
 	(up-gather-inside c: stable c: 0)
 	(up-gather-inside c: siege-workshop c: 0)
-	(up-gather-inside c: castle c: 0)
-	(up-gather-inside c: donjon c: 0)
-	(up-gather-inside c: krepost c: 0)
 	(attack-now)
 	(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
@@ -28190,7 +28170,6 @@
 	; (up-gather-inside c: archery-range c: 1)
 	; (up-gather-inside c: stable c: 1)
 	; (up-gather-inside c: siege-workshop c: 1)
-	; (up-gather-inside c: castle c: 1)
 ; )	
 
 (defrule
@@ -28333,60 +28312,26 @@
 )
 
 (defrule
-	(current-age == feudal-age)
+	(current-age == castle-age)
 	(town-under-attack)
-	(building-type-count-total donjon > 0)
-	(or (military-population < 6)
+	(building-type-count-total barracks > 0)
+	(or (military-population < 10)
 	(military-population g:< enemy-military-pop))
 =>
-	(up-gather-inside c: donjon c: 1)
-	;(chat-to-player my-player-number "Warte mit Truppen in Donjon, bis genug Truppen vorhanden sind.")
+	(up-gather-inside c: barracks c: 1)
+	;(chat-to-player my-player-number "Warte mit Truppen in Kasernen, bis genug Truppen vorhanden sind.")
 	;(disable-self)
 )
 
 (defrule
-	(current-age == feudal-age)
+	(current-age == castle-age)
 	(town-under-attack)
-	(building-type-count-total donjon > 0)
+	(building-type-count-total barracks > 0)
 	(or (military-population >= 6)
 	(or (military-population g:>= enemy-military-pop)
-	(players-current-age focus-player < feudal-age)))
-=>
-	(up-ungarrison c: donjon)
-	(up-gather-inside c: donjon c: 0)
-	;(chat-to-player my-player-number "Schicke Truppen aus den Donjons.")
-)
-
-(defrule
-	(current-age == feudal-age)
-	(not (town-under-attack))
-	(building-type-count-total donjon > 0)
+	(players-current-age focus-player < castle-age)))
 	(military-population >= 4)
-=>
-	(up-ungarrison c: donjon)
-	(up-gather-inside c: donjon c: 0)
-	;(chat-to-player my-player-number "Schicke Truppen aus den Donjons.")
-)
-
-(defrule
-	(current-age == castle-age)
-	(town-under-attack)
-	(building-type-count-total barracks > 0)
-	(or (military-population < 10)
-	(military-population g:< enemy-military-pop))
-=>
-	(up-gather-inside c: barracks c: 1)
-	;(chat-to-player my-player-number "Warte mit Truppen in Kasernen, bis genug Truppen vorhanden sind.")
-	;(disable-self)
-)
-
-(defrule
-	(current-age == castle-age)
-	(town-under-attack)
-	(building-type-count-total barracks > 0)
-	(or (military-population >= 6)
-	(or (military-population g:>= enemy-military-pop)
-	(players-current-age focus-player < castle-age)))
+	(up-compare-goal gl-military-advantage >= -8)
 =>
 	(up-ungarrison c: barracks)
 	(up-gather-inside c: barracks c: 0)
@@ -28424,6 +28369,8 @@
 	(or (military-population >= 6)
 	(or (military-population g:>= enemy-military-pop)
 	(players-current-age focus-player < castle-age)))
+	(military-population >= 4)
+	(up-compare-goal gl-military-advantage >= -8)
 =>
 	(up-ungarrison c: archery-range)
 	(up-gather-inside c: archery-range c: 0)
@@ -28461,6 +28408,8 @@
 	(or (military-population >= 6)
 	(or (military-population g:>= enemy-military-pop)
 	(players-current-age focus-player < castle-age)))
+	(military-population >= 4)
+	(up-compare-goal gl-military-advantage >= -8)
 =>
 	(up-ungarrison c: stable)
 	(up-gather-inside c: stable c: 0)
@@ -28498,6 +28447,8 @@
 	(or (military-population >= 6)
 	(or (military-population g:>= enemy-military-pop)
 	(players-current-age focus-player < castle-age)))
+	(military-population >= 4)
+	(up-compare-goal gl-military-advantage >= -8)
 =>
 	(up-ungarrison c: siege-workshop)
 	(up-gather-inside c: siege-workshop c: 0)
@@ -28514,117 +28465,6 @@
 	(up-ungarrison c: siege-workshop)
 	(up-gather-inside c: siege-workshop c: 0)
 	;(chat-to-player my-player-number "Schicke Truppen aus den Waffenschmiede.")
-)
-
-(defrule
-	(current-age == castle-age)
-	(town-under-attack)
-	(building-type-count-total castle > 0)
-	(or (military-population < 10)
-	(military-population g:< enemy-military-pop))
-=>
-	(up-gather-inside c: castle c: 1)
-	;(chat-to-player my-player-number "Warte mit Truppen in Burg, bis genug Truppen vorhanden sind.")
-	;(disable-self)
-)
-
-(defrule
-	(current-age == castle-age)
-	(town-under-attack)
-	(building-type-count-total castle > 0)
-	(or (military-population >= 6)
-	(or (military-population g:>= enemy-military-pop)
-	(players-current-age focus-player < castle-age)))
-=>
-	(up-ungarrison c: castle)
-	(up-gather-inside c: castle c: 0)
-	;(chat-to-player my-player-number "Schicke Truppen aus den Burg.")
-)
-
-(defrule
-	(current-age == castle-age)
-	(not (town-under-attack))
-	(building-type-count-total castle > 0)
-	(military-population >= 10)
-	(up-compare-goal gl-military-advantage >= -10)
-=>
-	(up-ungarrison c: castle)
-	(up-gather-inside c: castle c: 0)
-	;(chat-to-player my-player-number "Schicke Truppen aus den Burg.")
-)
-
-(defrule
-	(current-age == castle-age)
-	(town-under-attack)
-	(building-type-count-total krepost > 0)
-	(or (military-population < 10)
-	(military-population g:< enemy-military-pop))
-=>
-	(up-gather-inside c: krepost c: 1)
-	;(chat-to-player my-player-number "Warte mit Truppen in Krepost, bis genug Truppen vorhanden sind.")
-	;(disable-self)
-)
-
-(defrule
-	(current-age == castle-age)
-	(town-under-attack)
-	(building-type-count-total krepost > 0)
-	(or (military-population >= 6)
-	(or (military-population g:>= enemy-military-pop)
-	(players-current-age focus-player < castle-age)))
-=>
-	(up-ungarrison c: krepost)
-	(up-gather-inside c: krepost c: 0)
-	;(chat-to-player my-player-number "Schicke Truppen aus den Krepost.")
-)
-
-(defrule
-	(current-age == castle-age)
-	(not (town-under-attack))
-	(building-type-count-total krepost > 0)
-	(military-population >= 10)
-	(up-compare-goal gl-military-advantage >= -10)
-=>
-	(up-ungarrison c: krepost)
-	(up-gather-inside c: krepost c: 0)
-	;(chat-to-player my-player-number "Schicke Truppen aus den Krepost.")
-)
-
-(defrule
-	(current-age == castle-age)
-	(town-under-attack)
-	(building-type-count-total donjon > 0)
-	(or (military-population < 10)
-	(military-population g:< enemy-military-pop))
-=>
-	(up-gather-inside c: donjon c: 1)
-;	(chat-to-player my-player-number "Warte mit Truppen in Donjon, bis genug Truppen vorhanden sind.")
-;	(disable-self)
-)
-
-(defrule
-	(current-age == castle-age)
-	(town-under-attack)
-	(building-type-count-total donjon > 0)
-	(or (military-population >= 6)
-	(or (military-population g:>= enemy-military-pop)
-	(players-current-age focus-player < castle-age)))
-=>
-	(up-ungarrison c: donjon)
-	(up-gather-inside c: donjon c: 0)
-	;(chat-to-player my-player-number "Schicke Truppen aus den donjon.")
-)
-
-(defrule
-	(current-age == castle-age)
-	(not (town-under-attack))
-	(building-type-count-total donjon > 0)
-	(military-population >= 10)
-	(up-compare-goal gl-military-advantage >= -10)
-=>
-	(up-ungarrison c: donjon)
-	(up-gather-inside c: donjon c: 0)
-	;(chat-to-player my-player-number "Schicke Truppen aus den donjon.")
 )
 
 (defrule
@@ -28771,77 +28611,6 @@
 	;(chat-to-player my-player-number "Schicke Truppen aus den Waffenschmiede.")
 )
 
-(defrule
-	(current-age == imperial-age)
-	(town-under-attack)
-	(building-type-count-total castle > 0)
-	(or (military-population < 15)
-	(military-population g:< enemy-military-pop))
-=>
-	(up-gather-inside c: castle c: 1)
-	;(chat-to-player my-player-number "Warte mit Truppen in Burg, bis genug Truppen vorhanden sind.")
-	;(disable-self)
-)
-
-(defrule
-	(current-age == imperial-age)
-	(town-under-attack)
-	(building-type-count-total castle > 0)
-	(or (military-population >= 15)
-	(or (military-population g:>= enemy-military-pop)
-	(players-current-age focus-player < imperial-age)))
-=>
-	(up-ungarrison c: castle)
-	(up-gather-inside c: castle c: 0)
-	;(chat-to-player my-player-number "Schicke Truppen aus den Burg.")
-)
-
-(defrule
-	(current-age == imperial-age)
-	(not (town-under-attack))
-	(building-type-count-total castle > 0)
-	(military-population >= 15)
-=>
-	(up-ungarrison c: castle)
-	(up-gather-inside c: castle c: 0)
-	;(chat-to-player my-player-number "Schicke Truppen aus den Burg.")
-)
-
-(defrule
-	(current-age == imperial-age)
-	(town-under-attack)
-	(building-type-count-total krepost > 0)
-	(or (military-population < 15)
-	(military-population g:< enemy-military-pop))
-=>
-	(up-gather-inside c: krepost c: 1)
-	;(chat-to-player my-player-number "Warte mit Truppen in Krepost, bis genug Truppen vorhanden sind.")
-	;(disable-self)
-)
-
-(defrule
-	(current-age == imperial-age)
-	(town-under-attack)
-	(building-type-count-total krepost > 0)
-	(or (military-population >= 15)
-	(or (military-population g:>= enemy-military-pop)
-	(players-current-age focus-player < imperial-age)))
-=>
-	(up-ungarrison c: krepost)
-	(up-gather-inside c: krepost c: 0)
-	;(chat-to-player my-player-number "Schicke Truppen aus den Krepost.")
-)
-
-(defrule
-	(current-age == imperial-age)
-	(not (town-under-attack))
-	(building-type-count-total krepost > 0)
-	(military-population >= 15)
-=>
-	(up-ungarrison c: krepost)
-	(up-gather-inside c: krepost c: 0)
-	;(chat-to-player my-player-number "Schicke Truppen aus den Krepost.")
-)
 
 ;endregion
 
