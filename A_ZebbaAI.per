@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 0.18.2
-;last update: 28th February 2023
+;Version: 0.18.4
+;last update: 3rd March 2023
 
 ;Civs: Can play all civilizations
 ;Maps: besides standard maps like arabia, ZebbaAI can play nomad and other hybrid maps and custom maps. (Not optimized on water-maps though)
@@ -42,11 +42,9 @@
 ;ToDo: 
 
 ;what's up next:
-; - remove up-gather-inside rules for castles, kreposts and donjons
 ; - try to set sn-local-targeting-mode to 1
 ; - try do disable offensive priorities
 ; - split up tc retreat rules into feudal-age and post castle-age
-; - put siege-units in a group and use them to attack certain buildings more precisely
 ; - change escrow-rules for counter units, skirmisher production delays upgrades and building placements a lot
 ; - fix attack-rules, AI seems to not retreat at any time
 ; - add "closest-player-next" and set it to focus-players for team-game pocket-players (bug-potential)
@@ -113,15 +111,12 @@
 ; - garrison villagers in TC and shoot when enemy is in range of the TC (works, but only for one tc)
 ; - improve attack intelligence, such as grouping up units before attack/ retreating when enemy military-count is too high/
 ;/retreating single units from enemy-counter unit/ patrol-attacking, etc...
-; - Retreating from Enemy TCs, Castles, Towers and similar (-works, but only retreats from one TC/Castle/etc. obtained by an opponent. Not tested for Donjons & Kreposts) (fixed, being monitored)
 ; - More accurate scouting
 ; - using scouting info for strategic decisions --> saving expected opponents strategy in a goal
 ; - improve rules of building outposts
-; - rework boar-hunting
-; - more strategies(smush (needs deer pushing), build-order for water-maps, defensive feudal & spear/skirm-rush are planned)
+; - more strategies(smush (needs deer pushing), defensive feudal & spear/skirm-rush are planned)
 ; - use sheep to scout
 ; - implement deer-pushing
-; - implement build order for hybrid-maps (nomad excluded) to build fishing ships efficiently (work in progress)
 ; (- implement build-order for cuman 2 TC-Feudal play)
 ; - implement intelligent civ-evaluation to improve decision making and strategy choice in any civ-matchup
 ; - building markets at the edges of the map in TGs
@@ -918,7 +913,7 @@
 	(goal gl-priority-goal 4)
 =>
 	(up-set-offense-priority c: villager c: 8)
-	(up-set-offense-priority c: militia-line c: 5)
+	(up-set-offense-priority c: militia-line c: 9)
 	(up-set-offense-priority c: spearman-line c: 8)
 	(up-set-offense-priority c: eagle-warrior-line c: 8)
     (up-set-offense-priority c: archer-line c: 4)
@@ -968,8 +963,8 @@
 	(up-set-offense-priority c: university c: 1)
 	(up-set-offense-priority c: castle c: -1)
 	(up-set-offense-priority c: krepost c: -1)
-	(up-set-offense-priority c: watch-tower c: -1)
-	(up-set-offense-priority c: donjon c: -1)
+	(up-set-offense-priority c: watch-tower c: 4)
+	(up-set-offense-priority c: donjon c: 4)
 	(up-set-offense-priority c: bombard-tower c: -1)
 	(up-set-offense-priority c: caravanserai c: 1)
 	(up-set-offense-priority c: feitoria c: 3)
@@ -1033,8 +1028,8 @@
 	(up-set-offense-priority c: university c: 1)
 	(up-set-offense-priority c: castle c: -1)
 	(up-set-offense-priority c: krepost c: -1)
-	(up-set-offense-priority c: watch-tower c: -1)
-	(up-set-offense-priority c: donjon c: -1)
+	(up-set-offense-priority c: watch-tower c: 4)
+	(up-set-offense-priority c: donjon c: 4)
 	(up-set-offense-priority c: bombard-tower c: -1)
 	(up-set-offense-priority c: caravanserai c: 1)
 	(up-set-offense-priority c: feitoria c: 3)
@@ -1088,7 +1083,7 @@
 (defrule
 	(goal gl-priority-goal 7)
 =>
-	(up-set-offense-priority c: town-center c: 3)
+	(up-set-offense-priority c: town-center c: 4)
 	(up-set-offense-priority c: house c: 4)
 	(up-set-offense-priority c: mill c: 4)
 	(up-set-offense-priority c: lumber-camp c: 4)
@@ -1098,8 +1093,8 @@
 	(up-set-offense-priority c: university c: 1)
 	(up-set-offense-priority c: castle c: -1)
 	(up-set-offense-priority c: krepost c: -1)
-	(up-set-offense-priority c: watch-tower c: -1)
-	(up-set-offense-priority c: donjon c: -1)
+	(up-set-offense-priority c: watch-tower c: 4)
+	(up-set-offense-priority c: donjon c: 4)
 	(up-set-offense-priority c: bombard-tower c: -1)
 	(up-set-offense-priority c: caravanserai c: 1)
 	(up-set-offense-priority c: feitoria c: 3)
@@ -10368,7 +10363,7 @@
 	(chat-to-player my-player-number "Building initial tower")
 	; (up-chat-data-to-player my-player-number "Tower placed at x: %d" g: gl-temp-tower-x)
 	; (up-chat-data-to-player my-player-number "Tower placed at y: %d" g: gl-temp-tower-y)
-	(up-get-point position-point gl-temp-tower-x)
+	;(up-get-point position-point gl-temp-tower-x)
 	(set-goal gl-trush-init 1)
 	(set-goal gl-temp-three 0)	
 )
@@ -10454,7 +10449,7 @@
 	; (up-chat-data-to-player my-player-number "Enemy tc Point y: %d" g: enemy-point-y)
 	; (up-chat-data-to-player my-player-number "Tower Goal Point x: %d" g: gl-temp-tower-x)
 	; (up-chat-data-to-player my-player-number "Tower Goal Point y: %d" g: gl-temp-tower-y)
-	; (up-chat-data-to-player my-player-number "Distance tower to enemy tc: %d" g: gl-distance-temp-one)
+	(up-chat-data-to-player my-player-number "Distance tower to enemy tc: %d" g: gl-distance-temp-one)
 )
 
 ;1
@@ -10473,7 +10468,7 @@
 	(set-goal gl-temp-three 2)
 	(up-modify-goal gl-temp-tower-x c:+ 0)
 	(up-modify-goal gl-temp-tower-y c:- 6)
-	; (up-send-flare gl-temp-tower-x)
+	(up-send-flare gl-temp-tower-x)
 	; (chat-to-player my-player-number "set fu tower location 1")
 	; (up-chat-data-to-player my-player-number "Planned tower x: %d" g: gl-temp-tower-x)
 	; (up-chat-data-to-player my-player-number "Planned tower y: %d" g: gl-temp-tower-y)
@@ -10538,7 +10533,7 @@
 	(set-goal gl-temp-three 2)
 	(up-modify-goal gl-temp-tower-x c:+ 6)
 	(up-modify-goal gl-temp-tower-y c:+ 0)
-	; (up-send-flare gl-temp-tower-x)
+	(up-send-flare gl-temp-tower-x)
 	; (chat-to-player my-player-number "set fu tower location 2")
 	; (up-chat-data-to-player my-player-number "Planned tower x: %d" g: gl-temp-tower-x)
 	; (up-chat-data-to-player my-player-number "Planned tower y: %d" g: gl-temp-tower-y)
@@ -10607,7 +10602,7 @@
 	; (chat-to-player my-player-number "set fu tower location 3")
 	; (up-chat-data-to-player my-player-number "Planned tower x: %d" g: gl-temp-tower-x)
 	; (up-chat-data-to-player my-player-number "Planned tower y: %d" g: gl-temp-tower-y)
-	;(up-send-flare gl-temp-x)
+	(up-send-flare gl-temp-x)
 ;	(up-chat-data-to-all "house-x: %d" g: gl-temp-x)
 	;(up-chat-data-to-all "house-y: %d" g: gl-temp-y)
 )
@@ -10671,7 +10666,7 @@
 	(set-goal gl-temp-three 2)
 	(up-modify-goal gl-temp-tower-x c:+ 0)
 	(up-modify-goal gl-temp-tower-y c:+ 6)
-	; (up-send-flare gl-temp-tower-x)
+	(up-send-flare gl-temp-tower-x)
 	; (chat-to-player my-player-number "set fu tower location 4")
 	; (up-chat-data-to-player my-player-number "Planned tower x: %d" g: gl-temp-tower-x)
 	; (up-chat-data-to-player my-player-number "Planned tower y: %d" g: gl-temp-tower-y)
@@ -10759,7 +10754,7 @@
 	; (up-chat-data-to-player my-player-number "Enemy tc Point y: %d" g: enemy-point-y)
 	; (up-chat-data-to-player my-player-number "Tower Goal Point x: %d" g: gl-temp-tower-x)
 	; (up-chat-data-to-player my-player-number "Tower Goal Point y: %d" g: gl-temp-tower-y)
-	; (up-chat-data-to-player my-player-number "Distance tower to enemy tc: %d" g: gl-distance-temp-one)
+	(up-chat-data-to-player my-player-number "Distance tower to enemy tc: %d" g: gl-distance-temp-one)
 )
 
 ;build tower
@@ -18518,11 +18513,20 @@
 	(up-gather-inside c: town-center c: 0)
     (up-ungarrison c: town-center)
 	(set-goal gl-garrison-tc-two 0)
+	(chat-to-player my-player-number "ungarrison")
+)
+
+(defrule ;ungarrison villagers after boar has been hit
+	(goal gl-garrison-tc-two 0)
+	(up-set-target-by-id g: g-boar-id)
+	(up-object-data object-data-hitpoints <= 25)
+	(up-object-data object-data-hitpoints > 0)
+=>
 	(up-full-reset-search)
 	(up-set-group search-local c: 2)
 	(up-set-target-by-id g: g-boar-id)
 	(up-target-objects 1 action-default -1 -1)
-	(chat-to-player my-player-number "ungarrison")
+	(chat-to-player my-player-number "finish the boar")
 )
 
 ; (defrule
@@ -19889,6 +19893,7 @@
 	(can-train scout-cavalry-line)
 	(civilian-population g:< f-villager-goal)
 	(unit-type-count-total scout-cavalry-line < 4)
+	(players-unit-type-count focus-player infantry-class < 6)
 	(game-time < 1000)
 =>
 	(up-modify-escrow food c:- 80)
@@ -19905,7 +19910,7 @@
 	(up-compare-goal gl-military-advantage < 10))
 	(or (unit-type-count-total scout-cavalry-line >= 4)
 	(game-time >= 1000))
-	(players-unit-type-count focus-player spearman-line < 5)
+	(players-unit-type-count focus-player infantry-class < 6)
 =>
 	(train scout-cavalry-line)
 )
@@ -21071,6 +21076,7 @@
 	(can-train-with-escrow villager)
 	(or (unit-type-count-total villager g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
+	(unit-type-count-total villager < 160)
 	(food-amount >= 300)
 	(not (goal strategy-goal sg-boom-imp))
 	(not (research-completed ri-wheel-barrow))
@@ -21087,6 +21093,7 @@
 	(can-train-with-escrow villager)
 	(or (unit-type-count-total villager g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
+	(unit-type-count-total villager < 160)
 	(food-amount >= 300)
 	(or (goal strategy-goal sg-boom-imp)
 	(research-completed ri-wheel-barrow))
@@ -21102,6 +21109,7 @@
 	(can-train villager)
 	(or (unit-type-count-total villager g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
+	(unit-type-count-total villager < 160)
 	(food-amount < 300)
 =>
 	(train villager)
@@ -25208,7 +25216,8 @@
 
 (defrule
 	(can-research imperial-age)
-	(unit-type-count-total villager g:>= c-villager-goal)
+	(or (unit-type-count-total villager g:>= c-villager-goal)
+	(population-headroom < 5))
 =>
 	(research imperial-age)
 	(chat-to-allies "Gehe in die Imperialzeit")
@@ -26550,7 +26559,7 @@
 )
 
 (defrule
-	(unit-type-count-total infantry-class > 10)
+	(unit-type-count-total infantry-class > 8)
 	;(goal strategy-goal gl-archerrush)
 	(can-research ri-blast-furnace)
 =>
