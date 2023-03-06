@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 0.18.6
-;last update: 6th March 2023
+;Version: 0.18.7
+;last update: 7th March 2023
 
 ;Civs: Can play all civilizations
 ;Maps: besides standard maps like arabia, ZebbaAI can play nomad and other hybrid maps and custom maps. (Not optimized on water-maps though)
@@ -42,14 +42,17 @@
 ;ToDo: 
 
 ;what's up next:
-; - get blacksmith & fletching faster in archerrushes
-; - remake towerrush completely due to several number of bugs
+; - fix issue in archer rushes that initial food income in early feudal is too low
+; - implement conditions in feudal-age to stop producing military units if military advantage is high enough 
 ; - build feudal-age production buildings in safer spots when being drushed
-; - try do disable offensive priorities
-; - split up tc retreat rules into feudal-age and post castle-age
-; - change escrow-rules for counter units, skirmisher production delays upgrades and building placements a lot
-; - assign every build order to current-age
-; - add escrow rules for the first 1/2/3 trebs
+; - split up tc-retreat-rules into pre and post castle-age
+; - implement tc-garrison code for every tc
+; - implement up-jump-rule rule to skip build-order rules after castle-age
+; - add escrow rules for the first 2 trebs
+; - find a solution for tc-boar-hunting when there are no villager under the tc (maybe use previous villager-group and
+; task them to a straggler tree at the start of boar-hunting
+; - find a solution against villager harassments in dark-age
+; - remake towerrush completely due to several numbers of bugs
 
 ; - add ability to garrison low-hp villagers being attacked in the next tc
 ; - implement and test sn-special-attack-type2
@@ -726,6 +729,8 @@
 	(up-set-offense-priority c: eagle-warrior-line c: 9)
     (up-set-offense-priority c: archer-line c: 8)
 	(up-set-offense-priority c: skirmisher-line c: 8)
+	(up-set-offense-priority c: scout-cavalry-class c: 9)
+	(up-set-offense-priority c: camel-scout c: 9)
 	(up-set-offense-priority c: scout-cavalry-line c: 9)
     (up-set-offense-priority c: knight-line c: 1)
 	(up-set-offense-priority c: camel-line c: 2)
@@ -791,9 +796,9 @@
 	(up-set-offense-priority c: eagle-warrior-line c: 8)
     (up-set-offense-priority c: archer-line c: 7)
 	(up-set-offense-priority c: skirmisher-line c: 6)
-	(up-set-offense-priority c: scout-cavalry-class c: 8)
-	(up-set-offense-priority c: camel-scout c: 8)
-	(up-set-offense-priority c: scout-cavalry-line c: 8)
+	(up-set-offense-priority c: scout-cavalry-class c: 9)
+	(up-set-offense-priority c: camel-scout c: 9)
+	(up-set-offense-priority c: scout-cavalry-line c: 9)
     (up-set-offense-priority c: knight-line c: 1)
 	(up-set-offense-priority c: camel-line c: 3)
 	(up-set-offense-priority c: battle-elephant-line c: 1)
@@ -858,6 +863,8 @@
 	(up-set-offense-priority c: eagle-warrior-line c: 9)
     (up-set-offense-priority c: archer-line c: 10)
 	(up-set-offense-priority c: skirmisher-line c: 5)
+	(up-set-offense-priority c: scout-cavalry-class c: 9)
+	(up-set-offense-priority c: camel-scout c: 9)
 	(up-set-offense-priority c: scout-cavalry-line c: 9)
     (up-set-offense-priority c: knight-line c: 2)
 	(up-set-offense-priority c: camel-line c: 1)
@@ -923,6 +930,8 @@
 	(up-set-offense-priority c: eagle-warrior-line c: 8)
     (up-set-offense-priority c: archer-line c: 4)
 	(up-set-offense-priority c: skirmisher-line c: 3)
+	(up-set-offense-priority c: scout-cavalry-class c: 8)
+	(up-set-offense-priority c: camel-scout c: 8)
 	(up-set-offense-priority c: scout-cavalry-line c: 8)
     (up-set-offense-priority c: knight-line c: 1)
 	(up-set-offense-priority c: camel-line c: 2)
@@ -1278,6 +1287,13 @@
 =>    
 	(set-goal meso-civ YES)
     (disable-self)
+)
+
+(defrule
+	(current-age < castle-age)
+=>
+	(set-goal NumberVillsToGarrison 10)
+	(disable-self)
 )
 
 (defrule
@@ -18314,7 +18330,7 @@
 	(dropsite-min-distance live-boar > 0)
 	(or (and (unit-type-count villager-hunter < 1) ;for hunting 1st boar
 		(up-compare-goal g-boar-id == -1))	
-		(and (up-compare-goal remaining-boar-food c:<= 95) ; hunting after 1st boar
+		(and (up-compare-goal remaining-boar-food c:<= 100) ; hunting after 1st boar
 		(up-compare-goal remaining-boar-food > -1)))
 =>
 	(up-full-reset-search)
@@ -18337,7 +18353,7 @@
 	(up-object-data object-data-action != actionid-attack)
 	(dropsite-min-distance live-boar < 32)
 	(dropsite-min-distance live-boar > 0)
-	(up-compare-goal remaining-boar-food c:<= 95)
+	(up-compare-goal remaining-boar-food c:<= 100)
 	(up-compare-goal remaining-boar-food > -1)
 	(unit-type-count villager >= 8) 
 =>
@@ -18484,7 +18500,7 @@
 	(timer-triggered 6)
 =>
     (up-set-target-point gl-starting-tc-x)
-    (up-filter-distance c: -1 c: 5)
+    (up-filter-distance c: -1 c: 6)
 	;(up-filter-exclude -1 -1 orderid-hunt -1)
 	(up-find-local c: villager-class c: 10)
 	(up-remove-objects search-local object-data-group-flag == 3)
@@ -19596,7 +19612,7 @@
 	(wood-amount > 250)))
 	(building-type-count-total lumber-camp > 0)
 	(building-type-count-total archery-range >= 1)
-	(building-type-count-total farm < 4)
+	(building-type-count-total farm < 6)
 	(building-type-count-total blacksmith < 1)
 	(idle-farm-count < 1)
 	(can-build farm)
@@ -19613,7 +19629,7 @@
 	(wood-amount > 250)))
 	(building-type-count-total lumber-camp > 0)
 	(building-type-count-total archery-range >= 1)
-	(building-type-count-total farm < 4)
+	(building-type-count-total farm < 6)
 	(building-type-count-total blacksmith < 1)
 	(idle-farm-count < 1)
 	(can-build farm)
@@ -19631,7 +19647,6 @@
 	(wood-amount > 250)))
 	(building-type-count-total lumber-camp > 0)
 	(building-type-count-total archery-range >= 1)
-	(building-type-count-total farm >= 4)
 	(building-type-count-total blacksmith >= 1)
 	(idle-farm-count < 1)
 	(can-build farm)
@@ -19648,7 +19663,6 @@
 	(wood-amount > 250)))
 	(building-type-count-total lumber-camp > 0)
 	(building-type-count-total archery-range >= 1)
-	(building-type-count-total farm >= 4)
 	(building-type-count-total blacksmith >= 1)
 	(idle-farm-count < 1)
 	(can-build farm)
@@ -29470,13 +29484,13 @@
     (up-filter-distance c: -1 c: 7)    ;only villagers nearby
     (up-find-local c: villager-class c: 15)
     (up-clean-search search-local object-data-distance search-order-desc)    ;order by distance to get closest
-    (up-remove-objects search-local -1 > NumberVillsToGarrison)
+    (up-remove-objects search-local -1 g:> NumberVillsToGarrison)
     (up-get-search-state gl-local-total)
 )
 
 (defrule    ;garrison the villagers found above if there were some
     (goal gl-garrison-tc 0)
-    (up-compare-goal gl-local-total >= MinVillsToGarrison)
+    (up-compare-goal gl-local-total g:>= MinVillsToGarrison)
 =>
     (set-strategic-number sn-focus-player-number my-player-number)
     (up-find-remote c: town-center c: 1)    ;put in the remote list for up-target-objects command
