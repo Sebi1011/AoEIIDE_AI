@@ -42,19 +42,21 @@
 ;ToDo: 
 
 ;what's up next:
-; - try to set sn-local-targeting-mode to 1
 ; - try do disable offensive priorities
 ; - split up tc retreat rules into feudal-age and post castle-age
 ; - change escrow-rules for counter units, skirmisher production delays upgrades and building placements a lot
-; - fix attack-rules, AI seems to not retreat at any time
-; - add "closest-player-next" and set it to focus-players for team-game pocket-players (bug-potential)
-; - add market-price check before buying/selling resources
 ; - remake towerrush completely due to several number of bugs
-; - retreat with army in dark-age in drushes if villager number is to high (bug potential)
 ; - fix retreating from enemy towers, use different goal for spotting a tower and tower-retreat rules (tested)
 ; - assign every build order to current-age
 ; - build feudal-age production buildings in safer spots when being drushed
 ; - add escrow rules for the first 1/2/3 trebs
+; - get blacksmith & fletching faster in archerrushes
+
+; - add ability to garrison low-hp villagers being attacked in the next tc
+; - implement and test sn-special-attack-type2
+; - add "closest-player-next" and set it to focus-players for team-game pocket-players (bug-potential)
+; - add market-price check before buying/selling resources
+; - retreat with army in dark-age in drushes if villager number is to high (bug potential)
 ; - improve dark-age builder selection for building resource drop-off points
 ; - Eat only one sheep at a time (bug potential)
 ; - implement scouting-pattern for scouting own base (bug potential)
@@ -80,13 +82,13 @@
 ; - keep scout and militia closer together
 
 ;improving scoutrush:
-; - use one scout to block villagers for other scout
+; - use one scout to block villagers for other scouts
 ; - retreat with scouts when villager numbers are too high
 ; - build farms faster (tested)
 
 ;improving archerrush:
 ; - set up groups of archers to attack at multiple locations
-; - retreat with archers when villager numbers are too high
+; - retreat with single archer units when villager numbers are too high
 
 ;improving fastcastle gu & uu
 ; - start walling base earlier
@@ -98,7 +100,7 @@
 ;general improvements
 ; - find rules to make a switch to main-gold-unit later/ at a suitable time
 ; - improve defensive tower placement to select dangerous areas more precisely
-; - improve retreating from enemy castles, even if it's not obtained by the focus-player
+; - improve retreating code from enemy castles, to also retreat from buildings not obtained by the focus-player
 ; - change fcgu builds to build stable/archery-range instead of a market
 ; - add a new strategy "defensive fast-feudal", 22-pop feudal, change to this strategy in fc builds if researching to castle-age 
 ; does not work due to enemy pressure
@@ -226,6 +228,8 @@
 (defconst object-data-to-precise 80)		;precise distance to a precise target-point
 (defconst object-data-base-type 81)		;object base type id
 (defconst object-data-upgrade-type 82)		;object upgrade type id
+
+(defconst sn-special-attack-type2 107)
 
 (defconst list-active 0)
 (defconst list-inactive 1)
@@ -14710,7 +14714,6 @@
 	(timer-triggered split-stance-timer)
 =>	(up-full-reset-search)
 	(up-find-local c: -1 c: 240)
-	;(up-remove-objects search-local object-data-group-flag == 9)
 	(up-set-attack-stance -1 c: stance-aggressive)
 	(disable-timer split-stance-timer)
 	(up-reset-unit c: archery-class)
@@ -18111,7 +18114,8 @@
 ;region Hunting Boar =============================================== 
 	
 (defrule
-	(up-research-status c: feudal-age >= research-pending)
+	(current-age == dark-age)
+	(up-research-status c: feudal-age != research-pending)
 =>
 	(up-jump-rule 5)
 )
@@ -18278,8 +18282,7 @@
 ;shooting boar with tc code
 
 (defrule
-	(current-age == dark-age)
-	(up-research-status c: feudal-age != research-pending)
+	(up-research-status c: feudal-age >= research-pending)
 =>
 	(up-jump-rule 16) ;18 
 )
@@ -20203,12 +20206,12 @@
 	(goal retreat-now-goal 0)
 =>
 	(set-goal retreat-now-goal 1)
-	(up-reset-attack-now)
-	(up-reset-unit c: -1)
-	(up-retreat-now)
 	(set-strategic-number sn-number-attack-groups 0)
 	(set-strategic-number sn-minimum-attack-group-size 0)
 	(set-strategic-number sn-maximum-attack-group-size 0)
+	(up-reset-attack-now)
+	(up-reset-unit c: -1)
+	(up-retreat-now)
 	(chat-to-player my-player-number "Low army numbers, I am retreating")
 	(chat-to-allies "My army number is low, I am retreating")
 )
@@ -22332,12 +22335,12 @@
 	(goal retreat-now-goal 0)
 =>
 	(set-goal retreat-now-goal 1)
-	(up-reset-attack-now)
-	(up-reset-unit c: -1)
-	(up-retreat-now)
 	(set-strategic-number sn-number-attack-groups 0)
 	(set-strategic-number sn-minimum-attack-group-size 0)
 	(set-strategic-number sn-maximum-attack-group-size 0)
+	(up-reset-attack-now)
+	(up-reset-unit c: -1)
+	(up-retreat-now)
 	(chat-to-player my-player-number "Low army numbers, I am retreating")
 	(chat-to-allies "My army number is low, I am retreating")
 )
@@ -25725,12 +25728,12 @@
 	(goal retreat-now-goal 0)
 =>
 	(set-goal retreat-now-goal 1)
-	(up-reset-attack-now)
-	(up-reset-unit c: -1)
-	(up-retreat-now)
 	(set-strategic-number sn-number-attack-groups 0)
 	(set-strategic-number sn-minimum-attack-group-size 0)
 	(set-strategic-number sn-maximum-attack-group-size 0)
+	(up-reset-attack-now)
+	(up-reset-unit c: -1)
+	(up-retreat-now)
 	(chat-to-player my-player-number "Low army numbers, I am retreating")
 	(chat-to-allies "My army number is low, I am retreating")
 )
