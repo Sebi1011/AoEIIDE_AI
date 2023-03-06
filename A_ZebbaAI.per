@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 0.18.5
-;last update: 5th March 2023
+;Version: 0.18.6
+;last update: 6th March 2023
 
 ;Civs: Can play all civilizations
 ;Maps: besides standard maps like arabia, ZebbaAI can play nomad and other hybrid maps and custom maps. (Not optimized on water-maps though)
@@ -11,7 +11,7 @@
 ;Difficulty: there are no levels of difficulty for ZebbaAI. Its current level is comparable to the hard DE AI
 
 ;recently added:
-; - added more precise house-placement in dark-age, making the AI building houses outside tc-range
+; - added more precise house-placement in dark-age, making the AI building houses outside of tc-range
 ; - improved house-placement-algorithm in dark-age and fixed several bugs connected with it
 ; - added code-foundation for boar hunting to shoot and weaken a hunted boar with tc
 ; - added algorithm to build walls around a tower once it has been placed
@@ -22,11 +22,11 @@
 ; - can now build mining-camps specifically on stone
 ; - fixed bug that occured when sheep spawned on the edge of the map, causing the scout to freeze
 ; - fixed various build-order bugs
-; - added possibilities to deal with towerrushes
+; - added options to deal with towerrushes
 ; - added escrow-rules for bloodlines, upgrades for counter unit-lines and for buildings to make counter units
 ; - AI can now build outposts under certain circumstances
 ; - AI is building defensive towers more precisely to protect ressources
-; - added a current position evaluator to check, based on AIs current military advantage, if it should act more
+; - added a current military-evaluator to check, based on AIs current military advantage, if it should act more
 ; defensively or offensively
 ; - AI will now retreat from battles if army numbers are too low
 ; - significantly improved forage gathering
@@ -42,15 +42,14 @@
 ;ToDo: 
 
 ;what's up next:
+; - get blacksmith & fletching faster in archerrushes
+; - remake towerrush completely due to several number of bugs
+; - build feudal-age production buildings in safer spots when being drushed
 ; - try do disable offensive priorities
 ; - split up tc retreat rules into feudal-age and post castle-age
 ; - change escrow-rules for counter units, skirmisher production delays upgrades and building placements a lot
-; - remake towerrush completely due to several number of bugs
-; - fix retreating from enemy towers, use different goal for spotting a tower and tower-retreat rules (tested)
 ; - assign every build order to current-age
-; - build feudal-age production buildings in safer spots when being drushed
 ; - add escrow rules for the first 1/2/3 trebs
-; - get blacksmith & fletching faster in archerrushes
 
 ; - add ability to garrison low-hp villagers being attacked in the next tc
 ; - implement and test sn-special-attack-type2
@@ -229,7 +228,7 @@
 (defconst object-data-base-type 81)		;object base type id
 (defconst object-data-upgrade-type 82)		;object upgrade type id
 
-(defconst sn-special-attack-type2 107)
+;(defconst sn-special-attack-type2 107)
 
 (defconst list-active 0)
 (defconst list-inactive 1)
@@ -14193,11 +14192,11 @@
 
 (defrule										
 	(or	(current-age > castle-age)						
-		(or	(unit-type-count infantry-class > 20)				
+		(or	(unit-type-count infantry-class > 19)				
 			(or (unit-type-count cavalry-class > 15)
 				(or (unit-type-count battering-ram-line > 0)
 					(or (unit-type-count armored-elephant-line > 0)
-						(military-population > 25))))))	
+						(military-population > 34))))))	
 =>	
 	(up-jump-rule 13)
 )	
@@ -14372,7 +14371,7 @@
 ; Retreating from Castle 
 
 (defrule															
-	(or	(military-population > 25)					
+	(or	(military-population > 34)					
 		(or(unit-type-count trebuchet > 0)
 			(or(unit-type-count-total armored-elephant-line >= 1)
 				(or(unit-type-count-total battering-ram-line >= 1)
@@ -14490,7 +14489,7 @@
 ; Retreating from Enemy Towers
 
 (defrule															
-	(or	(military-population > 16)					
+	(or	(military-population > 18)					
 		(or (unit-type-count battering-ram-line > 0)
 			(or (unit-type-count armored-elephant-line > 0)		
 				(or(unit-type-count trebuchet > 0)
@@ -19592,11 +19591,13 @@
 (defrule
 	(goal strategy-goal sg-archerrush)
 	(current-age == feudal-age)
-	(or (civilian-population >= 22)
+	(or (civilian-population >= 23)
 	(or (building-type-count-total archery-range >= 2)
 	(wood-amount > 250)))
 	(building-type-count-total lumber-camp > 0)
-	(building-type-count-total archery-range >= 2)
+	(building-type-count-total archery-range >= 1)
+	(building-type-count-total farm < 4)
+	(building-type-count-total blacksmith < 1)
 	(idle-farm-count < 1)
 	(can-build farm)
 	(up-compare-goal gl-water-on-map != 1)
@@ -19607,11 +19608,48 @@
 (defrule
 	(goal strategy-goal sg-archerrush)
 	(current-age == feudal-age)
-	(or (civilian-population >= 22)
+	(or (civilian-population >= 23)
 	(or (building-type-count-total archery-range >= 2)
 	(wood-amount > 250)))
 	(building-type-count-total lumber-camp > 0)
 	(building-type-count-total archery-range >= 1)
+	(building-type-count-total farm < 4)
+	(building-type-count-total blacksmith < 1)
+	(idle-farm-count < 1)
+	(can-build farm)
+	(up-compare-goal gl-water-on-map == 1)
+	(wood-amount > 85)
+=>
+	(build farm)
+)
+
+(defrule
+	(goal strategy-goal sg-archerrush)
+	(current-age == feudal-age)
+	(or (civilian-population >= 23)
+	(or (building-type-count-total archery-range >= 2)
+	(wood-amount > 250)))
+	(building-type-count-total lumber-camp > 0)
+	(building-type-count-total archery-range >= 1)
+	(building-type-count-total farm >= 4)
+	(building-type-count-total blacksmith >= 1)
+	(idle-farm-count < 1)
+	(can-build farm)
+	(up-compare-goal gl-water-on-map != 1)
+=>
+	(build farm)
+)
+
+(defrule
+	(goal strategy-goal sg-archerrush)
+	(current-age == feudal-age)
+	(or (civilian-population >= 23)
+	(or (building-type-count-total archery-range >= 2)
+	(wood-amount > 250)))
+	(building-type-count-total lumber-camp > 0)
+	(building-type-count-total archery-range >= 1)
+	(building-type-count-total farm >= 4)
+	(building-type-count-total blacksmith >= 1)
 	(idle-farm-count < 1)
 	(can-build farm)
 	(up-compare-goal gl-water-on-map == 1)
@@ -19874,6 +19912,19 @@
 	; (set-strategic-number sn-placement-zone-size 0)
 	(up-set-placement-data my-player-number -1 c: 34)
     (up-build place-control 0 c: archery-range)
+)
+
+(defrule
+	(goal strategy-goal sg-archerrush)
+	(current-age == feudal-age)
+	(building-type-count-total town-center >= 1)
+	(building-type-count-total archery-range < 3)
+	(can-build-with-escrow archery-range)
+	(up-compare-goal gl-military-advantage < -3)
+	(military-population >= 20)
+=>
+	(up-modify-escrow wood c:- 175)
+	(build archery-range)
 )
 
 ; (defrule
@@ -20206,9 +20257,9 @@
 	(goal retreat-now-goal 0)
 =>
 	(set-goal retreat-now-goal 1)
-	(set-strategic-number sn-number-attack-groups 0)
-	(set-strategic-number sn-minimum-attack-group-size 0)
-	(set-strategic-number sn-maximum-attack-group-size 0)
+	; (set-strategic-number sn-number-attack-groups 0)
+	; (set-strategic-number sn-minimum-attack-group-size 0)
+	; (set-strategic-number sn-maximum-attack-group-size 0)
 	(up-reset-attack-now)
 	(up-reset-unit c: -1)
 	(up-retreat-now)
@@ -20445,13 +20496,22 @@
 )
 
 (defrule
-	(or (goal strategy-goal sg-archerrush)
-	(goal strategy-goal sg-scoutrush))
+	(goal strategy-goal sg-archerrush)
 	(current-age >= feudal-age)
 	(building-type-count-total blacksmith == 0)
-	(or (building-type-count-total archery-range >= 1)
-		(and (building-type-count-total stable >= 1)
-		(goal meso-civ NO)))
+	(building-type-count-total archery-range >= 1)
+	(building-type-count-total farm >= 4)
+	(can-build blacksmith)
+=>
+	(build blacksmith)
+)
+
+(defrule
+	(goal strategy-goal sg-scoutrush)
+	(goal meso-civ NO)
+	(current-age >= feudal-age)
+	(building-type-count-total blacksmith == 0)
+	(building-type-count-total stable >= 1)
 	(can-build blacksmith)
 =>
 	(build blacksmith)
@@ -20661,8 +20721,12 @@
 ; )
 
 (defrule
-	(or (goal strategy-goal sg-archerrush)
-	(goal strategy-goal sg-scoutrush))
+	(or 
+		(and (goal strategy-goal sg-archerrush)
+		(building-type-count-total archery-range >= 1))
+		(and (goal strategy-goal sg-scoutrush)
+		(building-type-count-total stable >= 1))
+	)
 	(food-amount >= 150)
 	(can-research ri-double-bit-axe)
 =>
@@ -22335,9 +22399,9 @@
 	(goal retreat-now-goal 0)
 =>
 	(set-goal retreat-now-goal 1)
-	(set-strategic-number sn-number-attack-groups 0)
-	(set-strategic-number sn-minimum-attack-group-size 0)
-	(set-strategic-number sn-maximum-attack-group-size 0)
+	; (set-strategic-number sn-number-attack-groups 0)
+	; (set-strategic-number sn-minimum-attack-group-size 0)
+	; (set-strategic-number sn-maximum-attack-group-size 0)
 	(up-reset-attack-now)
 	(up-reset-unit c: -1)
 	(up-retreat-now)
@@ -22621,6 +22685,7 @@
 (defrule
 	(current-age >= castle-age)
 	(civilian-population >= 55)
+	(up-research-status c: ri-bow-saw >= research-pending)
 	;(not(goal strategy-goal fastcastle))
 	(can-research ri-heavy-plow)
 =>
@@ -25728,9 +25793,9 @@
 	(goal retreat-now-goal 0)
 =>
 	(set-goal retreat-now-goal 1)
-	(set-strategic-number sn-number-attack-groups 0)
-	(set-strategic-number sn-minimum-attack-group-size 0)
-	(set-strategic-number sn-maximum-attack-group-size 0)
+	; (set-strategic-number sn-number-attack-groups 0)
+	; (set-strategic-number sn-minimum-attack-group-size 0)
+	; (set-strategic-number sn-maximum-attack-group-size 0)
 	(up-reset-attack-now)
 	(up-reset-unit c: -1)
 	(up-retreat-now)
