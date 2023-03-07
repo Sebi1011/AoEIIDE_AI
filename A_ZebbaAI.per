@@ -53,7 +53,7 @@
 ; task them to a straggler tree at the start of boar-hunting
 ; - find a solution against villager harassments in dark-age
 ; - remake towerrush completely due to several numbers of bugs
-; - fix retreating rules
+; - fix retreating rules (testing)
 ; - find a solution for initial scout losses in feudal rushes
 
 ; - add ability to garrison low-hp villagers being attacked in the next tc
@@ -19944,8 +19944,9 @@
 	(building-type-count-total town-center >= 1)
 	(building-type-count-total archery-range < 3)
 	(can-build-with-escrow archery-range)
-	(up-compare-goal gl-military-advantage < -3)
-	(military-population >= 20)
+	(up-compare-goal gl-military-advantage >= -5)
+	(up-compare-goal gl-military-advantage < 5)
+	(civilian-population >= 46)
 =>
 	(up-modify-escrow wood c:- 175)
 	(build archery-range)
@@ -20273,37 +20274,6 @@
 )
 
 (defrule
-	(goal retreat-now-goal 1)
-	(military-population >= 3)
-	(up-compare-goal gl-military-advantage >= 0)
-	(current-age == feudal-age)
-=>
-	(set-goal retreat-now-goal 0)
-	(set-goal attack-now-goal 0)
-	(up-reset-unit c: -1)
-	(set-strategic-number sn-number-attack-groups 500)
-	(set-strategic-number sn-minimum-attack-group-size 1)
-	(set-strategic-number sn-maximum-attack-group-size 1)
-	(chat-to-player my-player-number "Stop retreating")
-)
-
-(defrule
-	(current-age == feudal-age)
-	(up-compare-goal gl-military-advantage < -2)
-	(goal retreat-now-goal 0)
-=>
-	(set-goal retreat-now-goal 1)
-	; (set-strategic-number sn-number-attack-groups 0)
-	; (set-strategic-number sn-minimum-attack-group-size 0)
-	; (set-strategic-number sn-maximum-attack-group-size 0)
-	(up-reset-attack-now)
-	(up-reset-unit c: -1)
-	(up-retreat-now)
-	(chat-to-player my-player-number "Low army numbers, I am retreating")
-	(chat-to-allies "My army number is low, I am retreating")
-)
-
-(defrule
 	(not (goal strategy-goal sg-scoutrush))
 	(not (goal strategy-goal sg-towerrush)) ;mainly for archer-rush
 	(goal attack-now-goal 0) ;AI is not already attacking atm
@@ -20492,6 +20462,37 @@
 	(attack-now)
 	(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
+)
+
+(defrule
+	(goal retreat-now-goal 1)
+	(military-population >= 3)
+	(up-compare-goal gl-military-advantage >= 0)
+	(current-age == feudal-age)
+=>
+	(set-goal retreat-now-goal 0)
+	(set-goal attack-now-goal 0)
+	(up-reset-unit c: -1)
+	; (set-strategic-number sn-number-attack-groups 500)
+	; (set-strategic-number sn-minimum-attack-group-size 1)
+	; (set-strategic-number sn-maximum-attack-group-size 1)
+	(chat-to-player my-player-number "Stop retreating")
+)
+
+(defrule
+	(current-age == feudal-age)
+	(up-compare-goal gl-military-advantage < -2)
+	(goal retreat-now-goal 0)
+=>
+	(set-goal retreat-now-goal 1)
+	; (set-strategic-number sn-number-attack-groups 0)
+	; (set-strategic-number sn-minimum-attack-group-size 0)
+	; (set-strategic-number sn-maximum-attack-group-size 0)
+	(up-reset-attack-now)
+	(up-reset-unit c: -1)
+	(up-retreat-now)
+	(chat-to-player my-player-number "Low army numbers, I am retreating")
+	(chat-to-allies "My army number is low, I am retreating")
 )
 
 
@@ -22415,6 +22416,25 @@
 )
 
 (defrule
+	(current-age == castle-age)
+	(goal attack-now-goal 0)
+	(or (military-population >= 18)
+	(up-compare-goal gl-military-advantage >= 8))
+	(up-compare-goal gl-military-advantage >= -4)
+	(civilian-population g:< c-villager-goal)
+=>
+	(set-goal attack-now-goal 1)
+	(up-gather-inside c: barracks c: 0)
+	(up-gather-inside c: archery-range c: 0)
+	(up-gather-inside c: stable c: 0)
+	(up-gather-inside c: siege-workshop c: 0)
+	(attack-now)
+	(chat-to-player my-player-number "Starting an attack")
+	;(chat-to-allies "31")
+)
+
+
+(defrule
 	(goal retreat-now-goal 1)
 	(or (military-population >= 18)
 	(up-compare-goal gl-military-advantage >= 0))
@@ -22443,24 +22463,6 @@
 	(up-retreat-now)
 	(chat-to-player my-player-number "Low army numbers, I am retreating")
 	(chat-to-allies "My army number is low, I am retreating")
-)
-
-(defrule
-	(current-age == castle-age)
-	(goal attack-now-goal 0)
-	(or (military-population >= 18)
-	(up-compare-goal gl-military-advantage >= 8))
-	(up-compare-goal gl-military-advantage >= -4)
-	(civilian-population g:< c-villager-goal)
-=>
-	(set-goal attack-now-goal 1)
-	(up-gather-inside c: barracks c: 0)
-	(up-gather-inside c: archery-range c: 0)
-	(up-gather-inside c: stable c: 0)
-	(up-gather-inside c: siege-workshop c: 0)
-	(attack-now)
-	(chat-to-player my-player-number "Starting an attack")
-	;(chat-to-allies "31")
 )
 
 (defrule
@@ -25809,6 +25811,24 @@
 )
 
 (defrule
+	(current-age == imperial-age)
+	(goal attack-now-goal 0)
+	(or (military-population >= 23)
+	(up-compare-goal gl-military-advantage >= 10))
+	(up-compare-goal gl-military-advantage >= -5)
+=>
+	(set-goal attack-now-goal 1)
+	(up-gather-inside c: barracks c: 0)
+	(up-gather-inside c: archery-range c: 0)
+	(up-gather-inside c: stable c: 0)
+	(up-gather-inside c: siege-workshop c: 0)
+	(attack-now)
+	(chat-to-player my-player-number "Starting an attack")
+	;(chat-to-allies "31")
+)
+
+
+(defrule
 	(goal retreat-now-goal 1)
 	(or (military-population >= 23)
 	(up-compare-goal gl-military-advantage >= 0))
@@ -25837,23 +25857,6 @@
 	(up-retreat-now)
 	(chat-to-player my-player-number "Low army numbers, I am retreating")
 	(chat-to-allies "My army number is low, I am retreating")
-)
-
-(defrule
-	(current-age == imperial-age)
-	(goal attack-now-goal 0)
-	(or (military-population >= 23)
-	(up-compare-goal gl-military-advantage >= 10))
-	(up-compare-goal gl-military-advantage >= -5)
-=>
-	(set-goal attack-now-goal 1)
-	(up-gather-inside c: barracks c: 0)
-	(up-gather-inside c: archery-range c: 0)
-	(up-gather-inside c: stable c: 0)
-	(up-gather-inside c: siege-workshop c: 0)
-	(attack-now)
-	(chat-to-player my-player-number "Starting an attack")
-	;(chat-to-allies "31")
 )
 
 (defrule
@@ -28369,8 +28372,8 @@
 (defrule
 	(not (town-under-attack))
 	(current-age == castle-age)
-	(or (military-population < 15)
-	(up-compare-goal gl-military-advantage < 8))
+	(or (military-population < 12)
+	(up-compare-goal gl-military-advantage < 6))
 =>
 	(up-gather-inside c: barracks c: 1)
 	(up-gather-inside c: archery-range c: 1)
@@ -28535,7 +28538,7 @@
 	(current-age == castle-age)
 	(town-under-attack)
 	(building-type-count-total barracks > 0)
-	(or (military-population < 10)
+	(or (military-population < 12)
 	(military-population g:< enemy-military-pop))
 =>
 	(up-gather-inside c: barracks c: 1)
@@ -28547,11 +28550,11 @@
 	(current-age == castle-age)
 	(town-under-attack)
 	(building-type-count-total barracks > 0)
-	(or (military-population >= 6)
+	(or (military-population >= 12)
 	(or (military-population g:>= enemy-military-pop)
 	(players-current-age focus-player < castle-age)))
-	(military-population >= 4)
-	(up-compare-goal gl-military-advantage >= -8)
+	(military-population >= 6)
+	(up-compare-goal gl-military-advantage >= -6)
 =>
 	(up-ungarrison c: barracks)
 	(up-gather-inside c: barracks c: 0)
@@ -28562,8 +28565,8 @@
 	(current-age == castle-age)
 	(not (town-under-attack))
 	(building-type-count-total barracks > 0)
-	(military-population >= 10)
-	(up-compare-goal gl-military-advantage >= -10)
+	(military-population >= 12)
+	(up-compare-goal gl-military-advantage >= -6)
 =>
 	(up-ungarrison c: barracks)
 	(up-gather-inside c: barracks c: 0)
@@ -28574,7 +28577,7 @@
 	(current-age == castle-age)
 	(town-under-attack)
 	(building-type-count-total archery-range > 0)
-	(or (military-population < 10)
+	(or (military-population < 12)
 	(military-population g:< enemy-military-pop))
 =>
 	(up-gather-inside c: archery-range c: 1)
@@ -28586,11 +28589,11 @@
 	(current-age == castle-age)
 	(town-under-attack)
 	(building-type-count-total archery-range > 0)
-	(or (military-population >= 6)
+	(or (military-population >= 12)
 	(or (military-population g:>= enemy-military-pop)
 	(players-current-age focus-player < castle-age)))
-	(military-population >= 4)
-	(up-compare-goal gl-military-advantage >= -8)
+	(military-population >= 6)
+	(up-compare-goal gl-military-advantage >= -6)
 =>
 	(up-ungarrison c: archery-range)
 	(up-gather-inside c: archery-range c: 0)
@@ -28601,8 +28604,8 @@
 	(current-age == castle-age)
 	(not (town-under-attack))
 	(building-type-count-total archery-range > 0)
-	(military-population >= 10)
-	(up-compare-goal gl-military-advantage >= -10)
+	(military-population >= 12)
+	(up-compare-goal gl-military-advantage >= -6)
 =>
 	(up-ungarrison c: archery-range)
 	(up-gather-inside c: archery-range c: 0)
@@ -28613,7 +28616,7 @@
 	(current-age == castle-age)
 	(town-under-attack)
 	(building-type-count-total stable > 0)
-	(or (military-population < 10)
+	(or (military-population < 12)
 	(military-population g:< enemy-military-pop))
 =>
 	(up-gather-inside c: stable c: 1)
@@ -28625,11 +28628,11 @@
 	(current-age == castle-age)
 	(town-under-attack)
 	(building-type-count-total stable > 0)
-	(or (military-population >= 6)
+	(or (military-population >= 12)
 	(or (military-population g:>= enemy-military-pop)
 	(players-current-age focus-player < castle-age)))
-	(military-population >= 4)
-	(up-compare-goal gl-military-advantage >= -8)
+	(military-population >= 6)
+	(up-compare-goal gl-military-advantage >= -6)
 =>
 	(up-ungarrison c: stable)
 	(up-gather-inside c: stable c: 0)
@@ -28640,8 +28643,8 @@
 	(current-age == castle-age)
 	(not (town-under-attack))
 	(building-type-count-total stable > 0)
-	(military-population >= 10)
-	(up-compare-goal gl-military-advantage >= -10)
+	(military-population >= 12)
+	(up-compare-goal gl-military-advantage >= -6)
 =>
 	(up-ungarrison c: stable)
 	(up-gather-inside c: stable c: 0)
@@ -28652,7 +28655,7 @@
 	(current-age == castle-age)
 	(town-under-attack)
 	(building-type-count-total siege-workshop > 0)
-	(or (military-population < 10)
+	(or (military-population < 12)
 	(military-population g:< enemy-military-pop))
 =>
 	(up-gather-inside c: siege-workshop c: 1)
@@ -28664,11 +28667,11 @@
 	(current-age == castle-age)
 	(town-under-attack)
 	(building-type-count-total siege-workshop > 0)
-	(or (military-population >= 6)
+	(or (military-population >= 12)
 	(or (military-population g:>= enemy-military-pop)
 	(players-current-age focus-player < castle-age)))
-	(military-population >= 4)
-	(up-compare-goal gl-military-advantage >= -8)
+	(military-population >= 6)
+	(up-compare-goal gl-military-advantage >= -6)
 =>
 	(up-ungarrison c: siege-workshop)
 	(up-gather-inside c: siege-workshop c: 0)
@@ -28679,8 +28682,8 @@
 	(current-age == castle-age)
 	(not (town-under-attack))
 	(building-type-count-total siege-workshop > 0)
-	(military-population >= 10)
-	(up-compare-goal gl-military-advantage >= -10)
+	(military-population >= 12)
+	(up-compare-goal gl-military-advantage >= -6)
 =>
 	(up-ungarrison c: siege-workshop)
 	(up-gather-inside c: siege-workshop c: 0)
