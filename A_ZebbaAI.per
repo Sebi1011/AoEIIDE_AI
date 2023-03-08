@@ -1,14 +1,23 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 0.19.1
-;last update: 7th March 2023
+;Version: 0.20.1
+;last update: 8th March 2023
+
+;ZebbaAI is a versatile, aggressive and eco orientated AI. The idea of the AI is to set the opponent under pressure 
+;asap to keep any pressure from its base. In general, ZebbaAI tries to read the game as good as possible and adapt its
+;behaviour based on the current situation. 
+
+;This AI is still in development. Bugs and similar unintended behaviour are likely to happen are being tracked. However,
+;some bugs are very situational and hard to fix. If you notice any strange behaviour I'd be more than happy if you'd let me know 
+
+;have fun! :)
 
 ;Civs: Can play all civilizations
 ;Maps: besides standard maps like arabia, ZebbaAI can play nomad and other hybrid maps and custom maps. (Not optimized on water-maps though)
 		;ZebbaAI can't play properly on island-like maps: It needs a map with land connection to the enemy
 ;Taunts in TGs: AI reacts to following taunts: 3 ("food please"), 4("wood please"), 5("gold please"), 6("stone please"), 38("give me your extra resources"), Flare-Location + 48("I'm being attacked, please help")
 ;Strategies: Drush, Archerrush, Scoutrush, Towerrush, FC into Unique Unit, FC into Gold Unit, Fast-Imp (only pockets in team-games)
-;Difficulty: there are no levels of difficulty for ZebbaAI. Its current level is comparable to the hard DE AI
+;Difficulty: there are no levels of difficulty for ZebbaAI. Its current level is comparable to the hard DE AI. Before any match set the difficulty level to extreme to get the best results since the game nerfs AIs speed on lower difficulty levels
 
 ;recently added:
 ; - added more precise house-placement in dark-age, making the AI building houses outside of tc-range
@@ -39,22 +48,22 @@
 ; - improved AIs resource saving system
 ; - fixed several boar-hunting issues in dark-age
 ; - AI will now stop military production in feudal if it has a large advantage 
+; - greatly improved the archer-rush strategy
 
 ;ToDo: 
 
 ;what's up next:
-; - fix issue in archer rushes that initial food income in early feudal is too low
-; - build feudal-age production buildings in safer spots when being drushed
-; - split up tc-retreat-rules into pre and post castle-age
+; - build feudal-age production buildings in safer spots when being drushed (!)
+; - split up tc-retreat-rules into pre and post castle-age (testing)
 ; - implement tc-garrison code for every tc (testing)
-; - implement up-jump-rule rule to skip build-order rules after castle-age
+; - (implement up-jump-rule rule to skip build-order rules after castle-age)
 ; - (add escrow rules for the first 2 trebs)
-; - find a solution for tc-boar-hunting when there are no villager under the tc (maybe use previous villager-group and
-; task them to a straggler tree at the start of boar-hunting
-; - find a solution against villager harassments in dark-age
-; - remake towerrush completely due to several numbers of bugs
+; - (find a solution for tc-boar-hunting when there are no villager under the tc (maybe use previous villager-group and
+; task them to a straggler tree at the start of boar-hunting)
+; - find a solution against villager harassments in dark-age (maybe disable scouting when being attacked?)
+; - remake towerrush due to several numbers of bugs (!)
 ; - fix retreating rules (testing)
-; - find a solution for initial scout losses in feudal rushes
+; - find a solution for initial scout losses in feudal rushes (!)
 
 ; - add ability to garrison low-hp villagers being attacked in the next tc
 ; - implement and test sn-special-attack-type2
@@ -68,17 +77,6 @@
 ; constructions of buildings connected to villager count (bug potential)
 ; - fix problem that causes boar luring villagers being retasked to build non-duc buildings (tested)
 
-;improving trush:
-; - add villagers ability to fight back when tower is under attack
-; - implement decision making for building fu-towers clock-wise or counter-clockwise
-; - in trushes, keep builder villagers forward, even if no tower is being built (either build lumber/mining-camp nearby 
-; or garrison in a tower manually)
-; - improve timing of walling towers
-; - use military to defend forward towers and towers under construction
-; - prevent towers being built inside enemys tower range
-; - prevent initial towers being built inside enemys tc-range
-; - stop walling a tower-spot when tower has been destroyed
-; - fix correct setting up of villager groups for towerrush
 
 ;improving drush:
 ; - use scout to block villagers for militias
@@ -93,6 +91,19 @@
 ;improving archerrush:
 ; - set up groups of archers to attack at multiple locations
 ; - retreat with single archer units when villager numbers are too high
+; - keep initial scout near army when launching the 1st attack
+
+;improving trush:
+; - add villagers ability to fight back when tower is under attack
+; - implement decision making for building fu-towers clock-wise or counter-clockwise
+; - in trushes, keep builder villagers forward, even if no tower is being built (either build lumber/mining-camp nearby 
+; or garrison in a tower manually)
+; - improve timing of walling towers
+; - use military to defend forward towers and towers under construction
+; - prevent towers being built inside enemys tower range
+; - prevent initial towers being built inside enemys tc-range
+; - stop walling a tower-spot when tower has been destroyed
+; - fix correct setting up of villager groups for towerrush
 
 ;improving fastcastle gu & uu
 ; - start walling base earlier
@@ -101,8 +112,8 @@
 ;improving fastimp
 ; - start training army faster
 
-;general improvements
-; - find rules to make a switch to main-gold-unit later/ at a suitable time
+;improving general behaviour
+; - find rules to make a switch to main-gold-unit later/ at a more fitting time
 ; - improve defensive tower placement to select dangerous areas more precisely
 ; - improve retreating code from enemy castles, to also retreat from buildings not obtained by the focus-player
 ; - change fcgu builds to build stable/archery-range instead of a market
@@ -110,13 +121,12 @@
 ; does not work due to enemy pressure
 ; - implement taunt "31" ("Attack an enemy now!") and taunt reaction to enable combined attacks in teamgames
 ; - Saving resources for upgrades/buildings (work in progress) (missing: Capped/Siege Ram/Elephant, Onager, Siege Engineers, UTs, Redemption)
-; - improve military-management for producing, select 1 main-gold unit and produce at least 20 of this type
 ; - optimization of prioritisation of upgrades (-work in progress)
 ; - improve behaviour of villagers defending from enemy scout rushes
 ; - evacuate base to new safe position in TG when old base is being destroyed (work in progress)
-; - garrison villagers in TC and shoot when enemy is in range of the TC (works, but only for one tc)
 ; - improve attack intelligence, such as grouping up units before attack/ retreating when enemy military-count is too high/
-;/retreating single units from enemy-counter unit/ patrol-attacking, etc...
+;/retreating single units from enemy-counter unit/ patrol-attacking, target areas with army more precisely/
+; add ability to micro ranged-units
 ; - More accurate scouting
 ; - using scouting info for strategic decisions --> saving expected opponents strategy in a goal
 ; - improve rules of building outposts
@@ -129,17 +139,21 @@
 ; - improve walling: walling more precisely to forests and resources, use buildings as part of the wall
 ; - use first fishing ship to gather food instead of scouting on water (waiting for bug-fix)
 ; - build alternative lumber/mining-camp when another one is under attack
-; - garrison villager in houses when being attacked as KHMER-CIV
+; - garrison villager in houses when being attacked as KHMER
 ; - as POLES, build farms at folwarks
 
+
+;needs to be fixed:
+
 ; - fix several bugs related to tc-boar hunting
-; - fix: non-ranged-units should ignore ranged units standing inside their own tc/tower/castle range. Causes AI units trying to attack them,
-; but retreating once they touch the tc-range
-; - fix attack behaviour (constant switching targets)
+; - fix non-ranged-units behaviour to ignore ranged units standing inside their own tc/tower/castle range.
+; causing the AI units trying to attack them, but retreating once they touch the tc-range
+; - fix constant switching targets of military units
 ; - fix flare-sending enemy tcs at the start at nomad
-; - fix flare-sending issue in team-games, causing the AI to send random flares once one teammate has found an enemy tc/castle/tower
+; - fix flare-sending issue in team-games, causing the AI to send random flares once one teammate has found an enemy 
+; fortification
 ; - fix sn-camp-max-distance issue; gold/stone/wood piles are not being found correctly
-; - fix sending builders to regions on the map that is guarded by the enemy 
+; - fix sending builders to regions on the map that are guarded by the enemy 
 ; - fix counting of enemy warships
 ; - fix auto-garrison in towers when enemy units are close (currently deactivated)
 
@@ -322,9 +336,9 @@
 
 (defconst FDrop 14)
 (defconst MinVillsToGarrison 3)    ;number of vills that must be near the TC in order to garrison
-(defconst GarrisonSearchDistance 7)    ;how far from the TC an enemy unit has to be to trigger the garrisoning
-(defconst NumberVillsToGarrison 10)    ;how many villagers should be put inside the TC
-(defconst TCgarrisonGoal 69)
+(defconst gl-tc-search-distance 7)    ;how far from the TC an enemy unit has to be to trigger the garrisoning
+(defconst gl-garrison-count 10)    ;how many villagers should be put inside the TC
+(defconst gl-set-tc-garrison 69)
 (defconst gl-garrison-tc 71)
 (defconst gl-garrison-tc-two 72)
 (defconst TowerGarrisonGoal 75)
@@ -384,7 +398,6 @@
 (defconst relic-count 63)
 (defconst gold-mine 66)
 (defconst drush-goal 67)
-(defconst attacking-enemy-goal 68)
 (defconst retreating-goal 70)
 (defconst object-data-group-flag 73)
 (defconst gl-drush-militia-count 80)
@@ -394,6 +407,7 @@
 (defconst gl-tc-loop-counter 92)
 (defconst gl-castle-loop-counter 93)
 (defconst gl-self-loop-counter 94)
+(defconst gl-tower-loop-counter 95)
 (defconst gl-temp-three 98)
 (defconst gl-temp-two 99)
 (defconst gl-temp 100)
@@ -450,6 +464,7 @@
 (defconst gl-tcs 199)
 (defconst gl-loop-tower 200)
 (defconst gl-towers 201)
+(defconst gl-enemy-towers 201)
 (defconst temp-goal-one 202)
 (defconst temp-counter-goal 203)
 (defconst object-point-x 208)
@@ -1297,7 +1312,7 @@
 (defrule
 	(current-age < castle-age)
 =>
-	(set-goal NumberVillsToGarrison 10)
+	(set-goal gl-garrison-count 10)
 	(disable-self)
 )
 
@@ -1305,7 +1320,7 @@
 	(not (civ-selected teutonic))
 	(current-age >= castle-age)
 =>
-	(set-goal NumberVillsToGarrison 15)
+	(set-goal gl-garrison-count 15)
 	(disable-self)
 )
 
@@ -1313,7 +1328,7 @@
 	(civ-selected teutonic)
 	(current-age >= castle-age)
 =>
-	(set-goal NumberVillsToGarrison 25)
+	(set-goal gl-garrison-count 25)
 	(disable-self)
 )
 
@@ -1364,6 +1379,7 @@
 	(set-goal gl-distance-temp-three 999)
 	(set-goal gl-self-loop-counter 0)
 	(set-goal gl-tc-loop-counter 0)
+	(set-goal gl-tower-loop-counter 0)
 	(set-goal gl-castle-loop-counter 0)
 	(set-goal attack-now-goal 0)
 	(set-goal retreat-now-goal 0)
@@ -6845,7 +6861,7 @@
 	(players-unit-type-count focus-player spearman-line >= 3))
 	(can-train-with-escrow skirmisher-line)
 	(food-amount < 600)
-	(up-compare-goal gl-military-advantage < 30)
+	(up-compare-goal gl-military-advantage < 25)
 =>
 	(up-modify-escrow food c:- 25)
 	(up-modify-escrow wood c:- 35)	
@@ -6883,7 +6899,7 @@
 	(players-unit-type-count focus-player spearman-line < 4)
 	(can-train-with-escrow scout-cavalry-line)
 	(food-amount < 600)
-	(up-compare-goal gl-military-advantage < 30)
+	(up-compare-goal gl-military-advantage < 25)
 =>
 	(up-modify-escrow food c:- 80)
 	(train scout-cavalry-line)
@@ -6895,7 +6911,7 @@
 	(players-unit-type-count focus-player skirmisher-line >= 3)
 	(can-train-with-escrow eagle-warrior-line)
 	(food-amount < 600)	
-	(up-compare-goal gl-military-advantage < 30)
+	(up-compare-goal gl-military-advantage < 25)
 =>
 	(up-modify-escrow food c:- 20)
 	(up-modify-escrow gold c:- 50)
@@ -6907,7 +6923,7 @@
 	(current-age == feudal-age)
 	(players-unit-type-count focus-player militiaman-line > 0)
 	(can-train-with-escrow archer-line)
-	(up-compare-goal gl-military-advantage < 30)
+	(up-compare-goal gl-military-advantage < 25)
 =>
 	(up-modify-escrow wood c:- 25)
 	(up-modify-escrow gold c:- 45)
@@ -9329,7 +9345,7 @@
 ; =>
     ; (up-full-reset-search)
     ; (up-set-target-point gl-temp-x)
-    ; (up-filter-distance c: -1 c: GarrisonSearchDistance)    ;not too far from the tc 
+    ; (up-filter-distance c: -1 c: gl-tc-search-distance)    ;not too far from the tc 
     ; (up-find-remote c: all-units-class c: 1)
     ; (up-get-search-state gl-local-total)    ;count how many were found
     ; (up-modify-goal TowerGarrisonGoal g:= gl-remote-total)    ;save the number in a goal
@@ -9359,7 +9375,7 @@
     ; (up-filter-distance c: -1 c: 6)    ;only villagers nearby
     ; (up-find-local c: villager-class c: 5)
     ; (up-clean-search search-local object-data-distance search-order-desc)    ;order by distance to get closest
-    ; (up-remove-objects search-local -1 > NumberVillsToGarrison)
+    ; (up-remove-objects search-local -1 > gl-garrison-count)
     ; (up-get-search-state gl-local-total)
 ; )
 
@@ -14211,38 +14227,7 @@
 
 ;endregion
 
-;region Retreat Rules new ==========================================
-
-
-; Retreating from TC      
-
-(defrule										
-	(or	(current-age > castle-age)						
-		(or	(unit-type-count infantry-class > 19)				
-			(or (unit-type-count cavalry-class > 15)
-				(or (unit-type-count battering-ram-line > 0)
-					(or (unit-type-count armored-elephant-line > 0)
-						(military-population > 34))))))	
-=>	
-	(up-jump-rule 13)
-)	
-
-; (defrule
-	; (players-building-type-count focus-player town-center >= 1)
-; =>	
-	; (up-full-reset-search)
-	; (up-filter-status c: status-pending c: list-active)
-    ; (up-find-status-remote c: town-center c: 1)
-	; (up-get-search-state gl-local-total)
-; )
-
-; (defrule
-	; (players-building-type-count focus-player town-center >= 1)
-	; (up-compare-goal gl-remote-total > 0)
-	; (up-set-target-object remote-search c: 0)
-; =>
-	; (up-jump-rule 13)
-; )
+;region Retreat Rules new (Based on Esty the Tuto Master AI code) ================================
 
 ;loop through enemy tcs
 
@@ -14271,6 +14256,14 @@
 	(up-get-point position-object enemy-point-x) ;get position of first tc in the list
 	(up-set-target-point enemy-point-x) 
 	;(up-get-search-state gl-local-total)
+)
+
+(defrule ;pre castle-age rules
+	(or (current-age >= castle-age)
+	(or (unit-type-count-total militiaman-line >= 25)
+	(unit-type-count-total battering-ram-line >= 1)))
+=>
+	(up-jump-rule 8)
 )
 
 (defrule ;if tc is garrisoned, jump next code section
@@ -14320,6 +14313,7 @@
 	(up-filter-exclude -1 -1 -1 siege-weapon-class)
 	(up-filter-exclude -1 -1 -1 armored-elephant-line)
 	(up-find-local c: -1 c: 40)	
+	(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
 	(enable-timer split-stance-timer 6)
@@ -14372,10 +14366,142 @@
 	(up-filter-exclude -1 -1 -1 siege-weapon-class)
 	(up-filter-exclude -1 -1 -1 armored-elephant-line)
 	(up-find-local c: -1 c: 40)	
+	(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
 	(enable-timer split-stance-timer 6)
 )
+
+
+(defrule ;castle-age rules
+	(or	(current-age != castle-age)																
+	(or	(unit-type-count infantry-class > 24)	
+	(or	(unit-type-count eagle-warrior-line > 9)
+	(or	(unit-type-count huskarl-set > 9)
+	(or	(unit-type-count ghulam-line > 9)
+	(or (unit-type-count cavalry-class > 14)
+	(or (unit-type-count battering-ram-line > 0)
+	(or (unit-type-count armored-elephant-line > 0)
+	(military-population > 34)))))))))	
+=>	
+	(up-jump-rule 8)
+)
+	
+(defrule ;if tc is garrisoned, jump next code section
+	(players-building-type-count focus-player town-center >= 1)
+	(up-set-target-object search-remote g: gl-tc-loop-counter)
+	(or (up-object-data object-data-garrison-count >= 3)
+	(up-object-data object-data-hitpoints <= 450))
+=>
+	(up-jump-rule 3)
+)	
+	
+(defrule ;tc ungarrisoned
+	(goal split-rule-goal 0)
+	(players-building-type-count focus-player town-center > 0)
+=>
+	(up-full-reset-search)
+	(up-set-target-point enemy-point-x)
+	(up-filter-distance c: -1 c: 9) ;distance from which units shall retreat
+	(up-filter-include cmdid-military -1 -1 -1)
+	(up-filter-exclude -1 -1 -1 siege-weapon-class)
+	(up-filter-exclude -1 -1 -1 armored-elephant-line)
+	(up-filter-exclude -1 -1 -1 cavalry-class)
+	(up-filter-exclude -1 -1 -1 scout-cavalry-class)
+	(set-goal split-rule-goal 47)
+)
+
+(defrule	
+	(goal split-rule-goal 47)
+	(up-find-local c: -1 c: 1)
+	(up-set-target-object search-local c: 0)
+=>
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object object-point-x)
+	(up-lerp-tiles object-point-x enemy-point-x c: -8) 
+	(up-cross-tiles object-point-x enemy-point-x c: 9)
+	(up-bound-point object-point-x object-point-x)	
+	(set-goal retreating-goal YES)
+	(enable-timer retreating-timer 3)
+	(set-goal split-rule-goal 48)
+)
+
+(defrule
+	(goal split-rule-goal 48)
+=>	
+	(up-full-reset-search)	
+	(up-set-target-point enemy-point-x)
+	(up-filter-distance c: -1 c: 9)
+	(up-filter-include cmdid-military -1 -1 -1)	
+	(up-filter-exclude -1 -1 -1 siege-weapon-class)
+	(up-filter-exclude -1 -1 -1 armored-elephant-line)
+	(up-filter-exclude -1 -1 -1 cavalry-class)
+	(up-filter-exclude -1 -1 -1 scout-cavalry-class)
+	(up-find-local c: -1 c: 40)	
+	(set-strategic-number sn-disable-attack-groups 1)
+	(up-target-point object-point-x action-move formation-line stance-no-attack)
+	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
+	(enable-timer split-stance-timer 6)
+)
+
+(defrule ; if tc is garrisoned
+	(players-building-type-count focus-player town-center >= 1)
+	(up-set-target-object search-remote g: gl-tc-loop-counter)
+	(or (up-object-data object-data-garrison-count < 3)
+	(up-object-data object-data-hitpoints <= 450))
+=>
+	(up-jump-rule 3)
+)	
+	
+(defrule
+	(goal split-rule-goal 0) ;tc garrisoned
+	(players-building-type-count focus-player town-center > 0)
+=>
+	(up-full-reset-search)
+	(up-set-target-point enemy-point-x)
+	(up-filter-distance c: -1 c: 10)
+	(up-filter-include cmdid-military -1 -1 -1)
+	(up-filter-exclude -1 -1 -1 siege-weapon-class)
+	(up-filter-exclude -1 -1 -1 armored-elephant-line)
+	(up-filter-exclude -1 -1 -1 cavalry-class)
+	(up-filter-exclude -1 -1 -1 scout-cavalry-class)
+	(set-goal split-rule-goal 47)
+)
+
+(defrule	
+	(goal split-rule-goal 47)
+	(up-find-local c: -1 c: 1)
+	(up-set-target-object search-local c: 0)
+=>
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object object-point-x)
+	(up-lerp-tiles object-point-x enemy-point-x c: -8)
+	(up-cross-tiles object-point-x enemy-point-x c: 9)
+	(up-bound-point object-point-x object-point-x)	
+	(set-goal retreating-goal YES)
+	(enable-timer retreating-timer 4)
+	(set-goal split-rule-goal 48)
+)
+
+(defrule
+	(goal split-rule-goal 48)
+=>	
+	(up-full-reset-search)	
+	(up-set-target-point enemy-point-x)
+	(up-filter-distance c: -1 c: 10)
+	(up-filter-include cmdid-military -1 -1 -1)	
+	(up-filter-exclude -1 -1 -1 siege-weapon-class)
+	(up-filter-exclude -1 -1 -1 armored-elephant-line)
+	(up-filter-exclude -1 -1 -1 cavalry-class)
+	(up-filter-exclude -1 -1 -1 scout-cavalry-class)
+	(up-find-local c: -1 c: 40)	
+	(set-strategic-number sn-disable-attack-groups 1)
+	(up-target-point object-point-x action-move formation-line stance-no-attack)
+	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
+	(enable-timer split-stance-timer 6)
+)
+
+;go through the list
 
 (defrule
 	(players-building-type-count focus-player town-center >= 1)
@@ -14393,16 +14519,181 @@
 =>
 	(up-modify-goal gl-tc-loop-counter c:+ 1) ;go to next list-entry
 )
+
+;region old tc retreat rule
+;Retreating from TCs      
+
+; (defrule										
+	; (or	(current-age > castle-age)						
+	; (or	(unit-type-count infantry-class > 19)				
+	; (or (unit-type-count cavalry-class > 15)
+	; (or (unit-type-count battering-ram-line > 0)
+	; (or (unit-type-count armored-elephant-line > 0)
+	; (military-population > 34))))))	
+; =>	
+	; (up-jump-rule 13)
+; )	
+
+; ;loop through enemy tcs
+
+; (defrule
+	; (players-building-type-count focus-player town-center >= 1)
+; =>
+	; (up-full-reset-search)
+	; (up-filter-status c: status-ready c: list-active)
+	; (up-find-status-remote c: town-center c: 10)
+	; (up-get-search-state gl-local-total)
+	; (up-modify-goal gl-tcs g:= gl-remote-total)
+	; ;(up-chat-data-to-self "Nr enemy tcs: %d" g: gl-tcs)
+	; ;(up-chat-data-to-self "Current Focus TC: %d" g: gl-tc-loop-counter)
+; )
+
+; (defrule
+	; (up-compare-goal split-rule-goal g:>= 0)
+; =>
+	; (set-goal split-rule-goal 0)
+; )
+
+; (defrule
+	; (players-building-type-count focus-player town-center >= 1)
+	; (up-set-target-object search-remote g: gl-tc-loop-counter) ;enemy tc was found?
+; =>
+	; (up-get-point position-object enemy-point-x) ;get position of first tc in the list
+	; (up-set-target-point enemy-point-x) 
+	; ;(up-get-search-state gl-local-total)
+; )
+
+; (defrule ;if tc is garrisoned, jump next code section
+	; (players-building-type-count focus-player town-center >= 1)
+	; (up-set-target-object search-remote g: gl-tc-loop-counter)
+	; (or (up-object-data object-data-garrison-count >= 3)
+	; (up-object-data object-data-hitpoints <= 450))
+; =>
+	; (up-jump-rule 3)
+; )	
+	
+; (defrule ;tc ungarrisoned
+	; (goal split-rule-goal 0)
+	; (players-building-type-count focus-player town-center > 0)
+; =>
+	; (up-full-reset-search)
+	; (up-set-target-point enemy-point-x)
+	; (up-filter-distance c: -1 c: 9) ;distance from which units shall retreat
+	; (up-filter-include cmdid-military -1 -1 -1)
+	; (up-filter-exclude -1 -1 -1 siege-weapon-class)
+	; (up-filter-exclude -1 -1 -1 armored-elephant-line)
+	; (set-goal split-rule-goal 47)
+; )
+
+; (defrule	
+	; (goal split-rule-goal 47)
+	; (up-find-local c: -1 c: 1)
+	; (up-set-target-object search-local c: 0)
+; =>
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object object-point-x)
+	; (up-lerp-tiles object-point-x enemy-point-x c: -8) 
+	; (up-cross-tiles object-point-x enemy-point-x c: 9)
+	; (up-bound-point object-point-x object-point-x)	
+	; (set-goal retreating-goal YES)
+	; (enable-timer retreating-timer 3)
+	; (set-goal split-rule-goal 48)
+; )
+
+; (defrule
+	; (goal split-rule-goal 48)
+; =>	
+	; (up-full-reset-search)	
+	; (up-set-target-point enemy-point-x)
+	; (up-filter-distance c: -1 c: 9)
+	; (up-filter-include cmdid-military -1 -1 -1)	
+	; (up-filter-exclude -1 -1 -1 siege-weapon-class)
+	; (up-filter-exclude -1 -1 -1 armored-elephant-line)
+	; (up-find-local c: -1 c: 40)	
+	; (up-target-point object-point-x action-move formation-line stance-no-attack)
+	; ;(up-target-point object-point-x action-move formation-line stance-stand-ground)
+	; (enable-timer split-stance-timer 6)
+; )
+
+; (defrule ; if tc is garrisoned
+	; (players-building-type-count focus-player town-center >= 1)
+	; (up-set-target-object search-remote g: gl-tc-loop-counter)
+	; (or (up-object-data object-data-garrison-count < 3)
+	; (up-object-data object-data-hitpoints <= 450))
+; =>
+	; (up-jump-rule 3)
+; )	
+	
+; (defrule
+	; (goal split-rule-goal 0) ;tc garrisoned
+	; (players-building-type-count focus-player town-center > 0)
+; =>
+	; (up-full-reset-search)
+	; (up-set-target-point enemy-point-x)
+	; (up-filter-distance c: -1 c: 10)
+	; (up-filter-include cmdid-military -1 -1 -1)
+	; (up-filter-exclude -1 -1 -1 siege-weapon-class)
+	; (up-filter-exclude -1 -1 -1 armored-elephant-line)
+	; (set-goal split-rule-goal 47)
+; )
+
+; (defrule	
+	; (goal split-rule-goal 47)
+	; (up-find-local c: -1 c: 1)
+	; (up-set-target-object search-local c: 0)
+; =>
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object object-point-x)
+	; (up-lerp-tiles object-point-x enemy-point-x c: -8)
+	; (up-cross-tiles object-point-x enemy-point-x c: 9)
+	; (up-bound-point object-point-x object-point-x)	
+	; (set-goal retreating-goal YES)
+	; (enable-timer retreating-timer 4)
+	; (set-goal split-rule-goal 48)
+; )
+
+; (defrule
+	; (goal split-rule-goal 48)
+; =>	
+	; (up-full-reset-search)	
+	; (up-set-target-point enemy-point-x)
+	; (up-filter-distance c: -1 c: 10)
+	; (up-filter-include cmdid-military -1 -1 -1)	
+	; (up-filter-exclude -1 -1 -1 siege-weapon-class)
+	; (up-filter-exclude -1 -1 -1 armored-elephant-line)
+	; (up-find-local c: -1 c: 40)	
+	; (up-target-point object-point-x action-move formation-line stance-no-attack)
+	; ;(up-target-point object-point-x action-move formation-line stance-stand-ground)
+	; (enable-timer split-stance-timer 6)
+; )
+
+; (defrule
+	; (players-building-type-count focus-player town-center >= 1)
+	; ;(up-set-target-object search-remote g: gl-loop-counter) ;did we run through the list?
+	; (up-compare-goal gl-tc-loop-counter g:>= gl-tcs)
+; =>
+	; (set-goal gl-tc-loop-counter 0)
+	; (up-jump-rule 1) ;end loop
+; )
+
+; (defrule
+	; (players-building-type-count focus-player town-center >= 1) 
+	; (up-point-contains enemy-point-x c: town-center)
+	; (up-compare-goal gl-tc-loop-counter g:< gl-tcs)
+; =>
+	; (up-modify-goal gl-tc-loop-counter c:+ 1) ;go to next list-entry
+; )
+;endregion
 	
 ; Retreating from Castle 
 
 (defrule															
 	(or	(military-population > 34)					
-		(or(unit-type-count trebuchet > 0)
-			(or(unit-type-count-total armored-elephant-line >= 1)
-				(or(unit-type-count-total battering-ram-line >= 1)
-					(or(unit-type-count-total bombard-cannon >= 1)
-						(unit-type-count-total cannon-galleon-line >= 1))))))
+	(or(unit-type-count trebuchet > 0)
+	(or(unit-type-count-total armored-elephant-line >= 1)
+	(or(unit-type-count-total battering-ram-line >= 1)
+	(or(unit-type-count-total bombard-cannon >= 1)
+	(unit-type-count-total cannon-galleon-line >= 1))))))
 =>	
 	(up-jump-rule 10)
 )	
@@ -14489,6 +14780,7 @@
 	(up-filter-exclude -1 -1 -1 siege-weapon-class)
 	(up-filter-exclude -1 -1 -1 armored-elephant-line)
 	(up-find-local c: -1 c: 40)	
+	(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
 	(enable-timer split-stance-timer 6)
@@ -14516,41 +14808,46 @@
 
 (defrule															
 	(or	(military-population > 18)					
-		(or (unit-type-count battering-ram-line > 0)
-			(or (unit-type-count armored-elephant-line > 0)		
-				(or(unit-type-count trebuchet > 0)
-					(or (unit-type-count bombard-cannon > 0)
-						(or (unit-type-count cavalry-class >= 4)
-							(unit-type-count infantry-class >= 6)))))))
+	(or (unit-type-count battering-ram-line > 0)
+	(or (unit-type-count armored-elephant-line > 0)		
+	(or (unit-type-count trebuchet > 0)
+	(or (unit-type-count bombard-cannon > 0)
+	(or (unit-type-count cavalry-class >= 4)
+	(unit-type-count infantry-class >= 6)))))))
 =>	
 	(up-jump-rule 13)
 )	
 
 (defrule
-	(players-building-type-count focus-player watch-tower >= 1)
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
 =>	
 	(up-full-reset-search)
-	(up-filter-status c: status-pending c: list-active)
-    (up-find-status-remote c: watch-tower c: 1)
+	(up-filter-status c: status-pending c: list-active) ;don't retreat if enemy is building a tower
+    (up-find-status-remote c: tower-type c: 1)
 	(up-get-search-state gl-local-total)
 )
 
 (defrule
-	(players-building-type-count focus-player watch-tower >= 1)
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
 	(up-compare-goal gl-remote-total > 0)
 	(up-set-target-object search-remote c: 0)
 =>
 	(up-jump-rule 11)
 )
+
 ;loop through enemy towers
 
 (defrule
-	(players-building-type-count focus-player watch-tower >= 1)
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
 =>
 	(up-full-reset-search)
 	(up-filter-status c: status-ready c: list-active)
 	(up-find-status-remote c: tower-type c: 10)
-	(set-goal gl-loop-counter 0)
+	(up-get-search-state gl-local-total)
+	(up-modify-goal gl-enemy-towers g:= gl-remote-total)
 )
 
 (defrule
@@ -14560,25 +14857,29 @@
 )
 
 (defrule
-	(players-building-type-count focus-player watch-tower >= 1)
-	(up-set-target-object search-remote g: gl-loop-counter)
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
+	(up-set-target-object search-remote g: gl-tower-loop-counter)
 =>
 	(up-get-point position-object enemy-tower-point-x)
 	(up-set-target-point enemy-tower-point-x)
-	(up-get-search-state gl-local-total)
+	;(up-get-search-state gl-local-total)
 )
 
 (defrule ; skip if tower is not garrisoned
-	(players-building-type-count focus-player watch-tower >= 1)
-	(up-set-target-object search-remote g: gl-loop-counter)
-	(up-object-data object-data-garrison-count < 2)
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
+	(up-set-target-object search-remote g: gl-tower-loop-counter)
+	(or (up-object-data object-data-garrison-count < 2)
+	(up-object-data object-data-hitpoints <= 170))
 =>
 	(up-jump-rule 3)
 )	
 
 (defrule
 	(goal split-rule-goal 0)
-	(players-building-type-count focus-player watch-tower > 0)
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
 =>
 	(up-full-reset-search)
 	(up-set-target-point enemy-tower-point-x)
@@ -14620,32 +14921,16 @@
 	(up-filter-exclude -1 -1 -1 scout-cavalry-class)
 	(up-filter-exclude -1 -1 -1 infantry-class)
 	(up-find-local c: -1 c: 40)	
+	(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
 	(enable-timer split-stance-timer 6)
 )
 
-; (defrule
-	; (players-building-type-count focus-player watch-tower-line >= 1)
-	; ;(up-set-target-object search-remote g: gl-loop-counter)
-	; (up-compare-goal gl-remote-total g:== gl-loop-counter)
-; =>
-	; (up-jump-rule 1)
-; )
-
-; (defrule
-	; (players-building-type-count focus-player watch-tower-line >= 1)
-	; (up-point-contains enemy-tower-point-x c: watch-tower)
-	; (up-compare-goal gl-remote-total > 0)
-	; (up-compare-goal gl-loop-counter < 9)
-; =>
-	; (up-modify-goal gl-loop-counter c:+ 1)
-	; (up-jump-rule -7)
-; )
-
 (defrule ; skip if tower is garrisoned
-	(players-building-type-count focus-player watch-tower >= 1)
-	(up-set-target-object search-remote g: gl-loop-counter)
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
+	(up-set-target-object search-remote g: gl-tower-loop-counter)
 	(up-object-data object-data-garrison-count >= 2)
 =>
 	(up-jump-rule 3)
@@ -14653,7 +14938,8 @@
 
 (defrule
 	(goal split-rule-goal 0)
-	(players-building-type-count focus-player watch-tower > 0)
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
 =>
 	(up-full-reset-search)
 	(up-set-target-point enemy-tower-point-x)
@@ -14695,28 +14981,30 @@
 	(up-filter-exclude -1 -1 -1 scout-cavalry-class)
 	(up-filter-exclude -1 -1 -1 infantry-class)
 	(up-find-local c: -1 c: 40)	
+	(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
 	(enable-timer split-stance-timer 6)
 )
 
-; (defrule
-	; (players-building-type-count focus-player watch-tower-line >= 1)
-	; ;(up-set-target-object search-remote g: gl-loop-counter)
-	; (up-compare-goal gl-remote-total g:== gl-loop-counter)
-; =>
-	; (up-jump-rule 1)
-; )
+(defrule
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
+	;(up-set-target-object search-remote g: gl-loop-counter)
+	(up-compare-goal gl-tower-loop-counter g:>= gl-enemy-towers)
+=>
+	(set-goal gl-tower-loop-counter 0)
+	(up-jump-rule 1)
+)
 
-; (defrule
-	; (players-building-type-count focus-player watch-tower-line >= 1)
-	; (up-point-contains enemy-tower-point-x c: watch-tower)
-	; (up-compare-goal gl-remote-total > 0)
-	; (up-compare-goal gl-loop-counter < 9)
-; =>
-	; (up-modify-goal gl-loop-counter c:+ 1)
-	; (up-jump-rule -14)
-; )
+(defrule
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
+	(up-point-contains enemy-tower-point-x c: tower-type)
+	(up-compare-goal gl-tower-loop-counter g:< gl-enemy-towers)
+=>
+	(up-modify-goal gl-tower-loop-counter c:+ 1) ;go to next list-entry
+)
 
 	;resetting
 
@@ -14731,6 +15019,7 @@
 	;(up-reset-target-priorities priority-offense 1)
 	(up-set-attack-stance -1 c: stance-aggressive)
 	(set-strategic-number sn-disable-defend-groups 0)
+	(set-strategic-number sn-disable-attack-groups 0)
 	(disable-timer retreating-timer)
 )
 
@@ -14745,10 +15034,6 @@
 ;	(up-reset-target-priorities priority-offense 1)
 )
 
-	
-	
-	
-	
 ;endregion
 
 ;region Retreat Rules (old, inactive) ==============================
@@ -20030,7 +20315,7 @@
 	(unit-type-count-total scout-cavalry-line < 4)
 	(players-unit-type-count focus-player infantry-class < 6)
 	(game-time < 1000)
-	(up-compare-goal gl-military-advantage < 30)
+	(up-compare-goal gl-military-advantage < 25)
 =>
 	(up-modify-escrow food c:- 80)
 	(train scout-cavalry-line)	
@@ -20047,7 +20332,7 @@
 	(or (unit-type-count-total scout-cavalry-line >= 4)
 	(game-time >= 1000))
 	(players-unit-type-count focus-player infantry-class < 6)
-	(up-compare-goal gl-military-advantage < 30)
+	(up-compare-goal gl-military-advantage < 25)
 =>
 	(train scout-cavalry-line)
 )
@@ -20123,7 +20408,7 @@
 	(game-time < 1000)
 	(nand (players-unit-type-count focus-player scout-cavalry-line >= 3) 
 		  (unit-type-count-total spearman-line < 1)) 
-	(up-compare-goal gl-military-advantage < 30)
+	(up-compare-goal gl-military-advantage < 25)
 =>
 	(up-modify-escrow food c:- 20)
 	(up-modify-escrow gold c:- 50)
@@ -20141,7 +20426,7 @@
 	(game-time >= 1000))
 	(nand (players-unit-type-count focus-player scout-cavalry-line >= 3) 
 		  (unit-type-count-total spearman-line < 1)) 
-	(up-compare-goal gl-military-advantage < 30)
+	(up-compare-goal gl-military-advantage < 25)
 =>
 	(train eagle-warrior-line)
 )
@@ -20156,7 +20441,7 @@
 		  (unit-type-count-total scout-cavalry-line < 1)) 
 	(unit-type-count-total archer-line < 8)
 	(game-time < 1000)
-	(up-compare-goal gl-military-advantage < 30)
+	(up-compare-goal gl-military-advantage < 25)
 =>
 	(up-modify-escrow wood c:- 25)
 	(up-modify-escrow gold c:- 45)
@@ -20174,7 +20459,7 @@
 	(wood-amount > 65)
 	(or (unit-type-count-total archer-line >= 8)
 	(game-time >= 1000))
-	(up-compare-goal gl-military-advantage < 30)
+	(up-compare-goal gl-military-advantage < 25)
 =>
 	(train archer-line)
 )
@@ -20190,7 +20475,7 @@
 	(unit-type-count-total scout-cavalry-line < 1)
 	(unit-type-count-total skirmisher-line < 8)
 	(players-current-age focus-player == feudal-age)
-	(up-compare-goal gl-military-advantage < 30)
+	(up-compare-goal gl-military-advantage < 25)
 =>
 	(train skirmisher-line)
 )
@@ -20203,7 +20488,7 @@
 	(can-train skirmisher-line)
 	(wood-amount > 85)
 	(unit-type-count-total skirmisher-line < 6)
-	(up-compare-goal gl-military-advantage < 30)
+	(up-compare-goal gl-military-advantage < 25)
 =>
 	(train skirmisher-line)
 )
@@ -20216,7 +20501,7 @@
 	(can-train archer-line)
 	(wood-amount > 75)
 	(unit-type-count-total skirmisher-line >= 2)
-	(up-compare-goal gl-military-advantage < 30)
+	(up-compare-goal gl-military-advantage < 25)
 =>
 	(train archer-line)
 )
@@ -20229,7 +20514,7 @@
 	(can-train spearman-line)
 	(wood-amount > 75)
 	(unit-type-count-total spearman-line < 2)
-	(up-compare-goal gl-military-advantage < 30)
+	(up-compare-goal gl-military-advantage < 25)
 =>
 	(train spearman-line)
 )
@@ -20243,7 +20528,7 @@
 	(wood-amount > 75)
 	(food-amount > 85)
 	(unit-type-count-total spearman-line < 6)
-	(up-compare-goal gl-military-advantage < 30)
+	(up-compare-goal gl-military-advantage < 25)
 =>
 	(train spearman-line)
 )
@@ -20268,7 +20553,7 @@
 	(unit-type-count-total archer-line >= 4)
 	(wood-amount > 50)	
 	(food-amount > 70)
-	(up-compare-goal gl-military-advantage < 30)
+	(up-compare-goal gl-military-advantage < 25)
 =>
 	(train spearman-line)
 )
@@ -21127,6 +21412,13 @@
 )
 
 (defrule
+	(up-research-status c: feudal-age == research-pending)
+=>
+    (set-strategic-number sn-maximum-town-size 15)
+	(disable-self)
+)
+
+(defrule
 	(current-age == feudal-age)
 =>
     (set-strategic-number sn-maximum-town-size 17)
@@ -21853,7 +22145,7 @@
 	(current-age == castle-age)
 	(can-build siege-workshop)
 	(building-type-count-total siege-workshop < 1)
-	(or (military-population >= 14)
+	(or (military-population >= 10)
 	(or (players-current-age focus-player < castle-age)
 	(up-compare-goal gl-military-advantage >= 12)))
 =>
@@ -21867,7 +22159,7 @@
 	(can-build siege-workshop)
 	(building-type-count-total siege-workshop < 1)
 	(building-type-count-total town-center >= 1)
-	(or (military-population < 14)
+	(or (military-population < 10)
 	(up-compare-goal gl-military-advantage < 12))
 =>
 	(up-assign-builders c: siege-workshop c: 2)
@@ -21877,7 +22169,7 @@
 
 (defrule	
 	(current-age == castle-age)
-	(or (military-population < 15)
+	(or (military-population < 10)
 	(up-compare-goal gl-military-advantage < 10))
 	(can-build-with-escrow castle)
 	(not (civ-selected slavic))
@@ -21895,7 +22187,7 @@
 
 (defrule	
 	(current-age == castle-age)
-	(or (military-population < 15)
+	(or (military-population < 10)
 	(up-compare-goal gl-military-advantage < 10))
 	(can-build-with-escrow castle)
 	(not (civ-selected slavic))
@@ -21925,7 +22217,7 @@
 
 (defrule	
 	(current-age == castle-age)
-	(or (military-population >= 15)
+	(or (military-population >= 10)
 	(up-compare-goal gl-military-advantage >= 10))
 	(up-compare-goal gl-military-advantage >= -10)
 	(can-build-with-escrow castle)
@@ -21958,7 +22250,7 @@
 
 (defrule	
 	(current-age == castle-age)
-	(or (military-population < 15)
+	(or (military-population < 10)
 	(up-compare-goal gl-military-advantage < 10))
 	(not (town-under-attack))
 	(can-build-with-escrow castle)
@@ -21976,7 +22268,7 @@
 
 (defrule	
 	(current-age == castle-age)
-	(or (military-population >= 15)
+	(or (military-population >= 10)
 	(up-compare-goal gl-military-advantage >= 10))
 	(up-compare-goal gl-military-advantage >= -10)
 	(can-build-with-escrow castle)
@@ -21996,7 +22288,7 @@
 
 (defrule	
 	(current-age == castle-age)
-	(or (military-population < 15)
+	(or (military-population < 10)
 	(up-compare-goal gl-military-advantage < 10))
 	(not (town-under-attack))
 	(can-build-with-escrow castle)
@@ -22018,7 +22310,7 @@
 
 (defrule	
 	(current-age == castle-age)
-	(or (military-population >= 15)
+	(or (military-population >= 10)
 	(up-compare-goal gl-military-advantage >= 10))
 	(up-compare-goal gl-military-advantage >= -10)
 	(can-build-with-escrow castle)
@@ -22042,7 +22334,7 @@
 
 (defrule	
 	(current-age == castle-age)
-	(or (military-population < 15)
+	(or (military-population < 10)
 	(up-compare-goal gl-military-advantage < 10))
 	(not (town-under-attack))
 	(can-build castle)
@@ -22056,7 +22348,7 @@
 
 (defrule	
 	(current-age == castle-age)
-	(or (military-population < 15)
+	(or (military-population < 10)
 	(up-compare-goal gl-military-advantage < 10))
 	(not (town-under-attack))
 	(can-build castle)
@@ -22096,7 +22388,7 @@
 
 (defrule	
 	(current-age == castle-age)
-	(or (military-population >= 15)
+	(or (military-population >= 10)
 	(up-compare-goal gl-military-advantage >= 10))
 	(can-build castle)
 	(up-compare-goal gl-military-advantage >= -10)
@@ -22122,7 +22414,7 @@
 
 (defrule	
 	(current-age == castle-age)
-	(or (military-population < 15)
+	(or (military-population < 10)
 	(up-compare-goal gl-military-advantage < 8))
 	(not (town-under-attack))
 	(can-build-with-escrow krepost)
@@ -22139,7 +22431,7 @@
 
 (defrule	
 	(current-age == castle-age)
-	(or (military-population < 15)
+	(or (military-population < 10)
 	(up-compare-goal gl-military-advantage < 8))
 	(not (town-under-attack))
 	(can-build-with-escrow krepost)
@@ -22167,7 +22459,7 @@
 
 (defrule	
 	(current-age == castle-age)
-	(or (military-population >= 15)
+	(or (military-population >= 10)
 	(up-compare-goal gl-military-advantage >= 8))
 	(up-compare-goal gl-military-advantage >= -10)
 	(can-build-with-escrow krepost)
@@ -27043,7 +27335,7 @@
 	(current-age == feudal-age)
 	(up-research-status c: castle-age >= research-pending)
 	(can-train eagle-warrior-line)
-	(up-compare-goal gl-military-advantage < 30)
+	(up-compare-goal gl-military-advantage < 25)
 =>
 	(train eagle-warrior-line)
 )
@@ -28806,7 +29098,7 @@
 	(military-population g:< enemy-military-pop))
 =>
 	(up-gather-inside c: siege-workshop c: 1)
-	;(chat-to-player my-player-number "Warte mit Truppen in Waffenschmiede, bis genug Truppen vorhanden sind.")
+	;(chat-to-player my-player-number "Warte mit Truppen in Waffenschmieden, bis genug Truppen vorhanden sind.")
 	;(disable-self)
 )
 
@@ -28820,7 +29112,7 @@
 =>
 	(up-ungarrison c: siege-workshop)
 	(up-gather-inside c: siege-workshop c: 0)
-	;(chat-to-player my-player-number "Schicke Truppen aus den Waffenschmiede.")
+	;(chat-to-player my-player-number "Schicke Truppen aus den Waffenschmieden.")
 )
 
 (defrule
@@ -28831,7 +29123,7 @@
 =>
 	(up-ungarrison c: siege-workshop)
 	(up-gather-inside c: siege-workshop c: 0)
-	;(chat-to-player my-player-number "Schicke Truppen aus den Waffenschmiede.")
+	;(chat-to-player my-player-number "Schicke Truppen aus den Waffenschmieden.")
 )
 
 
@@ -29474,7 +29766,7 @@
     (true)
 =>
     (set-strategic-number sn-focus-player-number 1)    ;always start with player 1
-    (set-goal TCgarrisonGoal 0)
+    (set-goal gl-set-tc-garrison 0)
 )
 
 (defrule
@@ -29505,16 +29797,16 @@
 =>
     (up-full-reset-search)
 	(up-set-target-point gl-self-point-x)
-    (up-filter-distance c: -1 c: GarrisonSearchDistance)    ;not too far from the tc 
+    (up-filter-distance c: -1 c: gl-tc-search-distance)    ;not too far from the tc 
     (up-find-remote c: all-units-class c: 1)
 	(up-remove-objects search-remote object-data-class == building-class)
 	(up-remove-objects search-remote object-data-player == 0) ;gaia objects, like boars
     (up-get-search-state gl-local-total)    ;count how many were found
-    (up-modify-goal TCgarrisonGoal g:= gl-remote-total)    ;save the number in a goal
+    (up-modify-goal gl-set-tc-garrison g:= gl-remote-total)    ;save the number in a goal
 )
 
 (defrule    ;repeat the search if no enemy units were found
-    (up-compare-goal TCgarrisonGoal < 1)    ;no units found
+    (up-compare-goal gl-set-tc-garrison < 1)    ;no units found
     (player-valid focus-player)    ;don't search if focus-player isn't in the game
 =>
     (up-modify-sn sn-focus-player-number c:+ 1)    ;set to the next-highest player
@@ -29523,7 +29815,7 @@
 
 (defrule    ;if units found nearby, start the garrison process
     (goal gl-garrison-tc -1)
-    (up-compare-goal TCgarrisonGoal >= 1)
+    (up-compare-goal gl-set-tc-garrison >= 1)
 =>    
     (chat-to-player my-player-number "Enemy units near tc!")
     (set-goal gl-garrison-tc 0)
@@ -29537,13 +29829,13 @@
     (up-filter-distance c: -1 c: 7)    ;only villagers nearby
     (up-find-local c: villager-class c: 15)
     (up-clean-search search-local object-data-distance search-order-desc)    ;order by distance to get closest
-    (up-remove-objects search-local -1 g:> NumberVillsToGarrison)
+    (up-remove-objects search-local -1 g:> gl-garrison-count)
     (up-get-search-state gl-local-total)
 )
 
 (defrule    ;garrison the villagers found above if there were some
     (goal gl-garrison-tc 0)
-    (up-compare-goal gl-local-total g:>= MinVillsToGarrison)
+    (up-compare-goal gl-local-total g:>= gl-garrison-count)
 =>
     (set-strategic-number sn-focus-player-number my-player-number)
     (up-find-remote c: town-center c: 1)    ;put in the remote list for up-target-objects command
@@ -29554,9 +29846,10 @@
 
 
 ;UNGARRISON
+
 ; (defrule
     ; (up-compare-goal gl-garrison-tc != -1)
-    ; (up-compare-goal TCgarrisonGoal < 1)    ;search at the beginning didn't find anything
+    ; (up-compare-goal gl-set-tc-garrison < 1)    ;search at the beginning didn't find anything
 ; =>
     ; (up-ungarrison c: town-center)
     ; (chat-to-player my-player-number "Threat is over, release vills")
@@ -29565,7 +29858,7 @@
 
 (defrule
     (up-compare-goal gl-garrison-tc != -1)
-    (up-compare-goal TCgarrisonGoal < 1)    ;search at the beginning didn't find anything
+    (up-compare-goal gl-set-tc-garrison < 1)    ;search at the beginning didn't find anything
 =>
 	(up-full-reset-search)
 	(up-set-target-point gl-self-point-x)
@@ -29575,7 +29868,7 @@
 
 (defrule
 	(up-compare-goal gl-garrison-tc != -1)
-    (up-compare-goal TCgarrisonGoal < 1) 	
+    (up-compare-goal gl-set-tc-garrison < 1) 	
 	(up-set-target-object search-local c: 0)
 	(up-object-data object-data-garrison-count > 0)
 =>
@@ -32164,7 +32457,7 @@
     (building-type-count market >= 1)
 	(food-amount > 500)
 	(not (goal strategy-goal sg-fastcastle-uu))
-	(or (up-compare-goal gl-military-advantage >= 20)
+	(or (up-compare-goal gl-military-advantage >= 25) ;?
 	(up-compare-goal gl-military-advantage <= -16))
 =>
     (sell-commodity stone)
