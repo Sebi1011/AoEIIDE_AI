@@ -54,7 +54,7 @@
 ;ToDo: 
 
 ;what's up next:
-; - fix retreating rules (testing) (town-size probably causes unintended TSA)
+; - fix retreating rules (testing)
 ; - add escrow rules for the first 2 trebs (!)
 ; - test scoutrush (retreat scouts from spearmen) (testing)
 ; - find a solution against villager harassments in dark-age (testing)
@@ -559,6 +559,8 @@
 (defconst barracks-huskarl 759)
 (defconst elite-barracks-huskarl 761)
 (defconst archery-class 900)
+(defconst monument-class 901)
+(defconst trade-cog-class 902)
 (defconst building-class 903)
 (defconst villager-class 904)
 (defconst deep-fish 905)
@@ -567,18 +569,24 @@
 (defconst stone-mine-class 908)
 (defconst deer-class 909)
 (defconst boar-class 910)
+(defconst miscellaneous-class 911)
 (defconst cavalry-unit-class 912)
 (defconst siege-weapon-class 913)
+(defconst terrain-class 914)
 (defconst tree-class 915)
 (defconst monastery-class 918)
 (defconst trade-cart-class 919)
+(defconst transport-ship-class 920)
 (defconst fishing-ship-class 921)
 (defconst warship-class 922)
 (defconst cavalry-cannon-class 923)
 (defconst wall-class 927)
+(defconst flag-class 930)
 (defconst gold-mine-class 932)
 (defconst petard-class 935)
 (defconst cavalry-archer-class 936)
+(defconst relic-class 942)
+(defconst monk-with-relic-class 943)
 (defconst archery-cannon-class 944)
 (defconst scout-cavalry-class 947)
 (defconst packed-trebuchet-class 951)
@@ -586,6 +594,7 @@
 (defconst unpacked-trebuchet-class 954)
 (defconst scorpion-class 955)
 (defconst livestock-class 958)
+(defconst king-class 959)
 
 (defconst monk-set 970)
 (defconst trebuchet-set 971)
@@ -694,6 +703,7 @@
 	(set-strategic-number sn-attack-group-gather-spacing 7)
 	(set-strategic-number sn-filter-under-attack 1)
 	(set-strategic-number sn-disable-builder-assistance 1)
+	(set-strategic-number sn-disable-defend-groups 1)
 	(disable-self)
 )
 
@@ -704,6 +714,20 @@
 =>
 	(set-goal gl-priority-goal -1)
 	(disable-self)
+)
+
+(defrule
+	(town-under-attack)
+	(up-compare-sn sn-disable-defend-groups != 0)
+=>
+	(set-strategic-number sn-disable-defend-groups 0)
+)
+
+(defrule
+	(not (town-under-attack))
+	(up-compare-sn sn-disable-defend-groups != 1)
+=>
+	(set-strategic-number sn-disable-defend-groups 1)
 )
 
 ;drush
@@ -981,6 +1005,19 @@
 	(up-set-offense-priority c: bombard-cannon c: 1)	
 	(up-set-offense-priority c: fishing-ship c: 10)
 )
+
+; (defrule
+	; (current-age >= castle-age)
+; =>
+	; (set-strategic-number sn-enable-offensive-priority 0)
+	; (disable-self)
+; )
+
+; (defrule
+	; (current-age >= castle-age)
+; =>
+	; (up-jump-rule 12)
+; )
 
 ;fcgu
 
@@ -1451,10 +1488,21 @@
 		(current-age == dark-age)
 		(town-under-attack)
 		(up-enemy-units-in-town > 0)
+		(up-compare-sn sn-number-explore-groups != 0)
 =>
 		(set-strategic-number sn-number-explore-groups 0)
 		(set-strategic-number sn-total-number-explorers 0)
-		;(chat-to-player my-player-number "Found livestock: stop exploring with villagers")
+		(disable-self)
+)
+
+(defrule
+		(current-age == dark-age)
+		(not (town-under-attack))
+		(up-enemy-units-in-town < 1)
+		(up-compare-sn sn-number-explore-groups != 1)
+=>
+		(set-strategic-number sn-number-explore-groups 1)
+		(set-strategic-number sn-total-number-explorers 1)
 		(disable-self)
 )
 
@@ -11248,6 +11296,7 @@
 	(up-chat-data-to-self "Escrow gold: %d" g: amnt-escrow-gold)
 	(up-get-fact escrow-amount stone amnt-escrow-stone)
 	(up-chat-data-to-self "Escrow stone: %d" g: amnt-escrow-stone)
+	(up-chat-data-to-self "Town Size: %d" s: sn-maximum-town-size)
 	;(up-chat-data-to-self "Enemy unit count %d" g: enemy-military-pop)
 	(up-chat-data-to-self "Military Advantage: %d" g: gl-military-advantage)
 	(enable-timer 7 45)
@@ -11875,6 +11924,38 @@
 	(or (building-type-count-total barracks < 1)
 	(or (civilian-population < 20)
 	(building-type-count-total archery-range >= 2))))
+	(goal gl-wood-saving 3)
+=>
+	(release-escrow wood)
+	(set-escrow-percentage wood 0)
+	(set-goal gl-wood-saving 0)
+	;(chat-to-player my-player-number "Spare nicht mehr auf Schiessanlage")
+)
+
+(defrule
+	(goal strategy-goal sg-scoutrush)
+	(current-age == feudal-age)
+	(building-type-count-total barracks >= 1)
+	(civilian-population >= 25)
+	(building-type-count-total archery-range < 1)
+	(building-type-count-total farm >= 8)
+	(game-time >= 780) ;13mins
+	(goal gl-wood-saving 0)
+=>
+	(set-escrow-percentage wood 75)
+	(set-goal gl-wood-saving 3)
+	(enable-timer 9 1)
+	;(chat-to-player my-player-number "Spare auf Schiessanlage")
+)
+
+(defrule
+	(goal strategy-goal sg-scoutrush)
+	(or (current-age != feudal-age)
+	(or (building-type-count-total barracks < 1)
+	(or (civilian-population < 25)
+	(or (building-type-count-total farm < 8)
+	(or (game-time < 780) ;13mins
+	(building-type-count-total archery-range >= 1))))))
 	(goal gl-wood-saving 3)
 =>
 	(release-escrow wood)
@@ -14518,7 +14599,12 @@
 	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
 	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
 	(up-filter-exclude -1 -1 -1 cavalry-class) 
+	(up-filter-exclude -1 -1 -1 scout-cavalry-class) 
 	(up-find-local c: -1 c: 40)	
+	(up-remove-objects search-local object-data-class == cavalry-class)
+	(up-remove-objects search-local object-data-class == siege-weapon-class)
+	(up-remove-objects search-local object-data-class == scout-cavalry-class)
+	(up-remove-objects search-local object-data-type == armored-elephant)
 	(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
@@ -14534,8 +14620,8 @@
 	(up-jump-rule 3)
 )	
 	
-(defrule
-	(goal split-rule-goal 0) ;tc garrisoned
+(defrule ;tc garrisoned
+	(goal split-rule-goal 0) 
 	(players-building-type-count focus-player town-center > 0)
 =>
 	(up-full-reset-search)
@@ -14573,8 +14659,10 @@
 	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
 	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
 	(up-filter-exclude -1 -1 -1 cavalry-class)
-	(up-filter-exclude -1 -1 -1 scout-cavalry-class)
 	(up-find-local c: -1 c: 40)	
+	(up-remove-objects search-local object-data-class == cavalry-class)
+	(up-remove-objects search-local object-data-class == siege-weapon-class)
+	(up-remove-objects search-local object-data-type == armored-elephant)
 	(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
@@ -15110,7 +15198,7 @@
 	(up-set-target-point gl-scout-x)
 	(up-filter-distance c: -1 c: 3)
 	(up-find-remote c: villager-class c: 5)
-	;(up-find-remote c: spearman-line c: 5)
+	(up-find-remote c: spearman-line c: 5)
 	;(up-remove-objects search-remote object-data-hitpoints < 7)
 	(up-get-search-state gl-local-total)
 )
@@ -15423,6 +15511,7 @@
 
 (defrule
 	(current-age < castle-age)
+	(goal attack-now-goal 1)
 	(unit-type-count scout-cavalry-line >= 1)
 	(unit-type-count scout-cavalry-line < 10)
 =>
@@ -15436,6 +15525,7 @@
 
 (defrule
 	(current-age < castle-age)
+	(goal attack-now-goal 1)
 	(unit-type-count scout-cavalry-line >= 1)
 	(unit-type-count scout-cavalry-line < 10)
 	(up-set-target-object search-local g: gl-scout-index)
@@ -15447,28 +15537,32 @@
 	(up-full-reset-search)
 	(up-set-target-point gl-unit-x)
 	(up-filter-distance c: -1 c: 4)
-	(up-find-remote c: spearman-line c: 1)
-	(up-set-target-object search-remote c: 0)
+	(up-find-remote c: spearman-line c: 10)
+	;(up-set-target-object search-remote c: 0)
 	(up-find-local c: scout-cavalry-line c: 10)
 	(up-remove-objects search-local object-data-id g:== gl-temp-scout-id)
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-scout-spear-ratio g:= gl-local-last)
 	(up-modify-goal gl-scout-spear-ratio g:/ gl-remote-last)
 	;(up-remove-objects search-remote object-data-hitpoints < 7)
-	;(up-chat-data-to-player my-player-number "Scouts : Spears: %d" g: gl-scout-spear-ratio)
+	(up-chat-data-to-player my-player-number "Nearby scouts: %d" g: gl-local-last)
+	(up-chat-data-to-player my-player-number "Nearby spears: %d" g: gl-remote-last)
+	(up-chat-data-to-player my-player-number "Scouts : Spears: %d" g: gl-scout-spear-ratio)
 )
 
 (defrule
 	(current-age < castle-age)
+	(goal attack-now-goal 1)
 	(unit-type-count scout-cavalry-line >= 1)
 	(unit-type-count scout-cavalry-line < 10)
 	(up-compare-goal gl-scout-spear-ratio < 3)
+	(up-compare-goal gl-remote-last > 0)
 	(up-compare-goal gl-unit-x > 2)
 	(up-compare-goal gl-unit-y > 2)
-	(up-compare-goal gl-unit-x < FULL-MAP-SIZE)
-	(up-compare-goal gl-unit-y < FULL-MAP-SIZE)
+	;(up-compare-goal gl-unit-x g:< FULL-MAP-SIZE)
+	;(up-compare-goal gl-unit-y g:< FULL-MAP-SIZE)
 	;(up-object-data object-data-tasks-count > 0)
-	(up-set-target-object search-local g: gl-scout-index)
+	(up-set-target-object search-local g: gl-temp-scout-id)
 	(up-object-data object-data-attacker-id > 0)
 	;(up-object-data object-data-action == actionid-attack)
 	;(or (up-object-data object-data-order == orderid-attack)
@@ -15483,29 +15577,32 @@
 	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
 	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
 	(up-bound-point gl-unit-x gl-unit-x)	
-	(enable-timer retreating-timer 2)
+	(enable-timer retreating-timer 4)
 	(up-target-point gl-unit-x action-move formation-line stance-no-attack)
 	(chat-local-to-self "retreat with scout from spearman")
 )
 
 (defrule
 	(current-age < castle-age)
+	(goal attack-now-goal 1)
 	(unit-type-count scout-cavalry-line >= 1)
 	(unit-type-count scout-cavalry-line < 10)
 	(up-compare-goal gl-scout-index g:>= gl-number-scouts) ;reached end of list, reset
 =>
 	(set-goal gl-scout-index 0)
+	(up-chat-data-to-player my-player-number "Scout: %d" g: gl-scout-index)
 	(up-jump-rule 1)
 )
 
 (defrule
 	(current-age < castle-age)
+	(goal attack-now-goal 1)
 	(unit-type-count scout-cavalry-line >= 1)
 	(unit-type-count scout-cavalry-line < 10)
 	(up-compare-goal gl-scout-index g:< gl-number-scouts)
 =>
 	(up-modify-goal gl-scout-index c:+ 1) ;go to next list-entry
-	;(up-chat-data-to-player my-player-number "Scout: %d" g: gl-scout-index)
+	(up-chat-data-to-player my-player-number "Scout: %d" g: gl-scout-index)
 	;(up-jump-rule -5)
 )
 
@@ -15523,7 +15620,7 @@
 	(up-reset-unit c: archery-class)
 	;(up-reset-target-priorities priority-offense 1)
 	(up-set-attack-stance -1 c: stance-aggressive)
-	(set-strategic-number sn-disable-defend-groups 0)
+	;(set-strategic-number sn-disable-defend-groups 0)
 	(set-strategic-number sn-disable-attack-groups 0)
 	(disable-timer retreating-timer)
 )
@@ -18558,6 +18655,29 @@
 
 (defrule
 	(current-age == feudal-age)
+	(not (goal strategy-goal sg-scoutrush))
+	(food-amount < 50)
+	(up-research-status c: castle-age != research-pending)
+=>
+	;(chat-local-to-self "Forced drop")
+	(up-drop-resources food c: 4)
+)
+
+(defrule
+	(current-age == feudal-age)
+	(goal strategy-goal sg-scoutrush)
+	(unit-type-count-total villager < 32)
+	(food-amount < 80)
+	(up-research-status c: castle-age != research-pending)
+=>
+	;(chat-local-to-self "Forced drop")
+	(up-drop-resources food c: 4)
+)
+
+(defrule
+	(current-age == feudal-age)
+	(goal strategy-goal sg-scoutrush)
+	(unit-type-count-total villager >= 32)
 	(food-amount < 50)
 	(up-research-status c: castle-age != research-pending)
 =>
@@ -19484,6 +19604,33 @@
 	(set-strategic-number sn-disable-builder-assistance 0)
 	(disable-self)
 )
+
+(defrule
+	(goal strategy-goal sg-scoutrush)
+	(current-age == feudal-age)
+	(up-compare-sn sn-enable-training-queue == 1)
+	(unit-type-count-total scout-cavalry-line < 4)
+=>
+	(set-strategic-number sn-enable-training-queue 0)
+)
+
+(defrule
+	(goal strategy-goal sg-scoutrush)
+	(current-age == feudal-age)
+	(up-compare-sn sn-enable-training-queue == 0)
+	(unit-type-count-total scout-cavalry-line >= 4)
+=>
+	(set-strategic-number sn-enable-training-queue 1)
+)
+
+(defrule
+	(goal strategy-goal sg-scoutrush)
+	(current-age == castle-age)
+	(up-compare-sn sn-enable-training-queue == 0)
+=>
+	(set-strategic-number sn-enable-training-queue 1)
+)
+
 
 
 (defrule
@@ -20511,7 +20658,36 @@
 
 (defrule
 	(current-age == feudal-age)
+	(not (goal strategy-goal sg-scoutrush))
 	(can-train-with-escrow villager)
+	(or (unit-type-count-total villager g:< f-villager-goal)
+	(up-research-status c: castle-age == research-pending))
+=>
+	(up-modify-escrow food c:- 50)
+	(train villager)
+	(up-get-fact civilian-population 0 civilian-pop) 
+	;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
+)
+
+(defrule
+	(current-age == feudal-age)
+	(goal strategy-goal sg-scoutrush)
+	(can-train-with-escrow villager)
+	(up-research-status c: ri-wheel-barrow != research-pending)
+	(or (unit-type-count-total villager < 34)
+	(up-research-status c: castle-age == research-pending))
+=>
+	(up-modify-escrow food c:- 50)
+	(train villager)
+	(up-get-fact civilian-population 0 civilian-pop) 
+	;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
+)
+
+(defrule
+	(current-age == feudal-age)
+	(goal strategy-goal sg-scoutrush)
+	(can-train-with-escrow villager)
+	(up-research-status c: ri-wheel-barrow >= research-pending)
 	(or (unit-type-count-total villager g:< f-villager-goal)
 	(up-research-status c: castle-age == research-pending))
 =>
@@ -20676,7 +20852,7 @@
 	(civilian-population >= 20)
 	(or (building-type-count-total stable > 0)
 	(building-type-count-total barracks > 1))
-	(research-completed ri-horse-collar)
+	(up-research-status c: ri-horse-collar >= research-pending)
 	(idle-farm-count < 1)
 	(can-build farm)
 	(up-compare-goal gl-water-on-map != 1)
@@ -20862,6 +21038,48 @@
 	(set-escrow-percentage wood 0)
 	; (set-strategic-number sn-placement-zone-size 0)
 	;(up-set-placement-data my-player-number -1 c: 14)
+    (build archery-range)
+	(set-goal gl-wood-saving 0)
+)
+
+(defrule
+	(goal strategy-goal sg-scoutrush)
+	(current-age == feudal-age)
+	(can-build-with-escrow archery-range)
+	(building-type-count-total town-center >= 1)
+	(building-type-count-total barracks >= 1)
+	(building-type-count-total archery-range < 1)
+	(building-type-count-total farm >= 12)
+	(civilian-population >= 26)
+	(game-time >= 840) ;13mins
+	(or (not (town-under-attack))
+	(up-compare-goal gl-military-advantage >= -2))
+	(goal gl-wood-saving 3)
+=>
+	(release-escrow wood)
+	(set-escrow-percentage wood 0)
+	; (set-strategic-number sn-placement-zone-size 0)
+	(up-set-placement-data my-player-number -1 c: 14)
+    (up-build place-control with-escrow c: archery-range)
+	(set-goal gl-wood-saving 0)
+)
+
+(defrule
+	(goal strategy-goal sg-scoutrush)
+	(current-age == feudal-age)
+	(can-build-with-escrow archery-range)
+	(building-type-count-total town-center >= 1)
+	(building-type-count-total barracks >= 1)
+	(building-type-count-total archery-range < 1)
+	(building-type-count-total farm >= 12)
+	(civilian-population >= 26)
+	(game-time >= 840) ;13mins
+	(town-under-attack)
+	(up-compare-goal gl-military-advantage < -2)
+	(goal gl-wood-saving 3)
+=>
+	(release-escrow wood)
+	(set-escrow-percentage wood 0)
     (build archery-range)
 	(set-goal gl-wood-saving 0)
 )
@@ -21053,7 +21271,7 @@
 	(players-unit-type-count focus-player infantry-class < 6)
 	(or (players-unit-type-count focus-player archer-line < 10)
 	(unit-type-count skirmisher-line >= 5))
-	(unit-type-count-total villager < 30)
+	(unit-type-count-total villager < 32)
 	(up-compare-goal gl-military-advantage < 25)
 =>
 	(up-modify-escrow food c:- 80)
@@ -21073,7 +21291,7 @@
 	(players-unit-type-count focus-player infantry-class < 6)
 	(or (players-unit-type-count focus-player archer-line < 10)
 	(unit-type-count skirmisher-line >= 5))
-	(unit-type-count-total villager < 30)
+	(unit-type-count-total villager < 32)
 	(up-compare-goal gl-military-advantage < 25)
 =>
 	(train scout-cavalry-line)
@@ -21324,15 +21542,14 @@
 	(train spearman-line)
 )
 
-
 (defrule
+	(goal attack-now-goal 0)
 	(goal retreat-now-goal 1)
 	(military-population >= 3)
 	(up-compare-goal gl-military-advantage >= 0)
 	(current-age == feudal-age)
 =>
 	(set-goal retreat-now-goal 0)
-	(set-goal attack-now-goal 0)
 	(up-reset-unit c: -1)
 	; (set-strategic-number sn-number-attack-groups 500)
 	; (set-strategic-number sn-minimum-attack-group-size 1)
@@ -21343,9 +21560,10 @@
 (defrule
 	(current-age == feudal-age)
 	(up-compare-goal gl-military-advantage < -2)
-	;(goal attack-now-goal 1)
+	(goal attack-now-goal 1)
 	(goal retreat-now-goal 0)
 =>
+	(set-goal attack-now-goal 0)
 	(set-goal retreat-now-goal 1)
 	; (set-strategic-number sn-number-attack-groups 0)
 	; (set-strategic-number sn-minimum-attack-group-size 0)
@@ -21361,6 +21579,7 @@
 	(not (goal strategy-goal sg-scoutrush))
 	(not (goal strategy-goal sg-towerrush)) ;mainly for archer-rush
 	(goal attack-now-goal 0) ;AI is not already attacking atm
+	(goal retreat-now-goal 0)
 	(not (town-under-attack))
 	(current-age == feudal-age)
 	(civilian-population g:< f-villager-goal)
@@ -21391,6 +21610,7 @@
 	(not (goal strategy-goal sg-towerrush))
 	(town-under-attack)
 	(goal attack-now-goal 0)
+	(goal retreat-now-goal 0)
 	(current-age == feudal-age)
 	(civilian-population g:< f-villager-goal)
 	(or (military-population >= 10)
@@ -21417,6 +21637,7 @@
 (defrule
 	(goal strategy-goal sg-scoutrush)
 	(goal attack-now-goal 0)
+	(goal retreat-now-goal 0)
 	(goal meso-civ NO)
 	(current-age == feudal-age)
 	(not (town-under-attack))
@@ -21446,6 +21667,7 @@
 (defrule
 	(goal strategy-goal sg-scoutrush)
 	(goal attack-now-goal 0)
+	(goal retreat-now-goal 0)
 	(goal meso-civ YES)
 	(current-age == feudal-age)
 	(not (town-under-attack))
@@ -21473,6 +21695,7 @@
 (defrule
 	(goal strategy-goal sg-scoutrush)
 	(goal attack-now-goal 0)
+	(goal retreat-now-goal 0)
 	(goal meso-civ YES)
 	(current-age == feudal-age)
 	(not (town-under-attack))
@@ -21502,6 +21725,7 @@
 	(current-age == feudal-age)
 	(town-under-attack)
 	(goal attack-now-goal 0)
+	(goal retreat-now-goal 0)
 	(civilian-population g:< f-villager-goal)
 	(or (military-population >= 5)
 	(up-compare-goal gl-military-advantage >= 3))
@@ -21527,6 +21751,7 @@
 (defrule
 	(goal strategy-goal sg-towerrush)
 	(goal attack-now-goal 0)
+	(goal retreat-now-goal 0)
 	(current-age == feudal-age)
 	(civilian-population g:< f-villager-goal)
 	(military-population >= 2)
@@ -23489,6 +23714,7 @@
 
 
 (defrule
+	(goal attack-now-goal 0)
 	(goal retreat-now-goal 1)
 	(or (military-population >= 18)
 	(up-compare-goal gl-military-advantage >= 0))
@@ -23498,7 +23724,6 @@
 	(set-strategic-number sn-minimum-attack-group-size 1)
 	(set-strategic-number sn-maximum-attack-group-size 1)
 	(set-goal retreat-now-goal 0)
-	(set-goal attack-now-goal 0)
 	(chat-to-player my-player-number "Stop retreating")
 )
 
@@ -23506,8 +23731,10 @@
 	(current-age == castle-age)
 	(up-compare-goal gl-military-advantage < -4)
 	(military-population < 18)
+	(goal attack-now-goal 1)
 	(goal retreat-now-goal 0)
 =>
+	(set-goal attack-now-goal 0)
 	(set-goal retreat-now-goal 1)
 	; (set-strategic-number sn-number-attack-groups 0)
 	; (set-strategic-number sn-minimum-attack-group-size 0)
@@ -23522,6 +23749,7 @@
 (defrule
 	(current-age == castle-age)
 	(goal attack-now-goal 0)
+	(goal retreat-now-goal 0)
 	(or (military-population >= 18)
 	(up-compare-goal gl-military-advantage >= 8))
 	(up-compare-goal gl-military-advantage >= -4)
@@ -26888,13 +27116,13 @@
 )
 
 (defrule
+	(goal attack-now-goal 0)
 	(goal retreat-now-goal 1)
 	(or (military-population >= 23)
 	(up-compare-goal gl-military-advantage >= 0))
 	(current-age == imperial-age)
 =>
 	(set-goal retreat-now-goal 0)
-	(set-goal attack-now-goal 0)
 	(set-strategic-number sn-number-attack-groups 500)
 	(set-strategic-number sn-minimum-attack-group-size 1)
 	(set-strategic-number sn-maximum-attack-group-size 1)
@@ -26905,8 +27133,10 @@
 	(current-age == imperial-age)
 	(military-population < 23)
 	(up-compare-goal gl-military-advantage < -5)
+	(goal attack-now-goal 1)
 	(goal retreat-now-goal 0)
 =>
+	(set-goal attack-now-goal 0)
 	(set-goal retreat-now-goal 1)
 	; (set-strategic-number sn-number-attack-groups 0)
 	; (set-strategic-number sn-minimum-attack-group-size 0)
@@ -26920,6 +27150,7 @@
 
 (defrule
 	(current-age == imperial-age)
+	(goal retreat-now-goal 0)
 	(goal attack-now-goal 0)
 	(or (military-population >= 23)
 	(up-compare-goal gl-military-advantage >= 10))
@@ -30847,6 +31078,7 @@
 
 (defrule
 	(civilian-population == 11)
+	(current-age == dark-age)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 36)
 	(set-strategic-number sn-food-gatherer-percentage 64)
@@ -30856,6 +31088,7 @@
 
 (defrule
 	(civilian-population == 12)
+	(current-age == dark-age)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 33)
 	(set-strategic-number sn-food-gatherer-percentage 67)
@@ -30865,6 +31098,7 @@
 
 (defrule
 	(civilian-population == 13)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 31)
@@ -30875,6 +31109,7 @@
 
 (defrule
 	(civilian-population == 14)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 29)
@@ -30891,6 +31126,7 @@
 
 (defrule
 	(civilian-population == 15)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 29)
@@ -30907,6 +31143,7 @@
 
 (defrule
 	(civilian-population == 16)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 25)
@@ -30917,6 +31154,7 @@
 
 (defrule
 	(civilian-population == 17)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 
 =>
@@ -30928,6 +31166,7 @@
 
 (defrule
 	(civilian-population == 15)
+	(current-age == dark-age)
 	(goal strategy-goal sg-drush)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 20)
@@ -30938,6 +31177,7 @@
 
 (defrule
 	(civilian-population == 16)
+	(current-age == dark-age)
 	(goal strategy-goal sg-drush)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 25)
@@ -30949,6 +31189,7 @@
 (defrule
 	(civilian-population >= 17)
 	(civilian-population <= 25)
+	(current-age == dark-age)
 	(goal strategy-goal sg-drush)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 16)
@@ -30959,6 +31200,7 @@
 
 (defrule
 	(civilian-population == 26)
+	(current-age == dark-age)
 	(goal strategy-goal sg-drush)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 58)
@@ -30969,6 +31211,7 @@
 
 (defrule
 	(civilian-population == 10)
+	(current-age == dark-age)
 	(goal strategy-goal sg-scoutrush)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 30)
@@ -30979,6 +31222,7 @@
 
 (defrule
 	(civilian-population == 11)
+	(current-age == dark-age)
 	(goal strategy-goal sg-scoutrush)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 27)
@@ -30989,6 +31233,7 @@
 
 (defrule
 	(civilian-population == 12)
+	(current-age == dark-age)
 	(goal strategy-goal sg-scoutrush)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 25)
@@ -30999,6 +31244,7 @@
 
 (defrule
 	(civilian-population == 13)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 	(goal strategy-goal sg-scoutrush)
 =>
@@ -31010,6 +31256,7 @@
 
 (defrule
 	(civilian-population == 14)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 	(goal strategy-goal sg-scoutrush)
 =>
@@ -31021,6 +31268,7 @@
 
 (defrule
 	(civilian-population == 15)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 	(goal strategy-goal sg-scoutrush)
 =>
@@ -31032,6 +31280,7 @@
 
 (defrule
 	(civilian-population == 16)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 	(goal strategy-goal sg-scoutrush)
 =>
@@ -31043,6 +31292,7 @@
 
 (defrule
 	(civilian-population == 17)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 	(goal strategy-goal sg-scoutrush)
 =>
@@ -31054,6 +31304,7 @@
 
 (defrule
 	(civilian-population == 9)
+	(current-age == dark-age)
 	(goal strategy-goal sg-towerrush)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 22)
@@ -31064,6 +31315,7 @@
 
 (defrule
 	(civilian-population == 10)
+	(current-age == dark-age)
 	(goal strategy-goal sg-towerrush)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 20)
@@ -31074,6 +31326,7 @@
 
 (defrule
 	(civilian-population == 11)
+	(current-age == dark-age)
 	(goal strategy-goal sg-towerrush)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 18)
@@ -31084,6 +31337,7 @@
 
 (defrule
 	(civilian-population == 12)
+	(current-age == dark-age)
 	(goal strategy-goal sg-towerrush)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 16)
@@ -31094,6 +31348,7 @@
 
 (defrule
 	(civilian-population == 13)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 	(goal strategy-goal sg-towerrush)
 =>
@@ -31105,6 +31360,7 @@
 
 (defrule
 	(civilian-population == 14)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 	(goal strategy-goal sg-towerrush)
 =>
@@ -31116,6 +31372,7 @@
 
 (defrule
 	(civilian-population == 15)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 	(goal strategy-goal sg-towerrush)
 =>
@@ -31127,6 +31384,7 @@
 
 (defrule
 	(civilian-population == 16)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 	(goal strategy-goal sg-towerrush)
 =>
@@ -31138,6 +31396,7 @@
 
 (defrule
 	(civilian-population == 17)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 	(goal strategy-goal sg-towerrush)
 =>
@@ -31198,6 +31457,7 @@
 
 (defrule
 	(civilian-population == 18)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 
 =>
@@ -31209,6 +31469,7 @@
 
 (defrule
 	(civilian-population == 19)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 26)
@@ -31219,6 +31480,7 @@
 
 (defrule
 	(civilian-population == 20)
+	(current-age == dark-age)
 	(not(goal strategy-goal sg-scoutrush))
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 30)
@@ -31229,6 +31491,7 @@
 
 (defrule
 	(unit-type-count villager == 13)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map == 1)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 38)
@@ -31239,6 +31502,7 @@
 
 (defrule
 	(unit-type-count villager == 14)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map == 1)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 43)
@@ -31249,6 +31513,7 @@
 
 (defrule
 	(unit-type-count villager == 15)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map == 1)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 40)
@@ -31259,6 +31524,7 @@
 
 (defrule
 	(unit-type-count villager == 16)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map == 1)
 	(not (goal strategy-goal sg-drush))
 =>
@@ -31270,6 +31536,7 @@
 
 (defrule
 	(unit-type-count villager == 17)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map == 1)
 	(not (goal strategy-goal sg-drush))
 =>
@@ -31281,6 +31548,7 @@
 
 (defrule
 	(unit-type-count villager == 18)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map == 1)
 	(not(goal strategy-goal sg-boom-imp))
 	(not(goal strategy-goal sg-drush))
@@ -31294,6 +31562,7 @@
 
 (defrule
 	(unit-type-count villager == 19)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map == 1)
 	(not(goal strategy-goal sg-boom-imp))
 	(not(goal strategy-goal sg-drush))
@@ -31306,6 +31575,7 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
+	(current-age == dark-age)
 	(civilian-population == 20)
 	(up-research-status c: feudal-age != research-pending)
 =>
@@ -31317,6 +31587,7 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
+	(current-age == dark-age)
 	(civilian-population >= 20)
 	(up-research-status c: feudal-age != research-pending)
 =>
@@ -31328,6 +31599,7 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
+	(current-age == dark-age)
 	(civilian-population == 20)
 	(up-research-status c: feudal-age >= research-pending)
 	(goal meso-civ NO)
@@ -31340,6 +31612,7 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
+	(current-age == dark-age)
 	(civilian-population == 20)
 	(up-research-status c: feudal-age >= research-pending)
 	(goal meso-civ YES)
@@ -31352,6 +31625,7 @@
 
 (defrule
 	(goal strategy-goal sg-archerrush)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 	(civilian-population == 21)
 	(up-research-status c: feudal-age != research-pending)
@@ -31364,6 +31638,7 @@
 
 (defrule
 	(goal strategy-goal sg-archerrush)
+	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map != 1)
 	(civilian-population == 21)
 	(up-research-status c: feudal-age >= research-pending)
@@ -31376,6 +31651,7 @@
 
 (defrule
 	(goal strategy-goal sg-archerrush)
+	(current-age == feudal-age)
 	(up-compare-goal gl-water-on-map == 1)
 	(unit-type-count villager == 21)
 =>
@@ -33153,7 +33429,7 @@
 	(stone-amount < 100)
 	(gold-amount > 800)
 	(goal gl-gold-saving 0)
-	(up-compare-sn sn-gold-gatherer-percentage c:> 12)
+	(up-compare-sn sn-gold-gatherer-percentage c:> 15)
 =>	(up-modify-sn sn-stone-gatherer-percentage c:+ 5)
 	(up-modify-sn sn-gold-gatherer-percentage c:- 5)
 	;(chat-to-player my-player-number "Balancing eco from gold to stone")
