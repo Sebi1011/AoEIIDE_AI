@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 0.21.3
-;last update: 11th March 2023
+;Version: 0.21.4
+;last update: 16th March 2023
 
 ;ZebbaAI is a versatile, aggressive and eco orientated AI. The idea of the AI is to set the opponent under pressure 
 ;asap to keep any pressure from its base. In general, ZebbaAI tries to read the game as good as possible and adapt its
@@ -50,16 +50,16 @@
 ; - AI will now stop military production in feudal if it has a large advantage 
 ; - greatly improved the archer-rush strategy
 ; - improved drush and usage of initial scout
+; - fixed retreating of army
 
 ;ToDo: 
 
 ;what's up next:
-; - fix retreating rules (testing)
-; - add escrow rules for the first 2 trebs (!)
+; - fix training of counter units in feudal to prevent delayed castle-age time
 ; - test scoutrush (retreat scouts from spearmen) (testing)
-; - find a solution against villager harassments in dark-age (testing)
 ; - find a solution for tc-boar-hunting when there are no villager under the tc (switch to old boar-hunting if
 ; not enough villagers under tc)
+; - find a solution against villager harassments in dark-age (testing)
 ; - implement tc-garrison code for every tc (testing) (does not work)
 
 ; - remake towerrush due to several numbers of bugs
@@ -697,9 +697,12 @@
 	(set-strategic-number sn-zero-priority-distance 255)
 	(set-strategic-number sn-percent-attack-soldiers 100)
 	(set-strategic-number sn-enable-patrol-attack 1)
-	(set-strategic-number sn-number-attack-groups 500)
-	(set-strategic-number sn-minimum-attack-group-size 1)
-	(set-strategic-number sn-maximum-attack-group-size 1)
+	;(set-strategic-number sn-number-attack-groups 500)
+	;(set-strategic-number sn-minimum-attack-group-size 1)
+	;(set-strategic-number sn-maximum-attack-group-size 1)
+	(set-strategic-number sn-number-attack-groups 0)
+	(set-strategic-number sn-minimum-attack-group-size 0)
+	(set-strategic-number sn-maximum-attack-group-size 0)
 	(set-strategic-number sn-attack-group-gather-spacing 7)
 	(set-strategic-number sn-filter-under-attack 1)
 	(set-strategic-number sn-disable-builder-assistance 1)
@@ -1459,7 +1462,7 @@
 	(set-goal gl-tower-loop-counter 0)
 	(set-goal gl-castle-loop-counter 0)
 	(set-goal gl-scout-index 0)
-	(set-goal attack-now-goal 0)
+	(set-goal attack-now-goal 1)
 	(set-goal retreat-now-goal 0)
 	(disable-self)
 )
@@ -2767,12 +2770,12 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
+	(up-modify-goal civ-eco-s c: 5)
 	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
-	(up-modify-goal civ-uu-s c: 6)
+	(up-modify-goal civ-infantry-s c: 9)
+	(up-modify-goal civ-cavalry-s c: 8)
+	(up-modify-goal civ-siege-s c: 7)
+	(up-modify-goal civ-uu-s c: 5)
 	(set-goal ca-strategy gl-castleage-stableunit)
 	(disable-self)
 )
@@ -3065,7 +3068,7 @@
 #load-if-defined UP-2-PLAYER-GAME
 
 (defrule
-	(random-number > 100)
+	(random-number > 0)
 	(random-number <= 100)
 =>
 	(set-goal strategy-goal sg-drush)	
@@ -3092,7 +3095,7 @@
 )
 
 (defrule
-	(random-number > 0)
+	(random-number > 100)
 	(random-number <= 100)
 =>
 	(set-goal strategy-goal sg-scoutrush)	
@@ -3430,7 +3433,20 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train-with-escrow trebuchet)
-	(unit-type-count trebuchet-set < 3)
+	(goal gl-wood-saving 25)
+	(goal gl-gold-saving 25)
+	(building-type-count-total castle >= 1)
+	(unit-type-count-total trebuchet-set < 2)
+	(up-compare-goal gl-military-advantage >= -4)
+=>
+	(train trebuchet)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(can-train-with-escrow trebuchet)
+	(unit-type-count-total trebuchet-set < 2)
+	(up-compare-goal gl-military-advantage >= -4)
 =>
 	(up-modify-escrow wood c:- 200)
 	(up-modify-escrow gold c:- 200)
@@ -3440,8 +3456,9 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train trebuchet)
-	(unit-type-count trebuchet-set >= 3)
-	(unit-type-count trebuchet-set < 8)
+	(unit-type-count-total trebuchet-set >= 2)
+	(unit-type-count-total trebuchet-set < 8)
+	(up-compare-goal gl-military-advantage >= -4)
 =>
 	(train trebuchet)
 )
@@ -6989,6 +7006,7 @@
 	(can-train-with-escrow skirmisher-line)
 	(food-amount < 600)
 	(up-compare-goal gl-military-advantage < 25)
+	(not (goal gl-food-saving 22))
 =>
 	(up-modify-escrow food c:- 25)
 	(up-modify-escrow wood c:- 35)	
@@ -7027,6 +7045,7 @@
 	(can-train-with-escrow scout-cavalry-line)
 	(food-amount < 600)
 	(up-compare-goal gl-military-advantage < 25)
+	(not (goal gl-food-saving 22))
 =>
 	(up-modify-escrow food c:- 80)
 	(train scout-cavalry-line)
@@ -7039,6 +7058,7 @@
 	(can-train-with-escrow eagle-warrior-line)
 	(food-amount < 600)	
 	(up-compare-goal gl-military-advantage < 25)
+	(not (goal gl-food-saving 22))
 =>
 	(up-modify-escrow food c:- 20)
 	(up-modify-escrow gold c:- 50)
@@ -7051,6 +7071,7 @@
 	(players-unit-type-count focus-player militiaman-line > 0)
 	(can-train-with-escrow archer-line)
 	(up-compare-goal gl-military-advantage < 25)
+	(not (goal gl-food-saving 22))
 =>
 	(up-modify-escrow wood c:- 25)
 	(up-modify-escrow gold c:- 45)
@@ -7596,6 +7617,7 @@
 	(not (research-completed ri-pikeman))
 	(research-available ri-pikeman)
 	(unit-type-count-total spearman-line <= 5)
+	(unit-type-count-total camel-line <= 3)
 =>
 	(train spearman-line)
 	(chat-to-player my-player-number "Produziere Speerkaempfer gegen Kavallerie")
@@ -7606,6 +7628,7 @@
 	(players-unit-type-count focus-player cavalry-class >= 4)
 	(can-research ri-pikeman)
 	(not (research-completed ri-pikeman))
+	(unit-type-count-total camel-line <= 3)
 =>
 	(research ri-pikeman)
 	(chat-to-player my-player-number "Entwickle Pikeniere gegen Kavallerie")
@@ -7616,6 +7639,7 @@
 	(players-unit-type-count focus-player cavalry-class >= 4)
 	(can-train-with-escrow spearman-line)
 	(research-completed ri-pikeman)
+	(unit-type-count-total camel-line <= 3)
 =>
 	(up-modify-escrow food c:- 35)
 	(up-modify-escrow wood c:- 25)
@@ -7630,6 +7654,7 @@
 	(research-completed ri-pikeman)
 	(not (research-available ri-halberdier))
 	(unit-type-count-total spearman-line <= 40)
+	(unit-type-count-total camel-line <= 5)
 =>
 	(train spearman-line)
 	(chat-to-player my-player-number "Produziere Pikenier gegen Kavallerie")
@@ -7642,6 +7667,7 @@
 	(research-completed ri-pikeman)
 	(research-available ri-halberdier)
 	(unit-type-count-total spearman-line <= 5)
+	(unit-type-count-total camel-line <= 5)
 =>
 	(train spearman-line)
 	(chat-to-player my-player-number "Produziere Pikeniere gegen Kavallerie")
@@ -7652,6 +7678,7 @@
 	(players-unit-type-count focus-player cavalry-class >= 6)
 	(can-research ri-halberdier)
 	(not (research-completed ri-halberdier))
+	(unit-type-count-total camel-line <= 5)
 =>
 	(research ri-halberdier)
 	(chat-to-player my-player-number "Entwickle Hellebardiere gegen Kavallerie")
@@ -7662,6 +7689,7 @@
 	(players-unit-type-count focus-player cavalry-class >= 6)
 	(can-train spearman-line)
 	(research-completed ri-halberdier)
+	(unit-type-count-total camel-line <= 5)
 =>
 	(train spearman-line)
 	(chat-to-player my-player-number "Produziere Hellebardiere gegen Kavallerie")
@@ -7678,6 +7706,7 @@
 	(players-unit-type-count focus-player knight-line >= 4)))))))
 	(building-type-count-total barracks < 2)
 	(can-build-with-escrow barracks)
+	(unit-type-count-total camel-line <= 3)
 =>
 	(up-modify-escrow wood c:- 175)
 	(build barracks)
@@ -7698,6 +7727,7 @@
 	(not (research-completed ri-pikeman))
 	(research-available ri-pikeman)
 	(unit-type-count-total spearman-line <= 5)
+	(unit-type-count-total camel-line <= 3)
 =>
 	(train spearman-line)
 	(chat-to-player my-player-number "Produziere Speerkaempfer gegen Kavallerie")
@@ -7714,6 +7744,7 @@
 	(players-unit-type-count focus-player knight-line >= 4)))))))
 	(can-research ri-pikeman)
 	(not (research-completed ri-pikeman))
+	(unit-type-count-total camel-line <= 3)
 =>
 	(research ri-pikeman)
 	(chat-to-player my-player-number "Entwickle Pikeniere gegen Kavallerie")
@@ -7730,6 +7761,7 @@
 	(players-unit-type-count focus-player knight-line >= 4)))))))
 	(can-train-with-escrow spearman-line)
 	(research-completed ri-pikeman)
+	(unit-type-count-total camel-line <= 3)
 =>
 	(up-modify-escrow food c:- 35)
 	(up-modify-escrow wood c:- 25)
@@ -7748,6 +7780,7 @@
 	(players-unit-type-count focus-player knight-line >= 6)))))))
 	(building-type-count-total barracks < 3)
 	(can-build barracks)
+	(unit-type-count-total camel-line <= 5)
 =>
 	(build barracks)
 	(chat-to-player my-player-number "Baue Kaserne, um feindliche Kavallerie zu kontern")
@@ -7766,6 +7799,7 @@
 	(research-completed ri-pikeman)
 	(not (research-available ri-halberdier))
 	(unit-type-count-total spearman-line <= 40)
+	(unit-type-count-total camel-line <= 5)
 =>
 	(train spearman-line)
 	(chat-to-player my-player-number "Produziere Pikenier gegen Kavallerie")
@@ -7784,6 +7818,7 @@
 	(research-completed ri-pikeman)
 	(research-available ri-halberdier)
 	(unit-type-count-total spearman-line <= 5)
+	(unit-type-count-total camel-line <= 5)
 =>
 	(train spearman-line)
 	(chat-to-player my-player-number "Produziere Pikeniere gegen Kavallerie")
@@ -7800,6 +7835,7 @@
 	(players-unit-type-count focus-player knight-line >= 6)))))))
 	(can-research ri-halberdier)
 	(not (research-completed ri-halberdier))
+	(unit-type-count-total camel-line <= 5)
 =>
 	(research ri-halberdier)
 	(chat-to-player my-player-number "Entwickle Hellebardiere gegen Kavallerie")
@@ -7816,6 +7852,7 @@
 	(players-unit-type-count focus-player knight-line >= 6)))))))
 	(can-train spearman-line)
 	(research-completed ri-halberdier)
+	(unit-type-count-total camel-line <= 5)
 =>
 	(train spearman-line)
 	(chat-to-player my-player-number "Produziere Hellebardiere gegen Kavallerie")
@@ -7851,6 +7888,7 @@
 	(or (players-unit-type-count focus-player boyar-line >= 4)
 	(players-unit-type-count focus-player knight-line >= 4))))))))
 	(can-train-with-escrow camel-line)
+	(unit-type-count-total spearman-line <= 3)
 	; (or (civilian-population g:< c-villager-goal)
 	; (up-research-status c: imperial-age == research-pending))
 =>
@@ -7871,6 +7909,7 @@
 	(or (players-unit-type-count focus-player boyar-line >= 6)
 	(players-unit-type-count focus-player knight-line >= 6))))))))
 	(building-type-count-total stable < 4)
+	(unit-type-count-total spearman-line <= 5)
 	(can-build stable)
 	(unit-available camel-line)
 =>
@@ -7892,6 +7931,7 @@
 	(research-available ri-heavy-camel)
 	(not (research-completed ri-heavy-camel))
 	(unit-type-count-total camel-line <= 3)
+	(unit-type-count-total spearman-line <= 5)
 =>
 	(train camel-line)
 	(chat-to-player my-player-number "Produziere Kamelreiter gegen Kavallerie")
@@ -7909,6 +7949,7 @@
 	(players-unit-type-count focus-player knight-line >= 6))))))))
 	(can-research ri-heavy-camel)
 	(not (research-completed ri-heavy-camel))
+	(unit-type-count-total spearman-line <= 5)
 =>
 	(research ri-heavy-camel)
 	(chat-to-player my-player-number "Entwickle Schwere Kamelreiter gegen Kavallerie")
@@ -7927,6 +7968,7 @@
 	(can-train camel-line)
 	(research-completed ri-heavy-camel)
 	(not (research-available ri-imperial-camel-rider))
+	(unit-type-count-total spearman-line <= 5)
 =>
 	(train camel-line)
 	(chat-to-player my-player-number "Produziere Kamelreiter gegen Kavallerie")
@@ -7946,6 +7988,7 @@
 	(research-completed ri-heavy-camel)
 	(research-available ri-imperial-camel-rider)
 	(unit-type-count-total camel-line <= 10)
+	(unit-type-count-total spearman-line <= 5)
 =>
 	(train camel-line)
 	(chat-to-player my-player-number "Produziere Kamelreiter gegen Kavallerie")
@@ -7963,6 +8006,7 @@
 	(players-unit-type-count focus-player knight-line >= 6))))))))
 	(can-train camel-line)
 	(research-completed ri-imperial-camel-rider)
+	(unit-type-count-total spearman-line <= 5)
 =>
 	(train camel-line)
 	(chat-to-player my-player-number "Produziere Kamelreiter gegen Kavallerie")
@@ -11805,6 +11849,16 @@
 	(up-research-status c: imperial-age != research-pending)
 	(food-amount >= 1000)
 	(gold-amount >= 800)
+	(or 
+		(and (building-type-count monastery >= 1)
+		(building-type-count university >= 1))
+	(or 
+		(and (building-type-count monastery >= 1)
+		(building-type-count siege-workshop >= 1))
+	(or 
+		(and (building-type-count siege-workshop >= 1)
+		(building-type-count university >= 1))
+	(building-type-count castle >= 1))))
 =>
 	(up-modify-goal c-villager-goal g:= civilian-pop)
 	(up-chat-data-to-self "Got enough resources, stop making villagers at: %d villagers" g: c-villager-goal)
@@ -11817,6 +11871,16 @@
 	(up-research-status c: imperial-age != research-pending)
 	(food-amount >= 667)
 	(gold-amount >= 536)
+	(or 
+		(and (building-type-count monastery >= 1)
+		(building-type-count university >= 1))
+	(or 
+		(and (building-type-count monastery >= 1)
+		(building-type-count siege-workshop >= 1))
+	(or 
+		(and (building-type-count siege-workshop >= 1)
+		(building-type-count university >= 1))
+	(building-type-count castle >= 1))))
 =>
 	(up-modify-goal c-villager-goal g:= civilian-pop)
 	(up-chat-data-to-self "Got enough resources, stop making villagers at: %d villagers" g: c-villager-goal)
@@ -11829,6 +11893,16 @@
 	(up-research-status c: imperial-age != research-pending)
 	(food-amount >= 850)
 	(gold-amount >= 680)
+	(or 
+		(and (building-type-count monastery >= 1)
+		(building-type-count university >= 1))
+	(or 
+		(and (building-type-count monastery >= 1)
+		(building-type-count siege-workshop >= 1))
+	(or 
+		(and (building-type-count siege-workshop >= 1)
+		(building-type-count university >= 1))
+	(building-type-count castle >= 1))))
 =>
 	(up-modify-goal c-villager-goal g:= civilian-pop)
 	(up-chat-data-to-self "Got enough resources, stop making villagers at: %d villagers" g: c-villager-goal)
@@ -11846,7 +11920,7 @@
 	(set-goal gl-food-saving 1)
 	(set-goal gl-wood-saving 1)
 	(enable-timer 9 1)
-	;(chat-to-player my-player-number "Spare auf 1.Holzupgrade")
+	;(chat-to-player my-player-number " 1.Holzupgrade")
 )
 
 (defrule
@@ -13661,6 +13735,39 @@
 	;(chat-to-player my-player-number "Spare nicht mehr auf Burg")
 )
 
+(defrule
+	(up-research-status c: imperial-age >= research-pending)
+	(goal gl-wood-saving 0)
+	(goal gl-gold-saving 0)
+	(building-type-count-total castle >= 1)
+	(unit-type-count-total trebuchet-set < 2)
+	(up-compare-goal gl-military-advantage >= -4)
+=>
+	(set-escrow-percentage wood 50)
+	(set-escrow-percentage gold 50)
+	(set-goal gl-wood-saving 25)
+	(set-goal gl-gold-saving 25)
+	(enable-timer 9 1)
+	;(chat-to-player my-player-number "Spare auf Tribok")
+)
+
+(defrule
+	(up-research-status c: imperial-age >= research-pending)
+	(goal gl-wood-saving 25)
+	(goal gl-gold-saving 25)
+	(or (building-type-count-total castle < 1)
+	(or (unit-type-count-total trebuchet-set >= 2)
+	(up-compare-goal gl-military-advantage < -4)))
+=>
+	(release-escrow wood)
+	(release-escrow gold)
+	(set-escrow-percentage wood 0)
+	(set-escrow-percentage gold 0)
+	(set-goal gl-wood-saving 0)
+	(set-goal gl-gold-saving 0)
+	;(chat-to-player my-player-number "Spare nicht mehr auf Tribok")
+)
+
 
 (defrule
 	(true)
@@ -13957,6 +14064,20 @@
 (defrule
 	(goal gl-gold-saving 40)
 	(escrow-amount gold > 140)
+=>
+	(up-modify-escrow gold c:- 10)
+)
+
+(defrule
+	(goal gl-wood-saving 25)
+	(escrow-amount wood > 210)
+=>
+	(up-modify-escrow wood c:- 10)
+)
+
+(defrule
+	(goal gl-gold-saving 25)
+	(escrow-amount gold > 210)
 =>
 	(up-modify-escrow gold c:- 10)
 )
@@ -15534,6 +15655,7 @@
 	(up-set-target-object search-local g: gl-scout-index)
 	(up-get-object-data object-data-id gl-temp-scout-id)
 	(up-get-point position-object gl-unit-x)
+	;(up-send-flare gl-unit-x)
 	(up-full-reset-search)
 	(up-set-target-point gl-unit-x)
 	(up-filter-distance c: -1 c: 4)
@@ -15572,8 +15694,8 @@
 	(up-full-reset-search)
 	;(up-find-local c: scout-cavalry-line c: 9)
 	;(up-set-target-object search-local c: gl-scout-index)
-	(up-set-target-by-id g: gl-temp-scout-id)
-	(up-get-point position-object gl-unit-x)
+	;(up-set-target-by-id g: gl-temp-scout-id)
+	;(up-get-point position-object gl-unit-x)
 	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
 	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
 	(up-bound-point gl-unit-x gl-unit-x)	
@@ -15590,7 +15712,7 @@
 	(up-compare-goal gl-scout-index g:>= gl-number-scouts) ;reached end of list, reset
 =>
 	(set-goal gl-scout-index 0)
-	(up-chat-data-to-player my-player-number "Scout: %d" g: gl-scout-index)
+	;(up-chat-data-to-player my-player-number "Scout: %d" g: gl-scout-index)
 	(up-jump-rule 1)
 )
 
@@ -15602,7 +15724,7 @@
 	(up-compare-goal gl-scout-index g:< gl-number-scouts)
 =>
 	(up-modify-goal gl-scout-index c:+ 1) ;go to next list-entry
-	(up-chat-data-to-player my-player-number "Scout: %d" g: gl-scout-index)
+	;(up-chat-data-to-player my-player-number "Scout: %d" g: gl-scout-index)
 	;(up-jump-rule -5)
 )
 
@@ -18888,20 +19010,20 @@
 
 (defrule
 	;(goal strategy-goal sg-drush)
-	(goal attack-now-goal 0)
+	(goal attack-now-goal 1)
 	(current-age == dark-age)
 	;(civilian-population g:< d-villager-goal)
 	(unit-type-count militiaman-line g:>= gl-drush-militia-count)
 	;(unit-type-count-total militiaman-line g:== gl-drush-militia-count)
 =>
-	(set-goal attack-now-goal 1)
+	;(set-goal attack-now-goal 1)
 	(set-strategic-number sn-number-explore-groups 0)
 	(set-strategic-number sn-total-number-explorers 0)
 	(up-reset-scouts)
 	(up-gather-inside c: barracks c: 0)
 	(up-ungarrison c: barracks)
 	(attack-now)
-	(chat-to-player my-player-number "Starting an attack")
+	;(chat-to-player my-player-number "Starting an attack")
 )
 
 (defrule	
@@ -20658,7 +20780,7 @@
 
 (defrule
 	(current-age == feudal-age)
-	(not (goal strategy-goal sg-scoutrush))
+	;(not (goal strategy-goal sg-scoutrush))
 	(can-train-with-escrow villager)
 	(or (unit-type-count-total villager g:< f-villager-goal)
 	(up-research-status c: castle-age == research-pending))
@@ -20669,33 +20791,33 @@
 	;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
 )
 
-(defrule
-	(current-age == feudal-age)
-	(goal strategy-goal sg-scoutrush)
-	(can-train-with-escrow villager)
-	(up-research-status c: ri-wheel-barrow != research-pending)
-	(or (unit-type-count-total villager < 34)
-	(up-research-status c: castle-age == research-pending))
-=>
-	(up-modify-escrow food c:- 50)
-	(train villager)
-	(up-get-fact civilian-population 0 civilian-pop) 
-	;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
-)
+; (defrule
+	; (current-age == feudal-age)
+	; (goal strategy-goal sg-scoutrush)
+	; (can-train-with-escrow villager)
+	; (up-research-status c: ri-wheel-barrow != research-pending)
+	; (or (unit-type-count-total villager < 34)
+	; (up-research-status c: castle-age == research-pending))
+; =>
+	; (up-modify-escrow food c:- 50)
+	; (train villager)
+	; (up-get-fact civilian-population 0 civilian-pop) 
+	; ;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
+; )
 
-(defrule
-	(current-age == feudal-age)
-	(goal strategy-goal sg-scoutrush)
-	(can-train-with-escrow villager)
-	(up-research-status c: ri-wheel-barrow >= research-pending)
-	(or (unit-type-count-total villager g:< f-villager-goal)
-	(up-research-status c: castle-age == research-pending))
-=>
-	(up-modify-escrow food c:- 50)
-	(train villager)
-	(up-get-fact civilian-population 0 civilian-pop) 
-	;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
-)
+; (defrule
+	; (current-age == feudal-age)
+	; (goal strategy-goal sg-scoutrush)
+	; (can-train-with-escrow villager)
+	; (up-research-status c: ri-wheel-barrow >= research-pending)
+	; (or (unit-type-count-total villager g:< f-villager-goal)
+	; (up-research-status c: castle-age == research-pending))
+; =>
+	; (up-modify-escrow food c:- 50)
+	; (train villager)
+	; (up-get-fact civilian-population 0 civilian-pop) 
+	; ;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
+; )
 
 (defrule
 	(current-age == feudal-age)
@@ -21549,6 +21671,7 @@
 	(up-compare-goal gl-military-advantage >= 0)
 	(current-age == feudal-age)
 =>
+	(set-goal attack-now-goal 1)
 	(set-goal retreat-now-goal 0)
 	(up-reset-unit c: -1)
 	; (set-strategic-number sn-number-attack-groups 500)
@@ -21578,8 +21701,8 @@
 (defrule
 	(not (goal strategy-goal sg-scoutrush))
 	(not (goal strategy-goal sg-towerrush)) ;mainly for archer-rush
-	(goal attack-now-goal 0) ;AI is not already attacking atm
-	(goal retreat-now-goal 0)
+	(goal attack-now-goal 1)
+	;(goal retreat-now-goal 0)
 	(not (town-under-attack))
 	(current-age == feudal-age)
 	(civilian-population g:< f-villager-goal)
@@ -21588,7 +21711,7 @@
 	(up-compare-goal gl-military-advantage >= 4))
 	(up-compare-goal gl-military-advantage >= -2)
 =>
-	(set-goal attack-now-goal 1)
+	;(set-goal attack-now-goal 1)
 	(set-strategic-number sn-number-explore-groups 0)
 	(set-strategic-number sn-total-number-explorers 0)
 	(up-reset-scouts)
@@ -21601,7 +21724,7 @@
 	(up-ungarrison c: stable)
 	(up-ungarrison c: siege-workshop)
 	(attack-now)
-	(chat-to-player my-player-number "Starting an attack")
+	;(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
 
@@ -21609,8 +21732,8 @@
 	(not (goal strategy-goal sg-scoutrush))
 	(not (goal strategy-goal sg-towerrush))
 	(town-under-attack)
-	(goal attack-now-goal 0)
-	(goal retreat-now-goal 0)
+	(goal attack-now-goal 1)
+	;(goal retreat-now-goal 0)
 	(current-age == feudal-age)
 	(civilian-population g:< f-villager-goal)
 	(or (military-population >= 10)
@@ -21629,15 +21752,15 @@
 	(up-ungarrison c: archery-range)
 	(up-ungarrison c: stable)
 	(up-ungarrison c: siege-workshop)
-	(attack-now)
-	(chat-to-player my-player-number "Starting an attack")
+	(attack-now)	
+	;(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
-	(goal attack-now-goal 0)
-	(goal retreat-now-goal 0)
+	(goal attack-now-goal 1)
+	;(goal retreat-now-goal 0)
 	(goal meso-civ NO)
 	(current-age == feudal-age)
 	(not (town-under-attack))
@@ -21647,7 +21770,7 @@
 	(up-compare-goal gl-military-advantage >= 3))
 	(up-compare-goal gl-military-advantage >= -2)
 =>
-	(set-goal attack-now-goal 1)
+	;(set-goal attack-now-goal 1)
 	(set-strategic-number sn-number-explore-groups 0)
 	(set-strategic-number sn-total-number-explorers 0)
 	(up-reset-scouts)
@@ -21660,14 +21783,14 @@
 	(up-ungarrison c: stable)
 	(up-ungarrison c: siege-workshop)
 	(attack-now)
-	(chat-to-player my-player-number "Starting an attack")
+	;(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
-	(goal attack-now-goal 0)
-	(goal retreat-now-goal 0)
+	(goal attack-now-goal 1)
+	;(goal retreat-now-goal 0)
 	(goal meso-civ YES)
 	(current-age == feudal-age)
 	(not (town-under-attack))
@@ -21679,7 +21802,7 @@
 	(or (research-completed ri-scale-mail)
 	(research-completed ri-forging))
 =>
-	(set-goal attack-now-goal 1)
+	;(set-goal attack-now-goal 1)
 	(set-strategic-number sn-number-explore-groups 0)
 	(set-strategic-number sn-total-number-explorers 0)
 	(up-reset-scouts)
@@ -21688,14 +21811,14 @@
 	(attack-now)
 	(up-ungarrison c: barracks)
 	(up-ungarrison c: archery-range)
-	(chat-to-player my-player-number "Starting an attack")
+	;(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
-	(goal attack-now-goal 0)
-	(goal retreat-now-goal 0)
+	(goal attack-now-goal 1)
+	;(goal retreat-now-goal 0)
 	(goal meso-civ YES)
 	(current-age == feudal-age)
 	(not (town-under-attack))
@@ -21707,7 +21830,7 @@
 	(or (research-completed ri-scale-mail)
 	(research-completed ri-forging))
 =>
-	(set-goal attack-now-goal 1)
+	;(set-goal attack-now-goal 1)
 	(set-strategic-number sn-number-explore-groups 0)
 	(set-strategic-number sn-total-number-explorers 0)
 	(up-reset-scouts)
@@ -21716,7 +21839,7 @@
 	(attack-now)
 	(up-ungarrison c: barracks)
 	(up-ungarrison c: archery-range)
-	(chat-to-player my-player-number "Starting an attack")
+	;(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
 
@@ -21724,14 +21847,14 @@
 	(goal strategy-goal sg-scoutrush)
 	(current-age == feudal-age)
 	(town-under-attack)
-	(goal attack-now-goal 0)
-	(goal retreat-now-goal 0)
+	(goal attack-now-goal 1)
+	;(goal retreat-now-goal 0)
 	(civilian-population g:< f-villager-goal)
 	(or (military-population >= 5)
 	(up-compare-goal gl-military-advantage >= 3))
 	(up-compare-goal gl-military-advantage >= -3)
 =>
-	(set-goal attack-now-goal 1)
+	;(set-goal attack-now-goal 1)
 	(set-strategic-number sn-number-explore-groups 0)
 	(set-strategic-number sn-total-number-explorers 0)
 	(up-reset-scouts)
@@ -21744,19 +21867,19 @@
 	(up-ungarrison c: stable)
 	(up-ungarrison c: siege-workshop)
 	(attack-now)
-	(chat-to-player my-player-number "Starting an attack")
+	;(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
 
 (defrule
 	(goal strategy-goal sg-towerrush)
-	(goal attack-now-goal 0)
-	(goal retreat-now-goal 0)
+	(goal attack-now-goal 1)
+	;(goal retreat-now-goal 0)
 	(current-age == feudal-age)
 	(civilian-population g:< f-villager-goal)
 	(military-population >= 2)
 =>
-	(set-goal attack-now-goal 1)
+	;(set-goal attack-now-goal 1)
 	(set-strategic-number sn-number-explore-groups 1)
 	(set-strategic-number sn-total-number-explorers 1)
 	;(up-reset-scouts)
@@ -21769,7 +21892,7 @@
 	(up-ungarrison c: stable)
 	(up-ungarrison c: siege-workshop)
 	(attack-now)
-	(chat-to-player my-player-number "Starting an attack")
+	;(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
 
@@ -22344,6 +22467,20 @@
 	(up-set-placement-data my-player-number -1 c: 14)
     (up-build place-control 0 c: archery-range)
 	(chat-to-player my-player-number "Range 1")
+)
+
+(defrule
+	(or (goal strategy-goal sg-fastcastle-gu)
+	(goal strategy-goal sg-scoutrush))
+	(current-age == feudal-age)
+	(goal ca-strategy gl-castleage-rangeunit)
+	(building-type-count-total archery-range >= 1)
+	(building-type-count-total town-center >= 1)
+	(up-research-status c: castle-age >= research-pending)
+	(can-train archer-line)
+	(not (town-under-attack))
+=>
+	(train archer-line)
 )
 
 (defrule
@@ -23720,9 +23857,10 @@
 	(up-compare-goal gl-military-advantage >= 0))
 	(current-age == castle-age)
 =>
-	(set-strategic-number sn-number-attack-groups 500)
-	(set-strategic-number sn-minimum-attack-group-size 1)
-	(set-strategic-number sn-maximum-attack-group-size 1)
+	;(set-strategic-number sn-number-attack-groups 500)
+	;(set-strategic-number sn-minimum-attack-group-size 1)
+	;(set-strategic-number sn-maximum-attack-group-size 1)
+	(set-goal attack-now-goal 1)
 	(set-goal retreat-now-goal 0)
 	(chat-to-player my-player-number "Stop retreating")
 )
@@ -23748,14 +23886,14 @@
 
 (defrule
 	(current-age == castle-age)
-	(goal attack-now-goal 0)
+	(goal attack-now-goal 1)
 	(goal retreat-now-goal 0)
 	(or (military-population >= 18)
 	(up-compare-goal gl-military-advantage >= 8))
 	(up-compare-goal gl-military-advantage >= -4)
 	(civilian-population g:< c-villager-goal)
 =>
-	(set-goal attack-now-goal 1)
+	;(set-goal attack-now-goal 1)
 	(up-gather-inside c: barracks c: 0)
 	(up-gather-inside c: archery-range c: 0)
 	(up-gather-inside c: stable c: 0)
@@ -23765,7 +23903,7 @@
 	(up-ungarrison c: stable)
 	(up-ungarrison c: siege-workshop)
 	(attack-now)
-	(chat-to-player my-player-number "Starting an attack")
+	;(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
 
@@ -27122,10 +27260,11 @@
 	(up-compare-goal gl-military-advantage >= 0))
 	(current-age == imperial-age)
 =>
+	(set-goal attack-now-goal 1)
 	(set-goal retreat-now-goal 0)
-	(set-strategic-number sn-number-attack-groups 500)
-	(set-strategic-number sn-minimum-attack-group-size 1)
-	(set-strategic-number sn-maximum-attack-group-size 1)
+	;(set-strategic-number sn-number-attack-groups 500)
+	;(set-strategic-number sn-minimum-attack-group-size 1)
+	;(set-strategic-number sn-maximum-attack-group-size 1)
 	(chat-to-player my-player-number "Stop retreating")
 )
 
@@ -27150,19 +27289,19 @@
 
 (defrule
 	(current-age == imperial-age)
-	(goal retreat-now-goal 0)
-	(goal attack-now-goal 0)
+	;(goal retreat-now-goal 0)
+	(goal attack-now-goal 1)
 	(or (military-population >= 23)
 	(up-compare-goal gl-military-advantage >= 10))
 	(up-compare-goal gl-military-advantage >= -5)
 =>
-	(set-goal attack-now-goal 1)
+	;(set-goal attack-now-goal 1)
 	(up-gather-inside c: barracks c: 0)
 	(up-gather-inside c: archery-range c: 0)
 	(up-gather-inside c: stable c: 0)
 	(up-gather-inside c: siege-workshop c: 0)
 	(attack-now)
-	(chat-to-player my-player-number "Starting an attack")
+	;(chat-to-player my-player-number "Starting an attack")
 	;(chat-to-allies "31")
 )
 
