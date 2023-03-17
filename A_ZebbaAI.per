@@ -35,18 +35,15 @@
 ; - improved drush and usage of initial scout
 ; - fixed retreating of army
 ; - added ability to deal with villager-harassments by enemy scouts in dark-age
+; - fixed boar-hunting issue where AI couldnt garrison villagers to shoot the boar with tc if there are no villagers
+; nearby. AI will now switch temporarily to standard boar-hunting if it has < 2 villagers next to tc
 
 ;ToDo: 
 
 ;what's up next:
-; - test scoutrush (retreat scouts from spearmen) (testing) (not working)
-; - change villager defense against military units sn (testing)
 ; - improve debug code of tc-upgrade non shooting bug (testing)
-; - implement tc-garrison code for every tc (testing) (partly fixed)
-; - fix training of counter units in feudal to prevent delayed castle-age time (testing, not optimal yet: 
-; needs additional check if enemy military is too high to not make these units, even though we're saving for castle-age)
-; - find a solution for tc-boar-hunting when there are no villager under the tc (switch to old boar-hunting if
-; not enough villagers under tc) (testing)
+; - implement tc-garrison code for every tc (testing) (partly fixed, but not properly working)
+; - test scoutrush (retreat scouts from spearmen) (not working)
 
 ; - remake towerrush due to several numbers of bugs
 ; - test towerrush
@@ -12699,8 +12696,8 @@
 	(or (building-type-count-total town-center < 1)
 	(or (unit-type-count-total villager < 33)
 	(research-completed ri-wheel-barrow)))
-	(goal gl-food-saving 29)
-	(goal gl-wood-saving 29)
+	(or (goal gl-food-saving 29)
+	(goal gl-wood-saving 29))
 =>
 	(release-escrow food)
 	(release-escrow wood)
@@ -15706,19 +15703,20 @@
 	(up-chat-data-to-player my-player-number "Scouts : Spears: %d" g: gl-scout-spear-ratio)
 )
 
-(defrule
+(defrule ;is not triggering for some reason
 	(current-age < castle-age)
 	(goal attack-now-goal 1)
 	(unit-type-count scout-cavalry-line >= 1)
 	(unit-type-count scout-cavalry-line < 10)
+	(up-set-target-object search-local g: gl-scout-index)
+	(up-object-data object-data-attacker-count > 0)
 	(up-compare-goal gl-scout-spear-ratio < 3)
 	(up-compare-goal gl-remote-total > 0)
-	(up-compare-goal gl-unit-x > 2)
-	(up-compare-goal gl-unit-y > 2)
+	;(up-compare-goal gl-unit-x > 2)
+	;(up-compare-goal gl-unit-y > 2)
 	;(up-compare-goal gl-unit-x g:< FULL-MAP-SIZE)
 	;(up-compare-goal gl-unit-y g:< FULL-MAP-SIZE)
-	(up-set-target-by-id g: gl-temp-scout-id)
-	(up-object-data object-data-attacker-count > 0)
+	;(up-set-target-by-id g: gl-temp-scout-id)
 =>
 	(set-goal retreating-goal YES)
 	(up-full-reset-search)
@@ -19519,6 +19517,8 @@
 	(up-set-target-object search-local c: 0)
 	(unit-type-count villager >= 9) 
 =>
+	(set-strategic-number sn-disable-villager-garrison 3)
+	(set-goal gl-garrison-tc-two 0)
 	(up-full-reset-search)
 	(up-set-group search-local c: 3)
 	(up-remove-objects search-local object-data-tasks-count > 0)		
@@ -19561,6 +19561,8 @@
 	(unit-type-count villager >= 10) 
 =>
 	(enable-timer 6 1)
+	(set-strategic-number sn-disable-villager-garrison 3)
+	(set-goal gl-garrison-tc-two 0)
 	(up-full-reset-search)
 	(up-set-group search-local c: 3)
 	(up-remove-objects search-local object-data-tasks-count > 0)		
@@ -19576,7 +19578,7 @@
 	(dropsite-min-distance live-boar < 10)
 	(dropsite-min-distance live-boar > 0)
 =>
-	(set-strategic-number sn-disable-villager-garrison 3)
+	;(set-strategic-number sn-disable-villager-garrison 3)
 	(up-full-reset-search)
 	(up-set-target-point gl-starting-tc-x)
 	(up-filter-distance c: -1 c: 5)
@@ -19611,7 +19613,7 @@
 (defrule ;find tc and garrison vills from local search
 	(up-set-target-object search-remote c: 0)
 	(up-compare-sn sn-disable-villager-garrison == 3)
-	;(up-compare-goal gl-local-total >= 4)
+	(up-compare-goal gl-local-total >= 2)
 	(up-compare-goal gl-garrison-tc-two < 1)
 	(timer-triggered 6)
 =>
@@ -19629,7 +19631,7 @@
 (defrule ;find tc and garrison vills from local search
 	(up-set-target-object search-remote c: 0)
 	(up-compare-sn sn-disable-villager-garrison == 3)
-	(up-compare-goal gl-local-total < 1)
+	(up-compare-goal gl-local-total < 2)
 	(up-compare-goal gl-garrison-tc-two < 1)
 	(timer-triggered 6)
 =>
@@ -21084,6 +21086,7 @@
 	(current-age == feudal-age)
 	(civilian-population >= 20)
 	(building-type-count-total blacksmith < 1)
+	(building-type-count-total mining-camp > 0)
 	(idle-farm-count < 1)
 	(can-build farm)
 	(building-type-count-total farm < 8)
@@ -22282,6 +22285,7 @@
 	(current-age >= feudal-age)
 	(can-research-with-escrow ri-wheel-barrow)
 	(unit-type-count-total villager >= 33)
+	(not (can-research-with-escrow castle-age))
 	(goal gl-food-saving 29)
 	(goal gl-wood-saving 29)
 =>
@@ -22298,6 +22302,7 @@
 	(goal strategy-goal sg-scoutrush)
 	(can-research ri-wheel-barrow)
 	(unit-type-count-total villager >= 33)
+	(not (can-research-with-escrow castle-age))
 =>
 	(research ri-wheel-barrow)
 )
@@ -22360,11 +22365,17 @@
 )
 
 (defrule
-	(can-research castle-age)
+	(can-research-with-escrow castle-age)
 	(unit-type-count-total villager g:>= f-villager-goal)
 =>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
 	(research castle-age)
 	(chat-to-allies "Gehe in die Ritterzeit")
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
 )
 
 (defrule
@@ -31027,7 +31038,7 @@
 	(building-type-count town-center >= 1)
     (stance-toward focus-player enemy)    ;we are looking for enemy units only
 	(or (dropsite-min-distance live-boar > 8)
-	(dropsite-min-distance live-boar <= -1))
+	(dropsite-min-distance live-boar <= -1)) ; to prevent collision with tc-boar-hunting
 =>
     (up-full-reset-search)
 	(up-set-target-point gl-self-point-x)
