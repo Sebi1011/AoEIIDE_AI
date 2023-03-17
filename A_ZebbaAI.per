@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 0.21.4
-;last update: 16th March 2023
+;Version: 0.21.6
+;last update: 17th March 2023
 
 ;ZebbaAI is a versatile, aggressive and eco orientated AI. The idea of the AI is to set the opponent under pressure 
 ;asap to keep any pressure from its base. In general, ZebbaAI tries to read the game as good as possible and adapt its
@@ -20,23 +20,6 @@
 ;Difficulty: there are no levels of difficulty for ZebbaAI. Its current level is comparable to the hard DE AI. Before any match set the difficulty level to extreme to get the best results since the game nerfs AIs speed on lower difficulty levels
 
 ;recently added:
-; - added more precise house-placement in dark-age, making the AI building houses outside of tc-range
-; - improved house-placement-algorithm in dark-age and fixed several bugs connected with it
-; - added code-foundation for boar hunting to shoot and weaken a hunted boar with tc
-; - added algorithm to build walls around a tower once it has been placed
-; - AI can now garrison sheep when playing gurjaras 
-; - AI can now towerrush with donjons
-; - added military-advantage factor for more precise decision making
-; - slighty improved scouting
-; - can now build mining-camps specifically on stone
-; - fixed bug that occured when sheep spawned on the edge of the map, causing the scout to freeze
-; - fixed various build-order bugs
-; - added options to deal with towerrushes
-; - added escrow-rules for bloodlines, upgrades for counter unit-lines and for buildings to make counter units
-; - AI can now build outposts under certain circumstances
-; - AI is building defensive towers more precisely to protect ressources
-; - added a current military-evaluator to check, based on AIs current military advantage, if it should act more
-; defensively or offensively
 ; - AI will now retreat from battles if army numbers are too low
 ; - significantly improved forage gathering
 ; - improved scouting-pattern for finding the enemy base in 1v1s
@@ -56,12 +39,10 @@
 ;ToDo: 
 
 ;what's up next:
-; - test scoutrush (retreat scouts from spearmen) (testing)
-; - change villager defense against military units sn
-; - improve debug code of tc-upgrade non shooting bug
+; - test scoutrush (retreat scouts from spearmen) (testing) (not working)
+; - change villager defense against military units sn (testing)
+; - improve debug code of tc-upgrade non shooting bug (testing)
 ; - implement tc-garrison code for every tc (testing) (partly fixed)
-; - try to add a feudal-age villager-goal reducer when military-advantage is high enough 
-
 ; - fix training of counter units in feudal to prevent delayed castle-age time (testing, not optimal yet: 
 ; needs additional check if enemy military is too high to not make these units, even though we're saving for castle-age)
 ; - find a solution for tc-boar-hunting when there are no villager under the tc (switch to old boar-hunting if
@@ -70,32 +51,30 @@
 ; - remake towerrush due to several numbers of bugs
 ; - test towerrush
 ; - implement up-jump-rule rule to skip build-order rules after castle-age
-; - add ability to garrison low-hp villagers being attacked in the next tc
+; - add ability to garrison low-hp villagers under attack in the next tc
 ; - implement and test sn-special-attack-type2
-; - add "closest-player-next" and set it to focus-players for team-game pocket-players (bug-potential)
+; - add a "closest-player-next" rule and set it to focus-players for team-game pocket-players
 ; - add market-price check before buying/selling resources
-; - retreat with army in dark-age in drushes if villager number is to high (bug potential)
 ; - improve dark-age builder selection for building resource drop-off points
-; - Eat only one sheep at a time (bug potential)
-; - implement scouting-pattern for scouting own base (bug potential)
-; - decrease d-villager-goal for mongols when scout/archer-rushing, in addition changes need to be made to 
-; constructions of buildings connected to villager count (bug potential)
+; - Eat only one sheep at a time 
+; - implement scouting-pattern for scouting own base
+; - decrease d-villager-goal for mongols when scout/archer-rushing, in addition to that changes need to be made to 
+; constructions of buildings connected to villager count
 ; - fix problem that causes boar luring villagers being retasked to build non-duc buildings (tested)
 
 
 ;improving drush:
 ; - use scout to block villagers for militias
-; - retreat with army when villager numbers are too high
 ; - keep scout and militia closer together
 
 ;improving scoutrush:
 ; - use one scout to block villagers for other scouts
-; - retreat with scouts when villager numbers are too high
+; - retreat with scouts when villager numbers are too high/spearmen are nearby
 ; - build farms faster (tested)
 
 ;improving archerrush:
 ; - set up groups of archers to attack at multiple locations more precisely
-; - retreat with single archer units when villager numbers are too high
+; - retreat with single archer units when villagers are getting close
 ; - keep initial scout near army when launching the 1st attack
 
 ;improving trush:
@@ -126,8 +105,8 @@
 ; does not work due to enemy pressure
 ; - implement taunt "31" ("Attack an enemy now!") and taunt reaction to enable combined attacks in teamgames
 ; - Saving resources for upgrades/buildings (work in progress) (missing: Capped/Siege Ram/Elephant, Onager, Siege Engineers, UTs, Redemption)
-; - optimization of prioritisation of upgrades (-work in progress)
-; - improve behaviour of villagers defending from enemy scout rushes
+; - optimization of prioritisation of upgrades (work in progress)
+; - improve behaviour of villagers defending from enemy scout rushes/drushes
 ; - evacuate base to new safe position in TG when old base is being destroyed (work in progress)
 ; - improve attack intelligence, such as grouping up units before attack/ retreating when enemy military-count is too high/
 ;/retreating single units from enemy-counter unit/ patrol-attacking, target areas with army more precisely/
@@ -155,8 +134,6 @@
 ; causing the AI units trying to attack them, but retreating once they touch the tc-range
 ; - fix constant switching targets of military units
 ; - fix flare-sending enemy tcs at the start at nomad
-; - fix flare-sending issue in team-games, causing the AI to send random flares once one teammate has found an enemy 
-; fortification
 ; - fix sn-camp-max-distance issue; gold/stone/wood piles are not being found correctly
 ; - fix sending builders to regions on the map that are guarded by the enemy 
 ; - fix counting of enemy warships
@@ -165,7 +142,6 @@
 
 
 ;region Defconsts ==================================================
-
 
 (defconst object-data-index -1)
 (defconst object-data-id 0)
@@ -660,7 +636,7 @@
 	(enable-wall-placement 1)
 	(set-strategic-number sn-preferred-trade-distance 9999)
 	(set-strategic-number sn-allow-civilian-defense 1)
-	(set-strategic-number sn-allow-civilian-offense 2)
+	(set-strategic-number sn-allow-civilian-offense 0)
 	(set-strategic-number sn-intelligent-gathering 1)
 	(set-strategic-number sn-consecutive-idle-unit-limit 0)
 	(set-strategic-number sn-group-form-distance 60)
@@ -1397,7 +1373,7 @@
 (defrule
 	(current-age < castle-age)
 =>
-	(set-goal gl-garrison-count 10)
+	(set-goal gl-garrison-count 9)
 	(disable-self)
 )
 
@@ -1405,7 +1381,7 @@
 	(not (civ-selected teutonic))
 	(current-age >= castle-age)
 =>
-	(set-goal gl-garrison-count 15)
+	(set-goal gl-garrison-count 14)
 	(disable-self)
 )
 
@@ -1413,7 +1389,7 @@
 	(civ-selected teutonic)
 	(current-age >= castle-age)
 =>
-	(set-goal gl-garrison-count 25)
+	(set-goal gl-garrison-count 24)
 	(disable-self)
 )
 
@@ -6832,7 +6808,7 @@
 	(players-unit-type-count focus-player archer-line >= 6))
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -10))
-	(military-population < 6)
+	(military-population < 5)
 	;(town-under-attack)
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 2)
@@ -6853,7 +6829,7 @@
 	(players-unit-type-count focus-player archer-line >= 6))
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -10))
-	(military-population < 6)
+	(military-population < 5)
 	;(town-under-attack)
 	(can-build-with-escrow donjon)
 	(building-type-count-total donjon < 2)
@@ -6875,7 +6851,7 @@
 	(players-unit-type-count focus-player archer-line >= 10))
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -16))
-	(military-population < 6)
+	(military-population < 5)
 	(town-under-attack)
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 4)
@@ -6898,7 +6874,7 @@
 	(players-unit-type-count focus-player archer-line >= 10))
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -10))
-	(military-population < 6)
+	(military-population < 5)
 	(town-under-attack)
 	(can-build-with-escrow donjon)
 	(building-type-count-total tower-class < 4)
@@ -7011,7 +6987,11 @@
 	(can-train-with-escrow skirmisher-line)
 	(food-amount < 600)
 	(up-compare-goal gl-military-advantage < 25)
-	(not (goal gl-food-saving 22))
+	(or 
+		(not (goal gl-food-saving 22))
+		(and (goal gl-food-saving 22)
+		(up-compare-goal gl-military-advantage <= -12))
+	)
 =>
 	(up-modify-escrow food c:- 25)
 	(up-modify-escrow wood c:- 35)	
@@ -7050,7 +7030,11 @@
 	(can-train-with-escrow scout-cavalry-line)
 	(food-amount < 600)
 	(up-compare-goal gl-military-advantage < 25)
-	(not (goal gl-food-saving 22))
+	(or 
+		(not (goal gl-food-saving 22))
+		(and (goal gl-food-saving 22)
+		(up-compare-goal gl-military-advantage <= -12))
+	)
 =>
 	(up-modify-escrow food c:- 80)
 	(train scout-cavalry-line)
@@ -7063,7 +7047,11 @@
 	(can-train-with-escrow eagle-warrior-line)
 	(food-amount < 600)	
 	(up-compare-goal gl-military-advantage < 25)
-	(not (goal gl-food-saving 22))
+	(or 
+		(not (goal gl-food-saving 22))
+		(and (goal gl-food-saving 22)
+		(up-compare-goal gl-military-advantage <= -12))
+	)
 =>
 	(up-modify-escrow food c:- 20)
 	(up-modify-escrow gold c:- 50)
@@ -7076,7 +7064,11 @@
 	(players-unit-type-count focus-player militiaman-line > 0)
 	(can-train-with-escrow archer-line)
 	(up-compare-goal gl-military-advantage < 25)
-	(not (goal gl-food-saving 22))
+	(or 
+		(not (goal gl-food-saving 22))
+		(and (goal gl-food-saving 22)
+		(up-compare-goal gl-military-advantage <= -12))
+	)
 =>
 	(up-modify-escrow wood c:- 25)
 	(up-modify-escrow gold c:- 45)
@@ -7182,8 +7174,8 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (players-unit-type-count focus-player spearman-line >= 5)
-	(players-unit-type-count focus-player archer-line >= 6))
+	(or (players-unit-type-count focus-player spearman-line >= 6)
+	(players-unit-type-count focus-player archer-line >= 10))
 	(can-train-with-escrow skirmisher-line)
 	(research-completed ri-elite-skirmisher)
 	(not (unit-available genitour-line))
@@ -11677,7 +11669,13 @@
 (defrule
 	(current-age == feudal-age)
 	(timer-triggered 8)
-	(food-amount >= 450) ;600
+	(or 
+		(food-amount >= 450) ;600
+	(or	
+		(and (gold-amount >= 325) ;375
+		(building-type-count market >= 1))
+		(up-compare-goal gl-military-advantage >= 10))
+	)
 	(up-modify-goal gl-feudalup-compare g:= f-villager-goal)
 	(up-modify-goal gl-feudalup-compare c:- 5)
 	(unit-type-count-total villager g:< gl-feudalup-compare)
@@ -11689,21 +11687,21 @@
 	(enable-timer 8 30)
 )
 
-(defrule
-	(current-age == feudal-age)
-	(timer-triggered 8)
-	(gold-amount >= 325) ;375
-	(building-type-count market >= 1)
-	(up-modify-goal gl-feudalup-compare g:= f-villager-goal)
-	(up-modify-goal gl-feudalup-compare c:- 5)
-	(unit-type-count-total villager g:< gl-feudalup-compare)
-	(up-research-status c: castle-age != research-pending)
-=>
-	(disable-timer 8)
-	(up-modify-goal f-villager-goal c:- 1)
-	(up-chat-data-to-self "Feudal-Age villager goal: %d" g: f-villager-goal)
-	(enable-timer 8 30)
-)
+; (defrule
+	; (current-age == feudal-age)
+	; (timer-triggered 8)
+	; (gold-amount >= 325) ;375
+	; (building-type-count market >= 1)
+	; (up-modify-goal gl-feudalup-compare g:= f-villager-goal)
+	; (up-modify-goal gl-feudalup-compare c:- 5)
+	; (unit-type-count-total villager g:< gl-feudalup-compare)
+	; (up-research-status c: castle-age != research-pending)
+; =>
+	; (disable-timer 8)
+	; (up-modify-goal f-villager-goal c:- 1)
+	; (up-chat-data-to-self "Feudal-Age villager goal: %d" g: f-villager-goal)
+	; (enable-timer 8 30)
+; )
 
 (defrule
 	(current-age == feudal-age)
@@ -11782,8 +11780,10 @@
 	(timer-triggered 8)
 	(or (and (food-amount >= 800)
 		(gold-amount >= 500))
-		(and (gold-amount >= 600)
-		(food-amount >= 600)))
+	(or (and (gold-amount >= 600)
+		(food-amount >= 600))
+		(up-compare-goal gl-military-advantage >= 20))
+	)
 	(up-modify-goal gl-castleup-compare g:= c-villager-goal)
 	(up-modify-goal gl-castleup-compare c:- 9)
 	(unit-type-count-total villager g:< gl-castleup-compare)
@@ -13813,7 +13813,7 @@
 )
 
 (defrule
-	(or (research-completed feudal-age)
+	(or (up-research-status c: feudal-age >= research-pending)
 	(civilian-population g:< gl-darkage-safe))
 	(goal gl-food-saving 21)
 =>
@@ -13839,7 +13839,7 @@
 )
 
 (defrule
-	(or (research-completed castle-age)
+	(or (up-research-status c: castle-age >= research-pending)
 	(civilian-population g:< gl-feudalage-safe))
 	(goal gl-food-saving 22)
 	(goal gl-gold-saving 22)
@@ -13869,7 +13869,7 @@
 )
 
 (defrule
-	(or (research-completed imperial-age)
+	(or (up-research-status c: imperial-age >= research-pending)
 	(or (civilian-population g:< gl-castleage-safe)
 	(up-compare-goal gl-military-advantage < -25)))
 	(goal gl-food-saving 23)
@@ -19056,8 +19056,21 @@
 	;(chat-to-player my-player-number "Starting an attack")
 )
 
+(defrule
+	(or (up-research-status c: feudal-age == research-pending)
+	(or (up-research-status c: castle-age == research-pending)
+	(or (up-research-status c: imperial-age == research-pending)
+	(or (up-research-status c: ri-wheel-barrow == research-pending)
+	(up-research-status c: ri-hand-cart == research-pending)))))
+=>
+	(up-full-reset-search)
+	(up-filter-garrison c: 4 c: -1)
+	(up-find-local c: town-center c: 5)
+)
+
 (defrule	
 	(up-research-status c: feudal-age == research-pending)
+	(up-set-target-object search-local c: 0)
 	(town-under-attack)
 =>
 	(up-ungarrison c: town-center)
@@ -19067,6 +19080,7 @@
 
 (defrule	
 	(up-research-status c: castle-age == research-pending)
+	(up-set-target-object search-local c: 0)
 	(town-under-attack)
 =>
 	(up-ungarrison c: town-center)
@@ -19076,6 +19090,7 @@
 
 (defrule	
 	(up-research-status c: imperial-age == research-pending)
+	(up-set-target-object search-local c: 0)
 	(town-under-attack)
 =>
 	(up-ungarrison c: town-center)
@@ -19085,19 +19100,21 @@
 
 (defrule	
 	(up-research-status c: ri-wheel-barrow == research-pending)
+	(up-set-target-object search-local c: 0)
 	(town-under-attack)
 =>
 	(up-ungarrison c: town-center)
-	(chat-to-player my-player-number "Debug garrisoned Town-Center during age-up")
+	(chat-to-player my-player-number "Debug garrisoned Town-Center during TC Upgrade")
 	(disable-self)
 )
 
 (defrule	
 	(up-research-status c: ri-hand-cart == research-pending)
+	(up-set-target-object search-local c: 0)
 	(town-under-attack)
 =>
 	(up-ungarrison c: town-center)
-	(chat-to-player my-player-number "Debug garrisoned Town-Center during age-up")
+	(chat-to-player my-player-number "Debug garrisoned Town-Center during TC Upgrade")
 	(disable-self)
 )
 
@@ -19774,31 +19791,34 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
+	(goal meso-civ NO)
 	(current-age == feudal-age)
 	(up-compare-sn sn-enable-training-queue == 1)
 	(unit-type-count-total scout-cavalry-line < 4)
+	(building-type-count-total archery-range < 1)
 =>
 	(set-strategic-number sn-enable-training-queue 0)
 )
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
+	(goal meso-civ NO)
 	(current-age == feudal-age)
 	(up-compare-sn sn-enable-training-queue == 0)
-	(unit-type-count-total scout-cavalry-line >= 4)
+	(or (unit-type-count-total scout-cavalry-line >= 4)
+	(building-type-count-total archery-range >= 1))
 =>
 	(set-strategic-number sn-enable-training-queue 1)
 )
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
+	(goal meso-civ NO)
 	(current-age == castle-age)
 	(up-compare-sn sn-enable-training-queue == 0)
 =>
 	(set-strategic-number sn-enable-training-queue 1)
 )
-
-
 
 (defrule
 	(current-age == feudal-age)
@@ -21995,6 +22015,8 @@
 	(current-age >= feudal-age)
 	(building-type-count-total blacksmith == 0)
 	(building-type-count-total stable >= 1)
+	(or (civilian-population >= 26)
+	(unit-type-count-total scout-cavalry-line >= 4))
 	(can-build blacksmith)
 =>
 	(build blacksmith)
@@ -33272,16 +33294,47 @@
 ; )
 
 (defrule
-	(current-age >= castle-age)
+	(up-research-status c: castle-age >= research-pending)
+	(goal ca-strategy gl-castleage-eagles)
 	(not (goal strategy-goal sg-fastcastle-uu))
 	(not (goal strategy-goal sg-boom-imp))
 	(civilian-population g:>= f-villager-goal)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 34)
-	(set-strategic-number sn-food-gatherer-percentage 45)
-	(set-strategic-number sn-gold-gatherer-percentage 16)
-	(set-strategic-number sn-stone-gatherer-percentage 5)
-	(chat-to-player my-player-number "Setting up Economy for Castle-Age")
+	(set-strategic-number sn-wood-gatherer-percentage 29)
+	(set-strategic-number sn-food-gatherer-percentage 40)
+	(set-strategic-number sn-gold-gatherer-percentage 25)
+	(set-strategic-number sn-stone-gatherer-percentage 6)
+	(chat-to-player my-player-number "Setting up Economy for Castle-Age eagles")
+	(disable-self)
+)
+
+(defrule
+	(up-research-status c: castle-age >= research-pending)
+	(goal ca-strategy gl-castleage-rangeunit)
+	(not (goal strategy-goal sg-fastcastle-uu))
+	(not (goal strategy-goal sg-boom-imp))
+	(civilian-population g:>= f-villager-goal)
+=>
+	(set-strategic-number sn-wood-gatherer-percentage 35)
+	(set-strategic-number sn-food-gatherer-percentage 39)
+	(set-strategic-number sn-gold-gatherer-percentage 20)
+	(set-strategic-number sn-stone-gatherer-percentage 6)
+	(chat-to-player my-player-number "Setting up Economy for Castle-Age range-unit")
+	(disable-self)
+)
+
+(defrule
+	(up-research-status c: castle-age >= research-pending)
+	(goal ca-strategy gl-castleage-stableunit)
+	(not (goal strategy-goal sg-fastcastle-uu))
+	(not (goal strategy-goal sg-boom-imp))
+	(civilian-population g:>= f-villager-goal)
+=>
+	(set-strategic-number sn-wood-gatherer-percentage 29)
+	(set-strategic-number sn-food-gatherer-percentage 50)
+	(set-strategic-number sn-gold-gatherer-percentage 15)
+	(set-strategic-number sn-stone-gatherer-percentage 6)
+	(chat-to-player my-player-number "Setting up Economy for Castle-Age stable-unit")
 	(disable-self)
 )
 
