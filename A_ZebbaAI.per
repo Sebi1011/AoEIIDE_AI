@@ -1,22 +1,27 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 0.21.6
-;last update: 17th March 2023
+;Version: 0.22.3
+;last update: 18th March 2023
 
-;ZebbaAI is a versatile, aggressive and eco orientated AI. The idea of the AI is to set the opponent under pressure 
-;asap to keep any pressure from its base. In general, ZebbaAI tries to read the game as good as possible and adapt its
-;behaviour based on the current situation. 
+;ZebbaAI is a versatile, rather aggressive AI while trying to maintain eco behind. The playstyle of this AI is to set the opponent under 
+;pressure asap to keep any pressure from its base. In general, ZebbaAI tries to read the game as good as possible as with its current 
+;version and adapt its behaviour based on the current situation. 
 
-;This AI is still in development. Bugs and similar unintended behaviour are likely to happen are being tracked. However,
-;some bugs are very situational and hard to fix. If you notice any strange behaviour I'd be more than happy if you'd let me know 
+;The idea behind ZebbaAI was to create an AI that plays all various strategies to see how they work out in any situation, including 
+;adapting its strategy to opponent strategies. For that to work the goal is to give the AI all the necessary tools to make use of
+;everything the game offers, e.g. deer pushing. It's not yet at a point where I'd like to have it, since writing an AI at this game
+;was harder than I initially thought. Anyhow, 
+
+;This AI is still in development. Bugs and similar unintended behaviour are likely to happen and are being tracked. However,
+;some bugs are very situational and hard to fix. If you notice any strange behaviour I am more than happy if you let me know 
 
 ;have fun! :)
 
-;Civs: Can play all civilizations
-;Maps: besides standard maps like arabia, ZebbaAI can play nomad and other hybrid maps and custom maps. (Not optimized on water-maps though)
-		;ZebbaAI can't play properly on island-like maps: It needs a map with land connection to the enemy
+;Civs: Can play all civilizations, including the expansions
+;Maps: besides standard maps like arabia, ZebbaAI can play nomad, other hybrid maps and custom maps. (Not optimized on water-maps though)
+		;ZebbaAI can't play properly on island-like maps or on closed-maps like Arena: It needs a map with land connection to the enemy
 ;Taunts in TGs: AI reacts to following taunts: 3 ("food please"), 4("wood please"), 5("gold please"), 6("stone please"), 38("give me your extra resources"), Flare-Location + 48("I'm being attacked, please help")
-;Strategies: Drush, Archerrush, Scoutrush, Towerrush, FC into Unique Unit, FC into Gold Unit, Fast-Imp (only pockets in team-games)
+;Strategies: Drush, Archerrush, Scoutrush, Towerrush (currently deactivated), FC into Unique Unit, FC into Gold Unit, Fast-Imp (only pockets in team-games)
 ;Difficulty: there are no levels of difficulty for ZebbaAI. Its current level is comparable to the hard DE AI. Before any match set the difficulty level to extreme to get the best results since the game nerfs AIs speed on lower difficulty levels
 
 ;recently added:
@@ -41,7 +46,12 @@
 ;ToDo: 
 
 ;what's up next:
-; - improve debug code of tc-upgrade non shooting bug (testing)
+; - try to retreat only 1 unit at a time
+; - boar-hunting code broke again
+; - fix bug where a switch to old boar-hunting code can cause villagers that were found in the mean-time garrison in
+; the tc and won't ungarrison anymore
+
+; - fix gathering of units in military buildings before castle-age
 ; - implement tc-garrison code for every tc (testing) (partly fixed, but not properly working)
 ; - test scoutrush (retreat scouts from spearmen) (not working)
 
@@ -494,6 +504,7 @@
 (defconst g-boar-status 281)
 (defconst remaining-boar-food 282)
 (defconst boar-food-amount 283)
+(defconst boar-hunting 284)
 (defconst gl-distance-temp 289)
 (defconst gl-distance-temp-one 290)
 (defconst gl-distance-temp-two 291)
@@ -834,8 +845,8 @@
 	(up-set-offense-priority c: skirmisher c: 6)
 	(up-set-offense-priority c: scout-cavalry c: 9)
 	(up-set-offense-priority c: camel-scout c: 9)
-    (up-set-offense-priority c: knight c: 1)
-	(up-set-offense-priority c: camel c: 3)
+    (up-set-offense-priority c: knight c: 7)
+	(up-set-offense-priority c: camel c: 7)
 	(up-set-offense-priority c: battle-elephant c: 1)
 	(up-set-offense-priority c: cavalry-archer c: 4)
 	(up-set-offense-priority c: monastery-class c: 8)
@@ -903,8 +914,8 @@
 	(up-set-offense-priority c: skirmisher c: 5)
 	(up-set-offense-priority c: scout-cavalry c: 9)
 	(up-set-offense-priority c: camel-scout c: 9)
-    (up-set-offense-priority c: knight c: 2)
-	(up-set-offense-priority c: camel c: 1)
+    (up-set-offense-priority c: knight c: 8)
+	(up-set-offense-priority c: camel c: 8)
 	(up-set-offense-priority c: battle-elephant c: 1)
 	(up-set-offense-priority c: cavalry-archer c: 3)
 	(up-set-offense-priority c: monastery-class c: 11)
@@ -939,24 +950,24 @@
 =>
 	(up-set-offense-priority c: town-center c: 2)
 	(up-set-offense-priority c: house c: 5)
-	(up-set-offense-priority c: mill c: 5)
-	(up-set-offense-priority c: lumber-camp c: 5)
-	(up-set-offense-priority c: mining-camp c: 5)
+	(up-set-offense-priority c: mill c: 4)
+	(up-set-offense-priority c: lumber-camp c: 4)
+	(up-set-offense-priority c: mining-camp c: 4)
 	(up-set-offense-priority c: blacksmith c: 1)
 	(up-set-offense-priority c: market c: 3)
 	(up-set-offense-priority c: university c: 1)
 	(up-set-offense-priority c: castle c: 1)
 	(up-set-offense-priority c: krepost c: 1)
-	(up-set-offense-priority c: watch-tower c: 6)
-	(up-set-offense-priority c: donjon c: 6)
+	(up-set-offense-priority c: watch-tower c: 5)
+	(up-set-offense-priority c: donjon c: 5)
 	(up-set-offense-priority c: bombard-tower c: 1)
 	(up-set-offense-priority c: caravanserai c: 1)
 	(up-set-offense-priority c: feitoria c: 1)
-	(up-set-offense-priority c: dock c: 5)
-	(up-set-offense-priority c: barracks c: 5)
-	(up-set-offense-priority c: stable c: 5)
-	(up-set-offense-priority c: archery-range c: 5)
-	(up-set-offense-priority c: siege-workshop c: 5)
+	(up-set-offense-priority c: dock c: 4)
+	(up-set-offense-priority c: barracks c: 4)
+	(up-set-offense-priority c: stable c: 4)
+	(up-set-offense-priority c: archery-range c: 4)
+	(up-set-offense-priority c: siege-workshop c: 4)
 	(up-set-offense-priority c: monastery c: 1)
 )
 
@@ -968,12 +979,12 @@
 	(up-set-offense-priority c: man-at-arms c: 9)
 	(up-set-offense-priority c: spearman c: 8)
 	(up-set-offense-priority c: eagle-warrior c: 8)
-    (up-set-offense-priority c: archer c: 4)
-	(up-set-offense-priority c: skirmisher c: 3)
+    (up-set-offense-priority c: archer c: 7)
+	(up-set-offense-priority c: skirmisher c: 6)
 	(up-set-offense-priority c: scout-cavalry c: 8)
 	(up-set-offense-priority c: camel-scout c: 8)
-    (up-set-offense-priority c: knight c: 1)
-	(up-set-offense-priority c: camel c: 2)
+    (up-set-offense-priority c: knight c: 9)
+	(up-set-offense-priority c: camel c: 9)
 	(up-set-offense-priority c: battle-elephant c: 1)
 	(up-set-offense-priority c: cavalry-archer c: 1)
 	(up-set-offense-priority c: monastery-class c: 5)
@@ -1023,9 +1034,9 @@
 =>
 	(up-set-offense-priority c: town-center c: 4)
 	(up-set-offense-priority c: house c: 4)
-	(up-set-offense-priority c: mill c: 6)
-	(up-set-offense-priority c: lumber-camp c: 6)
-	(up-set-offense-priority c: mining-camp c: 6)
+	(up-set-offense-priority c: mill c: 5)
+	(up-set-offense-priority c: lumber-camp c: 5)
+	(up-set-offense-priority c: mining-camp c: 5)
 	(up-set-offense-priority c: blacksmith c: 1)
 	(up-set-offense-priority c: market c: 3)
 	(up-set-offense-priority c: university c: 1)
@@ -1055,7 +1066,7 @@
 	(up-set-offense-priority c: heavy-eagle-warrior c: 9)
     (up-set-offense-priority c: archer c: 10)
     (up-set-offense-priority c: crossbowman c: 10)
-	(up-set-offense-priority c: skirmisher c: 5)
+	(up-set-offense-priority c: skirmisher c: 6)
 	(up-set-offense-priority c: elite-skirmisher c: 5)
 	(up-set-offense-priority c: scout-cavalry c: 9)
 	(up-set-offense-priority c: light-cavalry c: 9)
@@ -1096,9 +1107,9 @@
 =>
 	(up-set-offense-priority c: town-center c: 4)
 	(up-set-offense-priority c: house c: 4)
-	(up-set-offense-priority c: mill c: 6)
-	(up-set-offense-priority c: lumber-camp c: 6)
-	(up-set-offense-priority c: mining-camp c: 6)
+	(up-set-offense-priority c: mill c: 5)
+	(up-set-offense-priority c: lumber-camp c: 5)
+	(up-set-offense-priority c: mining-camp c: 5)
 	(up-set-offense-priority c: blacksmith c: 1)
 	(up-set-offense-priority c: market c: 3)
 	(up-set-offense-priority c: university c: 1)
@@ -1495,7 +1506,7 @@
 (defrule
 	(game-time > 10)
 =>
-	(chat-to-all "ZebbaAI Version: 1.0.0")
+	(chat-to-all "ZebbaAI Version: 1.0.0 by Zebba")
 	(disable-self)
 )
 
@@ -3046,8 +3057,8 @@
 #load-if-defined UP-2-PLAYER-GAME
 
 (defrule
-	(random-number > 100)
-	(random-number <= 100)
+	(random-number > 0)
+	(random-number <= 40)
 =>
 	(set-goal strategy-goal sg-drush)	
 	(set-goal d-villager-goal 26)
@@ -3060,8 +3071,8 @@
 )
 
 (defrule
-	(random-number > 100)
-	(random-number <= 100)
+	(random-number > 40)
+	(random-number <= 80)
 =>
 	(set-goal strategy-goal sg-archerrush)	
 	(set-goal d-villager-goal 21)
@@ -3073,7 +3084,7 @@
 )
 
 (defrule
-	(random-number > 0)
+	(random-number > 80)
 	(random-number <= 100)
 =>
 	(set-goal strategy-goal sg-scoutrush)	
@@ -3131,7 +3142,7 @@
 #load-if-not-defined UP-POCKET-POSITION
 
 (defrule
-	(random-number < 30)
+	(random-number < 40)
 =>
 	(set-goal strategy-goal sg-archerrush)	
 	(set-goal d-villager-goal 21)
@@ -3143,8 +3154,8 @@
 )
 
 (defrule
-	(random-number >= 30)
-	(random-number < 50)
+	(random-number >= 40)
+	(random-number < 65)
 =>
 	(set-goal strategy-goal sg-drush)	
 	(set-goal d-villager-goal 26)
@@ -3157,7 +3168,7 @@
 )
 
 (defrule
-	(random-number >= 50)
+	(random-number >= 100)
 	(random-number < 65)
 =>
 	(set-goal strategy-goal sg-towerrush)	
@@ -3279,7 +3290,7 @@
 )
 
 (defrule
-	(random-number >= 15)
+	(random-number >= 100)
 	(random-number < 40)
 =>
 	(set-goal strategy-goal sg-towerrush)	
@@ -3292,8 +3303,8 @@
 )
 
 (defrule
-	(random-number >= 40)
-	(random-number < 65)
+	(random-number >= 15)
+	(random-number < 50)
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)	
 	(set-goal d-villager-goal 26)
@@ -3304,7 +3315,7 @@
 )
 
 (defrule
-	(random-number >= 65)
+	(random-number >= 50)
 	(random-number < 90)
 =>
 	(set-goal strategy-goal sg-fastcastle-gu)	
@@ -6806,7 +6817,7 @@
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -10))
 	(military-population < 5)
-	;(town-under-attack)
+	(not (town-under-attack))
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 2)
 	(not (goal gl-stone-saving 7))
@@ -6827,7 +6838,7 @@
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -10))
 	(military-population < 5)
-	;(town-under-attack)
+	(not (town-under-attack))
 	(can-build-with-escrow donjon)
 	(building-type-count-total donjon < 2)
 	(not (goal gl-stone-saving 7))
@@ -6849,7 +6860,7 @@
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -16))
 	(military-population < 5)
-	(town-under-attack)
+	(not (town-under-attack))
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 4)
 	(not (goal gl-stone-saving 7))
@@ -6872,7 +6883,7 @@
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -10))
 	(military-population < 5)
-	(town-under-attack)
+	(not (town-under-attack))
 	(can-build-with-escrow donjon)
 	(building-type-count-total tower-class < 4)
 	(not (goal gl-stone-saving 7))
@@ -6892,7 +6903,7 @@
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -10))
 	(military-population < 8)
-	;(town-under-attack)
+	(not (town-under-attack))
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 2)
 	(not (goal gl-stone-saving 7))
@@ -6912,7 +6923,7 @@
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -10))
 	(military-population < 8)
-	;(town-under-attack)
+	(not (town-under-attack))
 	(can-build-with-escrow donjon)
 	(building-type-count-total donjon < 2)
 	(not (goal gl-stone-saving 7))
@@ -6932,7 +6943,7 @@
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -10))
 	(military-population < 8)
-	(town-under-attack)
+	(not (town-under-attack))
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 4)
 	(not (goal gl-stone-saving 7))
@@ -6953,7 +6964,7 @@
 	(or (military-population < 3)
 	(up-compare-goal gl-military-advantage <= -10))
 	(military-population < 8)
-	(town-under-attack)
+	(not (town-under-attack))
 	(can-build-with-escrow donjon)
 	(building-type-count-total tower-class < 4)
 	(not (goal gl-stone-saving 7))
@@ -8063,10 +8074,10 @@
 
 (defrule
 	(current-age == castle-age)
-	(players-unit-type-count focus-player monk >= 3)
+	(players-unit-type-count focus-player monk > 3)
 	(can-train scout-cavalry-line)
 	(research-available ri-light-cavalry)
-	(unit-type-count-total scout-cavalry-line < 8)
+	(unit-type-count-total scout-cavalry-line < 5)
 =>
 	(train scout-cavalry-line)
 	(chat-to-player my-player-number "Produziere Scouts gegen Moenche")
@@ -8074,7 +8085,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(players-unit-type-count focus-player monk >= 3)
+	(players-unit-type-count focus-player monk > 3)
 	(can-train scout-cavalry-line)
 	(not (research-available ri-light-cavalry))
 	(unit-type-count-total scout-cavalry-line < 10)
@@ -8085,7 +8096,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(players-unit-type-count focus-player monk >= 3)
+	(players-unit-type-count focus-player monk > 3)
 	(can-train scout-cavalry-line)
 	(research-completed ri-light-cavalry)
 =>
@@ -8095,7 +8106,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(players-unit-type-count focus-player monk >= 3)
+	(players-unit-type-count focus-player monk > 3)
 	(can-train scout-cavalry-line)
 	(unit-type-count-total scout-cavalry-line < 10)
 =>
@@ -8105,7 +8116,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(players-unit-type-count focus-player monk >= 3)
+	(players-unit-type-count focus-player monk > 3)
 	(can-train eagle-warrior-line)
 	(research-completed ri-eagle-warrior)
 	(unit-type-count-total eagle-warrior-line < 20)
@@ -8116,7 +8127,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(players-unit-type-count focus-player monk >= 3)
+	(players-unit-type-count focus-player monk > 3)
 	(can-research ri-eagle-warrior)
 	(not (research-completed ri-eagle-warrior))
 =>
@@ -8126,7 +8137,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(players-unit-type-count focus-player monk >= 3)
+	(players-unit-type-count focus-player monk > 3)
 	(can-train eagle-warrior-line)
 	(research-completed ri-eagle-warrior)
 	(unit-type-count-total eagle-warrior-line < 15)
@@ -14640,7 +14651,7 @@
 	(up-cross-tiles object-point-x enemy-point-x c: 9)
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
-	(enable-timer retreating-timer 4)
+	(enable-timer retreating-timer 3)
 	(set-goal split-rule-goal 48)
 )
 
@@ -19416,7 +19427,7 @@
 	(dropsite-min-distance live-boar > 0)
 	(or (and (unit-type-count villager-hunter < 1) ;for hunting 1st boar
 		(up-compare-goal g-boar-id == -1))	
-		(and (up-compare-goal remaining-boar-food c:<= 100) ; hunting after 1st boar
+		(and (up-compare-goal remaining-boar-food c:<= 110) ; hunting after 1st boar
 		(up-compare-goal remaining-boar-food > -1)))
 =>
 	(up-full-reset-search)
@@ -19435,15 +19446,16 @@
 )
 
 (defrule
-	(up-group-size c: 3 == 1)
+	(up-group-size c: 3 >= 1)
 	(up-compare-goal g-boar-id != -1)	
 	(up-object-data object-data-action != actionid-attack)
 	(dropsite-min-distance live-boar < 32)
 	(dropsite-min-distance live-boar > 0)
-	(up-compare-goal remaining-boar-food c:<= 100)
+	(up-compare-goal remaining-boar-food c:<= 110)
 	(up-compare-goal remaining-boar-food > -1)
 	(unit-type-count villager >= 8) 
 =>
+	(set-goal boar-hunting 1)
 	(up-full-reset-search)
 	(up-set-group search-local c: 3)
 	(up-find-local c: 590 c: 240) ;female shepherd
@@ -19469,6 +19481,7 @@
 	(dropsite-min-distance live-boar > 0)
 	(unit-type-count villager >= 8) 
 =>
+	(set-goal boar-hunting 1)
 	(up-full-reset-search)
 	(up-find-local c: 590 c: 240) ;female shepherd
 	(up-find-local c: 592 c: 240) ;male shepherd
@@ -19508,7 +19521,7 @@
 	(or (goal strategy-goal sg-towerrush)
 	(or (civ-selected gurjaras)
 	(civ-selected briton)))))
-	(up-group-size c: 3 == 1) 
+	(up-group-size c: 3 >= 1) 
 	(dropsite-min-distance live-boar < 32)
 	(dropsite-min-distance live-boar > 0)
 	(up-compare-goal g-boar-id != -1)	
@@ -19526,7 +19539,7 @@
 	(up-remove-objects search-local object-data-action == actionid-build)
 	(up-set-target-by-id g: g-boar-id)
 	(up-target-objects 1 action-default -1 -1)
-	;(chat-to-player my-player-number "enable boar-luring") 
+	(chat-to-player my-player-number "enable boar-luring") 
 )
 
 (defrule
@@ -19535,7 +19548,7 @@
 	(or (goal strategy-goal sg-towerrush)
 	(or (civ-selected gurjaras)
 	(civ-selected briton)))))
-	(up-group-size c: 3 == 1) 
+	(up-group-size c: 3 >= 1) 
 	(dropsite-min-distance live-boar < 32)
 	(dropsite-min-distance live-boar > 0)
 	(up-compare-goal g-boar-id != -1)		
@@ -19543,7 +19556,7 @@
 =>
 	(up-full-reset-search)
 	(up-set-group search-local c: 3)
-	;(chat-to-player my-player-number "Test")
+	(chat-to-player my-player-number "Test")
 )
 
 (defrule
@@ -19552,7 +19565,7 @@
 	(or (goal strategy-goal sg-towerrush)
 	(or (civ-selected gurjaras)
 	(civ-selected briton)))))
-	(up-group-size c: 3 == 1) 
+	(up-group-size c: 3 >= 1) 
 	(dropsite-min-distance live-boar < 32)
 	(dropsite-min-distance live-boar > 0)
 	(up-compare-goal g-boar-id != -1)
@@ -19570,7 +19583,7 @@
 	(up-remove-objects search-local object-data-action == actionid-build)
 	(up-set-target-by-id g: g-boar-id)
 	(up-target-objects 1 action-default -1 -1)
-	;(chat-to-player my-player-number "enable boar-luring")
+	(chat-to-player my-player-number "enable boar-luring")
 )
 
 (defrule ;find boar close to tc
@@ -19581,10 +19594,10 @@
 	;(set-strategic-number sn-disable-villager-garrison 3)
 	(up-full-reset-search)
 	(up-set-target-point gl-starting-tc-x)
-	(up-filter-distance c: -1 c: 5)
+	(up-filter-distance c: -1 c: 6)
 	(up-find-remote c: boar-class c: 20)
 	(up-get-search-state gl-local-total)
-	;(chat-to-player my-player-number "Boar Test")
+	(chat-to-player my-player-number "Boar Test")
 )
 
 (defrule ;find villagers close to tc
@@ -19625,7 +19638,7 @@
 	(up-gather-inside c: town-center c: -1)
 	(chat-to-player my-player-number "Garrison Test")
 	(set-goal gl-garrison-tc-two 1)
-	(enable-timer 6 15)
+	(enable-timer 6 8)
 )
 
 (defrule ;find tc and garrison vills from local search
@@ -19639,7 +19652,7 @@
 	(set-strategic-number sn-disable-villager-garrison 0)
 	(set-strategic-number sn-minimum-number-hunters 4)
 	(chat-to-player my-player-number "No villagers to garrison, switch to old boar-hunting method")
-	(enable-timer 6 15)
+	(enable-timer 6 8)
 )
 
 ; (defrule
@@ -19683,7 +19696,7 @@
 	(up-find-local c: town-center c: 1) 
 	;(up-add-object-by-id search-remote g: g-boar-id)
 	(up-target-objects 1 action-default -1 -1)
-	;(chat-to-player my-player-number "Shooting Boar")
+	(chat-to-player my-player-number "Shooting Boar")
 	;(set-goal g-boar-status 2)
 )
 
@@ -19691,8 +19704,11 @@
 	(goal gl-garrison-tc-two 1)
 	;(up-set-target-object search-remote c: 0)
 	(up-set-target-by-id g: g-boar-id)
-	(up-object-data object-data-hitpoints <= 25)
+	(or (up-object-data object-data-hitpoints <= 25)
+	(timer-triggered 6))
 =>
+	(set-goal boar-hunting 0)
+	(disable-timer 6)
 	(up-gather-inside c: town-center c: 0)
     (up-ungarrison c: town-center)
 	(set-goal gl-garrison-tc-two 0)
@@ -19730,6 +19746,7 @@
 	;(up-object-data object-data-hitpoints < 1)
 	(up-compare-goal remaining-boar-food > 0)
 	(up-compare-sn sn-disable-villager-garrison != 0)
+	(goal boar-hunting 0)
 =>
 	(set-strategic-number sn-disable-villager-garrison 0)
 	(chat-to-player my-player-number "villager garrisoning allowed")
@@ -19788,6 +19805,7 @@
 =>
 	(set-strategic-number sn-enable-research-queue 1)
 	(set-strategic-number sn-disable-builder-assistance 0)
+	(set-strategic-number sn-disable-villager-garrison 0)
 	(disable-self)
 )
 
@@ -26803,8 +26821,8 @@
 )
 
 (defrule
-	(or (unit-type-count-total cavalry-class > 2)
-	(unit-type-count-total scout-cavalry-line > 2))
+	(or (unit-type-count-total cavalry-class > 4)
+	(unit-type-count-total scout-cavalry-line > 4))
 	(can-research-with-escrow ri-bloodlines)
 =>
 	(up-modify-escrow food c:- 150)
@@ -26813,16 +26831,16 @@
 )
 
 (defrule
-	(or (unit-type-count-total cavalry-class > 2)
-	(unit-type-count-total scout-cavalry-line > 2))
+	(or (unit-type-count-total cavalry-class > 4)
+	(unit-type-count-total scout-cavalry-line > 4))
 	(can-research ri-husbandry)
 =>
 	(research ri-husbandry)
 )
 
 (defrule
-	(or (unit-type-count-total cavalry-class > 2)
-	(unit-type-count-total scout-cavalry-line > 2))
+	(or (unit-type-count-total cavalry-class > 4)
+	(unit-type-count-total scout-cavalry-line > 4))
 	(can-research-with-escrow ri-scale-barding)
 	(goal gl-food-saving 13)
 =>
@@ -26865,8 +26883,8 @@
 )
 
 (defrule
-	(or (unit-type-count-total cavalry-class > 2)
-	(unit-type-count-total scout-cavalry-line > 2))
+	(or (unit-type-count-total cavalry-class > 4)
+	(unit-type-count-total scout-cavalry-line > 4))
 	(can-research ri-scale-barding)
 =>
 	(research ri-scale-barding)
@@ -30082,7 +30100,7 @@
 	(or (military-population g:>= enemy-military-pop)
 	(players-current-age focus-player < castle-age)))
 	(military-population >= 6)
-	(or (up-compare-goal gl-military-advantage < -8)
+	(or (up-compare-goal gl-military-advantage >= -8)
 	(military-population >= 18))
 =>
 	(up-ungarrison c: barracks)
@@ -30095,7 +30113,7 @@
 	(not (town-under-attack))
 	(building-type-count-total barracks > 0)
 	(military-population >= 12)
-	(or (up-compare-goal gl-military-advantage < -8)
+	(or (up-compare-goal gl-military-advantage >= -8)
 	(military-population >= 18))
 =>
 	(up-ungarrison c: barracks)
@@ -30123,7 +30141,7 @@
 	(or (military-population g:>= enemy-military-pop)
 	(players-current-age focus-player < castle-age)))
 	(military-population >= 6)
-	(or (up-compare-goal gl-military-advantage < -8)
+	(or (up-compare-goal gl-military-advantage >= -8)
 	(military-population >= 18))
 =>
 	(up-ungarrison c: archery-range)
@@ -30136,7 +30154,7 @@
 	(not (town-under-attack))
 	(building-type-count-total archery-range > 0)
 	(military-population >= 12)
-	(or (up-compare-goal gl-military-advantage < -8)
+	(or (up-compare-goal gl-military-advantage >= -8)
 	(military-population >= 18))
 =>
 	(up-ungarrison c: archery-range)
@@ -30164,7 +30182,7 @@
 	(or (military-population g:>= enemy-military-pop)
 	(players-current-age focus-player < castle-age)))
 	(military-population >= 6)
-	(or (up-compare-goal gl-military-advantage < -8)
+	(or (up-compare-goal gl-military-advantage >= -8)
 	(military-population >= 18))
 =>
 	(up-ungarrison c: stable)
@@ -30177,7 +30195,7 @@
 	(not (town-under-attack))
 	(building-type-count-total stable > 0)
 	(military-population >= 12)
-	(or (up-compare-goal gl-military-advantage < -8)
+	(or (up-compare-goal gl-military-advantage >= -8)
 	(military-population >= 18))
 =>
 	(up-ungarrison c: stable)
@@ -30205,7 +30223,7 @@
 	(or (military-population g:>= enemy-military-pop)
 	(players-current-age focus-player < castle-age)))
 	(military-population >= 6)
-	(or (up-compare-goal gl-military-advantage < -8)
+	(or (up-compare-goal gl-military-advantage >= -8)
 	(military-population >= 18))
 =>
 	(up-ungarrison c: siege-workshop)
@@ -30218,7 +30236,7 @@
 	(not (town-under-attack))
 	(building-type-count-total siege-workshop > 0)
 	(military-population >= 12)
-	(or (up-compare-goal gl-military-advantage < -8)
+	(or (up-compare-goal gl-military-advantage >= -8)
 	(military-population >= 18))
 =>
 	(up-ungarrison c: siege-workshop)
