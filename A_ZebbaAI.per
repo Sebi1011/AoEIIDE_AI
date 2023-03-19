@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 0.22.3
-;last update: 18th March 2023
+;Version: 1.0.0
+;last update: 19th March 2023
 
 ;ZebbaAI is a versatile, rather aggressive AI while trying to maintain eco behind. The playstyle of this AI is to set the opponent under 
 ;pressure asap to keep any pressure from its base. In general, ZebbaAI tries to read the game as good as possible as with its current 
@@ -9,23 +9,27 @@
 
 ;The idea behind ZebbaAI was to create an AI that plays all various strategies to see how they work out in any situation, including 
 ;adapting its strategy to opponent strategies. For that to work the goal is to give the AI all the necessary tools to make use of
-;everything the game offers, e.g. deer pushing. It's not yet at a point where I'd like to have it, since writing an AI at this game
-;was harder than I initially thought. Anyhow, 
+;everything the game offers, e.g. deer pushing. It's not yet at a point where I'd like to have it, since implementing a lot of abilities 
+;takes a lot of time, but I'm working on it. Stay tuned for more improvements in the future! :)
 
 ;This AI is still in development. Bugs and similar unintended behaviour are likely to happen and are being tracked. However,
-;some bugs are very situational and hard to fix. If you notice any strange behaviour I am more than happy if you let me know 
+;some bugs are very situational and hard to detect/fix. If you notice any strange behaviour I am more than happy if you let me know so
+;I can work on fixing those!
 
 ;have fun! :)
 
 ;Civs: Can play all civilizations, including the expansions
 ;Maps: besides standard maps like arabia, ZebbaAI can play nomad, other hybrid maps and custom maps. (Not optimized on water-maps though)
 		;ZebbaAI can't play properly on island-like maps or on closed-maps like Arena: It needs a map with land connection to the enemy
-;Taunts in TGs: AI reacts to following taunts: 3 ("food please"), 4("wood please"), 5("gold please"), 6("stone please"), 38("give me your extra resources"), Flare-Location + 48("I'm being attacked, please help")
-;Strategies: Drush, Archerrush, Scoutrush, Towerrush (currently deactivated), FC into Unique Unit, FC into Gold Unit, Fast-Imp (only pockets in team-games)
-;Difficulty: there are no levels of difficulty for ZebbaAI. Its current level is comparable to the hard DE AI. Before any match set the difficulty level to extreme to get the best results since the game nerfs AIs speed on lower difficulty levels
+;Taunts in TGs: AI reacts to following taunts: 3 ("food please"), 4("wood please"), 5("gold please"), 6("stone please"),
+;38("give me your extra resources"), Flare-Location + 48("I'm being attacked, please help")
+;Strategies: Drush, Archerrush, Scoutrush, Towerrush (currently deactivated), FC into Unique Unit, FC into Gold Unit, 
+;Fast-Imp (only pockets in team-games)
+;Difficulty: there are no levels of difficulty for ZebbaAI. Its current level is comparable to the hard DE AI. 
+;Before any match set the difficulty level to extreme to get the best results since the game nerfs AIs speed on lower difficulty levels
 
 ;recently added:
-; - AI will now retreat from battles if army numbers are too low
+; - AI will now retreat from battles/stop sending more reinforcements if army numbers are too low
 ; - significantly improved forage gathering
 ; - improved scouting-pattern for finding the enemy base in 1v1s
 ; - added elite-skirmisher, halberdier and chemistry to the targetable resource saving list
@@ -42,18 +46,22 @@
 ; - added ability to deal with villager-harassments by enemy scouts in dark-age
 ; - fixed boar-hunting issue where AI couldnt garrison villagers to shoot the boar with tc if there are no villagers
 ; nearby. AI will now switch temporarily to standard boar-hunting if it has < 2 villagers next to tc
+; - improved retreating from enemy fortifications when in castle-age
 
 ;ToDo: 
 
 ;what's up next:
-; - try to retreat only 1 unit at a time
-; - boar-hunting code broke again
-; - fix bug where a switch to old boar-hunting code can cause villagers that were found in the mean-time garrison in
-; the tc and won't ungarrison anymore
 
+; - try to retreat only 1 unit at a time from enemy fortifications
+; - try to retreat without regrouping in a formation
+; - partly fixed boar-hunting situation where not enough villagers are under the tc to garrison. Issue remains that once the boar-luring
+;villager (low hp) attempts to lure the boar for a 2nd time, it is not going back to the tc and will very likely die. Could be caused 
+;by ctrl-group issue where more than 1 villager is in the boar-lurer ctrl group after the initial lurer garrisons in the tc. Can be fixed 
+;by rewriting the luring code to recreate the group when enabling boar-luring
 ; - fix gathering of units in military buildings before castle-age
 ; - implement tc-garrison code for every tc (testing) (partly fixed, but not properly working)
-; - test scoutrush (retreat scouts from spearmen) (not working)
+; - test scoutrush (retreat scouts from spearmen(not working))
+; - implement debug rules for every resource-saving goal
 
 ; - remake towerrush due to several numbers of bugs
 ; - test towerrush
@@ -65,9 +73,8 @@
 ; - improve dark-age builder selection for building resource drop-off points
 ; - Eat only one sheep at a time 
 ; - implement scouting-pattern for scouting own base
-; - decrease d-villager-goal for mongols when scout/archer-rushing, in addition to that changes need to be made to 
+; - decrease d-villager-goal for mongols by 1 when scout/archer-rushing, in addition to that changes need to be made to 
 ; constructions of buildings connected to villager count
-; - fix problem that causes boar luring villagers being retasked to build non-duc buildings (tested)
 
 
 ;improving drush:
@@ -85,20 +92,19 @@
 ; - keep initial scout near army when launching the 1st attack
 
 ;improving trush:
-; - add villagers ability to fight back when tower is under attack
+; - add villagers ability to fight back when forward tower is under attack
 ; - implement decision making for building fu-towers clock-wise or counter-clockwise
-; - in trushes, keep builder villagers forward, even if no tower is being built (either build lumber/mining-camp nearby 
+; - keep builder villagers forward, even if no tower is being built (either build lumber/mining-camp nearby 
 ; or garrison in a tower manually)
-; - improve timing of walling towers
 ; - use military to defend forward towers and towers under construction
-; - prevent towers being built inside enemys tower range
-; - prevent initial towers being built inside enemys tc-range
+; - prevent towers being built inside enemys tower or tc range
 ; - stop walling a tower-spot when tower has been destroyed
-; - fix correct setting up of villager groups for towerrush
+; - fix correct setting up of villager groups for towerrush (caused by garrisoned villagers not being counted correctly in groups)
 
 ;improving fastcastle gu & uu
 ; - start walling base earlier
 ; - overall improve build order and eco management to minimize idle time and get to castle-age faster
+; - change fcgu builds to build stable/archery-range instead of a market
 
 ;improving fastimp
 ; - start training army faster
@@ -107,7 +113,6 @@
 ; - find rules to make a switch to main-gold-unit later/ at a more fitting time
 ; - improve defensive tower placement to select dangerous areas more precisely
 ; - improve retreating code from enemy castles, to also retreat from buildings not obtained by the focus-player
-; - change fcgu builds to build stable/archery-range instead of a market
 ; - add a new strategy "defensive fast-feudal", 22-pop feudal, change to this strategy in fc builds if researching to castle-age 
 ; does not work due to enemy pressure
 ; - implement taunt "31" ("Attack an enemy now!") and taunt reaction to enable combined attacks in teamgames
@@ -136,7 +141,6 @@
 
 ;needs to be fixed:
 
-; - fix several bugs related to tc-boar hunting
 ; - fix non-ranged-units behaviour to ignore ranged units standing inside their own tc/tower/castle range.
 ; causing the AI units trying to attack them, but retreating once they touch the tc-range
 ; - fix constant switching targets of military units
@@ -774,7 +778,7 @@
 	(up-set-offense-priority c: eagle-warrior c: 9)
     (up-set-offense-priority c: archer c: 8)
 	(up-set-offense-priority c: skirmisher c: 8)
-	(up-set-offense-priority c: scout-cavalry c: 9)
+	(up-set-offense-priority c: scout-cavalry-class c: 9)
 	(up-set-offense-priority c: camel-scout c: 9)
     (up-set-offense-priority c: knight c: 1)
 	(up-set-offense-priority c: camel c: 2)
@@ -843,7 +847,7 @@
 	(up-set-offense-priority c: eagle-warrior c: 8)
     (up-set-offense-priority c: archer c: 7)
 	(up-set-offense-priority c: skirmisher c: 6)
-	(up-set-offense-priority c: scout-cavalry c: 9)
+	(up-set-offense-priority c: scout-cavalry-class c: 9)
 	(up-set-offense-priority c: camel-scout c: 9)
     (up-set-offense-priority c: knight c: 7)
 	(up-set-offense-priority c: camel c: 7)
@@ -912,7 +916,7 @@
 	(up-set-offense-priority c: eagle-warrior c: 9)
     (up-set-offense-priority c: archer c: 10)
 	(up-set-offense-priority c: skirmisher c: 5)
-	(up-set-offense-priority c: scout-cavalry c: 9)
+	(up-set-offense-priority c: scout-cavalry-class c: 9)
 	(up-set-offense-priority c: camel-scout c: 9)
     (up-set-offense-priority c: knight c: 8)
 	(up-set-offense-priority c: camel c: 8)
@@ -981,7 +985,7 @@
 	(up-set-offense-priority c: eagle-warrior c: 8)
     (up-set-offense-priority c: archer c: 7)
 	(up-set-offense-priority c: skirmisher c: 6)
-	(up-set-offense-priority c: scout-cavalry c: 8)
+	(up-set-offense-priority c: scout-cavalry-class c: 8)
 	(up-set-offense-priority c: camel-scout c: 8)
     (up-set-offense-priority c: knight c: 9)
 	(up-set-offense-priority c: camel c: 9)
@@ -1068,8 +1072,7 @@
     (up-set-offense-priority c: crossbowman c: 10)
 	(up-set-offense-priority c: skirmisher c: 6)
 	(up-set-offense-priority c: elite-skirmisher c: 5)
-	(up-set-offense-priority c: scout-cavalry c: 9)
-	(up-set-offense-priority c: light-cavalry c: 9)
+	(up-set-offense-priority c: scout-cavalry-class c: 9)
     (up-set-offense-priority c: knight c: 10)
 	(up-set-offense-priority c: cavalier c: 10)
 	(up-set-offense-priority c: camel c: 9)
@@ -1141,8 +1144,7 @@
 	(up-set-offense-priority c: crossbowman c: 10)
 	(up-set-offense-priority c: skirmisher c: 7)
 	(up-set-offense-priority c: elite-skirmisher c: 7)
-	(up-set-offense-priority c: scout-cavalry c: 6)
-	(up-set-offense-priority c: light-cavalry c: 6)
+	(up-set-offense-priority c: scout-cavalry-class c: 6)
     (up-set-offense-priority c: knight c: 10)
 	(up-set-offense-priority c: cavalier c: 10)
 	(up-set-offense-priority c: camel c: 8)
@@ -1214,8 +1216,7 @@
 	(up-set-offense-priority c: crossbowman c: 8)
 	(up-set-offense-priority c: skirmisher c: 7)
 	(up-set-offense-priority c: elite-skirmisher c: 7)
-	(up-set-offense-priority c: scout-cavalry c: 8)
-	(up-set-offense-priority c: light-cavalry c: 8)
+	(up-set-offense-priority c: scout-cavalry-class c: 8)
     (up-set-offense-priority c: knight c: 10)
 	(up-set-offense-priority c: cavalier c: 10)
 	(up-set-offense-priority c: camel c: 9)
@@ -14557,8 +14558,7 @@
 
 (defrule ;pre castle-age rules
 	(or (current-age >= castle-age)
-	(or (unit-type-count-total militiaman-line >= 20)
-	(unit-type-count-total battering-ram-line >= 1)))
+	(unit-type-count-total militiaman-line >= 20))
 =>
 	(up-jump-rule 8)
 )
@@ -14587,7 +14587,7 @@
 
 (defrule	
 	(goal split-rule-goal 47)
-	(up-find-local c: -1 c: 1)
+	(up-find-local c: -1 c: 40)
 	(up-set-target-object search-local c: 0)
 =>
 	(up-set-target-object search-local c: 0)
@@ -14609,9 +14609,10 @@
 	(up-filter-include cmdid-military -1 -1 -1)	
 	(up-filter-exclude -1 -1 -1 siege-weapon-class)
 	(up-filter-exclude -1 -1 -1 armored-elephant-line)
-	(up-remove-objects search-local object-data-class == siege-weapon-class)
+	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == armored-elephant)
-	(up-find-local c: -1 c: 20)	;how many units should retreat?
+	(up-find-local c: -1 c: 40)	;how many units should retreat?
 	(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
@@ -14642,7 +14643,7 @@
 
 (defrule	
 	(goal split-rule-goal 47)
-	(up-find-local c: -1 c: 1)
+	(up-find-local c: -1 c: 40)
 	(up-set-target-object search-local c: 0)
 =>
 	(up-set-target-object search-local c: 0)
@@ -14664,7 +14665,8 @@
 	(up-filter-include cmdid-military -1 -1 -1)	
 	(up-filter-exclude -1 -1 -1 siege-weapon-class)
 	(up-filter-exclude -1 -1 -1 armored-elephant-line)
-	(up-remove-objects search-local object-data-class == siege-weapon-class)
+	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == armored-elephant)
 	(up-find-local c: -1 c: 40)	
 	(set-strategic-number sn-disable-attack-groups 1)
@@ -14674,16 +14676,27 @@
 )
 
 
+; (defrule ;castle-age rules
+	; (or	(current-age != castle-age)																
+	; (or	(unit-type-count infantry-class > 24)	
+	; (or	(unit-type-count eagle-warrior-line > 9)
+	; (or	(unit-type-count huskarl-set > 9)
+	; (or	(unit-type-count ghulam-line > 9)
+	; (or (unit-type-count cavalry-class > 14)
+	; (or (unit-type-count battering-ram-line > 0)
+	; (or (unit-type-count armored-elephant-line > 0)
+	; (military-population > 34)))))))))	
+; =>	
+	; (up-jump-rule 8)
+; )
+
 (defrule ;castle-age rules
 	(or	(current-age != castle-age)																
 	(or	(unit-type-count infantry-class > 24)	
 	(or	(unit-type-count eagle-warrior-line > 9)
 	(or	(unit-type-count huskarl-set > 9)
 	(or	(unit-type-count ghulam-line > 9)
-	(or (unit-type-count cavalry-class > 14)
-	(or (unit-type-count battering-ram-line > 0)
-	(or (unit-type-count armored-elephant-line > 0)
-	(military-population > 34)))))))))	
+	(unit-type-count cavalry-class > 14))))))	
 =>	
 	(up-jump-rule 8)
 )
@@ -14703,12 +14716,17 @@
 =>
 	(up-full-reset-search)
 	(up-set-target-point enemy-point-x)
-	(up-filter-distance c: -1 c: 8) ;distance from which units shall retreat
+	(up-filter-distance c: -1 c: 9) ;distance from which units shall retreat
 	(up-filter-include cmdid-military -1 -1 -1)
 	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
 	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
 	(up-filter-exclude -1 -1 -1 cavalry-class)
 	(up-filter-exclude -1 -1 -1 scout-cavalry-class)
+	(up-remove-objects search-local object-data-class == cavalry-class)
+	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-remove-objects search-local object-data-type == feudal-battering-ram)
+	(up-remove-objects search-local object-data-class == scout-cavalry-class)
+	(up-remove-objects search-local object-data-type == armored-elephant)
 	(set-goal split-rule-goal 47)
 )
 
@@ -14732,7 +14750,7 @@
 =>	
 	(up-full-reset-search)	
 	(up-set-target-point enemy-point-x)
-	(up-filter-distance c: -1 c: 8)
+	(up-filter-distance c: -1 c: 9)
 	(up-filter-include cmdid-military -1 -1 -1)	
 	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
 	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
@@ -14740,7 +14758,8 @@
 	(up-filter-exclude -1 -1 -1 scout-cavalry-class) 
 	(up-find-local c: -1 c: 40)	
 	(up-remove-objects search-local object-data-class == cavalry-class)
-	(up-remove-objects search-local object-data-class == siege-weapon-class)
+	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-class == scout-cavalry-class)
 	(up-remove-objects search-local object-data-type == armored-elephant)
 	(set-strategic-number sn-disable-attack-groups 1)
@@ -14764,7 +14783,7 @@
 =>
 	(up-full-reset-search)
 	(up-set-target-point enemy-point-x)
-	(up-filter-distance c: -1 c: 9)
+	(up-filter-distance c: -1 c: 10)
 	(up-filter-include cmdid-military -1 -1 -1)
 	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
 	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
@@ -14792,14 +14811,15 @@
 =>	
 	(up-full-reset-search)	
 	(up-set-target-point enemy-point-x)
-	(up-filter-distance c: -1 c: 9)
+	(up-filter-distance c: -1 c: 10)
 	(up-filter-include cmdid-military -1 -1 -1)	
 	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
 	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
 	(up-filter-exclude -1 -1 -1 cavalry-class)
 	(up-find-local c: -1 c: 40)	
 	(up-remove-objects search-local object-data-class == cavalry-class)
-	(up-remove-objects search-local object-data-class == siege-weapon-class)
+	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == armored-elephant)
 	(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move formation-line stance-no-attack)
@@ -15085,7 +15105,8 @@
 	(up-filter-include cmdid-military -1 -1 -1)	
 	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
 	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
-	(up-remove-objects search-local object-data-class == siege-weapon-class)
+	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == armored-elephant)
 	(up-find-local c: -1 c: 40)	
 	(set-strategic-number sn-disable-attack-groups 1)
@@ -19408,7 +19429,7 @@
 	(up-find-remote c: boar-class c: 1)
 	(up-set-target-object search-remote c: 0)
 	(up-get-object-data object-data-carry boar-food-amount)
-	(up-chat-data-to-self "Boars on this map have %d food" g: boar-food-amount) 
+	;(up-chat-data-to-self "Boars on this map have %d food" g: boar-food-amount) 
 	(disable-self)
 )
 	
@@ -19441,7 +19462,7 @@
 	(up-remove-objects search-remote -1 > 0) ;remove all other boars in the list
 	(up-set-target-object search-remote c: 0)
 	(up-get-object-data object-data-id g-boar-id) ;Store the boars ID in a goal
-	(chat-to-player my-player-number "Found a boar")
+	;(chat-to-player my-player-number "Found a boar")
 	(up-chat-data-to-self "Boar id is: %d" g: g-boar-id) 
 )
 
@@ -19454,6 +19475,7 @@
 	(up-compare-goal remaining-boar-food c:<= 110)
 	(up-compare-goal remaining-boar-food > -1)
 	(unit-type-count villager >= 8) 
+	(up-compare-goal gl-garrison-tc-two < 1)
 =>
 	(set-goal boar-hunting 1)
 	(up-full-reset-search)
@@ -19470,7 +19492,7 @@
 	(up-reset-group c: 3)
 	(up-create-group 0 0 c: 3) ;boar-lurer ctrl-group
 	(up-modify-group-flag 1 c: 3)
-	(up-chat-data-to-player my-player-number "Number of boar lurers a: %d" g: gl-local-total) 
+	;(up-chat-data-to-player my-player-number "Number of boar lurers a: %d" g: gl-local-total) 
 )
 
 (defrule
@@ -19480,6 +19502,7 @@
 	(dropsite-min-distance live-boar < 32)
 	(dropsite-min-distance live-boar > 0)
 	(unit-type-count villager >= 8) 
+	(up-compare-goal gl-garrison-tc-two < 1)
 =>
 	(set-goal boar-hunting 1)
 	(up-full-reset-search)
@@ -19496,7 +19519,7 @@
 	(up-create-group 0 0 c: 3) ;boar-lurer ctrl-group
 	(up-modify-group-flag 1 c: 3)
 	(up-get-search-state gl-local-total)
-	(up-chat-data-to-player my-player-number "Number of boar lurers b: %d" g: gl-local-total) 
+	;(up-chat-data-to-player my-player-number "Number of boar lurers b: %d" g: gl-local-total) 
 )
 
 (defrule
@@ -19505,11 +19528,12 @@
 	(or (goal strategy-goal sg-towerrush)
 	(or (civ-selected gurjaras)
 	(civ-selected briton)))))
-	(up-group-size c: 3 == 1) 
+	(up-group-size c: 3 >= 1) 
 	(dropsite-min-distance live-boar < 32)
 	(dropsite-min-distance live-boar > 0)
 	(up-compare-goal g-boar-id != -1)		
 	(unit-type-count villager >= 9) 
+	(up-compare-goal gl-garrison-tc-two < 1)
 =>
 	(up-full-reset-search)
 	(up-set-group search-local c: 3)
@@ -19529,8 +19553,11 @@
 	(up-object-data object-data-action != actionid-attack)	
 	(up-set-target-object search-local c: 0)
 	(unit-type-count villager >= 9) 
+	(up-compare-goal gl-garrison-tc-two < 1)
 =>
 	(set-strategic-number sn-disable-villager-garrison 3)
+	(set-strategic-number sn-minimum-boar-hunt-group-size 0)
+	(set-strategic-number sn-minimum-number-hunters 0)
 	(set-goal gl-garrison-tc-two 0)
 	(up-full-reset-search)
 	(up-set-group search-local c: 3)
@@ -19539,7 +19566,7 @@
 	(up-remove-objects search-local object-data-action == actionid-build)
 	(up-set-target-by-id g: g-boar-id)
 	(up-target-objects 1 action-default -1 -1)
-	(chat-to-player my-player-number "enable boar-luring") 
+	;(chat-to-player my-player-number "enable boar-luring") 
 )
 
 (defrule
@@ -19553,10 +19580,11 @@
 	(dropsite-min-distance live-boar > 0)
 	(up-compare-goal g-boar-id != -1)		
 	(unit-type-count villager >= 10) 
+	(up-compare-goal gl-garrison-tc-two < 1)
 =>
 	(up-full-reset-search)
 	(up-set-group search-local c: 3)
-	(chat-to-player my-player-number "Test")
+	;(chat-to-player my-player-number "Test")
 )
 
 (defrule
@@ -19572,9 +19600,11 @@
 	(up-object-data object-data-action != actionid-attack)	
 	(up-set-target-object search-local c: 0)
 	(unit-type-count villager >= 10) 
+	(up-compare-goal gl-garrison-tc-two < 1)
 =>
-	(enable-timer 6 1)
 	(set-strategic-number sn-disable-villager-garrison 3)
+	(set-strategic-number sn-minimum-boar-hunt-group-size 0)
+	(set-strategic-number sn-minimum-number-hunters 0)
 	(set-goal gl-garrison-tc-two 0)
 	(up-full-reset-search)
 	(up-set-group search-local c: 3)
@@ -19583,7 +19613,7 @@
 	(up-remove-objects search-local object-data-action == actionid-build)
 	(up-set-target-by-id g: g-boar-id)
 	(up-target-objects 1 action-default -1 -1)
-	(chat-to-player my-player-number "enable boar-luring")
+	;(chat-to-player my-player-number "enable boar-luring")
 )
 
 (defrule ;find boar close to tc
@@ -19597,18 +19627,18 @@
 	(up-filter-distance c: -1 c: 6)
 	(up-find-remote c: boar-class c: 20)
 	(up-get-search-state gl-local-total)
-	(chat-to-player my-player-number "Boar Test")
+	;(chat-to-player my-player-number "Boar Test")
 )
 
 (defrule ;find villagers close to tc
 	(up-set-target-object search-remote c: 0)
+	(up-object-data object-data-hitpoints > 25)
 	(up-compare-goal gl-garrison-tc-two < 1)
 	(dropsite-min-distance live-boar < 10)
 	(dropsite-min-distance live-boar > 0)
-	(timer-triggered 6)
 =>
     (up-set-target-point gl-starting-tc-x)
-    (up-filter-distance c: -1 c: 6)
+    (up-filter-distance c: -1 c: 5)
 	;(up-filter-exclude -1 -1 orderid-hunt -1)
 	(up-find-local c: villager-class c: 10)
 	(up-remove-objects search-local object-data-group-flag == 3)
@@ -19620,38 +19650,38 @@
 	;(up-chat-data-to-player my-player-number "Found %d villagers to garrison" g: gl-local-total)
 	;(up-chat-data-to-player my-player-number "TC garrison goal: %d" g: gl-garrison-tc-two)
 	;(up-chat-data-to-player my-player-number "boar hunting goal: %d" g: boar-hunting)
-	(chat-to-player my-player-number "Villagers Test")
+	;(chat-to-player my-player-number "Villagers Test")
 )
 
 (defrule ;find tc and garrison vills from local search
 	(up-set-target-object search-remote c: 0)
+	(up-object-data object-data-hitpoints > 25)
 	(up-compare-sn sn-disable-villager-garrison == 3)
 	(up-compare-goal gl-local-total >= 2)
 	(up-compare-goal gl-garrison-tc-two < 1)
-	(timer-triggered 6)
 =>
-	(disable-timer 6)
 	(up-reset-search 0 0 1 1)
     (set-strategic-number sn-focus-player-number my-player-number)
 	(up-find-remote c: town-center c: 1)
 	(up-target-objects 0 action-garrison -1 -1)
 	(up-gather-inside c: town-center c: -1)
-	(chat-to-player my-player-number "Garrison Test")
+	;(chat-to-player my-player-number "Garrison Test")
 	(set-goal gl-garrison-tc-two 1)
 	(enable-timer 6 8)
 )
 
 (defrule ;find tc and garrison vills from local search
 	(up-set-target-object search-remote c: 0)
+	(up-object-data object-data-hitpoints > 25)
 	(up-compare-sn sn-disable-villager-garrison == 3)
 	(up-compare-goal gl-local-total < 2)
 	(up-compare-goal gl-garrison-tc-two < 1)
-	(timer-triggered 6)
 =>
-	(disable-timer 6)
 	(set-strategic-number sn-disable-villager-garrison 0)
 	(set-strategic-number sn-minimum-number-hunters 4)
-	(chat-to-player my-player-number "No villagers to garrison, switch to old boar-hunting method")
+	(set-strategic-number sn-minimum-boar-hunt-group-size 4)
+	(set-goal gl-garrison-tc-two 1)
+	;(chat-to-player my-player-number "No villagers to garrison, switch to old boar-hunting method")
 	(enable-timer 6 8)
 )
 
@@ -19682,8 +19712,8 @@
 (defrule ;find tc and shoot boar
 	(dropsite-min-distance live-boar < 32)
 	(dropsite-min-distance live-boar > 0)
+	(up-compare-sn sn-disable-villager-garrison == 3)
 	;(up-set-target-object search-remote c: 0)
-	;(timer-triggered 6)
 	(goal gl-garrison-tc-two 1)
 =>
     (up-reset-search 0 0 1 1)
@@ -19696,8 +19726,7 @@
 	(up-find-local c: town-center c: 1) 
 	;(up-add-object-by-id search-remote g: g-boar-id)
 	(up-target-objects 1 action-default -1 -1)
-	(chat-to-player my-player-number "Shooting Boar")
-	;(set-goal g-boar-status 2)
+	;(chat-to-player my-player-number "Shooting Boar")
 )
 
 (defrule ;ungarrison villagers after boar has been hit
@@ -19712,7 +19741,7 @@
 	(up-gather-inside c: town-center c: 0)
     (up-ungarrison c: town-center)
 	(set-goal gl-garrison-tc-two 0)
-	(chat-to-player my-player-number "ungarrison")
+	;(chat-to-player my-player-number "ungarrison")
 )
 
 (defrule ;ungarrison villagers after boar has been hit
@@ -19725,20 +19754,8 @@
 	(up-set-group search-local c: 2)
 	(up-set-target-by-id g: g-boar-id)
 	(up-target-objects 1 action-default -1 -1)
-	(chat-to-player my-player-number "finish the boar")
+	;(chat-to-player my-player-number "finish the boar")
 )
-
-; (defrule
-	; (dropsite-min-distance live-boar < 32)
-	; (dropsite-min-distance live-boar > 0)
-; =>
-	; (up-full-reset-search)
-    ; (up-modify-sn sn-focus-player-number c: 0)
-	; (up-filter-status c: status-gather c: list-inactive)
-	; (up-find-status-remote c: boar-class c: 1)
-	; (up-get-search-state gl-local-total)
-	; ;(up-chat-data-to-player my-player-number "Number of dead boars: %d" g: gl-remote-total)
-; )
 
 (defrule ;reset boar-hunting settings
 	;(up-set-target-object search-remote c: 0)
@@ -19749,25 +19766,8 @@
 	(goal boar-hunting 0)
 =>
 	(set-strategic-number sn-disable-villager-garrison 0)
-	(chat-to-player my-player-number "villager garrisoning allowed")
+	;(chat-to-player my-player-number "villager garrisoning allowed")
 )
-
-; (defrule ;reset boar-hunting settings
-	; (up-set-target-object search-remote c: 0)
-	; (dropsite-min-distance live-boar < 32)
-	; (dropsite-min-distance live-boar > 0)
-	; (goal boar-hunting 2)
-	; ;(up-set-target-by-id g: g-boar-id)
-	; (up-object-data object-data-carry < 95)
-	; (up-compare-sn sn-minimum-number-hunters != 1)
-	; (up-compare-sn sn-disable-villager-garrison == 0) ;are we currently luring a boar?
-; =>
-	; (set-strategic-number sn-minimum-number-hunters 1)
-	; (set-goal boar-hunting 0)
-	; (set-goal g-boar-status 0)
-	; (enable-timer 5 1)
-	; (chat-to-player my-player-number "resetting")
-; )
 
 (defrule
 (or	(unit-type-count villager >= 30); test
@@ -19874,7 +19874,7 @@
 =>
 	;(enable-timer 19 45)
 	(up-send-scout group-type-land-explore scout-opposite)
-	(chat-to-player my-player-number "Suche nach Gegner")
+	(chat-to-player my-player-number "Searching for opponent")
 	(disable-self)
 )
 
@@ -19884,7 +19884,7 @@
 =>
 	;(enable-timer 19 45)
 	(up-send-scout group-type-land-explore scout-opposite)
-	(chat-to-player my-player-number "Suche nach Gegner")
+	(chat-to-player my-player-number "Searching for opponent")
 	(disable-self)
 )
 
@@ -19899,7 +19899,7 @@
 =>
 	;(enable-timer 19 45)
 	(up-send-scout group-type-land-explore scout-opposite)
-	(chat-to-player my-player-number "Suche nach Gegner")
+	(chat-to-player my-player-number "Searching for opponent")
 	(disable-self)
 )
 
@@ -19909,7 +19909,7 @@
 =>
 	;(enable-timer 19 45)
 	(up-send-scout group-type-land-explore scout-opposite)
-	(chat-to-player my-player-number "Suche nach Gegner")
+	(chat-to-player my-player-number "Searching for opponent")
 	(disable-self)
 )
 #end-if
@@ -19921,7 +19921,7 @@
 =>
 	;(enable-timer 19 45)
 	(up-send-scout group-type-land-explore scout-flank)
-	(chat-to-player my-player-number "Suche nach Gegner")
+	(chat-to-player my-player-number "Searching for opponent")
 	(disable-self)
 )
 
@@ -19931,7 +19931,7 @@
 =>
 	;(enable-timer 19 45)
 	(up-send-scout group-type-land-explore scout-flank)
-	(chat-to-player my-player-number "Suche nach Gegner")
+	(chat-to-player my-player-number "Searching for opponent")
 	(disable-self)
 )
 #end-if
@@ -19943,7 +19943,7 @@
 	(players-building-count focus-player > 0)
 =>
 	(up-send-scout group-type-land-explore scout-enemy)
-	(chat-to-player my-player-number "Scoute gegnerische Base")
+	(chat-to-player my-player-number "scouting enemy base")
 	(disable-self)
 )
 
@@ -19952,7 +19952,7 @@
 	(players-building-count focus-player > 0)
 =>
 	(up-send-scout group-type-land-explore scout-enemy)
-	(chat-to-player my-player-number "Scoute gegnerische Base")
+	(chat-to-player my-player-number "scouting enemy base")
 	(disable-self)
 )
 
@@ -19961,7 +19961,7 @@
 	(players-building-count focus-player > 0)
 =>
 	(up-send-scout group-type-land-explore scout-enemy)
-	(chat-to-player my-player-number "Scoute gegnerische Base")
+	(chat-to-player my-player-number "scouting enemy base")
 	(disable-self)
 )
 
@@ -23005,7 +23005,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(building-type-count-total mining-camp < 4)
+	(building-type-count-total mining-camp < 7)
 	(resource-found stone)
 	;(dropsite-min-distance stone > 2)
 	(dropsite-min-distance stone < 255)
@@ -27973,7 +27973,7 @@
 	(can-build mining-camp)
 	(current-age == imperial-age)
 	(up-compare-sn sn-gold-gatherer-percentage > 30)
-	(building-type-count-total mining-camp < 5)
+	(building-type-count-total mining-camp < 7)
 	(resource-found gold)
 	;(dropsite-min-distance gold > 2)
 	(dropsite-min-distance gold < 255)
@@ -28022,7 +28022,7 @@
 	(can-build mining-camp)
 	(current-age == imperial-age)
 	(up-compare-sn sn-stone-gatherer-percentage > 20)
-	(building-type-count-total mining-camp < 5)
+	(building-type-count-total mining-camp < 7)
 	(resource-found stone)
 	;(dropsite-min-distance stone > 2)
 	(dropsite-min-distance stone < 255)
@@ -28110,7 +28110,7 @@
 	(game-time > 3000)
 	(can-build mining-camp)
 	(current-age > castle-age)
-	(building-type-count-total mining-camp < 3)
+	(building-type-count-total mining-camp < 4)
 	(resource-found gold)
 	;(dropsite-min-distance gold > 2)
 	(dropsite-min-distance gold < 255)
@@ -28125,7 +28125,7 @@
 	(game-time > 3000)
 	(can-build mining-camp)
 	(current-age > castle-age)
-	(building-type-count-total mining-camp < 3)
+	(building-type-count-total mining-camp < 4)
 	(resource-found stone)
 	;(dropsite-min-distance stone > 2)
 	(dropsite-min-distance stone < 255)
