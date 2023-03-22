@@ -55,13 +55,15 @@
 
 ;what's up next:
 
-; - improve drush feudal build order to reduce idle time
-; - fix military prefering enemy buildings over enemy units
-; - fix military going idle in enemy base
+; - improve drush into feudal rush build order to reduce idle time
+; - fix military prefering enemy buildings over enemy units (testing)
+; - fix military going idle in enemy base (testing)
 ; - try to retreat without regrouping in a formation
 ; - implement debug rules for every resource-saving goal
 ; - add pikeman upgrade to the targetable resource saving list
 ; - add escrow-cap for trebs
+; - get fletching faster (testing)
+; - always get horse collar before building a lot of farms (testing)
 
 ; - try to retreat only 1 unit at a time from enemy fortifications
 ; - implement tc-garrison code for every tc (testing) (partly fixed, but not properly working)
@@ -12230,7 +12232,8 @@
 (defrule
 	(current-age >= feudal-age)
 	(or (up-compare-goal gl-archery-class-units >= 3)
-	(up-compare-goal gl-cavalry-archer-units > 5))
+	(or (unit-type-count-total archery-class >= 3)
+	(up-compare-goal gl-cavalry-archer-units > 5)))
 	(research-available ri-fletching)
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
@@ -12245,10 +12248,11 @@
 
 (defrule
 	(current-age >= feudal-age)
-	(or (up-compare-goal gl-archery-class-units < 3)
-	(or (up-compare-goal gl-cavalry-archer-units < 5)
-		(and (research-completed ri-fletching)
-		(research-available ri-bodkin-arrow))))
+	(up-compare-goal gl-archery-class-units < 3)
+	(unit-type-count-total archery-class < 3)
+	(up-compare-goal gl-cavalry-archer-units < 5)
+	(and (research-completed ri-fletching)
+	(research-available ri-bodkin-arrow))
 	(goal gl-food-saving 14)
 	(goal gl-gold-saving 14)
 =>
@@ -12264,7 +12268,8 @@
 (defrule
 	(up-research-status c: castle-age >= research-pending)
 	(or (up-compare-goal gl-archery-class-units >= 3)
-	(up-compare-goal gl-cavalry-archer-units > 5))
+	(or (unit-type-count-total archery-class >= 3)
+	(up-compare-goal gl-cavalry-archer-units > 5)))
 	(research-available ri-bodkin-arrow)
 	(research-completed ri-fletching)
 	(goal gl-food-saving 0)
@@ -12280,10 +12285,11 @@
 
 (defrule
 	(up-research-status c: castle-age >= research-pending)
-	(or (up-compare-goal gl-archery-class-units < 3)
-	(or (up-compare-goal gl-cavalry-archer-units < 5)
-		(and (research-completed ri-bodkin-arrow)
-		(research-available ri-bracer))))
+	(up-compare-goal gl-archery-class-units < 3)
+	(unit-type-count-total archery-class < 3)
+	(up-compare-goal gl-cavalry-archer-units < 5)
+	(and (research-completed ri-bodkin-arrow)
+	(research-available ri-bracer))
 	(goal gl-food-saving 14)
 	(goal gl-gold-saving 14)
 =>
@@ -12435,7 +12441,8 @@
 	(research-available ri-chemistry)
 	(not (goal strategy-goal sg-boom-imp))
 	(or (up-compare-goal gl-archery-class-units >= 5)
-	(up-compare-goal gl-cavalry-archer-units >= 5))
+	(or (unit-type-count-total archery-class >= 5)
+	(up-compare-goal gl-cavalry-archer-units >= 5)))
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
@@ -12452,8 +12459,10 @@
 	(not (goal strategy-goal sg-boom-imp))
 	(or (building-type-count-total university < 1)
 		(or (up-research-status c: ri-chemistry >= research-pending)		
-			(nor (up-compare-goal gl-archery-class-units >= 5)
-				(up-compare-goal gl-cavalry-archer-units >= 5))))	
+			(or 
+				(and (up-compare-goal gl-archery-class-units < 5)
+				(and (unit-type-count-total archery-class < 5)
+				(up-compare-goal gl-cavalry-archer-units < 5))))))	
 	(goal gl-food-saving 26)
 	(goal gl-gold-saving 26)
 =>
@@ -12925,7 +12934,8 @@
 	(building-type-count-total blacksmith >= 1)
 	(up-research-status c: imperial-age >= research-pending)
 	(or (up-compare-goal gl-archery-class-units >= 3)
-	(up-compare-goal gl-cavalry-archer-units > 5))
+	(or (unit-type-count-total archery-class >= 3)
+	(up-compare-goal gl-cavalry-archer-units > 5)))
 	(research-available ri-bracer)
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
@@ -12941,9 +12951,10 @@
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total blacksmith < 1)
-		(or (and (up-compare-goal gl-archery-class-units < 3)
-		(up-compare-goal gl-cavalry-archer-units <= 5))
-		(research-completed ri-bracer)))
+		(or (research-completed ri-bracer)
+			(and (up-compare-goal gl-archery-class-units < 3)
+			(and (unit-type-count-total archery-class < 3)
+			(up-compare-goal gl-cavalry-archer-units <= 5)))))
 	(goal gl-food-saving 14)
 	(goal gl-gold-saving 14)
 =>
@@ -12959,7 +12970,7 @@
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
 	(building-type-count-total barracks >= 1)
-	(unit-type-count-total spearman-line >= 6)
+	(unit-type-count-total spearman-line >= 5)
 	(research-available ri-halberdier)
 	(research-completed ri-pikeman)
 	(goal gl-food-saving 0)
@@ -12976,7 +12987,7 @@
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total barracks < 1)
-		(or (unit-type-count-total spearman-line < 6)
+		(or (unit-type-count-total spearman-line < 5)
 		(or (research-completed ri-halberdier)
 		(not (research-completed ri-pikeman)))))
 	(goal gl-food-saving 41)
@@ -19656,6 +19667,8 @@
 	(building-type-count-total lumber-camp > 0)
 	(building-type-count-total archery-range >= 1)
 	(building-type-count-total blacksmith >= 1)
+	(up-research-status c: ri-horse-collar != research-pending)
+	(building-type-count-total farm < 10)
 	(idle-farm-count < 1)
 	(can-build farm)
 	(up-compare-goal gl-water-on-map != 1)
@@ -19672,6 +19685,43 @@
 	(building-type-count-total lumber-camp > 0)
 	(building-type-count-total archery-range >= 1)
 	(building-type-count-total blacksmith >= 1)
+	(up-research-status c: ri-horse-collar != research-pending)
+	(building-type-count-total farm < 10)
+	(idle-farm-count < 1)
+	(can-build farm)
+	(up-compare-goal gl-water-on-map == 1)
+	(wood-amount > 85)
+=>
+	(build farm)
+)
+
+(defrule
+	(goal strategy-goal sg-archerrush)
+	(current-age == feudal-age)
+	(or (civilian-population >= 23)
+	(or (building-type-count-total archery-range >= 2)
+	(wood-amount > 250)))
+	(building-type-count-total lumber-camp > 0)
+	(building-type-count-total archery-range >= 1)
+	(building-type-count-total blacksmith >= 1)
+	(up-research-status c: ri-horse-collar >= research-pending)
+	(idle-farm-count < 1)
+	(can-build farm)
+	(up-compare-goal gl-water-on-map != 1)
+=>
+	(build farm)
+)
+
+(defrule
+	(goal strategy-goal sg-archerrush)
+	(current-age == feudal-age)
+	(or (civilian-population >= 23)
+	(or (building-type-count-total archery-range >= 2)
+	(wood-amount > 250)))
+	(building-type-count-total lumber-camp > 0)
+	(building-type-count-total archery-range >= 1)
+	(building-type-count-total blacksmith >= 1)
+	(up-research-status c: ri-horse-collar >= research-pending)
 	(idle-farm-count < 1)
 	(can-build farm)
 	(up-compare-goal gl-water-on-map == 1)
