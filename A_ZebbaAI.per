@@ -89,6 +89,7 @@
 ; - implement debug rules for every resource-saving goal
 ; - place additional tcs more controlled (reduce town-size before building?)
 ; - enhance house placement rules, to get a more random placement around the base to increase the AIs LOS
+; - fix research of eco-upgrades for burgundians when fcing
 
 ; - in TGs, improve pocket-players attack speed when going for a scout-rush and the flank is rushing as well
 ; - try to retreat only 1 unit at a time from enemy fortifications
@@ -3381,7 +3382,6 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train trebuchet)
-	(unit-type-count-total trebuchet-set >= 2)
 	(unit-type-count-total trebuchet-set < 8)
 	(up-compare-goal gl-military-advantage >= -4)
 =>
@@ -12749,7 +12749,7 @@
 	(unit-type-count-total scout-cavalry-line > 4))
 	(building-type-count-total stable >= 1)
 	(research-available ri-chain-barding)
-	up-research-status c: ri-scale-barding >= research-pending
+	(up-research-status c: ri-scale-barding >= research-pending)
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
@@ -13287,7 +13287,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total barracks < 1)
 		(or (unit-type-count-total eagle-warrior-line < 3)
-			(up-research-status c: ri-elite-eagle-warrior>= research-pending)))
+			(up-research-status c: ri-elite-eagle-warrior >= research-pending)))
 	(goal gl-food-saving 24)
 	(goal gl-gold-saving 24)
 =>
@@ -13321,7 +13321,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total castle < 1)
 	(or (unit-type-count-total my-unique-unit-line < 3)
-	(up-research-status c: ri-my-unique-unit-upgrade >= research-pending)))
+	(up-research-status c: my-unique-unit-upgrade >= research-pending)))
 	(goal gl-food-saving 32)
 	(goal gl-wood-saving 32)
 	(goal gl-civ-uu-cost 1)
@@ -13356,7 +13356,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total castle < 1)
 	(or (unit-type-count-total my-unique-unit-line < 3)
-	(up-research-status c: ri-my-unique-unit-upgrade >= research-pending)))
+	(up-research-status c: my-unique-unit-upgrade >= research-pending)))
 	(goal gl-wood-saving 33)
 	(goal gl-gold-saving 33)
 	(goal gl-civ-uu-cost 2)
@@ -13391,7 +13391,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total castle < 1)
 	(or (unit-type-count-total my-unique-unit-line < 3)
-	(up-research-status c: ri-my-unique-unit-upgrade >= research-pending)))
+	(up-research-status c: my-unique-unit-upgrade >= research-pending)))
 	(goal gl-food-saving 34)
 	(goal gl-gold-saving 34)
 	(goal gl-civ-uu-cost 3)
@@ -14596,6 +14596,7 @@
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-class == scout-cavalry-class)
 	(up-remove-objects search-local object-data-type == armored-elephant)
+		(up-remove-objects search-local object-data-type == eagle-warrior)
 	(set-goal split-rule-goal 47)
 )
 
@@ -14631,6 +14632,8 @@
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-class == scout-cavalry-class)
 	(up-remove-objects search-local object-data-type == armored-elephant)
+	(up-remove-objects search-local object-data-type == eagle-warrior)
+	(up-remove-objects search-local object-data-type == huskarl)
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
@@ -14691,6 +14694,8 @@
 	(up-remove-objects search-local object-data-type == battering-ram)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == armored-elephant)
+	(up-remove-objects search-local object-data-type == eagle-warrior)
+	(up-remove-objects search-local object-data-type == huskarl)
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
@@ -20879,7 +20884,7 @@
 	(up-research-status c: castle-age == research-pending))
 	(can-research ri-padded-archer-armor)
 	(food-amount > 150)
-	(up-research-status c: ri-fletching >= research-pending))
+	(up-research-status c: ri-fletching >= research-pending)
 =>
 	(research ri-padded-archer-armor)
 )
@@ -20896,7 +20901,7 @@
 	(release-escrow wood)
 	(set-escrow-percentage wood 0)
 	(up-assign-builders c: market c: 2)
-	(up-set-placement-data my-player-number -1 c: -6)
+	(up-set-placement-data my-player-number -1 c: -8)
 	(set-strategic-number sn-placement-zone-size 5)
 	(set-strategic-number sn-placement-fail-delta 0)
 	(up-build place-control 0 c: market)
@@ -20915,7 +20920,7 @@
 	(release-escrow wood)
 	(set-escrow-percentage wood 0)
 	(up-assign-builders c: market c: 2)
-	(up-set-placement-data my-player-number -1 c: -6)
+	(up-set-placement-data my-player-number -1 c: -8)
 	(set-strategic-number sn-placement-zone-size 5)
 	(set-strategic-number sn-placement-fail-delta 0)
 	(up-build place-control 0 c: market)
@@ -20932,7 +20937,7 @@
 	(can-build market)
 =>
 	(up-assign-builders c: market c: 2)
-	(up-set-placement-data my-player-number -1 c: -6)
+	(up-set-placement-data my-player-number -1 c: -8)
 	(set-strategic-number sn-placement-zone-size 5)
 	(set-strategic-number sn-placement-fail-delta 0)
 	(up-build place-control 0 c: market)
@@ -20951,7 +20956,7 @@
 	(release-escrow wood)
 	(set-escrow-percentage wood 0)
 	(up-assign-builders c: market c: 2)
-	(up-set-placement-data my-player-number -1 c: -6)
+	(up-set-placement-data my-player-number -1 c: -8)
 	(set-strategic-number sn-placement-zone-size 5)
 	(set-strategic-number sn-placement-fail-delta 0)
 	(up-build place-control 0 c: market)
@@ -26760,9 +26765,10 @@
 
 (defrule
 	(can-build feitoria)
-	(building-type-count-total feitoria < 3)
+	(building-type-count-total feitoria < 5)
 =>
-	(build feitoria)
+	(up-set-placement-data my-player-number -1 c: -10)
+    (up-build place-control 0 c: feitoria)
 )
 
 (defrule
