@@ -1,8 +1,20 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 1.0.4
-;last update: 24th March 2023
+;Version: 1.1.0
+;last update: 25th March 2023
 
+;region Chats at match-start =======================================
+#load-if-defined UP-2-PLAYER-GAME
+
+(defrule
+	(game-time > 10)
+=>
+	(chat-to-all "ZebbaAI: Version 1.1.0 by Zebba")
+	(disable-self)
+)
+
+#end-if
+;endregion
 
 ;region Introduction, content & To-Do ==============================
 
@@ -50,34 +62,35 @@
 ; - fixed boar-hunting issue where AI couldnt garrison villagers to shoot the boar with tc if there are no villagers
 ; nearby. AI will now switch temporarily to standard boar-hunting if it has < 2 villagers next to tc
 ; - improved retreating from enemy fortifications when in castle-age
+
 ; - improved timing of horse collar & fletching in archerrushes
+; - improved placement of blacksmiths & markets (in feudal-age), universities & some military buildings
+; - AI will no longer build defensive towers as a pocket-player
+; - when playing fast-imp, the AI will try to go for condottieros if the unit is available
+; - AI will now be less likely to send villagers forward, and will no longer send new villagers after it in case of a failed attempt 
+; of building forward buildings.  
+; - slightly improved speed to get up to castle-& imperial-age
 ; - fixed a rare bug that caused the AI to build too many tcs (more than 9)
-; - improved placement of blacksmiths & markets (in feudal-age) & some military buildings
+; - fixed fast-imp build order unit production before imperial-age, which made it impossible to get enough res for imp 
+; - fixed an issue in the retreating code for enemy towers and castles
+
 
 ;ToDo: 
 
 ;what's up next:
 
-; - fix military prefering enemy buildings over enemy units (testing)
-; - fix military going idle in enemy base (testing)
-; - try to retreat without regrouping in a formation (testing)
-; - fix bug in escrow saving system (or notification) for wood-saving 7, 37 & 2, the notification keeps getting spammed for some reason
-; - fix sending villagers forward, resulting in losing a great amount of them (testing)
-; - fix fast-imp build order unit production before imperial-age, making it impossible to get enough res for imp (testing)
-; - in general: try to get to next age faster (testing)
+; - fix bug in escrow saving system (or notification) the notification keeps getting spammed for some reason
+; - fix preferation of training gold units (knights/archers) in imp over getting their upgrades first
+; - split up retreat rules for enemy towers into pre- & and post-castle-age
+; - enhance retreat code to let monks retreat as well
+; - add pikeman upgrade to the targetable resource saving list
+; - fix production of trebs
 ; - improve drush into feudal rush build order to reduce idle time (idea: reduce amount of wood-escrow savings to get more farms?)
 ; - implement debug rules for every resource-saving goal
-; - add pikeman upgrade to the targetable resource saving list
-; - split up retreat rules for enemy towers into pre- & and post-castle-age
-; - fix production of trebs
 ; - place additional tcs more controlled (reduce town-size before building?)
 ; - enhance house placement rules, to get a more random placement around the base to increase the AIs LOS
-; - recheck sending of resources to allies to ensure that banking has been researched in imperial-age and for every gold & stone-sling
-; (testing)
-; - enhance retreat code to let monks retreat as well
-; - fix retreating code for towers and castles: units like archers dont seem to retreat properly, scouts do retreat, but shouldn't
-; - fix preferation of training gold units (knights/archers) in imp over getting their upgrades first
 
+; - in TGs, improve pocket-players attack speed when going for a scout-rush and the flank is rushing as well
 ; - try to retreat only 1 unit at a time from enemy fortifications
 ; - implement tc-garrison code for every tc (testing) (partly fixed, but not properly working)
 ; - test scoutrush (retreat scouts from spearmen(not working))
@@ -98,6 +111,7 @@
 ; - implement scouting-pattern for scouting own base
 ; - decrease d-villager-goal for mongols by 1 when scout/archer-rushing, in addition to that changes need to be made to 
 ; constructions of buildings connected to villager count
+
 
 
 ;improving drush:
@@ -1523,33 +1537,6 @@
 )
 
 ;endregion 
-
-;region Chats at match-start =======================================
-#load-if-defined UP-2-PLAYER-GAME
-
-(defrule
-	(game-time > 10)
-=>
-	(chat-to-all "ZebbaAI: Version 1.0.0 by Zebba")
-	(disable-self)
-)
-
-; (defrule
-	; (game-time > 10)
-; =>
-	; (chat-to-all "Hey there, looking forward to challenge you!")
-	; (disable-self)
-; )
-
-; (defrule
-	; (game-time > 15)
-; =>
-	; (chat-to-all "Get ready for an epic battle!")
-	; (disable-self)
-; )
-
-#end-if
-;endregion
 
 ;region Map-Size definer ===========================================
             #load-if-defined TINY-MAP
@@ -3210,8 +3197,8 @@
 	(set-goal d-villager-goal 30)
 	(set-goal f-villager-goal 32)
 	(set-goal c-villager-goal 34)
-	(chat-to-allies "I'll go fast Imp")
-	(chat-to-player my-player-number "I'll go fast Imp")
+	(chat-to-allies "I'll go Fast Imp")
+	(chat-to-player my-player-number "I'll go Fast Imp")
 	(disable-self)
 )
 
@@ -6725,6 +6712,8 @@
 	;(chat-to-player my-player-number "Baue Schiessanlage, um feindliche Ber. Bogenschuetzen zu kontern")
 )
 
+#load-if-not-defined UP-POCKET-POSITION
+
 (defrule
 	(current-age == feudal-age)
 	(not (goal strategy-goal sg-towerrush))
@@ -6892,6 +6881,8 @@
     (up-build place-control 0 c: donjon)
 	;(chat-to-player my-player-number "Building defensive donjon")
 )
+
+#end-if
 
 (defrule
 	(current-age >= castle-age)
@@ -7260,6 +7251,8 @@
 	;(chat-to-player my-player-number "Making rams against enemy fortifications")
 )
 
+#load-if-not-defined UP-POCKET-POSITION
+
 (defrule
 	(current-age >= feudal-age)
 	(players-building-type-count focus-player watch-tower-line >= 1)
@@ -7273,6 +7266,31 @@
 
 (defrule
 	(current-age == feudal-age)
+	(players-building-type-count focus-player watch-tower-line >= 1)
+	(can-train-with-escrow battering-ram-line)
+	(unit-type-count-total battering-ram-line < 2)
+=>
+	(up-modify-escrow wood c:- 160)
+	(up-modify-escrow gold c:- 75)
+	(train battering-ram-line)
+	;(chat-to-player my-player-number "Making rams against enemy towers")
+)
+
+#end-if
+
+(defrule
+	(current-age >= castle-age)
+	(players-building-type-count focus-player watch-tower-line >= 1)
+	(can-build-with-escrow siege-workshop)
+	(building-type-count-total siege-workshop < 1)
+=>
+	(up-modify-escrow wood c:- 200)
+	(build siege-workshop)
+	;(chat-to-player my-player-number "Produziere Rammboecke gegen feindliche Türme")
+)
+
+(defrule
+	(current-age == castle-age)
 	(players-building-type-count focus-player watch-tower-line >= 1)
 	(can-train-with-escrow battering-ram-line)
 	(unit-type-count-total battering-ram-line < 2)
@@ -9102,7 +9120,8 @@
 	(building-type-count-total university < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -11258,10 +11277,10 @@
 	(timer-triggered 9)
 =>
 	(disable-timer 9)
-	(up-chat-data-to-self "Saving food for: %d" g: gl-food-saving)
-	(up-chat-data-to-self "Saving wood for: %d" g: gl-wood-saving)
-	(up-chat-data-to-self "Saving gold for: %d" g: gl-gold-saving)
-	(up-chat-data-to-self "Saving stone for: %d" g: gl-stone-saving)
+	;(up-chat-data-to-self "Saving food for: %d" g: gl-food-saving)
+	;(up-chat-data-to-self "Saving wood for: %d" g: gl-wood-saving)
+	;(up-chat-data-to-self "Saving gold for: %d" g: gl-gold-saving)
+	;(up-chat-data-to-self "Saving stone for: %d" g: gl-stone-saving)
 	;(enable-timer 9 180)
 )
 
@@ -12259,7 +12278,7 @@
 	(up-compare-goal gl-archery-class-units < 5)
 	(unit-type-count-total archery-class < 5)
 	(up-compare-goal gl-cavalry-archer-units < 5)
-	(and (research-completed ri-fletching)
+	(and (up-research-status c: ri-fletching >= research-pending)
 	(research-available ri-bodkin-arrow))
 	(goal gl-food-saving 14)
 	(goal gl-gold-saving 14)
@@ -12296,7 +12315,7 @@
 	(up-compare-goal gl-archery-class-units < 3)
 	(unit-type-count-total archery-class < 3)
 	(up-compare-goal gl-cavalry-archer-units < 5)
-	(and (research-completed ri-bodkin-arrow)
+	(and (up-research-status c: ri-bodkin-arrow >= research-pending)
 	(research-available ri-bracer))
 	(goal gl-food-saving 14)
 	(goal gl-gold-saving 14)
@@ -12328,7 +12347,7 @@
 (defrule
 	(up-research-status c: castle-age >= research-pending)
 	(or (unit-type-count-total archer-line < 3)
-		(and (research-completed ri-crossbow)
+		(and (up-research-status c: ri-crossbow >= research-pending)
 		(research-available ri-arbalest)))
 	(goal gl-food-saving 9)
 	(goal gl-gold-saving 9)
@@ -12361,7 +12380,7 @@
 (defrule
 	(up-research-status c: castle-age >= research-pending)
 	(or (unit-type-count-total skirmisher-line < 3)
-		(research-completed ri-elite-skirmisher))
+		(up-research-status c: ri-elite-skirmisher >= research-pending))
 	(goal gl-wood-saving 40)
 	(goal gl-gold-saving 40)
 =>
@@ -12395,7 +12414,7 @@
 	(or (building-type-count-total university < 1)
 		(or (and (up-compare-goal gl-archery-class-units < 5)
 			(up-compare-goal gl-cavalry-archer-units < 5))
-	(research-completed ri-ballistics)))
+	(up-research-status c: ri-ballistics >= research-pending)))
 	(goal gl-wood-saving 10)
 	(goal gl-gold-saving 10)
 =>
@@ -12541,7 +12560,7 @@
 	(goal strategy-goal sg-scoutrush)
 	(or (building-type-count-total town-center < 1)
 	(or (unit-type-count-total villager < 33)
-	(research-completed ri-wheel-barrow)))
+	(up-research-status c: ri-wheel-barrow >= research-pending)))
 	(or (goal gl-food-saving 29)
 	(goal gl-wood-saving 29))
 =>
@@ -12575,7 +12594,7 @@
 	(not (civ-selected viking))
 	(current-age >= castle-age)
 	(or (building-type-count-total town-center < 1)
-	(research-completed ri-wheel-barrow))
+	(up-research-status c: ri-wheel-barrow >= research-pending))
 	; (or (building-type-count-total town-center < 1)
 		; (and (research-completed ri-wheel-barrow)
 			; (not (research-completed ri-hand-cart))))
@@ -12647,8 +12666,7 @@
 (defrule
 	(up-research-status c: feudal-age >= research-pending)
 	(or (building-type-count-total lumber-camp < 1)
-		(and (research-completed ri-bow-saw)
-		(research-available ri-two-man-saw)))
+		(up-research-status c: ri-bow-saw >= research-pending))
 	(goal gl-food-saving 11)
 	(goal gl-wood-saving 11)
 =>
@@ -12680,8 +12698,7 @@
 (defrule
 	(up-research-status c: feudal-age >= research-pending)
 	(or (building-type-count-total lumber-camp < 1)
-		(and (research-completed ri-bow-saw)
-		(research-available ri-two-man-saw)))
+		(up-research-status c: ri-bow-saw >= research-pending))
 	(goal gl-food-saving 12)
 	(goal gl-wood-saving 12)
 =>
@@ -12714,7 +12731,7 @@
 	(or (building-type-count-total blacksmith < 1)
 		(or (unit-type-count-total cavalry-class <= 2)
 			(or (building-type-count-total stable < 1)
-				(and (research-completed ri-scale-barding)
+				(and (up-research-status c: ri-scale-barding >= research-pending)
 					(research-available ri-chain-barding)))))
 	(goal gl-food-saving 13)
 	(up-compare-goal gl-gold-saving != 13)
@@ -12732,7 +12749,7 @@
 	(unit-type-count-total scout-cavalry-line > 4))
 	(building-type-count-total stable >= 1)
 	(research-available ri-chain-barding)
-	(research-completed ri-scale-barding)
+	up-research-status c: ri-scale-barding >= research-pending
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
@@ -12749,7 +12766,7 @@
 	(or (building-type-count-total blacksmith < 1)
 		(or (unit-type-count-total cavalry-class <= 4)
 			(or (building-type-count-total stable < 1)
-				(and (research-completed ri-chain-barding)
+				(and (up-research-status c: ri-chain-barding >= research-pending)
 				(research-available ri-plate-barding)))))
 	(goal gl-food-saving 13)
 	(goal gl-gold-saving 13)
@@ -12770,7 +12787,7 @@
 	(unit-type-count-total scout-cavalry-line > 4))
 	(building-type-count-total stable >= 1)
 	(research-available ri-plate-barding)
-	(research-completed ri-chain-barding)
+	(up-research-status c: ri-chain-barding >= research-pending)
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
@@ -12787,7 +12804,7 @@
 	(or (building-type-count-total blacksmith < 1)
 		(or (unit-type-count-total cavalry-class <= 4)
 			(or (building-type-count-total stable < 1)
-				(research-completed ri-plate-barding))))
+				(up-research-status c: ri-plate-barding >= research-pending))))
 	(goal gl-food-saving 13)
 	(goal gl-gold-saving 13)
 =>
@@ -12819,7 +12836,7 @@
 	(or (building-type-count-total blacksmith < 1)
 		(or (unit-type-count-total infantry-class <= 4)
 			(or (building-type-count-total barracks < 1)
-				(and (research-completed ri-scale-mail)
+				(and (up-research-status c: ri-scale-mail >= research-pending)
 				(research-available ri-chain-mail)))))
 	(goal gl-food-saving 20)
 	(up-compare-goal gl-gold-saving != 20)
@@ -12836,7 +12853,7 @@
 	(unit-type-count-total infantry-class > 5)
 	(building-type-count-total barracks >= 1)
 	(research-available ri-chain-mail)
-	(research-completed ri-scale-mail)
+	(up-research-status c: ri-scale-mail >= research-pending)
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
@@ -12853,7 +12870,7 @@
 	(or (building-type-count-total blacksmith < 1)
 		(or (unit-type-count-total infantry-class <= 5)
 			(or (building-type-count-total barracks < 1)
-				(and (research-completed ri-chain-mail)
+				(and (up-research-status c: ri-chain-mail >= research-pending)
 				(research-available ri-plate-mail)))))
 	(goal gl-food-saving 20)
 	(goal gl-gold-saving 20)
@@ -12873,7 +12890,7 @@
 	(unit-type-count-total infantry-class > 8)
 	(building-type-count-total barracks >= 1)
 	(research-available ri-plate-mail)
-	(research-completed ri-chain-mail)
+	(up-research-status c: ri-chain-mail >= research-pending)
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
@@ -12890,7 +12907,7 @@
 	(or (building-type-count-total blacksmith < 1)
 		(or (unit-type-count-total infantry-class <= 8)
 			(or (building-type-count-total barracks < 1)
-				(research-completed ri-plate-mail))))
+				(up-research-status c: ri-plate-mail >= research-pending))))
 	(goal gl-food-saving 20)
 	(goal gl-gold-saving 20)
 =>
@@ -12908,7 +12925,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(unit-type-count-total archer-line >= 3)
 	(research-available ri-arbalest)
-	(research-completed ri-crossbow)
+	(up-research-status c: ri-crossbow >= research-pending)
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
@@ -12924,7 +12941,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total archery-range < 1)
 		(or (unit-type-count-total archer-line < 3)
-			(research-completed ri-arbalest)))
+			(up-research-status c: ri-arbalest >= research-pending)))
 	(goal gl-food-saving 9)
 	(goal gl-gold-saving 9)
 =>
@@ -12958,7 +12975,7 @@
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total blacksmith < 1)
-		(or (research-completed ri-bracer)
+		(or (up-research-status c: ri-bracer >= research-pending)
 			(and (up-compare-goal gl-archery-class-units < 3)
 			(and (unit-type-count-total archery-class < 3)
 			(up-compare-goal gl-cavalry-archer-units <= 5)))))
@@ -12979,7 +12996,7 @@
 	(building-type-count-total barracks >= 1)
 	(unit-type-count-total spearman-line >= 5)
 	(research-available ri-halberdier)
-	(research-completed ri-pikeman)
+	(up-research-status c: ri-pikeman >= research-pending)
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
@@ -12995,7 +13012,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total barracks < 1)
 		(or (unit-type-count-total spearman-line < 5)
-		(or (research-completed ri-halberdier)
+		(or (up-research-status c: ri-halberdier >= research-pending)
 		(not (research-completed ri-pikeman)))))
 	(goal gl-food-saving 41)
 	(goal gl-gold-saving 41)
@@ -13029,7 +13046,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total archery-range < 1)
 		(or (unit-type-count-total cavalry-archer-line < 5)
-			(research-completed ri-heavy-cavalry-archer)))
+			(up-research-status c: ri-heavy-cavalry-archer >= research-pending)))
 	(goal gl-food-saving 15)
 	(goal gl-gold-saving 15)
 =>
@@ -13062,7 +13079,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total stable < 1)
 		(or (unit-type-count-total camel-line < 5)
-			(and (research-completed ri-heavy-camel)
+			(and (up-research-status c: ri-heavy-camel >= research-pending)
 			(research-available ri-imperial-camel-rider))))
 	(goal gl-food-saving 16)
 	(goal gl-gold-saving 16)
@@ -13096,7 +13113,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total stable < 1)
 		(or (unit-type-count-total camel-line < 5)
-			(research-completed ri-imperial-camel-rider)))
+			(up-research-status c: ri-imperial-camel-rider >= research-pending)))
 	(goal gl-food-saving 17)
 	(goal gl-gold-saving 17)
 =>
@@ -13131,7 +13148,7 @@
 	(civ-selected burgundians)
 	(or (building-type-count-total stable < 1)
 		(or (unit-type-count-total knight-line < 4)
-			(and (research-completed ri-cavalier)
+			(and (up-research-status c: ri-cavalier >= research-pending)
 			(research-available ri-paladin))))
 	(goal gl-food-saving 18)
 	(goal gl-gold-saving 18)
@@ -13167,7 +13184,7 @@
 	(not (civ-selected burgundians))
 	(or (building-type-count-total stable < 1)
 		(or (unit-type-count-total knight-line < 6)
-			(and (research-completed ri-cavalier)
+			(and (up-research-status c: ri-cavalier >= research-pending)
 			(research-available ri-paladin))))
 	(goal gl-food-saving 19)
 	(goal gl-gold-saving 19)
@@ -13186,7 +13203,7 @@
 	(building-type-count-total stable >= 1)
 	(unit-type-count-total knight-line >= 8)
 	(research-available ri-paladin)
-	(research-completed ri-cavalier)
+	(up-research-status c: ri-cavalier >= research-pending)
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
@@ -13202,7 +13219,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total stable < 1)
 		(or (unit-type-count-total knight-line < 8)
-			(research-completed ri-paladin)))
+			(up-research-status c: ri-paladin >= research-pending)))
 	(goal gl-food-saving 19)
 	(goal gl-gold-saving 19)
 =>
@@ -13235,7 +13252,7 @@
 	(up-research-status c: castle-age >= research-pending)
 	(or (building-type-count-total barracks < 1)
 		(or (unit-type-count-total eagle-warrior-line < 3)
-			(and (research-completed ri-eagle-warrior)
+			(and (up-research-status c: ri-eagle-warrior >= research-pending)
 			(research-available ri-elite-eagle-warrior))))
 	(goal gl-food-saving 24)
 	(goal gl-gold-saving 24)
@@ -13254,7 +13271,7 @@
 	(building-type-count-total barracks >= 1)
 	(unit-type-count-total eagle-warrior-line >= 3)
 	(research-available ri-elite-eagle-warrior)
-	(research-completed ri-eagle-warrior)
+	(up-research-status c: ri-eagle-warrior >= research-pending)
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
@@ -13270,7 +13287,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total barracks < 1)
 		(or (unit-type-count-total eagle-warrior-line < 3)
-			(research-completed ri-elite-eagle-warrior)))
+			(up-research-status c: ri-elite-eagle-warrior>= research-pending)))
 	(goal gl-food-saving 24)
 	(goal gl-gold-saving 24)
 =>
@@ -13304,7 +13321,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total castle < 1)
 	(or (unit-type-count-total my-unique-unit-line < 3)
-	(research-completed my-unique-unit-upgrade)))
+	(up-research-status c: ri-my-unique-unit-upgrade >= research-pending)))
 	(goal gl-food-saving 32)
 	(goal gl-wood-saving 32)
 	(goal gl-civ-uu-cost 1)
@@ -13339,7 +13356,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total castle < 1)
 	(or (unit-type-count-total my-unique-unit-line < 3)
-	(research-completed my-unique-unit-upgrade)))
+	(up-research-status c: ri-my-unique-unit-upgrade >= research-pending)))
 	(goal gl-wood-saving 33)
 	(goal gl-gold-saving 33)
 	(goal gl-civ-uu-cost 2)
@@ -13374,7 +13391,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total castle < 1)
 	(or (unit-type-count-total my-unique-unit-line < 3)
-	(research-completed my-unique-unit-upgrade)))
+	(up-research-status c: ri-my-unique-unit-upgrade >= research-pending)))
 	(goal gl-food-saving 34)
 	(goal gl-gold-saving 34)
 	(goal gl-civ-uu-cost 3)
@@ -14881,19 +14898,10 @@
 	(up-compare-goal gl-remote-total > 0)
 	(up-set-target-object search-remote c: 0)
 =>
-	(up-jump-rule 8)
+	(up-jump-rule 6)
 )
 
 ;loop through enemy castles
-
-(defrule													
-	(or (unit-type-count-total trebuchet-set > 0)
-	(or (unit-type-count-total armored-elephant-line >= 1)
-	(or (unit-type-count-total battering-ram-line >= 1)
-	(unit-type-count-total bombard-cannon >= 1))))
-=>	
-	(up-jump-rule 8)
-)
 
 (defrule
 	(players-building-type-count focus-player castle >= 1)
@@ -14990,17 +14998,17 @@
 
 ; Retreating from Enemy Towers
 
-(defrule															
-	(or	(military-population > 34)					
-	(or (unit-type-count battering-ram-line > 0)
-	(or (unit-type-count armored-elephant-line > 0)		
-	(or (unit-type-count trebuchet > 0)
-	(or (unit-type-count bombard-cannon > 0)
-	(or (unit-type-count cavalry-class >= 4)
-	(unit-type-count infantry-class >= 6)))))))
-=>	
-	(up-jump-rule 13)
-)	
+; (defrule															
+	; (or	(military-population > 34)					
+	; (or (unit-type-count battering-ram-line > 0)
+	; (or (unit-type-count armored-elephant-line > 0)		
+	; (or (unit-type-count trebuchet > 0)
+	; (or (unit-type-count bombard-cannon > 0)
+	; (or (unit-type-count cavalry-class >= 4)
+	; (unit-type-count infantry-class >= 6)))))))
+; =>	
+	; (up-jump-rule 13)
+; )	
 
 (defrule
 	(or (players-building-type-count focus-player watch-tower >= 1)
@@ -15138,7 +15146,7 @@
 =>
 	(up-full-reset-search)
 	(up-set-target-point enemy-tower-point-x)
-	(up-filter-distance c: -1 c: 9)
+	(up-filter-distance c: -1 c: 10)
 	(up-filter-include cmdid-military -1 -1 -1)
 	(up-filter-exclude -1 -1 -1 siege-weapon-class)
 	(up-filter-exclude -1 -1 -1 armored-elephant-line)
@@ -15173,7 +15181,7 @@
 =>	
 	(up-full-reset-search)	
 	(up-set-target-point enemy-tower-point-x)
-	(up-filter-distance c: -1 c: 9)
+	(up-filter-distance c: -1 c: 10)
 	(up-filter-include cmdid-military -1 -1 -1)	
 	(up-filter-exclude -1 -1 -1 siege-weapon-class)
 	(up-filter-exclude -1 -1 -1 armored-elephant-line)
@@ -20661,8 +20669,8 @@
 	(or (military-population >= 4)
 	(up-compare-goal gl-military-advantage >= 3))
 	(up-compare-goal gl-military-advantage >= -2)
-	(or (research-completed ri-scale-mail)
-	(research-completed ri-forging))
+	(or (up-research-status c: ri-scale-mail >= research-pending)
+	(up-research-status c: ri-forging >= research-pending))
 =>
 	;(set-goal attack-now-goal 1)
 	(set-strategic-number sn-number-explore-groups 0)
@@ -20689,8 +20697,8 @@
 	(or (military-population >= 4)
 	(up-compare-goal gl-military-advantage >= 3))
 	(up-compare-goal gl-military-advantage >= -2)
-	(or (research-completed ri-scale-mail)
-	(research-completed ri-forging))
+	(or (up-research-status c: ri-scale-mail >= research-pending)
+	(up-research-status c: ri-forging >= research-pending))
 =>
 	;(set-goal attack-now-goal 1)
 	(set-strategic-number sn-number-explore-groups 0)
@@ -20871,7 +20879,7 @@
 	(up-research-status c: castle-age == research-pending))
 	(can-research ri-padded-archer-armor)
 	(food-amount > 150)
-	(research-completed ri-fletching)
+	(up-research-status c: ri-fletching >= research-pending))
 =>
 	(research ri-padded-archer-armor)
 )
@@ -20888,7 +20896,7 @@
 	(release-escrow wood)
 	(set-escrow-percentage wood 0)
 	(up-assign-builders c: market c: 2)
-	(up-set-placement-data my-player-number -1 c: -2)
+	(up-set-placement-data my-player-number -1 c: -6)
 	(set-strategic-number sn-placement-zone-size 5)
 	(set-strategic-number sn-placement-fail-delta 0)
 	(up-build place-control 0 c: market)
@@ -20907,7 +20915,7 @@
 	(release-escrow wood)
 	(set-escrow-percentage wood 0)
 	(up-assign-builders c: market c: 2)
-	(up-set-placement-data my-player-number -1 c: -2)
+	(up-set-placement-data my-player-number -1 c: -6)
 	(set-strategic-number sn-placement-zone-size 5)
 	(set-strategic-number sn-placement-fail-delta 0)
 	(up-build place-control 0 c: market)
@@ -20924,7 +20932,7 @@
 	(can-build market)
 =>
 	(up-assign-builders c: market c: 2)
-	(up-set-placement-data my-player-number -1 c: -2)
+	(up-set-placement-data my-player-number -1 c: -6)
 	(set-strategic-number sn-placement-zone-size 5)
 	(set-strategic-number sn-placement-fail-delta 0)
 	(up-build place-control 0 c: market)
@@ -20943,7 +20951,7 @@
 	(release-escrow wood)
 	(set-escrow-percentage wood 0)
 	(up-assign-builders c: market c: 2)
-	(up-set-placement-data my-player-number -1 c: -2)
+	(up-set-placement-data my-player-number -1 c: -6)
 	(set-strategic-number sn-placement-zone-size 5)
 	(set-strategic-number sn-placement-fail-delta 0)
 	(up-build place-control 0 c: market)
@@ -22844,7 +22852,8 @@
 	(can-build-with-escrow university)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -22854,7 +22863,8 @@
 	(can-build-with-escrow university)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -23362,7 +23372,8 @@
 	(building-type-count-total university < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -23438,7 +23449,7 @@
 
 (defrule
 	(up-compare-goal gl-archery-class-units > 5)
-	(research-completed ri-fletching)
+	(up-research-status c: ri-fletching >= research-pending)
 	(can-research ri-padded-archer-armor)
 =>
 	(research ri-padded-archer-armor)
@@ -23446,7 +23457,7 @@
 
 (defrule
 	(up-compare-goal gl-archery-class-units > 5)
-	(research-completed ri-bodkin-arrow)
+	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-leather-archer-armor)
 =>
 	(research ri-leather-archer-armor)
@@ -23454,7 +23465,7 @@
 
 (defrule
 	(up-compare-goal gl-archery-class-units > 5)
-	(research-completed ri-bracer)
+	(up-research-status c: ri-bracer >= research-pending)
 	(can-research ri-ring-archer-armor)
 =>
 	(research ri-ring-archer-armor)
@@ -23475,8 +23486,8 @@
 
 (defrule
 	(up-compare-goal gl-archery-class-units > 5)
-	(research-completed ri-crossbow)
-	(research-completed ri-bodkin-arrow)
+	(up-research-status c: ri-crossbow >= research-pending)
+	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-thumb-ring)
 =>
 	(research ri-thumb-ring)
@@ -23488,7 +23499,8 @@
 	(can-build-with-escrow university)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -23540,7 +23552,8 @@
 	(building-type-count-total university < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -23604,7 +23617,7 @@
 
 (defrule
 	(unit-type-count-total archer-line >= 3)
-	(research-completed ri-fletching)
+	(up-research-status c: ri-fletching >= research-pending)
 	(can-research ri-padded-archer-armor)
 =>
 	(research ri-padded-archer-armor)
@@ -23612,7 +23625,7 @@
 
 (defrule
 	(unit-type-count-total archer-line >= 3)
-	(research-completed ri-bodkin-arrow)
+	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-leather-archer-armor)
 =>
 	(research ri-leather-archer-armor)
@@ -23620,7 +23633,7 @@
 
 (defrule
 	(unit-type-count-total archer-line >= 3)
-	(research-completed ri-bracer)
+	(up-research-status c: ri-bracer >= research-pending)
 	(can-research ri-ring-archer-armor)
 =>
 	(research ri-ring-archer-armor)
@@ -23641,8 +23654,8 @@
 
 (defrule
 	(unit-type-count-total archer-line >= 3)
-	(research-completed ri-crossbow)
-	(research-completed ri-bodkin-arrow)
+	(up-research-status c: ri-crossbow >= research-pending)
+	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-thumb-ring)
 =>
 	(research ri-thumb-ring)
@@ -23654,7 +23667,8 @@
 	(building-type-count-total university < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -23748,7 +23762,7 @@
 
 (defrule
 	(unit-type-count-total skirmisher-line >= 3)
-	(research-completed ri-fletching)
+	(up-research-status c: ri-fletching >= research-pending)
 	(can-research ri-padded-archer-armor)
 =>
 	(research ri-padded-archer-armor)
@@ -23756,7 +23770,7 @@
 
 (defrule
 	(unit-type-count-total skirmisher-line >= 3)
-	(research-completed ri-bodkin-arrow)
+	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-leather-archer-armor)
 =>
 	(research ri-leather-archer-armor)
@@ -23764,7 +23778,7 @@
 
 (defrule
 	(unit-type-count-total skirmisher-line >= 3)
-	(research-completed ri-bracer)
+	(up-research-status c: ri-bracer >= research-pending)
 	(can-research ri-ring-archer-armor)
 =>
 	(research ri-ring-archer-armor)
@@ -23785,8 +23799,8 @@
 
 (defrule
 	(unit-type-count-total skirmisher-line >= 3)
-	(research-completed ri-elite-skirmisher)
-	(research-completed ri-bodkin-arrow)
+	(up-research-status c: ri-elite-skirmisher >= research-pending)
+	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-thumb-ring)
 =>
 	(research ri-thumb-ring)
@@ -23798,7 +23812,8 @@
 	(building-type-count-total university < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -23891,7 +23906,7 @@
 
 (defrule
 	(unit-type-count-total longbowman-line > 5)
-	(research-completed ri-fletching)
+	(up-research-status c: ri-fletching >= research-pending)
 	(can-research ri-padded-archer-armor)
 =>
 	(research ri-padded-archer-armor)
@@ -23899,7 +23914,7 @@
 
 (defrule
 	(unit-type-count-total longbowman-line > 5)
-	(research-completed ri-bodkin-arrow)
+	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-leather-archer-armor)
 =>
 	(research ri-leather-archer-armor)
@@ -23907,20 +23922,10 @@
 
 (defrule
 	(unit-type-count-total longbowman-line > 5)
-	(research-completed ri-bracer)
+	(up-research-status c: ri-bracer >= research-pending)
 	(can-research ri-ring-archer-armor)
 =>
 	(research ri-ring-archer-armor)
-)
-
-(defrule
-	(unit-type-count-total longbowman-line > 5)
-	(building-type-count-total archery-range == 0)
-	(research-available ri-thumb-ring)
-	(can-build-with-escrow archery-range)
-=>
-	(up-modify-escrow wood c:- 175)
-	(build archery-range)
 )
 
 (defrule
@@ -23929,7 +23934,8 @@
 	(building-type-count-total university < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -24022,7 +24028,7 @@
 
 (defrule
 	(unit-type-count-total chu-ko-nu-line > 5)
-	(research-completed ri-fletching)
+	(up-research-status c: ri-fletching >= research-pending)
 	(can-research ri-padded-archer-armor)
 =>
 	(research ri-padded-archer-armor)
@@ -24030,7 +24036,7 @@
 
 (defrule
 	(unit-type-count-total chu-ko-nu-line > 5)
-	(research-completed ri-bodkin-arrow)
+	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-leather-archer-armor)
 =>
 	(research ri-leather-archer-armor)
@@ -24038,7 +24044,7 @@
 
 (defrule
 	(unit-type-count-total chu-ko-nu-line > 5)
-	(research-completed ri-bracer)
+	(up-research-status c: ri-bracer >= research-pending)
 	(can-research ri-ring-archer-armor)
 =>
 	(research ri-ring-archer-armor)
@@ -24067,7 +24073,8 @@
 	(building-type-count-total university < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -24160,7 +24167,7 @@
 
 (defrule
 	(unit-type-count-total plumed-archer-line > 5)
-	(research-completed ri-fletching)
+	(up-research-status c: ri-fletching >= research-pending)
 	(can-research ri-padded-archer-armor)
 =>
 	(research ri-padded-archer-armor)
@@ -24168,7 +24175,7 @@
 
 (defrule
 	(unit-type-count-total plumed-archer-line > 5)
-	(research-completed ri-bodkin-arrow)
+	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-leather-archer-armor)
 =>
 	(research ri-leather-archer-armor)
@@ -24176,7 +24183,7 @@
 
 (defrule
 	(unit-type-count-total plumed-archer-line > 5)
-	(research-completed ri-bracer)
+	(up-research-status c: ri-bracer >= research-pending)
 	(can-research ri-ring-archer-armor)
 =>
 	(research ri-ring-archer-armor)
@@ -24205,7 +24212,8 @@
 	(building-type-count-total university < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -24298,7 +24306,7 @@
 
 (defrule
 	(unit-type-count-total rattan-archer-line > 5)
-	(research-completed ri-fletching)
+	(up-research-status c: ri-fletching >= research-pending)
 	(can-research ri-padded-archer-armor)
 =>
 	(research ri-padded-archer-armor)
@@ -24306,7 +24314,7 @@
 
 (defrule
 	(unit-type-count-total rattan-archer-line > 5)
-	(research-completed ri-bodkin-arrow)
+	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-leather-archer-armor)
 =>
 	(research ri-leather-archer-armor)
@@ -24314,7 +24322,7 @@
 
 (defrule
 	(unit-type-count-total rattan-archer-line > 5)
-	(research-completed ri-bracer)
+	(up-research-status c: ri-bracer >= research-pending)
 	(can-research ri-ring-archer-armor)
 =>
 	(research ri-ring-archer-armor)
@@ -24343,7 +24351,8 @@
 	(building-type-count-total university < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -24370,7 +24379,7 @@
 
 (defrule
 	(up-compare-goal gl-cavalry-archer-units > 5)
-	(research-completed ri-fletching)
+	(up-research-status c: ri-fletching >= research-pending)
 	(can-research ri-padded-archer-armor)
 =>
 	(research ri-padded-archer-armor)
@@ -24378,7 +24387,7 @@
 
 (defrule
 	(up-compare-goal gl-cavalry-archer-units > 5)
-	(research-completed ri-bodkin-arrow)
+	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-leather-archer-armor)
 =>
 	(research ri-leather-archer-armor)
@@ -24386,7 +24395,7 @@
 
 (defrule
 	(up-compare-goal gl-cavalry-archer-units > 5)
-	(research-completed ri-bracer)
+	(up-research-status c: ri-bracer >= research-pending)
 	(can-research ri-ring-archer-armor)
 =>
 	(research ri-ring-archer-armor)
@@ -24491,7 +24500,8 @@
 	(building-type-count-total university < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -24518,7 +24528,7 @@
 
 (defrule
 	(unit-type-count-total cavalry-archer-line > 5)
-	(research-completed ri-fletching)
+	(up-research-status c: ri-fletching >= research-pending)
 	(can-research ri-padded-archer-armor)
 =>
 	(research ri-padded-archer-armor)
@@ -24526,7 +24536,7 @@
 
 (defrule
 	(unit-type-count-total cavalry-archer-line > 5)
-	(research-completed ri-bodkin-arrow)
+	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-leather-archer-armor)
 =>
 	(research ri-leather-archer-armor)
@@ -24662,7 +24672,8 @@
 	(building-type-count-total university < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -24689,7 +24700,7 @@
 
 (defrule
 	(unit-type-count-total mangudai-line > 5)
-	(research-completed ri-fletching)
+	(up-research-status c: ri-fletching >= research-pending)
 	(can-research ri-padded-archer-armor)
 =>
 	(research ri-padded-archer-armor)
@@ -24697,7 +24708,7 @@
 
 (defrule
 	(unit-type-count-total mangudai-line > 5)
-	(research-completed ri-bodkin-arrow)
+	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-leather-archer-armor)
 =>
 	(research ri-leather-archer-armor)
@@ -24830,7 +24841,8 @@
 	(building-type-count-total university < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -24857,7 +24869,7 @@
 
 (defrule
 	(unit-type-count-total ratha-set > 5)
-	(research-completed ri-fletching)
+	(up-research-status c: ri-fletching >= research-pending)
 	(can-research ri-padded-archer-armor)
 =>
 	(research ri-padded-archer-armor)
@@ -24865,7 +24877,7 @@
 
 (defrule
 	(unit-type-count-total ratha-set > 5)
-	(research-completed ri-bodkin-arrow)
+	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-leather-archer-armor)
 =>
 	(research ri-leather-archer-armor)
@@ -24982,7 +24994,8 @@
 	(building-type-count-total university < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -25009,7 +25022,7 @@
 
 (defrule
 	(unit-type-count-total camel-archer-line > 5)
-	(research-completed ri-fletching)
+	(up-research-status c: ri-fletching >= research-pending)
 	(can-research ri-padded-archer-armor)
 =>
 	(research ri-padded-archer-armor)
@@ -25017,7 +25030,7 @@
 
 (defrule
 	(unit-type-count-total camel-archer-line > 5)
-	(research-completed ri-bodkin-arrow)
+	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-leather-archer-armor)
 =>
 	(research ri-leather-archer-armor)
@@ -25150,7 +25163,8 @@
 	(building-type-count-total university < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -25177,7 +25191,7 @@
 
 (defrule
 	(unit-type-count-total war-wagon-line > 5)
-	(research-completed ri-fletching)
+	(up-research-status c: ri-fletching >= research-pending)
 	(can-research ri-padded-archer-armor)
 =>
 	(research ri-padded-archer-armor)
@@ -25185,7 +25199,7 @@
 
 (defrule
 	(unit-type-count-total war-wagon-line > 5)
-	(research-completed ri-bodkin-arrow)
+	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-leather-archer-armor)
 =>
 	(research ri-leather-archer-armor)
@@ -25318,7 +25332,8 @@
 	(building-type-count-total university < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -25345,7 +25360,7 @@
 
 (defrule
 	(unit-type-count-total genitour-line > 5)
-	(research-completed ri-fletching)
+	(up-research-status c: ri-fletching >= research-pending)
 	(can-research ri-padded-archer-armor)
 =>
 	(research ri-padded-archer-armor)
@@ -25353,7 +25368,7 @@
 
 (defrule
 	(unit-type-count-total genitour-line > 5)
-	(research-completed ri-bodkin-arrow)
+	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-leather-archer-armor)
 =>
 	(research ri-leather-archer-armor)
@@ -25465,7 +25480,8 @@
 	(building-type-count-total university < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 
 (defrule
@@ -25492,7 +25508,7 @@
 
 (defrule
 	(unit-type-count-total kipchak-set > 5)
-	(research-completed ri-fletching)
+	(up-research-status c: ri-fletching >= research-pending)
 	(can-research ri-padded-archer-armor)
 =>
 	(research ri-padded-archer-armor)
@@ -25500,7 +25516,7 @@
 
 (defrule
 	(unit-type-count-total kipchak-set > 5)
-	(research-completed ri-bodkin-arrow)
+	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-leather-archer-armor)
 =>
 	(research ri-leather-archer-armor)
@@ -25633,7 +25649,8 @@
 	(building-type-count-total university < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build university)
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+    (up-build place-control 0 c: university)
 )
 (defrule
 	(unit-type-count-total kipchak-set > 5)
@@ -26185,6 +26202,24 @@
 	(players-unit-type-count focus-player eagle-warrior-line > 5)))))	
 =>
 	(train condottiero)
+)
+
+(defrule
+	(can-train condottiero)
+	(goal strategy-goal sg-boom-imp)
+	(building-type-count-total barracks > 0)
+=>
+	(train condottiero)
+)
+
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(building-type-count-total barracks < 6)
+	(can-build barracks)
+	(unit-type-count-total condottiero > 2)
+=>
+	(up-set-placement-data my-player-number -1 c: 13)
+    (up-build place-control 0 c: barracks)
 )
 
 (defrule
@@ -27036,7 +27071,7 @@
 (defrule
 	(unit-type-count-total cavalry-class > 4)
 	(or (research-available ri-cavalier)
-	(research-completed ri-cavalier))
+	(up-research-status c: ri-cavalier >= research-pending))
 	;(goal strategy-goal gl-archerrush)
 	(can-research ri-iron-casting)
 =>
@@ -27121,7 +27156,7 @@
 
 (defrule
 	(unit-type-count-total infantry-class > 4)
-	(research-completed ri-chain-mail)
+	(up-research-status c: ri-chain-mail >= research-pending)
 	(current-age == castle-age)
 	;(goal strategy-goal gl-archerrush)
 	(can-research ri-forging)
@@ -27131,7 +27166,7 @@
 
 (defrule
 	(unit-type-count-total infantry-class > 4)
-	(research-completed ri-plate-mail)
+	(up-research-status c: ri-plate-mail >= research-pending)
 	(current-age >= imperial-age)
 	;(goal strategy-goal gl-archerrush)
 	(can-research ri-forging)
@@ -27141,7 +27176,7 @@
 
 (defrule
 	(unit-type-count-total infantry-class > 8)
-	(research-completed ri-chain-mail)
+	(up-research-status c: ri-chain-mail >= research-pending)
 	;(goal strategy-goal gl-archerrush)
 	(can-research ri-iron-casting)
 =>
@@ -28055,7 +28090,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(research-completed ri-two-handed-swordsman)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
 =>
 	(research ri-supplies)
@@ -28102,7 +28137,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(research-completed ri-two-handed-swordsman)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
 =>
 	(research ri-supplies)
@@ -28122,7 +28157,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(research-completed ri-two-handed-swordsman)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
 =>
 	(research ri-supplies)
@@ -28169,7 +28204,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(research-completed ri-two-handed-swordsman)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
 =>
 	(research ri-supplies)
@@ -28216,7 +28251,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(research-completed ri-two-handed-swordsman)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
 =>
 	(research ri-supplies)
@@ -28263,7 +28298,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(research-completed ri-two-handed-swordsman)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
 =>
 	(research ri-supplies)
@@ -28310,7 +28345,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(research-completed ri-two-handed-swordsman)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
 =>
 	(research ri-supplies)
@@ -28357,7 +28392,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(research-completed ri-two-handed-swordsman)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
 =>
 	(research ri-supplies)
@@ -28408,7 +28443,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(research-completed ri-two-handed-swordsman)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
 	(players-unit-type-count focus-player militiaman-line >= 6)
 =>
@@ -28456,7 +28491,7 @@
 )
 (defrule
 	(current-age >= imperial-age)
-	(research-completed ri-two-handed-swordsman)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
 =>
 	(research ri-supplies)
@@ -28503,7 +28538,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(research-completed ri-two-handed-swordsman)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
 =>
 	(research ri-supplies)
@@ -28550,7 +28585,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(research-completed ri-two-handed-swordsman)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
 =>
 	(research ri-supplies)
@@ -28597,7 +28632,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(research-completed ri-two-handed-swordsman)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
 =>
 	(research ri-supplies)
@@ -28644,7 +28679,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(research-completed ri-two-handed-swordsman)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
 =>
 	(research ri-supplies)
@@ -28691,7 +28726,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(research-completed ri-two-handed-swordsman)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
 =>
 	(research ri-supplies)
