@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.1.0
-;last update: 25th March 2023
+;last update: 26th March 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -3073,7 +3073,7 @@
 #load-if-not-defined UP-POCKET-POSITION
 
 (defrule
-	(random-number < 40)
+	(random-number < 50)
 =>
 	(set-goal strategy-goal sg-archerrush)	
 	(set-goal d-villager-goal 21)
@@ -3085,8 +3085,8 @@
 )
 
 (defrule
-	(random-number >= 40)
-	(random-number < 65)
+	(random-number >= 50)
+	(random-number < 75)
 =>
 	(set-goal strategy-goal sg-drush)	
 	(set-goal d-villager-goal 26)
@@ -3100,7 +3100,7 @@
 
 (defrule
 	(random-number >= 100)
-	(random-number < 65)
+	(random-number < 75)
 =>
 	(set-goal strategy-goal sg-towerrush)	
 	(set-goal d-villager-goal 18)
@@ -3112,8 +3112,8 @@
 )
 
 (defrule
-	(random-number >= 65)
-	(random-number < 80)
+	(random-number >= 75)
+	(random-number < 90)
 =>
 	(set-goal strategy-goal sg-scoutrush)	
 	(set-goal d-villager-goal 20)
@@ -3125,8 +3125,8 @@
 )
 
 (defrule
-	(random-number >= 80)
-	(random-number < 90)
+	(random-number >= 90)
+	(random-number < 100)
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)	
 	(set-goal d-villager-goal 26)
@@ -3138,7 +3138,7 @@
 )
 
 (defrule
-	(random-number >= 90)
+	(random-number >= 100) ;only go fc-gu if pocket is going scoutrush
 =>
 	(set-goal strategy-goal sg-fastcastle-gu)	
 	(set-goal d-villager-goal 26)
@@ -14476,9 +14476,12 @@
 	(up-filter-include cmdid-military -1 -1 -1)	
 	(up-filter-exclude -1 -1 -1 siege-weapon-class)
 	(up-filter-exclude -1 -1 -1 armored-elephant-line)
-	(up-remove-objects search-local object-data-type == battering-ram)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
+	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
+	(up-remove-objects search-local object-data-upgrade-type == siege-ram)
 	(up-remove-objects search-local object-data-type == armored-elephant)
+	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
 	(up-find-local c: -1 c: 40)	;how many units should retreat?
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
@@ -14533,9 +14536,12 @@
 	(up-filter-include cmdid-military -1 -1 -1)	
 	(up-filter-exclude -1 -1 -1 siege-weapon-class)
 	(up-filter-exclude -1 -1 -1 armored-elephant-line)
-	(up-remove-objects search-local object-data-type == battering-ram)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
+	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
+	(up-remove-objects search-local object-data-upgrade-type == siege-ram)
 	(up-remove-objects search-local object-data-type == armored-elephant)
+	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
 	(up-find-local c: -1 c: 40)	
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
@@ -14592,11 +14598,18 @@
 	(up-filter-exclude -1 -1 -1 cavalry-class)
 	(up-filter-exclude -1 -1 -1 scout-cavalry-class)
 	(up-remove-objects search-local object-data-class == cavalry-class)
-	(up-remove-objects search-local object-data-type == battering-ram)
-	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-class == scout-cavalry-class)
+	(up-remove-objects search-local object-data-type == feudal-battering-ram)
+	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
+	(up-remove-objects search-local object-data-upgrade-type == siege-ram)
 	(up-remove-objects search-local object-data-type == armored-elephant)
-		(up-remove-objects search-local object-data-type == eagle-warrior)
+	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
+	(up-remove-objects search-local object-data-type == eagle-warrior)
+	(up-remove-objects search-local object-data-upgrade-type == heavy-eagle-warrior)
+	(up-remove-objects search-local object-data-upgrade-type == elite-eagle-warrior)
+	(up-remove-objects search-local object-data-type == huskarl)
+	(up-remove-objects search-local object-data-upgrade-type == elite-huskarl)
 	(set-goal split-rule-goal 47)
 )
 
@@ -14627,13 +14640,19 @@
 	(up-filter-exclude -1 -1 -1 cavalry-class) 
 	(up-filter-exclude -1 -1 -1 scout-cavalry-class) 
 	(up-find-local c: -1 c: 40)	
-	(up-remove-objects search-local object-data-class == cavalry-class)
-	(up-remove-objects search-local object-data-type == battering-ram)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
-	(up-remove-objects search-local object-data-class == scout-cavalry-class)
+	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
+	(up-remove-objects search-local object-data-upgrade-type == siege-ram)
 	(up-remove-objects search-local object-data-type == armored-elephant)
+	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
 	(up-remove-objects search-local object-data-type == eagle-warrior)
+	(up-remove-objects search-local object-data-upgrade-type == heavy-eagle-warrior)
+	(up-remove-objects search-local object-data-upgrade-type == elite-eagle-warrior)
 	(up-remove-objects search-local object-data-type == huskarl)
+	(up-remove-objects search-local object-data-upgrade-type == elite-huskarl)
+	(up-remove-objects search-local object-data-class == cavalry-class)
+	(up-remove-objects search-local object-data-class == scout-cavalry-class)
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
@@ -14690,12 +14709,18 @@
 	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
 	(up-filter-exclude -1 -1 -1 cavalry-class)
 	(up-find-local c: -1 c: 40)	
-	(up-remove-objects search-local object-data-class == cavalry-class)
-	(up-remove-objects search-local object-data-type == battering-ram)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
+	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
+	(up-remove-objects search-local object-data-upgrade-type == siege-ram)
 	(up-remove-objects search-local object-data-type == armored-elephant)
+	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
 	(up-remove-objects search-local object-data-type == eagle-warrior)
+	(up-remove-objects search-local object-data-upgrade-type == heavy-eagle-warrior)
+	(up-remove-objects search-local object-data-upgrade-type == elite-eagle-warrior)
 	(up-remove-objects search-local object-data-type == huskarl)
+	(up-remove-objects search-local object-data-upgrade-type == elite-huskarl)
+	(up-remove-objects search-local object-data-class == cavalry-class)
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
@@ -14943,8 +14968,12 @@
 	(up-filter-include cmdid-military -1 -1 -1)
 	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
 	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
-	; (up-remove-objects search-local object-data-class == siege-weapon-class)
-	; (up-remove-objects search-local object-data-type == armored-elephant)
+	(up-remove-objects search-local object-data-type == feudal-battering-ram)
+	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
+	(up-remove-objects search-local object-data-upgrade-type == siege-ram)
+	(up-remove-objects search-local object-data-type == armored-elephant)
+	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
 	(set-goal split-rule-goal 3)
 )
 
@@ -14972,9 +15001,12 @@
 	(up-filter-include cmdid-military -1 -1 -1)	
 	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
 	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
-	(up-remove-objects search-local object-data-type == battering-ram)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
+	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
+	(up-remove-objects search-local object-data-upgrade-type == siege-ram)
 	(up-remove-objects search-local object-data-type == armored-elephant)
+	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
 	(up-find-local c: -1 c: 40)	
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
@@ -15124,9 +15156,10 @@
 	(up-filter-exclude -1 -1 -1 infantry-class)
 	(up-remove-objects search-local object-data-class == scout-cavalry-class)
 	(up-remove-objects search-local object-data-class == cavalry-class)
-	(up-remove-objects search-local object-data-class == siege-weapon-class)
 	(up-remove-objects search-local object-data-class == infantry-class)
+	(up-remove-objects search-local object-data-class == siege-weapon-class)
 	(up-remove-objects search-local object-data-type == armored-elephant)
+	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
 	(up-find-local c: -1 c: 40)	
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
@@ -15195,9 +15228,10 @@
 	(up-filter-exclude -1 -1 -1 infantry-class)
 	(up-remove-objects search-local object-data-class == scout-cavalry-class)
 	(up-remove-objects search-local object-data-class == cavalry-class)
-	(up-remove-objects search-local object-data-class == siege-weapon-class)
 	(up-remove-objects search-local object-data-class == infantry-class)
+	(up-remove-objects search-local object-data-class == siege-weapon-class)
 	(up-remove-objects search-local object-data-type == armored-elephant)
+	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
 	(up-find-local c: -1 c: 40)	
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
