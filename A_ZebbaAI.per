@@ -79,6 +79,7 @@
 
 ;what's up next:
 
+; - fix house placements on nomad
 ; - fix bug in escrow saving system (or notification) the notification keeps getting spammed for some reason
 ; - fix preferation of training gold units (knights/archers) in imp over getting their upgrades first
 ; - split up retreat rules for enemy towers into pre- & and post-castle-age
@@ -90,6 +91,8 @@
 ; - place additional tcs more controlled (reduce town-size before building?)
 ; - enhance house placement rules, to get a more random placement around the base to increase the AIs LOS
 ; - fix research of eco-upgrades for burgundians when fcing
+; - fix asking for resources when almost dead
+
 
 ; - in TGs, improve pocket-players attack speed when going for a scout-rush and the flank is rushing as well
 ; - try to retreat only 1 unit at a time from enemy fortifications
@@ -672,7 +675,7 @@
 	(set-strategic-number sn-allow-adjacent-dropsites 1)
 	(set-strategic-number sn-nomad-style-start 0)	
 	(set-strategic-number sn-number-forward-builders 6)
-	(set-strategic-number sn-dock-training-filter 0)
+	(set-strategic-number sn-dock-training-filter 1)
 	(set-strategic-number sn-percent-building-cancellation 35)
 	(set-strategic-number sn-allow-serjeant-building 1)
 	(set-difficulty-parameter ability-to-dodge-missiles 0)
@@ -738,6 +741,7 @@
 	(set-strategic-number sn-filter-under-attack 1)
 	(set-strategic-number sn-disable-builder-assistance 1)
 	(set-strategic-number sn-disable-defend-groups 1)
+	(set-strategic-number sn-dock-proximity-factor 100)
 	(disable-self)
 )
 
@@ -1821,6 +1825,15 @@
 	(disable-self)
 )
 
+#load-if-defined UP-NOMAD-STYLE
+
+(defrule
+	(up-gaia-type-count c: ocean-fish-class > 0)
+=>
+	(set-goal gl-water-on-map 1)
+)
+
+#end-if
 ;endregion
 
 ;region Scouting the Map in 1v1 ====================================
@@ -1850,7 +1863,41 @@
 
 ;endregion
 
-;region Garrison sheep in mill as Gurjaras =========================
+;region Sending livestock to tc on nomad
+
+#load-if-defined UP-NOMAD-STYLE
+
+(defrule
+	(civ-selected gurjaras)
+	(building-type-count mill > 0)
+=>
+	(up-jump-rule 2)
+)
+
+(defrule
+	(current-age == dark-age)
+	(building-type-count town-center > 0)
+	(unit-type-count livestock-class > 0)
+=>
+	(up-full-reset-search)
+	(up-find-local c: livestock-class c: 8)
+)
+
+(defrule
+	(current-age == dark-age)
+	(building-type-count town-center > 0)
+	(unit-type-count livestock-class > 0)
+=>
+	(up-set-target-point gl-starting-tc-x)
+	(up-target-point 0 action-default -1 -1)
+	;(chat-to-player my-player-number "Sending sheep to tc")
+)
+
+#end-if
+
+;endregion
+
+;region Garrison livestock in mill as Gurjaras =========================
 
 (defrule
 	(not (civ-selected gurjaras))
@@ -15745,21 +15792,23 @@
 )
 
 #load-if-defined UP-ALLY-IN-GAME
+#load-if-not-defined UP-NOMAD-STYLE
 
 ;region Finding Enemy TC x/y position (not working on Nomad)
 
 
 (defrule
 	(players-building-type-count any-enemy town-center > 0)
-	;(timer-triggered t-3-sec)
-	;(up-compare-goal enemy-point-x == -1) ;todo
 =>	
 	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 	(up-full-reset-search)
-	; (up-filter-status c: status-ready c: list-active)
-	; (up-find-status-remote c: town-center c: 1)
 	(up-find-remote c: town-center c: 1)
+)
+
+(defrule
+	(players-building-type-count any-enemy town-center > 0)
 	(up-set-target-object search-remote c: 0)
+=>
 	(up-get-point position-object enemy-point-x)
 	;(up-send-flare enemy-point-x)
 )
@@ -15779,10 +15828,65 @@
 	; (up-store-player-name focus-player)
 	; (up-chat-data-to-player every-ally text-enemy-located-here c: 7031232)
 	(chat-to-allies " 16 Enemy Town Center here")
-	(up-chat-data-to-self "Mein Gegner ist Spieler %d" s: sn-target-player-number)
-	(up-chat-data-to-self "Mein Gegner ist %s" c: 7031232)
+	(up-chat-data-to-self "My enemy is player %d" s: sn-target-player-number)
+	(up-chat-data-to-self "My enemy is %s" c: 7031232)
 	(disable-self)
 )
+
+#end-if
+
+#load-if-defined UP-NOMAD-STYLE
+
+(defrule
+	(players-building-type-count any-enemy town-center > 0)
+=>	
+	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	(up-full-reset-search)
+	(up-find-remote c: town-center c: 1)
+)
+
+(defrule
+	(players-building-type-count any-enemy town-center > 0)
+	(up-set-target-object search-remote c: 0)
+=>
+	(up-get-point position-object enemy-point-x)
+	;(up-send-flare enemy-point-x)
+)
+
+(defrule
+	(game-time > 5)
+	(players-building-type-count any-enemy town-center > 0)
+=>
+	(up-full-reset-search)
+	; (up-filter-status c: status-ready c: list-active)
+	; (up-find-status-remote c: town-center c: 1)
+	(up-find-remote c: town-center c: 1)
+)
+
+(defrule
+	(game-time > 5)
+	(players-building-type-count any-enemy town-center > 0)
+	(up-set-target-object search-remote c: 0)
+=>
+	(up-get-point position-object enemy-point-x)
+)
+
+(defrule
+	(up-point-explored enemy-point-x != explored-no)
+	(game-time > 5)
+	(players-building-type-count any-enemy town-center > 0)
+=>
+	(up-send-flare enemy-point-x)
+	; (up-store-player-name focus-player)
+	; (up-chat-data-to-player every-ally text-enemy-located-here c: 7031232)
+	(chat-to-allies " 16 Enemy Town Center here")
+	(up-chat-data-to-self "My enemy is player %d" s: sn-target-player-number)
+	(up-chat-data-to-self "My enemy is %s" c: 7031232)
+	(disable-self)
+)
+
+#end-if
+
 ;endregion
 
 ;region Finding Enemy Castle x/y position
@@ -15874,7 +15978,7 @@
 	(up-set-target-object search-local c: 0)
 	(up-get-point position-object gl-starting-tc-x)
 	(up-send-flare gl-starting-tc-x)
-	(chat-to-allies "Ich bin hier!")
+	(chat-to-allies "I am here!")
 	(disable-self)
 )
 
@@ -15923,24 +16027,23 @@
 	;(timer-triggered t-3-sec)
 	;(up-compare-goal enemy-point-x == -1) ;todo
 =>	
-	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 	(up-full-reset-search)
-	; (up-filter-status c: status-ready c: list-active)
-	; (up-find-status-remote c: town-center c: 1)
 	(up-find-remote c: town-center c: 1)
+)
+
+(defrule
+	(players-building-type-count any-enemy town-center > 0)
 	(up-set-target-object search-remote c: 0)
+=>
 	(up-get-point position-object enemy-point-x)
 	;(up-send-flare enemy-point-x)
 )
 
 (defrule
-	;(up-set-target-object search-remote c: 0)
 	(game-time > 5)
 	(players-building-type-count any-enemy town-center > 0)
 =>
 	(up-full-reset-search)
-	; (up-filter-status c: status-ready c: list-active)
-	; (up-find-status-remote c: town-center c: 1)
 	(up-find-remote c: town-center c: 1)
 	(up-set-target-object search-remote c: 0)
 	(up-get-point position-object enemy-point-x)
@@ -15948,8 +16051,8 @@
 	; (up-store-player-name focus-player)
 	; (up-chat-data-to-player every-ally text-enemy-located-here c: 7031232)
 	;(chat-to-allies " 16 Enemy Town Center here")
-	(up-chat-data-to-self "Mein Gegner ist Spieler %d" s: sn-target-player-number)
-	(up-chat-data-to-self "Mein Gegner ist %s" c: 7031232)
+	(up-chat-data-to-self "My enemy is player %d" s: sn-target-player-number)
+	(up-chat-data-to-self "My enemy is %s" c: 7031232)
 	(disable-self)
 )
 ;endregion
@@ -16034,7 +16137,7 @@
 	(up-set-target-object search-local c: 0)
 	(up-get-point position-object gl-starting-tc-x)
 	;(up-send-flare gl-starting-tc-x)
-	;(chat-to-allies "Ich bin hier!")
+	;(chat-to-allies "I am here!")
 	(disable-self)
 )
 
@@ -16197,6 +16300,7 @@
 	(current-age >= castle-age)
 =>
 	(set-strategic-number sn-dock-training-filter 2)
+	(set-strategic-number sn-dock-avoidance-factor 10)
 	(disable-self)
 )
 
@@ -16211,7 +16315,7 @@
 	(set-strategic-number sn-percent-civilian-explorers 100)
 	(set-strategic-number sn-cap-civilian-explorers 100)
 	(set-strategic-number sn-town-center-placement lumber-camp)
-	(chat-to-player my-player-number "Suche Wald fuer TC")
+	(chat-to-player my-player-number "Searching a forest for my TC")
 )
 
 (defrule
@@ -16220,15 +16324,37 @@
 	(building-type-count-total town-center == 0)
 	(resource-found wood)
 	(game-time > 5)
+	(up-gaia-type-count-total c: wood > 7)
+=>
+	;(set-strategic-number sn-town-center-placement lumber-camp)
+	(up-modify-sn sn-focus-player-number c:= 0)
+	(up-filter-status c: status-ready c: list-active)
+	(up-find-resource c: wood c: 200)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-player my-player-number "nr of trees: %d" g: gl-remote-total)
+)
+
+(defrule
+	(up-compare-goal gl-remote-total > 7)
+	(current-age >= dark-age)
+	(can-build town-center)
+	(building-type-count-total town-center == 0)
+	(resource-found wood)
+	(game-time > 5)
+	(up-gaia-type-count-total c: wood > 7)
 =>
 	(set-strategic-number sn-percent-civilian-explorers 0)
 	(set-strategic-number sn-cap-civilian-explorers 0)
 	(set-strategic-number sn-cap-civilian-gatherers 0)
 	(set-strategic-number sn-total-number-explorers 1)
 	(set-strategic-number sn-number-explore-groups 1)
-	(set-strategic-number sn-town-center-placement lumber-camp)
+	(up-set-target-object search-remote c: 0)
+	(up-get-point position-object gl-temp-x)
+	(up-set-target-point gl-temp-x)
+	(set-strategic-number sn-placement-zone-size 5)
+	(set-strategic-number sn-placement-fail-delta 1)
 	(up-assign-builders c: town-center-foundation c: 3)
-	(build town-center)
+	(up-build place-point 0 c: town-center)
 	(chat-to-player my-player-number "Building my tc")
 )
 
@@ -16242,11 +16368,22 @@
 (defrule
 	(current-age == dark-age)
 	(can-build farm)
-	(unit-type-count fishing-ship == 0)
+	(or (unit-type-count fishing-ship >= 5)
+	(or (building-type-count-total dock < 1)
+	(wood-amount > 90)))
 	(idle-farm-count < 1)
 =>
 	(build farm)
 )
+
+; (defrule
+	; (wood-amount > 60)
+	; (not (can-build farm))
+	; (building-type-count mill > 0)
+; =>
+	; (up-modify-sn sn-maximum-town-size c:+ 2)
+	; (up-chat-data-to-player my-player-number "Town Size: %d" s: sn-maximum-town-size)
+; )
 
 #end-if
 
@@ -16346,7 +16483,7 @@
 	(disable-self)
 )
 
-
+#load-if-not-defined UP-NOMAD-STYLE
 ;first house
 
 (defrule
@@ -16358,7 +16495,7 @@
 )
 
 (defrule
-	(building-type-count-total town-center >= 1)
+	(building-type-count town-center >= 1)
 	(building-type-count-total house < 1)
     (up-pending-objects c: house < 1)
 	(housing-headroom < 3)
@@ -16400,7 +16537,7 @@
 )
 
 (defrule
-	(building-type-count-total town-center >= 1)
+	(building-type-count town-center >= 1)
 	(building-type-count-total house < 1)
     (up-pending-objects c: house < 1)
 	(housing-headroom < 3)
@@ -16491,7 +16628,7 @@
 )
 
 (defrule
-	(building-type-count-total town-center >= 1)
+	(building-type-count town-center >= 1)
 	(building-type-count-total house < 1)
     (up-pending-objects c: house < 1)
 	(housing-headroom < 3)
@@ -16503,11 +16640,11 @@
     (up-build-line gl-temp-x gl-temp-x c: house)
 	;(up-set-placement-data my-player-number town-center c: -10)
     ;(up-build place-control 0 c: house)
-	;(chat-to-player my-player-number "Building first house")
+	(chat-to-player my-player-number "Building first house")
 )
 
 (defrule
-	(building-type-count-total town-center >= 1)
+	(building-type-count town-center >= 1)
 	(building-type-count-total house < 1)
     (up-pending-objects c: house < 1)
 	(housing-headroom < 3)
@@ -16518,7 +16655,7 @@
     (build house)
 	;(up-set-placement-data my-player-number town-center c: -10)
     ;(up-build place-control 0 c: house)
-	;(chat-to-player my-player-number "Building first house after failed attempt")
+	(chat-to-player my-player-number "Building first house after failed attempt")
 )
 
 
@@ -16534,7 +16671,7 @@
 )
 
 (defrule
-	(building-type-count-total town-center >= 1)
+	(building-type-count town-center >= 1)
     (building-type-count-total house < 2)
     (up-pending-objects c: house < 2)
 	(housing-headroom < 3)
@@ -16576,7 +16713,7 @@
 )
 
 (defrule
-	(building-type-count-total town-center >= 1)
+	(building-type-count town-center >= 1)
     (building-type-count-total house < 2)
     (up-pending-objects c: house < 2)
 	(housing-headroom < 3)
@@ -16667,7 +16804,7 @@
 )
 
 (defrule
-	(building-type-count-total town-center >= 1)
+	(building-type-count town-center >= 1)
     (building-type-count-total house < 2)
     (up-pending-objects c: house < 2)
 	(housing-headroom < 3)
@@ -16679,7 +16816,7 @@
     (up-build-line gl-temp-x gl-temp-x c: house)
 	;(up-set-placement-data my-player-number town-center c: -10)
     ;(up-build place-control 0 c: house)
-	;(chat-to-player my-player-number "Building second house")
+	(chat-to-player my-player-number "Building second house")
 	(disable-self)
 )
 
@@ -16710,7 +16847,7 @@
 	(game-time > 10)
 	(civilian-population > 5)
 	(housing-headroom < 4)
-	(building-type-count-total town-center > 0)
+	(building-type-count town-center > 0)
 	(up-pending-objects c: house < 1)
 =>
 	(set-goal gl-house 1)
@@ -16723,7 +16860,7 @@
 	(game-time > 10)
 	(civilian-population > 5)
 	(housing-headroom < 5)
-	(building-type-count-total town-center > 0)
+	(building-type-count town-center > 0)
 	(up-pending-objects c: house < 1)
 =>
 	(set-goal gl-house 1)
@@ -16883,6 +17020,10 @@
     ;(up-build place-control 0 c: house)
 )
 
+#end-if
+
+
+
 (defrule
 	(current-age == dark-age)
 	(civilian-population >= 7)
@@ -16897,6 +17038,15 @@
 )
 
 #load-if-defined UP-NOMAD-STYLE
+
+(defrule
+	(current-age == dark-age)
+	(can-build house)
+	(housing-headroom < 5)
+	(up-pending-objects c: house < 1)
+=>
+	(build house)
+)
 
 (defrule
 	;(goal strategy-goal sg-waterplay)
@@ -17034,13 +17184,12 @@
 (defrule
 	(up-compare-goal gl-water-on-map == 1)
 	(current-age == dark-age)
-	; (civilian-population > 10)
 	(can-train fishing-ship)
 	(up-compare-goal gl-military-advantage >= -2)
-	(wood-amount > 75)
-	(unit-type-count-total fishing-ship < 5)
+	(unit-type-count-total fishing-ship < 8)
 =>
 	(train fishing-ship)
+	(up-modify-goal f-villager-goal c:+ 1)
 	;(chat-to-player my-player-number "Erschaffe Fischkutter")
 )
 
@@ -17049,8 +17198,7 @@
 	(current-age == feudal-age)
 	(can-train fishing-ship)
 	(up-compare-goal gl-military-advantage >= -2)
-	(wood-amount > 75)
-	(unit-type-count-total fishing-ship < 10)
+	(unit-type-count-total fishing-ship < 15)
 	(or (civilian-population g:< f-villager-goal)
 	(up-research-status c: castle-age == research-pending))
 =>
@@ -17425,7 +17573,7 @@
 
 (defrule
 	(current-age >= dark-age)
-	(civilian-population >= 15)
+	(civilian-population >= 11)
 	(not(resource-found food))
 	(building-type-count-total mill == 0)
 	(can-build mill)
@@ -18248,12 +18396,16 @@
 
 ;region Hunting Boar =============================================== 
 	
+#load-if-not-defined UP-NOMAD-STYLE	
+	
 (defrule
 	(current-age == dark-age)
 	(up-research-status c: feudal-age != research-pending)
 =>
 	(up-jump-rule 5)
 )
+
+#end-if
 	
 (defrule
 	(up-timer-status boar-timer != timer-running)	
@@ -18338,6 +18490,8 @@
 ;region Hunting Boar with TC (Still has some bugs) =================
 
 ;shooting boar with tc code
+
+#load-if-not-defined UP-NOMAD-STYLE
 
 (defrule
 	(up-research-status c: feudal-age >= research-pending)
@@ -18674,6 +18828,8 @@
 	(set-strategic-number sn-disable-villager-garrison 0)
 	(chat-local-to-self "Disabling hunting restrictions.")
 )
+
+#end-if
 
 ;endregion
 
@@ -23011,7 +23167,7 @@
 )
 
 (defrule
-	(current-age >= castle-age)
+	(current-age >= imperial-age)
 	(can-research ri-block-printing)
 	(unit-type-count-total monk >= 3)
 =>
@@ -23019,7 +23175,7 @@
 )
 
 (defrule
-	(current-age >= castle-age)
+	(current-age >= imperial-age)
 	(can-research ri-illumination)
 	(unit-type-count-total monk >= 5)
 =>
@@ -23027,9 +23183,9 @@
 )
 
 (defrule
-	(current-age >= castle-age)
+	(current-age >= imperial-age)
 	(can-research ri-theocracy)
-	(unit-type-count-total monk >= 6)
+	(unit-type-count-total monk >= 5)
 =>
 	(research ri-theocracy)
 )
@@ -23052,7 +23208,7 @@
 )
 
 (defrule
-	(current-age >= castle-age)
+	(current-age >= imperial-age)
 	(can-research ri-faith)
 	(players-unit-type-count focus-player monk >= 6)
 =>
@@ -23094,7 +23250,7 @@
 (defrule
 	(current-age >= castle-age)
 	(can-research ri-atonement)
-	(unit-type-count-total monk >= 5)
+	(unit-type-count-total monk >= 3)
 	(players-unit-type-count focus-player monk >= 3)
 =>
 	(research ri-atonement)
@@ -25810,7 +25966,8 @@
 
 (defrule
 	(can-research-with-escrow imperial-age)
-	(unit-type-count-total villager g:>= c-villager-goal)
+	(or (unit-type-count-total villager g:>= c-villager-goal)
+	(population-headroom < 5))
 	(goal gl-food-saving 23)
 	(goal gl-gold-saving 23)
 =>
