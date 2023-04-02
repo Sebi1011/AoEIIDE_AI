@@ -26503,6 +26503,18 @@
 
 (defrule
 	(current-age == imperial-age)
+	(can-train mangonel-line)
+	(research-available ri-onager)
+	(unit-type-count mangonel-line < 2)
+	(wood-amount > 75)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(military-population >= 20))
+=>
+	(train mangonel-line)
+)
+
+(defrule
+	(current-age == imperial-age)
 	(can-research ri-onager)
 	(unit-type-count mangonel-line >= 2)
 =>
