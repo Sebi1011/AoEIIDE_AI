@@ -84,6 +84,12 @@
 
 ;what's up next:
 
+; - fix issue where militia & scouts wouldn't target enemy villagers nearby, but instead prefer to target the enemy tc
+; - add next ally information in TGs: in 3v3s & 4v4s, identify which flanks belong to which pocket. Then gather information about
+; allied military to improve combined attacks and army-evaluation. Add this information for 2v2s. The easiest way to implement this
+; would be to modify the military advantage calculation rules, selecting different methods based on how many allies the AI has
+; - implement player-loop for fortification-retreat-rules
+
 ; - try to always attack with at least 2 rams instead of only one
 ; - in general, improve speed to kill a player when in advantage
 ; - fix bug in escrow saving system (or notification) the notification keeps getting spammed for some reason
@@ -95,7 +101,7 @@
 ; - implement debug rules for every resource-saving goal
 ; - place additional tcs more controlled (reduce town-size before building?)
 ; - enhance house placement rules, to get a more random placement around the base to increase the AIs LOS
-; - try skipping tc-retreat code if AI is already retreating
+; - try skipping tc-retreat code if AI is already retreating (retreating-timer)
 
 ; - retreat only 1 unit at a time from enemy fortifications
 ; - implement tc-garrison code for every tc (testing) (partly fixed, but not properly working)
@@ -786,7 +792,7 @@
 (defrule
 	(goal gl-priority-goal 1)
 =>
-	(up-set-offense-priority c: town-center c: 2)
+	(up-set-offense-priority c: town-center c: -1)
 	(up-set-offense-priority c: house c: 5)
 	(up-set-offense-priority c: mill c: 5)
 	(up-set-offense-priority c: lumber-camp c: 5)
@@ -855,7 +861,7 @@
 (defrule
 	(goal gl-priority-goal 2)
 =>
-	(up-set-offense-priority c: town-center c: 1)
+	(up-set-offense-priority c: town-center c: -1)
 	(up-set-offense-priority c: house c: 2)
 	(up-set-offense-priority c: mill c: 5)
 	(up-set-offense-priority c: lumber-camp c: 5)
@@ -924,7 +930,7 @@
 (defrule
 	(goal gl-priority-goal 3)
 =>
-	(up-set-offense-priority c: town-center c: 1)
+	(up-set-offense-priority c: town-center c: -1)
 	(up-set-offense-priority c: house c: 5)
 	(up-set-offense-priority c: mill c: 5)
 	(up-set-offense-priority c: lumber-camp c: 5)
@@ -993,7 +999,7 @@
 (defrule
 	(goal gl-priority-goal 4)
 =>
-	(up-set-offense-priority c: town-center c: 2)
+	(up-set-offense-priority c: town-center c: -1)
 	(up-set-offense-priority c: house c: 5)
 	(up-set-offense-priority c: mill c: 4)
 	(up-set-offense-priority c: lumber-camp c: 4)
@@ -14653,7 +14659,7 @@
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
-	(enable-timer split-stance-timer 6)
+	(enable-timer split-stance-timer 3)
 )
 
 (defrule ; if tc is garrisoned
@@ -14713,7 +14719,7 @@
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
-	(enable-timer split-stance-timer 6)
+	(enable-timer split-stance-timer 3)
 )
 
 (defrule ;castle-age rules
@@ -14810,7 +14816,7 @@
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
-	(enable-timer split-stance-timer 6)
+	(enable-timer split-stance-timer 3)
 )
 
 (defrule ; if tc is garrisoned
@@ -14847,7 +14853,7 @@
 	(up-cross-tiles object-point-x enemy-point-x c: 9)
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
-	(enable-timer retreating-timer 4)
+	(enable-timer retreating-timer 3)
 	(set-goal split-rule-goal 48)
 )
 
@@ -14880,7 +14886,7 @@
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
-	(enable-timer split-stance-timer 6)
+	(enable-timer split-stance-timer 3)
 )
 
 ;go through the list
@@ -15167,7 +15173,7 @@
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
-	(enable-timer split-stance-timer 6)
+	(enable-timer split-stance-timer 5)
 )
 
 (defrule
@@ -15293,7 +15299,7 @@
 	(up-cross-tiles object-point-x enemy-tower-point-x c: 9)
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
-	(enable-timer retreating-timer 4)
+	(enable-timer retreating-timer 3)
 	(set-goal split-rule-goal 7)
 )
 
@@ -15365,7 +15371,7 @@
 	(up-cross-tiles object-point-x enemy-tower-point-x c: 9)
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
-	(enable-timer retreating-timer 4)
+	(enable-timer retreating-timer 3)
 	(set-goal split-rule-goal 7)
 )
 
@@ -15820,7 +15826,7 @@
 	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
 	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
 	(up-bound-point gl-unit-x gl-unit-x)	
-	(enable-timer retreating-timer 4)
+	(enable-timer retreating-timer 3)
 	(up-target-point gl-unit-x action-move formation-line stance-no-attack)
 	;(chat-local-to-self "retreat with scout from spearman")
 )
