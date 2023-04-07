@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.1.2
-;last update: 6th April 2023
+;last update: 7th April 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -18434,17 +18434,6 @@
 	(disable-self)
 )
 
-; (defrule 
-	; (civilian-population >= 18)
-	; (players-building-count any-enemy < 1)
-; =>
-	; ;(enable-timer 19 5)
-	; (set-goal gl-scout-map YES)
-	; (up-send-scout group-type-land-explore scout-mirror)
-	; (chat-to-player my-player-number "Scouting opponent")
-	; (disable-self)
-; )
-
 (defrule 
 	(or (goal strategy-goal sg-drush)
 	(goal strategy-goal sg-towerrush))
@@ -18462,6 +18451,7 @@
 #end-if
 
 #load-if-not-defined UP-2-PLAYER-GAME
+#load-if-not-defined UP-POCKET-POSITION
 (defrule 
 	(civilian-population >= 18)
 	(players-building-count any-enemy < 1)
@@ -18473,8 +18463,6 @@
 )
 
 (defrule 
-	(or (goal strategy-goal sg-drush)
-	(goal strategy-goal sg-towerrush))
 	(current-age == dark-age)
 	(civilian-population >= 18)
 	(players-building-count focus-player >= 1)
@@ -18485,6 +18473,53 @@
 	(disable-self)
 )
 
+(defrule 
+	(current-age == dark-age)
+	(civilian-population g:>= d-villager-goal)
+	(players-building-count focus-player < 1)
+=>
+	;(enable-timer 19 5)
+	(up-send-scout group-type-land-explore scout-flank)
+	;(chat-to-player my-player-number "Scouting opponent base")
+	(disable-self)
+)
+
+#end-if
+
+#load-if-defined UP-POCKET-POSITION
+(defrule 
+	(civilian-population >= 20)
+	(players-building-count any-enemy < 1)
+=>
+	;(enable-timer 19 5)
+	(up-send-scout group-type-land-explore scout-mirror)
+	;(chat-to-player my-player-number "Looking for enemy")
+	(disable-self)
+)
+
+(defrule 
+	(current-age == dark-age)
+	(civilian-population >= 20)
+	(players-building-count focus-player >= 1)
+=>
+	;(enable-timer 19 5)
+	(up-send-scout group-type-land-explore scout-enemy)
+	;(chat-to-player my-player-number "Scouting opponent base")
+	(disable-self)
+)
+
+(defrule 
+	(current-age == dark-age)
+	(civilian-population g:>= d-villager-goal)
+	(players-building-count focus-player < 1)
+=>
+	;(enable-timer 19 5)
+	(up-send-scout group-type-land-explore scout-mirror)
+	;(chat-to-player my-player-number "Scouting opponent base")
+	(disable-self)
+)
+
+#end-if
 #end-if
 
 (defrule
@@ -26300,10 +26335,12 @@
 )
 
 (defrule
-	(can-research imperial-age)
+	(can-research-with-escrow imperial-age)
 	(or (unit-type-count-total villager g:>= c-villager-goal)
 	(population-headroom < 5))
 =>
+	(up-modify-escrow food c:- 1000)
+	(up-modify-escrow gold c:- 800)
 	(research imperial-age)
 	(chat-to-allies "Going to Imperial-Age")
 )
