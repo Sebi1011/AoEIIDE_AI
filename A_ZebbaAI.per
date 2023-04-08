@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.1.2
-;last update: 7th April 2023
+;last update: 8th April 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -84,12 +84,21 @@
 
 ;what's up next:
 
+; - fix fc-uu bo before going up to castle-age (testing)
+; - use scout retreat rules for all scout-types (testing)
+; - fix militia retreat rules to retreat with the correct militia
+; - try new boar-hunting method (testing)
+; - take blacksmith upgrades more into consideration after castle-age (testing)
+
+; - fix targeting enemy buildings instead of enemy units (testing)
+; - fix rare boar hunting bug, where the AI wouldn't garrison villagers under tc for unknown reasons
 ; - fix issue where militia & scouts wouldn't target enemy villagers nearby, but instead prefer to target the enemy tc
 ; - add next ally information in TGs: in 3v3s & 4v4s, identify which flanks belong to which pocket. Then gather information about
 ; allied military to improve combined attacks and army-evaluation. Add this information for 2v2s. The easiest way to implement this
 ; would be to modify the military advantage calculation rules, selecting different methods based on how many allies the AI has
 ; - implement player-loop for fortification-retreat-rules
 
+; - fix strategy choice in 2v2s: there should always be 1 cav & 1 archer player
 ; - try to always attack with at least 2 rams instead of only one
 ; - in general, improve speed to kill a player when in advantage
 ; - fix bug in escrow saving system (or notification) the notification keeps getting spammed for some reason
@@ -432,7 +441,9 @@
 (defconst sg-fastcastle-gu 59)
 (defconst sg-waterplay 60)
 (defconst sg-boom-imp 61)
-(defconst relic-count 63)
+(defconst team-military-pop 62)
+(defconst enemy-team-military-pop 63)
+(defconst relic-count 64)
 (defconst gold-mine 66)
 (defconst drush-goal 67)
 (defconst retreating-goal 70)
@@ -481,6 +492,7 @@
 (defconst gl-gold-saving 145)
 (defconst gl-stone-saving 146)
 
+(defconst gl-team-military-advantage 149)
 (defconst gl-house 150)
 (defconst vil-loom-hp 151)
 (defconst gl-military-advantage 152)
@@ -671,7 +683,7 @@
 	(set-strategic-number sn-minimum-boar-hunt-group-size 0)
 	(set-strategic-number sn-gate-type-for-wall 1)
 	(set-strategic-number sn-garrison-rams 1)
-	(set-strategic-number sn-building-targeting-mode 0)
+	;(set-strategic-number sn-building-targeting-mode 0)
 	(set-strategic-number sn-attack-intelligence 1)
 	(set-strategic-number sn-wall-targeting-mode 1)
 	(set-goal civilian-pop 0)
@@ -793,7 +805,7 @@
 	(goal gl-priority-goal 1)
 =>
 	(up-set-offense-priority c: town-center c: -1)
-	(up-set-offense-priority c: house c: 5)
+	(up-set-offense-priority c: house c: -1)
 	(up-set-offense-priority c: mill c: 5)
 	(up-set-offense-priority c: lumber-camp c: 5)
 	(up-set-offense-priority c: mining-camp c: 5)
@@ -862,7 +874,7 @@
 	(goal gl-priority-goal 2)
 =>
 	(up-set-offense-priority c: town-center c: -1)
-	(up-set-offense-priority c: house c: 2)
+	(up-set-offense-priority c: house c: -1)
 	(up-set-offense-priority c: mill c: 5)
 	(up-set-offense-priority c: lumber-camp c: 5)
 	(up-set-offense-priority c: mining-camp c: 5)
@@ -931,7 +943,7 @@
 	(goal gl-priority-goal 3)
 =>
 	(up-set-offense-priority c: town-center c: -1)
-	(up-set-offense-priority c: house c: 5)
+	(up-set-offense-priority c: house c: -1)
 	(up-set-offense-priority c: mill c: 5)
 	(up-set-offense-priority c: lumber-camp c: 5)
 	(up-set-offense-priority c: mining-camp c: 5)
@@ -1000,7 +1012,7 @@
 	(goal gl-priority-goal 4)
 =>
 	(up-set-offense-priority c: town-center c: -1)
-	(up-set-offense-priority c: house c: 5)
+	(up-set-offense-priority c: house c: -1)
 	(up-set-offense-priority c: mill c: 4)
 	(up-set-offense-priority c: lumber-camp c: 4)
 	(up-set-offense-priority c: mining-camp c: 4)
@@ -1084,7 +1096,7 @@
 	(goal gl-priority-goal 5)
 =>
 	(up-set-offense-priority c: town-center c: 4)
-	(up-set-offense-priority c: house c: 4)
+	(up-set-offense-priority c: house c: -1)
 	(up-set-offense-priority c: mill c: 5)
 	(up-set-offense-priority c: lumber-camp c: 5)
 	(up-set-offense-priority c: mining-camp c: 5)
@@ -1156,7 +1168,7 @@
 	(goal gl-priority-goal 6)
 =>
 	(up-set-offense-priority c: town-center c: 4)
-	(up-set-offense-priority c: house c: 4)
+	(up-set-offense-priority c: house c: -1)
 	(up-set-offense-priority c: mill c: 5)
 	(up-set-offense-priority c: lumber-camp c: 5)
 	(up-set-offense-priority c: mining-camp c: 5)
@@ -1228,7 +1240,7 @@
 	(goal gl-priority-goal 7)
 =>
 	(up-set-offense-priority c: town-center c: 4)
-	(up-set-offense-priority c: house c: 4)
+	(up-set-offense-priority c: house c: -1)
 	(up-set-offense-priority c: mill c: 4)
 	(up-set-offense-priority c: lumber-camp c: 4)
 	(up-set-offense-priority c: mining-camp c: 4)
@@ -1726,6 +1738,7 @@
 =>
 	(set-goal enemy-military-pop 0)
 	(set-goal our-military-pop 0)
+	(set-goal team-military-pop 0)
 	;(set-goal enemy-warship-pop 0)
 	(disable-self)
 )	
@@ -1757,6 +1770,27 @@
 	(up-get-fact civilian-population 0 civilian-pop) 
 )	
 
+#load-if-defined UP-4-PLAYER-GAME
+#load-if-defined UP-ALLY-IN-GAME
+#load-if-defined UP-MULTIPLE-ENEMIES
+
+(defrule
+	(true)
+=>
+	(up-get-fact-sum any-ally military-population 0 team-military-pop)
+)
+
+(defrule
+	(true)
+=>
+	(up-get-fact-sum any-enemy military-population 0 enemy-team-military-pop)
+)
+
+
+#end-if
+#end-if
+#end-if
+
 
 
 ; (defrule
@@ -1780,6 +1814,16 @@
 	;(up-chat-data-to-self "Enemy Military: %d" g: enemy-military-pop)
 	(up-modify-goal gl-military-advantage g:= our-military-pop)
 	(up-modify-goal gl-military-advantage g:- enemy-military-pop)
+	;(up-chat-data-to-self "advantage: %d" g: gl-military-advantage)
+)
+
+(defrule
+	(timer-triggered t-3-sec)
+=>
+	;(up-chat-data-to-self "Our Military: %d" g: our-military-pop)
+	;(up-chat-data-to-self "Enemy Military: %d" g: enemy-military-pop)
+	(up-modify-goal gl-team-military-advantage g:= team-military-pop)
+	(up-modify-goal gl-team-military-advantage g:- enemy-team-military-pop)
 	;(up-chat-data-to-self "advantage: %d" g: gl-military-advantage)
 )
 
@@ -2227,6 +2271,8 @@
 
 #load-if-not-defined UP-NOMAD-STYLE
 #load-if-not-defined UP-2-PLAYER-GAME
+#load-if-not-defined UP-4-PLAYER-GAME
+#load-if-defined UP-ALLY-IN-GAME
 #load-if-defined UP-POCKET-POSITION
 
 (defrule
@@ -2297,6 +2343,8 @@
 	(disable-self)
 )
 
+#end-if
+#end-if
 #end-if
 #end-if
 #end-if
@@ -3310,7 +3358,7 @@
 
 (defrule
 	(random-number >= 20)
-	(random-number < 40)
+	(random-number < 45)
 =>
 	(set-goal strategy-goal sg-fastcastle-gu)	
 	(set-goal d-villager-goal 26)
@@ -3322,8 +3370,8 @@
 )
 
 (defrule
-	(random-number >= 40)
-	(random-number < 80)
+	(random-number >= 45)
+	(random-number < 90)
 =>
 	(set-goal strategy-goal sg-scoutrush)	
 	(set-goal d-villager-goal 20)
@@ -3335,7 +3383,7 @@
 )
 
 (defrule
-	(random-number >= 80)
+	(random-number >= 90)
 =>
 	(set-goal strategy-goal sg-boom-imp)	
 	(set-goal d-villager-goal 30)
@@ -3941,19 +3989,19 @@
 
 (defrule
 	(research-completed my-second-unique-research)
-	(up-compare-goal gl-military-advantage >= 10)
 	(can-build watch-tower-line)
 	(military-population >= 25)
 	(up-compare-goal gl-military-advantage >= 15)
 =>
+	(up-assign-builders c: watch-tower c: 2)
 	(build-forward watch-tower-line)
 )
 
 (defrule
 	(research-completed my-second-unique-research)
-	(up-compare-goal gl-military-advantage < 10)
+	(up-compare-goal gl-military-advantage < 15)
 	(can-build watch-tower-line)
-	(building-type-count-total watch-tower < 10)
+	(building-type-count-total watch-tower < 5)
 =>
 	(build watch-tower-line)
 )
@@ -6835,6 +6883,9 @@
 	(players-unit-type-count focus-player militiaman-line >= 6)))
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range < 2)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(up-modify-escrow wood c:- 175)
 	(build archery-range)
@@ -6846,6 +6897,9 @@
 	(players-unit-type-count focus-player skirmisher-line >= 6)
 	(can-build-with-escrow stable)
 	(building-type-count-total stable < 2)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(up-modify-escrow wood c:- 175)
 	(build stable)
@@ -6861,6 +6915,9 @@
 	(players-unit-type-count focus-player camel-archer-line >= 4)))))
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range == 0)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(up-modify-escrow wood c:- 175)
 	(build archery-range)
@@ -6966,6 +7023,7 @@
 	(not (town-under-attack))
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 2)
+	(building-type-count-total castle < 1)
 	(not (goal gl-stone-saving 7))
 =>
 	(up-modify-escrow wood c:- 50)
@@ -6986,6 +7044,7 @@
 	(not (town-under-attack))
 	(can-build-with-escrow donjon)
 	(building-type-count-total donjon < 2)
+	(building-type-count-total castle < 1)
 	(not (goal gl-stone-saving 7))
 =>
 	(up-modify-escrow wood c:- 75)
@@ -7006,6 +7065,7 @@
 	(not (town-under-attack))
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 4)
+	(building-type-count-total castle < 1)
 	(not (goal gl-stone-saving 7))
 =>
 	(up-modify-escrow wood c:- 50)
@@ -7027,6 +7087,7 @@
 	(not (town-under-attack))
 	(can-build-with-escrow donjon)
 	(building-type-count-total tower-class < 4)
+	(building-type-count-total castle < 1)
 	(not (goal gl-stone-saving 7))
 =>
 	(up-modify-escrow wood c:- 75)
@@ -7220,6 +7281,9 @@
 	(players-unit-type-count focus-player archer-line >= 6))
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range < 2)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(up-modify-escrow wood c:- 175)
 	(build archery-range)
@@ -7235,6 +7299,9 @@
 	(research-available ri-elite-skirmisher)
 	(not (unit-available genitour-line))
 	(unit-type-count skirmisher-line <= 4)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(train skirmisher-line)
 	;(chat-to-player my-player-number "Produziere Plaenkler gegen Bogenschuetzen und Speerkaempfer")
@@ -7247,6 +7314,9 @@
 	(can-research-with-escrow ri-elite-skirmisher)
 	(not (research-completed ri-elite-skirmisher))
 	(not (unit-available genitour-line))
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(up-modify-escrow wood c:- 230)
 	(up-modify-escrow gold c:- 130)
@@ -7262,6 +7332,9 @@
 	(research-completed ri-elite-skirmisher)
 	(not (unit-available genitour-line))
 	(not (goal gl-food-saving 23))
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(up-modify-escrow food c:- 25)
 	(up-modify-escrow wood c:- 35)
@@ -7276,6 +7349,9 @@
 	(can-train skirmisher-line)
 	(research-completed ri-elite-skirmisher)
 	(not (unit-available genitour-line))
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(train skirmisher-line)
 	;(chat-to-player my-player-number "Produziere Plaenkler gegen Bogenschuetzen und Speerkaempfer")
@@ -7286,8 +7362,9 @@
 	(or (players-unit-type-count focus-player spearman-line >= 5)
 	(players-unit-type-count focus-player archer-line >= 6))
 	(can-train genitour-line)
-	; (or (civilian-population g:< c-villager-goal)
-	; (up-research-status c: castle-age == research-pending))
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(train genitour-line)
 	;(chat-to-player my-player-number "Produziere Ginete gegen Bogenschuetzen und Speerkaempfer")
@@ -7300,6 +7377,9 @@
 	(can-train genitour-line)
 	(research-available ri-elite-genitour)
 	(unit-type-count genitour-line <= 6)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(train genitour-line)
 	;(chat-to-player my-player-number "Produziere Ginete gegen Bogenschuetzen und Speerkaempfer")
@@ -7311,6 +7391,9 @@
 	(players-unit-type-count focus-player archer-line >= 6))
 	(can-train genitour-line)
 	(research-completed ri-elite-genitour)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(train genitour-line)
 	;(chat-to-player my-player-number "Produziere Ginete gegen Bogenschuetzen und Speerkaempfer")
@@ -7320,6 +7403,9 @@
 	(current-age >= castle-age)
 	(players-unit-type-count focus-player archer-line >= 4)
 	(can-research ri-elite-genitour)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(research ri-elite-genitour)
 	;(chat-to-player my-player-number "Entwickle Elite-Ginete gegen Bogenschuetzen")
@@ -8317,6 +8403,9 @@
 	(players-unit-type-count focus-player rattan-archer-line >= 5))))))
 	(can-train skirmisher-line)
 	(research-completed ri-elite-skirmisher)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(train skirmisher-line)
 	;(chat-to-player my-player-number "Produziere Plaenkler gegen Bogenschuetzen")
@@ -8333,6 +8422,9 @@
 	(can-research-with-escrow ri-elite-skirmisher)
 	(not (research-completed ri-elite-skirmisher))
 	(unit-type-count skirmisher-line > 3)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(up-modify-escrow wood c:- 230)
 	(up-modify-escrow gold c:- 130)
@@ -8351,6 +8443,9 @@
 	(can-train-with-escrow skirmisher-line)
 	(research-completed ri-elite-skirmisher)
 	(not (goal gl-food-saving 23))
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(up-modify-escrow food c:- 25)
 	(up-modify-escrow wood c:- 35)
@@ -8363,6 +8458,9 @@
 	(players-unit-type-count focus-player archer-line >= 6)
 	(can-train genitour-line)
 	(research-completed ri-elite-genitour)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(train genitour-line)
 	;(chat-to-player my-player-number "Produziere Ginete gegen Bogenschuetzen")
@@ -9121,6 +9219,9 @@
 	(research-available ri-crossbow)
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range < 2)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(up-modify-escrow wood c:- 175)
 	(build archery-range)
@@ -9157,6 +9258,9 @@
 		(and (current-age == imperial-age)
 			(not (research-available ri-arbalest))))
 	(can-research-with-escrow ri-elite-skirmisher)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(up-modify-escrow wood c:- 230)
 	(up-modify-escrow gold c:- 130)
@@ -9182,6 +9286,9 @@
 	(research-completed ri-bodkin-arrow)
 	(building-type-count-total archery-range > 0)
 	(not (goal gl-food-saving 23))
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(up-modify-escrow food c:- 25)
 	(up-modify-escrow wood c:- 35)
@@ -9222,6 +9329,9 @@
 	(can-train skirmisher-line)
 	(research-completed ri-elite-skirmisher)
 	(building-type-count-total archery-range > 0)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(train skirmisher-line)
 )
@@ -9326,6 +9436,9 @@
 	(players-unit-type-count focus-player ghulam-line >= 6)
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range < 2)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(up-modify-escrow wood c:- 175)
 	(build archery-range)
@@ -9509,6 +9622,9 @@
 	(research-available ri-crossbow)
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range < 2)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(up-modify-escrow wood c:- 175)
 	(build archery-range)
@@ -9534,6 +9650,9 @@
 	(players-unit-type-count focus-player conquistador-line >= 6)
 	(current-age >= castle-age)
 	(can-research-with-escrow ri-elite-skirmisher)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(up-modify-escrow wood c:- 230)
 	(up-modify-escrow gold c:- 130)
@@ -9548,6 +9667,9 @@
 	(research-completed ri-bodkin-arrow)
 	(building-type-count-total archery-range > 0)
 	(not (goal gl-food-saving 23))
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(up-modify-escrow food c:- 25)
 	(up-modify-escrow wood c:- 35)
@@ -9562,6 +9684,9 @@
 	(research-available ri-crossbow)
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range < 2)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(up-modify-escrow wood c:- 175)
 	(build archery-range)
@@ -9590,6 +9715,9 @@
 	(current-age >= castle-age)
 	(can-research-with-escrow ri-elite-skirmisher)
 	(not (unit-available camel-line))
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(up-modify-escrow wood c:- 230)
 	(up-modify-escrow gold c:- 130)
@@ -9605,6 +9733,9 @@
 	(building-type-count-total archery-range > 0)
 	(not (unit-available camel-line))
 	(not (goal gl-food-saving 23))
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
 =>
 	(up-modify-escrow food c:- 25)
 	(up-modify-escrow wood c:- 35)
@@ -11453,7 +11584,6 @@
 	(up-get-fact escrow-amount stone amnt-escrow-stone)
 	(up-chat-data-to-self "Escrow stone: %d" g: amnt-escrow-stone)
 	(up-chat-data-to-self "Town Size: %d" s: sn-maximum-town-size)
-	;(up-chat-data-to-self "Enemy unit count %d" g: enemy-military-pop)
 	(up-chat-data-to-self "Military Advantage: %d" g: gl-military-advantage)
 	(enable-timer 7 45)
 )
@@ -14701,11 +14831,11 @@
 	(up-filter-include cmdid-military -1 -1 -1)
 	(up-filter-exclude -1 -1 -1 siege-weapon-class)
 	(up-filter-exclude -1 -1 -1 armored-elephant-line)
-	(set-goal split-rule-goal 47)
+	(set-goal split-rule-goal 49)
 )
 
 (defrule	
-	(goal split-rule-goal 47)
+	(goal split-rule-goal 49)
 	(up-find-local c: -1 c: 40)
 	(up-set-target-object search-local c: 0)
 =>
@@ -14716,11 +14846,11 @@
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
 	(enable-timer retreating-timer 3)
-	(set-goal split-rule-goal 48)
+	(set-goal split-rule-goal 50)
 )
 
 (defrule
-	(goal split-rule-goal 48)
+	(goal split-rule-goal 50)
 =>	
 	(up-full-reset-search)	
 	(up-set-target-point enemy-point-x)
@@ -14748,7 +14878,7 @@
 	(or	(unit-type-count eagle-warrior-line > 9)
 	(or	(unit-type-count huskarl-set > 9)
 	(or	(unit-type-count ghulam-line > 9)
-	(unit-type-count cavalry-class > 14))))))	
+	(unit-type-count cavalry-class > 14))))))
 =>	
 	(up-jump-rule 8)
 )
@@ -14788,11 +14918,11 @@
 	(up-remove-objects search-local object-data-type == huskarl)
 	(up-remove-objects search-local object-data-upgrade-type == elite-huskarl)
 	(up-remove-objects search-local object-data-upgrade-type == long-swordsman)
-	(set-goal split-rule-goal 47)
+	(set-goal split-rule-goal 51)
 )
 
 (defrule	
-	(goal split-rule-goal 47)
+	(goal split-rule-goal 51)
 	(up-find-local c: -1 c: 1)
 	(up-set-target-object search-local c: 0)
 =>
@@ -14803,11 +14933,11 @@
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
 	(enable-timer retreating-timer 3)
-	(set-goal split-rule-goal 48)
+	(set-goal split-rule-goal 52)
 )
 
 (defrule
-	(goal split-rule-goal 48)
+	(goal split-rule-goal 52)
 =>	
 	(up-full-reset-search)	
 	(up-set-target-point enemy-point-x)
@@ -14859,11 +14989,11 @@
 	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
 	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
 	(up-filter-exclude -1 -1 -1 cavalry-class)
-	(set-goal split-rule-goal 47)
+	(set-goal split-rule-goal 53)
 )
 
 (defrule	
-	(goal split-rule-goal 47)
+	(goal split-rule-goal 53)
 	(up-find-local c: -1 c: 1)
 	(up-set-target-object search-local c: 0)
 =>
@@ -14874,11 +15004,11 @@
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
 	(enable-timer retreating-timer 3)
-	(set-goal split-rule-goal 48)
+	(set-goal split-rule-goal 54)
 )
 
 (defrule
-	(goal split-rule-goal 48)
+	(goal split-rule-goal 54)
 =>	
 	(up-full-reset-search)	
 	(up-set-target-point enemy-point-x)
@@ -15377,11 +15507,11 @@
 	; (up-remove-objects search-local object-data-class == siege-weapon-class)
 	; (up-remove-objects search-local object-data-class == infantry-class)
 	; (up-remove-objects search-local object-data-type == armored-elephant)
-	(set-goal split-rule-goal 6)
+	(set-goal split-rule-goal 8)
 )
 
 (defrule	
-	(goal split-rule-goal 6)
+	(goal split-rule-goal 8)
 	(up-find-local c: -1 c: 1)
 	(up-set-target-object search-local c: 0)
 =>
@@ -15392,11 +15522,11 @@
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
 	(enable-timer retreating-timer 3)
-	(set-goal split-rule-goal 7)
+	(set-goal split-rule-goal 9)
 )
 
 (defrule
-	(goal split-rule-goal 7)
+	(goal split-rule-goal 9)
 =>	
 	(up-full-reset-search)	
 	(up-set-target-point enemy-tower-point-x)
@@ -15441,61 +15571,61 @@
 )
 
 ;retreat with scout from enemy villagers
-(defrule
-	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
-	(or (unit-type-count scout-cavalry-line >= 1)
-	(or (unit-type-count eagle-warrior-line >= 1)
-	(unit-type-count camel-scout >= 1)))
-	(not (goal strategy-goal sg-towerrush))
-=>
-	(up-full-reset-search)
-	(up-find-local c: scout-type c: 1)
-)
+; (defrule
+	; (current-age < castle-age)
+	; (up-compare-goal attack-now-goal == 1)
+	; (or (unit-type-count scout-cavalry-line >= 1)
+	; (or (unit-type-count eagle-warrior-line >= 1)
+	; (unit-type-count camel-scout >= 1)))
+	; (not (goal strategy-goal sg-towerrush))
+; =>
+	; (up-full-reset-search)
+	; (up-find-local c: scout-type c: 1)
+; )
 
-(defrule
-	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
-	(or (unit-type-count scout-cavalry-line >= 1)
-	(or (unit-type-count eagle-warrior-line >= 1)
-	(unit-type-count camel-scout >= 1)))
-	(not (goal strategy-goal sg-towerrush))
-	(up-set-target-object search-local c: 0)
-=>
-	(up-get-point position-object gl-scout-x)
-	(up-set-target-point gl-scout-x)
-	(up-filter-distance c: -1 c: 3)
-	(up-find-remote c: villager-class c: 5)
-	(up-find-remote c: spearman-line c: 5)
-	(up-find-remote c: militiaman-line c: 5)
-	;(up-remove-objects search-remote object-data-hitpoints < 7)
-	(up-get-search-state gl-local-total)
-)
+; (defrule
+	; (current-age < castle-age)
+	; (up-compare-goal attack-now-goal == 1)
+	; (or (unit-type-count scout-cavalry-line >= 1)
+	; (or (unit-type-count eagle-warrior-line >= 1)
+	; (unit-type-count camel-scout >= 1)))
+	; (not (goal strategy-goal sg-towerrush))
+	; (up-set-target-object search-local c: 0)
+; =>
+	; (up-get-point position-object gl-scout-x)
+	; (up-set-target-point gl-scout-x)
+	; (up-filter-distance c: -1 c: 3)
+	; (up-find-remote c: villager-class c: 5)
+	; (up-find-remote c: spearman-line c: 5)
+	; (up-find-remote c: militiaman-line c: 5)
+	; ;(up-remove-objects search-remote object-data-hitpoints < 7)
+	; (up-get-search-state gl-local-total)
+; )
 
-(defrule
-	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
-	(or (unit-type-count scout-cavalry-line >= 1)
-	(or (unit-type-count eagle-warrior-line >= 1)
-	(unit-type-count camel-scout >= 1)))
-	(not (goal strategy-goal sg-towerrush))
-	(up-compare-goal gl-remote-total >= 2)
-	(up-object-data object-data-tasks-count > 0)
-	(up-set-target-object search-remote c: 0)
-	;(up-object-data object-data-action == actionid-attack)
-=>
-	(set-goal retreating-goal YES)
-	(up-full-reset-search)
-	(up-find-local c: scout-type c: 1)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object gl-scout-x)
-	(up-lerp-tiles gl-scout-x enemy-point-x c: -8) 
-	(up-cross-tiles gl-scout-x enemy-point-x c: 9)
-	(up-bound-point gl-scout-x gl-scout-x)	
-	(enable-timer retreating-timer 3)
-	(up-target-point gl-scout-x action-move formation-line stance-no-attack)
-	;(chat-local-to-self "Scout in danger, retreat with scout")
-)
+; (defrule
+	; (current-age < castle-age)
+	; (up-compare-goal attack-now-goal == 1)
+	; (or (unit-type-count scout-cavalry-line >= 1)
+	; (or (unit-type-count eagle-warrior-line >= 1)
+	; (unit-type-count camel-scout >= 1)))
+	; (not (goal strategy-goal sg-towerrush))
+	; (up-compare-goal gl-remote-total >= 2)
+	; (up-object-data object-data-tasks-count > 0)
+	; (up-set-target-object search-remote c: 0)
+	; ;(up-object-data object-data-action == actionid-attack)
+; =>
+	; (set-goal retreating-goal YES)
+	; (up-full-reset-search)
+	; (up-find-local c: scout-type c: 1)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object gl-scout-x)
+	; (up-lerp-tiles gl-scout-x enemy-point-x c: -8) 
+	; (up-cross-tiles gl-scout-x enemy-point-x c: 9)
+	; (up-bound-point gl-scout-x gl-scout-x)	
+	; (enable-timer retreating-timer 3)
+	; (up-target-point gl-scout-x action-move formation-line stance-no-attack)
+	; ;(chat-local-to-self "Scout in danger, retreat with scout")
+; )
 
 ;region Militia Retreat Rules
 
@@ -15775,105 +15905,409 @@
 
 ;endregion
 
-;region Scout Retreat Rules
 
-;retreat with scouts from enemy spearmen
+;region Scout temporary Retreat Rules (works for up to 4 scouts)
 
+;retreat with scouts from enemy threats
 (defrule
 	(current-age < castle-age)
-	(goal attack-now-goal 1)
-	(unit-type-count scout-cavalry-line >= 1)
-	(unit-type-count scout-cavalry-line < 10)
+	(up-compare-goal attack-now-goal == 1)
+	(or (unit-type-count scout-cavalry-line >= 1)
+	(or (unit-type-count eagle-warrior-line >= 1)
+	(unit-type-count camel-scout >= 1)))
 =>
 	(up-full-reset-search)
-	(up-find-local c: scout-cavalry-line c: 9)
-	(up-get-search-state gl-local-total)
-	(up-modify-goal gl-number-scouts g:= gl-local-total)
-	(up-modify-goal gl-number-scouts c:- 1)
-	;(up-chat-data-to-player my-player-number "Number of scouts: %d" g: gl-number-scouts)
+	(up-find-local c: scout-type c: 4)
 )
-
 
 (defrule
 	(current-age < castle-age)
-	(goal attack-now-goal 1)
-	(unit-type-count scout-cavalry-line >= 1)
-	(unit-type-count scout-cavalry-line < 10)
-	(up-set-target-object search-local g: gl-scout-index)
-	(up-object-data object-data-attacker-count > 0)
+	(up-compare-goal attack-now-goal == 1)
+	(or (unit-type-count scout-cavalry-line >= 1)
+	(or (unit-type-count eagle-warrior-line >= 1)
+	(unit-type-count camel-scout >= 1)))
+	(up-set-target-object search-local c: 0)
 =>
-	(up-set-target-object search-local g: gl-scout-index)
-	(up-get-object-data object-data-id gl-temp-scout-id)
 	(up-get-point position-object gl-unit-x)
-	;(up-send-flare gl-unit-x)
-	(up-full-reset-search)
 	(up-set-target-point gl-unit-x)
-	(up-filter-distance c: -1 c: 4)
-	(up-find-remote c: spearman-line c: 10)
-	;(up-set-target-object search-remote c: 0)
-	(up-find-local c: scout-cavalry-line c: 10)
-	(up-remove-objects search-local object-data-id g:== gl-temp-scout-id)
-	(up-get-search-state gl-local-total)
-	(up-modify-goal gl-scout-spear-ratio g:= gl-local-total)
-	(up-modify-goal gl-scout-spear-ratio g:/ gl-remote-total)
+	(up-filter-distance c: -1 c: 3)
+	(up-find-remote c: villager-class c: 5)
+	(up-find-remote c: militiaman-line c: 5)
+	(up-find-remote c: spearman-line c: 5)
 	;(up-remove-objects search-remote object-data-hitpoints < 7)
-	;(up-chat-data-to-player my-player-number "Nearby scouts: %d" g: gl-local-total)
-	;(up-chat-data-to-player my-player-number "Nearby spears: %d" g: gl-remote-total)
-	;(up-chat-data-to-player my-player-number "Scouts : Spears: %d" g: gl-scout-spear-ratio)
+	(up-get-search-state gl-local-total)
 )
 
-(defrule ;is not triggering for some reason
+
+
+;1 scout
+(defrule
 	(current-age < castle-age)
-	(goal attack-now-goal 1)
-	(unit-type-count scout-cavalry-line >= 1)
-	(unit-type-count scout-cavalry-line < 10)
-	(up-set-target-object search-local g: gl-scout-index)
-	(up-object-data object-data-attacker-count > 0)
-	(up-compare-goal gl-scout-spear-ratio < 3)
-	(up-compare-goal gl-remote-total > 0)
-	;(up-compare-goal gl-unit-x > 2)
-	;(up-compare-goal gl-unit-y > 2)
-	;(up-compare-goal gl-unit-x g:< FULL-MAP-SIZE)
-	;(up-compare-goal gl-unit-y g:< FULL-MAP-SIZE)
-	;(up-set-target-by-id g: gl-temp-scout-id)
+	(up-compare-goal attack-now-goal == 1)
+	(or (unit-type-count scout-cavalry-line == 1)
+	(or (unit-type-count eagle-warrior-line == 1)
+	(unit-type-count camel-scout == 1)))
+	(up-compare-goal gl-remote-total >= 1)
+	(up-object-data object-data-tasks-count > 0)
+	(up-set-target-object search-remote c: 0)
+	;(up-object-data object-data-action == actionid-attack)
+	;(or (up-object-data object-data-order == orderid-attack)
+	;(up-object-data object-data-order == orderid-defend))
 =>
 	(set-goal retreating-goal YES)
 	(up-full-reset-search)
-	;(up-find-local c: scout-cavalry-line c: 9)
-	;(up-set-target-object search-local c: gl-scout-index)
-	;(up-set-target-by-id g: gl-temp-scout-id)
-	;(up-get-point position-object gl-unit-x)
+	(up-find-local c: scout-type c: 4)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object gl-unit-x)
 	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
 	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
 	(up-bound-point gl-unit-x gl-unit-x)	
-	(enable-timer retreating-timer 3)
-	(up-target-point gl-unit-x action-move formation-line stance-no-attack)
-	;(chat-local-to-self "retreat with scout from spearman")
+	(enable-timer retreating-timer 2)
+	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	;(chat-local-to-self "retreat with scout 1")
+)
+
+;2 scouts
+
+(defrule
+	(current-age < castle-age)
+	(up-compare-goal attack-now-goal == 1)
+	(or (unit-type-count scout-cavalry-line == 2)
+	(or (unit-type-count eagle-warrior-line == 2)
+	(unit-type-count camel-scout == 2)))
+	(up-compare-goal gl-remote-total >= 2)
+	(up-object-data object-data-tasks-count > 0)
+	(up-set-target-object search-remote c: 0)
+	;(up-object-data object-data-action == actionid-attack)
+	;(or (up-object-data object-data-order == orderid-attack)
+	;(up-object-data object-data-order == orderid-defend))
+=>
+	(set-goal retreating-goal YES)
+	(up-full-reset-search)
+	(up-find-local c: scout-type c: 4)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object gl-unit-x)
+	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	(up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 2)
+	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+;	(chat-local-to-self "retreat with scout 2.1")
 )
 
 (defrule
 	(current-age < castle-age)
-	(goal attack-now-goal 1)
-	(unit-type-count scout-cavalry-line >= 1)
-	(unit-type-count scout-cavalry-line < 10)
-	(up-compare-goal gl-scout-index g:>= gl-number-scouts) ;reached end of list, reset
+	(up-compare-goal attack-now-goal == 1)
+	(or (unit-type-count scout-cavalry-line == 2)
+	(or (unit-type-count eagle-warrior-line == 2)
+	(unit-type-count camel-scout == 2)))
+	(up-compare-goal gl-remote-total >= 2)
+	(up-object-data object-data-tasks-count > 0)
+	(up-set-target-object search-remote c: 1)
+	;(up-object-data object-data-action == actionid-attack)
+	;(or (up-object-data object-data-order == orderid-attack)
+	;(up-object-data object-data-order == orderid-defend))
 =>
-	(set-goal gl-scout-index 0)
-	;(up-chat-data-to-player my-player-number "Scout: %d" g: gl-scout-index)
-	(up-jump-rule 1)
+	(set-goal retreating-goal YES)
+	(up-full-reset-search)
+	(up-find-local c: scout-type c: 4)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object gl-unit-x)
+	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	(up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 2)
+	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+;	(chat-local-to-self "retreat with scout 2.2")
+)
+
+;3 scouts
+
+(defrule
+	(current-age < castle-age)
+	(up-compare-goal attack-now-goal == 1)
+	(or (unit-type-count scout-cavalry-line == 3)
+	(or (unit-type-count eagle-warrior-line == 3)
+	(unit-type-count camel-scout == 3)))
+	(up-compare-goal gl-remote-total >= 3)
+	(up-object-data object-data-tasks-count > 0)
+	(up-set-target-object search-remote c: 0)
+	;(up-object-data object-data-action == actionid-attack)
+	;(or (up-object-data object-data-order == orderid-attack)
+	;(up-object-data object-data-order == orderid-defend))
+=>
+	(set-goal retreating-goal YES)
+	(up-full-reset-search)
+	(up-find-local c: scout-type c: 4)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object gl-unit-x)
+	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	(up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 2)
+	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+;	(chat-local-to-self "retreat with scout 3.1")
 )
 
 (defrule
 	(current-age < castle-age)
-	(goal attack-now-goal 1)
-	(unit-type-count scout-cavalry-line >= 1)
-	(unit-type-count scout-cavalry-line < 10)
-	(up-compare-goal gl-scout-index g:< gl-number-scouts)
+	(up-compare-goal attack-now-goal == 1)
+	(or (unit-type-count scout-cavalry-line == 3)
+	(or (unit-type-count eagle-warrior-line == 3)
+	(unit-type-count camel-scout == 3)))
+	(up-compare-goal gl-remote-total >= 3)
+	(up-object-data object-data-tasks-count > 0)
+	(up-set-target-object search-remote c: 1)
+	;(up-object-data object-data-action == actionid-attack)
+	;(or (up-object-data object-data-order == orderid-attack)
+	;(up-object-data object-data-order == orderid-defend))
 =>
-	(up-modify-goal gl-scout-index c:+ 1) ;go to next list-entry
-	;(up-chat-data-to-player my-player-number "Scout: %d" g: gl-scout-index)
-	;(up-jump-rule -5)
+	(set-goal retreating-goal YES)
+	(up-full-reset-search)
+	(up-find-local c: scout-type c: 4)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object gl-unit-x)
+	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	(up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 2)
+	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+;	(chat-local-to-self "retreat with scout 3.2")
 )
+
+(defrule
+	(current-age < castle-age)
+	(up-compare-goal attack-now-goal == 1)
+	(or (unit-type-count scout-cavalry-line == 3)
+	(or (unit-type-count eagle-warrior-line == 3)
+	(unit-type-count camel-scout == 3)))
+	(up-compare-goal gl-remote-total >= 3)
+	(up-object-data object-data-tasks-count > 0)
+	(up-set-target-object search-remote c: 2)
+	;(up-object-data object-data-action == actionid-attack)
+	;(or (up-object-data object-data-order == orderid-attack)
+	;(up-object-data object-data-order == orderid-defend))
+=>
+	(set-goal retreating-goal YES)
+	(up-full-reset-search)
+	(up-find-local c: scout-type c: 4)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object gl-unit-x)
+	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	(up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 2)
+	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+;	(chat-local-to-self "retreat with scout 3.3")
+)
+
+;4 scouts
+
+(defrule
+	(current-age < castle-age)
+	(up-compare-goal attack-now-goal == 1)
+	(or (unit-type-count scout-cavalry-line == 4)
+	(or (unit-type-count eagle-warrior-line == 4)
+	(unit-type-count camel-scout == 4)))
+	(up-compare-goal gl-remote-total >= 4)
+	(up-object-data object-data-tasks-count > 0)
+	(up-set-target-object search-remote c: 0)
+	;(up-object-data object-data-action == actionid-attack)
+	;(or (up-object-data object-data-order == orderid-attack)
+	;(up-object-data object-data-order == orderid-defend))
+=>
+	(set-goal retreating-goal YES)
+	(up-full-reset-search)
+	(up-find-local c: scout-type c: 4)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object gl-unit-x)
+	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	(up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 2)
+	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+;	(chat-local-to-self "retreat with scout 4.1")
+)
+
+(defrule
+	(current-age < castle-age)
+	(up-compare-goal attack-now-goal == 1)
+	(or (unit-type-count scout-cavalry-line == 4)
+	(or (unit-type-count eagle-warrior-line == 4)
+	(unit-type-count camel-scout == 4)))
+	(up-compare-goal gl-remote-total >= 4)
+	(up-object-data object-data-tasks-count > 0)
+	(up-set-target-object search-remote c: 1)
+	;(up-object-data object-data-action == actionid-attack)
+	;(or (up-object-data object-data-order == orderid-attack)
+	;(up-object-data object-data-order == orderid-defend))
+=>
+	(set-goal retreating-goal YES)
+	(up-full-reset-search)
+	(up-find-local c: scout-type c: 4)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object gl-unit-x)
+	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	(up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 2)
+	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+;	(chat-local-to-self "retreat with scout 4.2")
+)
+
+(defrule
+	(current-age < castle-age)
+	(up-compare-goal attack-now-goal == 1)
+	(or (unit-type-count scout-cavalry-line == 4)
+	(or (unit-type-count eagle-warrior-line == 4)
+	(unit-type-count camel-scout == 4)))
+	(up-compare-goal gl-remote-total >= 4)
+	(up-object-data object-data-tasks-count > 0)
+	(up-set-target-object search-remote c: 2)
+	;(up-object-data object-data-action == actionid-attack)
+	;(or (up-object-data object-data-order == orderid-attack)
+	;(up-object-data object-data-order == orderid-defend))
+=>
+	(set-goal retreating-goal YES)
+	(up-full-reset-search)
+	(up-find-local c: scout-type c: 4)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object gl-unit-x)
+	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	(up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 2)
+	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+;	(chat-local-to-self "retreat with scout 4.3")
+)
+
+(defrule
+	(current-age < castle-age)
+	(up-compare-goal attack-now-goal == 1)
+	(or (unit-type-count scout-cavalry-line == 4)
+	(or (unit-type-count eagle-warrior-line == 4)
+	(unit-type-count camel-scout == 4)))
+	(up-compare-goal gl-remote-total >= 4)
+	(up-object-data object-data-tasks-count > 0)
+	(up-set-target-object search-remote c: 3)
+	;(up-object-data object-data-action == actionid-attack)
+	;(or (up-object-data object-data-order == orderid-attack)
+	;(up-object-data object-data-order == orderid-defend))
+=>
+	(set-goal retreating-goal YES)
+	(up-full-reset-search)
+	(up-find-local c: scout-type c: 4)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object gl-unit-x)
+	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	(up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 2)
+	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+;	(chat-local-to-self "retreat with scout 4.4")
+)
+
+;endregion
+
+;region Scout Retreat Rules (not working, deactivated)
+
+;retreat with scouts from enemy spearmen 
+
+; (defrule
+	; (current-age < castle-age)
+	; (goal attack-now-goal 1)
+	; (unit-type-count scout-cavalry-line >= 1)
+	; (unit-type-count scout-cavalry-line < 10)
+; =>
+	; (up-full-reset-search)
+	; (up-find-local c: scout-cavalry-line c: 9)
+	; (up-get-search-state gl-local-total)
+	; (up-modify-goal gl-number-scouts g:= gl-local-total)
+	; (up-modify-goal gl-number-scouts c:- 1)
+	; ;(up-chat-data-to-player my-player-number "Number of scouts: %d" g: gl-number-scouts)
+; )
+
+
+; (defrule
+	; (current-age < castle-age)
+	; (goal attack-now-goal 1)
+	; (unit-type-count scout-cavalry-line >= 1)
+	; (unit-type-count scout-cavalry-line < 10)
+	; (up-set-target-object search-local g: gl-scout-index)
+	; (up-object-data object-data-attacker-count > 0)
+; =>
+	; (up-set-target-object search-local g: gl-scout-index)
+	; (up-get-object-data object-data-id gl-temp-scout-id)
+	; (up-get-point position-object gl-unit-x)
+	; ;(up-send-flare gl-unit-x)
+	; (up-full-reset-search)
+	; (up-set-target-point gl-unit-x)
+	; (up-filter-distance c: -1 c: 4)
+	; (up-find-remote c: spearman-line c: 10)
+	; ;(up-set-target-object search-remote c: 0)
+	; (up-find-local c: scout-cavalry-line c: 10)
+	; (up-remove-objects search-local object-data-id g:== gl-temp-scout-id)
+	; (up-get-search-state gl-local-total)
+	; (up-modify-goal gl-scout-spear-ratio g:= gl-local-total)
+	; (up-modify-goal gl-scout-spear-ratio g:/ gl-remote-total)
+	; ;(up-remove-objects search-remote object-data-hitpoints < 7)
+	; ;(up-chat-data-to-player my-player-number "Nearby scouts: %d" g: gl-local-total)
+	; ;(up-chat-data-to-player my-player-number "Nearby spears: %d" g: gl-remote-total)
+	; ;(up-chat-data-to-player my-player-number "Scouts : Spears: %d" g: gl-scout-spear-ratio)
+; )
+
+; (defrule ;is not triggering for some reason
+	; (current-age < castle-age)
+	; (goal attack-now-goal 1)
+	; (unit-type-count scout-cavalry-line >= 1)
+	; (unit-type-count scout-cavalry-line < 10)
+	; (up-set-target-object search-local g: gl-scout-index)
+	; (up-object-data object-data-attacker-count > 0)
+	; (up-compare-goal gl-scout-spear-ratio < 3)
+	; (up-compare-goal gl-remote-total > 0)
+	; ;(up-compare-goal gl-unit-x > 2)
+	; ;(up-compare-goal gl-unit-y > 2)
+	; ;(up-compare-goal gl-unit-x g:< FULL-MAP-SIZE)
+	; ;(up-compare-goal gl-unit-y g:< FULL-MAP-SIZE)
+	; ;(up-set-target-by-id g: gl-temp-scout-id)
+; =>
+	; (set-goal retreating-goal YES)
+	; (up-full-reset-search)
+	; ;(up-find-local c: scout-cavalry-line c: 9)
+	; ;(up-set-target-object search-local c: gl-scout-index)
+	; ;(up-set-target-by-id g: gl-temp-scout-id)
+	; ;(up-get-point position-object gl-unit-x)
+	; (up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	; (up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	; (up-bound-point gl-unit-x gl-unit-x)	
+	; (enable-timer retreating-timer 3)
+	; (up-target-point gl-unit-x action-move formation-line stance-no-attack)
+	; ;(chat-local-to-self "retreat with scout from spearman")
+; )
+
+; (defrule
+	; (current-age < castle-age)
+	; (goal attack-now-goal 1)
+	; (unit-type-count scout-cavalry-line >= 1)
+	; (unit-type-count scout-cavalry-line < 10)
+	; (up-compare-goal gl-scout-index g:>= gl-number-scouts) ;reached end of list, reset
+; =>
+	; (set-goal gl-scout-index 0)
+	; ;(up-chat-data-to-player my-player-number "Scout: %d" g: gl-scout-index)
+	; (up-jump-rule 1)
+; )
+
+; (defrule
+	; (current-age < castle-age)
+	; (goal attack-now-goal 1)
+	; (unit-type-count scout-cavalry-line >= 1)
+	; (unit-type-count scout-cavalry-line < 10)
+	; (up-compare-goal gl-scout-index g:< gl-number-scouts)
+; =>
+	; (up-modify-goal gl-scout-index c:+ 1) ;go to next list-entry
+	; ;(up-chat-data-to-player my-player-number "Scout: %d" g: gl-scout-index)
+	; ;(up-jump-rule -5)
+; )
 
 ;endregion
 
@@ -15925,7 +16359,6 @@
 	(disable-self)
 )
 
-#load-if-defined UP-ALLY-IN-GAME
 #load-if-not-defined UP-NOMAD-STYLE
 
 ;region Finding Enemy TC x/y position (not working on Nomad)
@@ -16019,7 +16452,6 @@
 	(disable-self)
 )
 
-#end-if
 
 ;endregion
 
@@ -17178,6 +17610,7 @@
 	(can-build house)
 	(housing-headroom < 5)
 	(up-pending-objects c: house < 1)
+	(building-type-count town-center >= 1)
 =>
 	(build house)
 )
@@ -18929,7 +19362,7 @@
     (up-filter-distance c: -1 c: 5)
 	(up-find-local c: villager-class c: 10)
 	(up-remove-objects search-local object-data-group-flag == 3)
-	(up-remove-objects search-local -1 > 3)
+	(up-remove-objects search-local -1 > 5) ;3
 	(up-reset-group c: 2)
 	(up-create-group 0 0 c: 2) ;boar-hunter ctrl-group
 	(up-modify-group-flag 1 c: 2)
@@ -22013,7 +22446,7 @@
 	(current-age == castle-age)
 =>
     (set-strategic-number sn-maximum-town-size 30)
-	(set-strategic-number sn-camp-max-distance 25)
+	(set-strategic-number sn-camp-max-distance 28)
 	(set-strategic-number sn-number-explore-groups 1)
 	(set-strategic-number sn-total-number-explorers 1)
 	(disable-self)
@@ -23286,9 +23719,11 @@
 )
 
 (defrule
-	(can-research ri-crossbow)
-	(unit-type-count-total archer-line >= 3)
+	(can-research-with-escrow ri-crossbow)
+	(unit-type-count-total archer-line >= 6)
 =>
+	(up-modify-escrow food c:- 175)
+	(up-modify-escrow gold c:- 125)
 	(research ri-crossbow)
 )
 
@@ -23860,6 +24295,34 @@
 (defrule
 	(current-age == castle-age)
 	(can-train knight-line)
+	(up-research-status c: ri-chain-barding < research-pending)
+	(up-research-status c: ri-bloodlines < research-pending)	
+	(unit-type-count-total knight-line < 8)
+	(or (civilian-population g:< c-villager-goal)
+	(up-research-status c: imperial-age == research-pending))
+	(or (unit-type-count-total archer-line <= 8)
+	(unit-type-count-total archer-line >= 20))
+	(or (unit-type-count-total camel-line <= 8)
+	(unit-type-count-total camel-line >= 20))
+	(unit-type-count-total my-unique-unit-line <= 8)
+	(unit-type-count-total battle-elephant-line <= 4)
+	(unit-type-count-total steppe-lancer-line <= 4)
+	(or 
+		(nor (players-unit-type-count focus-player spearman-line >= 15) 
+		(or (players-unit-type-count focus-player monk >= 3) 
+		(players-unit-type-count focus-player camel-line >= 8)))
+		(or (unit-type-count-total infantry-class >= 3)
+		(unit-type-count-total monk >= 2))
+	)
+=>
+	(train knight-line)
+)
+
+(defrule
+	(current-age == castle-age)
+	(can-train knight-line)
+	(or (up-research-status c: ri-chain-barding >= research-pending)
+	(up-research-status c: ri-bloodlines >= research-pending))	
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 	(or (unit-type-count-total archer-line <= 8)
@@ -26505,6 +26968,7 @@
 	(can-train armored-elephant-line)
 	(research-completed ri-elite-armored-elephant)
 	(unit-type-count armored-elephant-line < 10)
+	(military-population >= 10)
 =>
 	(train armored-elephant-line)
 )
@@ -26524,6 +26988,7 @@
 	(not (research-available ri-siege-ram))
 	(research-completed ri-capped-ram)
 	(unit-type-count battering-ram-line < 10)
+	(military-population >= 10)
 =>
 	(train battering-ram-line)
 )
@@ -26542,7 +27007,8 @@
 	(current-age == imperial-age)
 	(can-train battering-ram-line)
 	(research-completed ri-siege-ram)
-	(unit-type-count battering-ram-line < 10)
+	(unit-type-count battering-ram-line < 15)
+	(military-population >= 10)
 =>
 	(train battering-ram-line)
 )
@@ -26617,7 +27083,7 @@
 	(military-population >= 25)
 	(up-compare-goal gl-military-advantage >= 15)
 =>
-	(up-assign-builders c: bombard-tower c: 4)
+	(up-assign-builders c: bombard-tower c: 2)
 	(build-forward bombard-tower)
 )
 
@@ -27064,7 +27530,7 @@
 	(military-population >= 25)
 	(up-compare-goal gl-military-advantage >= 15)
 =>
-	(up-assign-builders c: watch-tower c: 4)
+	(up-assign-builders c: watch-tower c: 2)
 	(build-forward watch-tower)
 )
 
@@ -27390,6 +27856,7 @@
 	(up-compare-sn sn-wood-gatherer-percentage > 50)
 	(building-type-count-total lumber-camp < 3)
 	(building-type-count-total farm >= 4)
+	(unit-type-count-total villager >= 30)
 	(resource-found wood)
 	(dropsite-min-distance wood < 255)
 =>
@@ -27627,7 +28094,6 @@
 	(build mining-camp)
 )
 
-
 (defrule
 	(current-age == imperial-age)
 	(can-train scout-cavalry-line)
@@ -27635,7 +28101,7 @@
 	(food-amount > 130)
 	(nor (research-available ri-hussar)
 		 (research-available ri-winged-hussar))
-	(unit-type-count scout-cavalry-line < 20)
+	(unit-type-count scout-cavalry-line < 10)
 =>
 	(train scout-cavalry-line)
 )
@@ -27666,8 +28132,8 @@
 
 (defrule
 	(current-age == imperial-age)
-	(unit-type-count-total cavalry-class == 0)
 	(military-population > 0)
+	(unit-type-count scout-cavalry-line > 1)
 	(can-research ri-light-cavalry)
 =>
 	(research ri-light-cavalry)
@@ -32256,6 +32722,19 @@
 	(goal strategy-goal sg-fastcastle-uu)
 	(current-age == feudal-age)
 	(civilian-population >= 28)
+	(up-research-status c: castle-age != research-pending)
+=>
+	(set-strategic-number sn-wood-gatherer-percentage 36)
+	(set-strategic-number sn-food-gatherer-percentage 42)
+	(set-strategic-number sn-gold-gatherer-percentage 11) ;3 on gold
+	(set-strategic-number sn-stone-gatherer-percentage 11) ;3 on stone
+)
+
+(defrule
+	(goal strategy-goal sg-fastcastle-uu)
+	(current-age == feudal-age)
+	(civilian-population >= 28)
+	(up-research-status c: castle-age == research-pending)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 36)
 	(set-strategic-number sn-food-gatherer-percentage 34)
