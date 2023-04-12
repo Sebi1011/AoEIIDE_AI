@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.1.2
-;last update: 10th April 2023
+;last update: 12th April 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -3630,7 +3630,8 @@
 
 (defrule
 	(can-research my-unique-research)
-	(civilian-population >= 100)
+	(or (civilian-population >= 100)
+	(unit-type-count-total monk >= 10))
 =>
 	(research my-unique-research)
 )
@@ -3720,7 +3721,7 @@
 
 (defrule
 	(can-research my-unique-research)
-	(civilian-population >= 125)
+	(up-compare-goal gl-military-advantage <= -10)
 =>
 	(research my-unique-research)
 )
@@ -3749,7 +3750,8 @@
 
 (defrule
 	(can-research my-second-unique-research)
-	(unit-type-count-total fire-ship-line >= 3)
+	(or (unit-type-count-total fire-ship-line >= 3)
+	(building-type-count-total bombard-tower >= 2))
 =>
 	(research my-second-unique-research)
 )
@@ -3841,14 +3843,15 @@
 
 (defrule
 	(can-research my-second-unique-research)
-	(unit-type-count-total shotel-line >= 10)
+	(or (unit-type-count-total shotel-line >= 5)
+	(unit-type-count-total camel-line >= 3))
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
 	(can-research my-unique-research)
-	(unit-type-count-total siege-weapon-class >= 5)
+	(unit-type-count-total siege-weapon-class >= 4)
 =>
 	(research my-unique-research)
 )
@@ -3918,6 +3921,13 @@
 #end-if
 
 #load-if-defined HUN-CIV
+
+(defrule
+	(can-research my-unique-research)
+	(enemy-captured-relics)
+=>
+	(research my-unique-research)
+)
 
 #end-if
 
@@ -4405,14 +4415,15 @@
 
 (defrule
 	(can-research my-second-unique-research)
-	(unit-type-count-total infantry-class >= 5)
+	(unit-type-count-total infantry-class >= 4)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
 	(can-research my-unique-research)
-	(unit-type-count-total berserk-line >= 5)
+	(or (unit-type-count-total archer-line >= 5)
+	(unit-type-count-total longboat-line >= 4))
 =>
 	(research my-unique-research)
 )
@@ -7196,7 +7207,7 @@
 		(up-compare-goal gl-military-advantage <= -12))
 	)
 =>
-	(up-modify-escrow food c:- 20)
+	(up-modify-escrow food c:- 25)
 	(up-modify-escrow gold c:- 50)
 	(train eagle-warrior-line)
 	;(chat-to-player my-player-number "Produziere Adlerkrieger gegen Bogenschuetzen")
@@ -7623,7 +7634,7 @@
 	(or (players-building-type-count focus-player castle >= 1)
 	(players-building-type-count focus-player krepost >= 1))
 	(can-train armored-elephant-line)
-	(research-available ri-elite-armored-elephant)
+	(research-available ri-siege-elephant)
 	(unit-type-count-total armored-elephant-line < 1)
 =>
 	(train armored-elephant-line)
@@ -7635,7 +7646,7 @@
 	(or (players-building-type-count focus-player castle >= 1)
 	(players-building-type-count focus-player krepost >= 1))
 	(can-train armored-elephant-line)
-	(research-completed ri-elite-armored-elephant)
+	(research-completed ri-siege-elephant)
 	(unit-type-count-total armored-elephant-line < 10)
 =>
 	(train armored-elephant-line)
@@ -8472,7 +8483,7 @@
 	(can-train-with-escrow eagle-warrior-line)
 	(research-completed ri-eagle-warrior)
 =>
-	(up-modify-escrow food c:- 20)
+	(up-modify-escrow food c:- 25)
 	(up-modify-escrow gold c:- 50)
 	(train eagle-warrior-line)
 	;(chat-to-player my-player-number "Produziere Adlerkrieger gegen Bogenschuetzen")
@@ -9453,6 +9464,25 @@
 )
 
 ;ballista-elephant
+
+(defrule
+	(current-age >= castle-age)
+	(players-unit-type-count focus-player ballista-elephant-line >= 6)
+	(can-build-with-escrow siege-workshop)
+	(building-type-count-total siege-workshop < 2)
+=>
+	(up-modify-escrow wood c:- 200)
+	(build siege-workshop)
+)
+
+(defrule
+	(current-age >= castle-age)
+	(players-unit-type-count focus-player ballista-elephant-line >= 6)
+	(can-train mangonel-line)
+	(building-type-count-total siege-workshop > 0)
+=>
+	(train mangonel-line)
+)
 
 (defrule
 	(current-age >= castle-age)
@@ -20162,7 +20192,6 @@
 (defrule
 	(current-age == feudal-age)
 	(unit-type-count-total militiaman-line >= 5)
-	(food-amount >= 125)
 	(can-research ri-supplies)
 =>
 	(research ri-supplies)
@@ -21235,7 +21264,7 @@
 		(unit-type-count-total spearman-line >= 1))
 	(up-compare-goal gl-military-advantage < 25)
 =>
-	(up-modify-escrow food c:- 20)
+	(up-modify-escrow food c:- 25)
 	(up-modify-escrow gold c:- 50)
 	(train eagle-warrior-line)
 )
@@ -22636,6 +22665,19 @@
 	(build outpost)
 )
 
+
+(defrule
+	(current-age >= feudal-age)
+	(civ-selected ethiopian)
+	(building-type-count-total outpost < 2)	
+	(up-compare-goal gl-military-advantage >= 4)
+	(not (town-under-attack))
+	(can-build outpost)
+	(up-pending-objects c: outpost < 1)
+=>
+	(build outpost)
+)
+
 (defrule
 	(current-age >= feudal-age)
 	(player-in-game any-ally)
@@ -23891,6 +23933,14 @@
 	(can-research ri-murder-holes)
 =>
 	(research ri-murder-holes)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(players-unit-type-count focus-player siege-weapon-class >= 3)
+	(can-research ri-sappers)
+=>
+	(research ri-sappers)
 )
 
 (defrule
@@ -26949,15 +26999,15 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(can-research ri-elite-armored-elephant)
+	(can-research ri-siege-elephant)
 =>
-	(research ri-elite-armored-elephant)
+	(research ri-siege-elephant)
 )
 
 (defrule
 	(current-age == imperial-age)
 	(can-train armored-elephant-line)
-	(research-available ri-elite-armored-elephant)
+	(research-available ri-siege-elephant)
 	(unit-type-count armored-elephant-line < 1)
 =>
 	(train armored-elephant-line)
@@ -26966,7 +27016,7 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train armored-elephant-line)
-	(research-completed ri-elite-armored-elephant)
+	(research-completed ri-siege-elephant)
 	(unit-type-count armored-elephant-line < 10)
 	(military-population >= 10)
 =>
@@ -28707,6 +28757,14 @@
 	(research ri-arson)
 )
 
+(defrule
+	(unit-type-count-total infantry-class >= 5)
+	;(goal strategy-goal gl-archerrush)
+	(can-research ri-gambesons)
+=>
+	(research ri-gambesons)
+)
+
 ;endregion
 
 ;region CAV ARCHERS ================================================
@@ -29305,6 +29363,53 @@
 
 #end-if
 
+#load-if-defined BYZANTINE-CIV
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-man-at-arms)
+=>
+	(research ri-man-at-arms)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-long-swordsman)
+=>
+	(research ri-long-swordsman)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-two-handed-swordsman)
+=>
+	(research ri-two-handed-swordsman)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-champion)
+=>
+	(research ri-champion)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
+	(can-research ri-supplies)
+=>
+	(research ri-supplies)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(research-completed ri-champion)
+	(can-train militiaman-line)
+=>
+	(train militiaman-line)
+)
+
+#end-if
+
 #load-if-defined CELTIC-CIV
 (defrule
 	(current-age >= imperial-age)
@@ -29400,53 +29505,6 @@
 #end-if
 
 #load-if-defined FRANKISH-CIV
-(defrule
-	(current-age >= imperial-age)
-	(can-research ri-man-at-arms)
-=>
-	(research ri-man-at-arms)
-)
-
-(defrule
-	(current-age >= imperial-age)
-	(can-research ri-long-swordsman)
-=>
-	(research ri-long-swordsman)
-)
-
-(defrule
-	(current-age >= imperial-age)
-	(can-research ri-two-handed-swordsman)
-=>
-	(research ri-two-handed-swordsman)
-)
-
-(defrule
-	(current-age >= imperial-age)
-	(can-research ri-champion)
-=>
-	(research ri-champion)
-)
-
-(defrule
-	(current-age >= imperial-age)
-	(up-research-status c: ri-two-handed-swordsman >= research-pending)
-	(can-research ri-supplies)
-=>
-	(research ri-supplies)
-)
-
-(defrule
-	(current-age >= imperial-age)
-	(research-completed ri-champion)
-	(can-train militiaman-line)
-=>
-	(train militiaman-line)
-)
-
-#end-if
-
-#load-if-defined BYZANTINE-CIV
 (defrule
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
@@ -29593,6 +29651,53 @@
 #end-if
 
 #load-if-defined MALIAN-CIV
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-man-at-arms)
+=>
+	(research ri-man-at-arms)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-long-swordsman)
+=>
+	(research ri-long-swordsman)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-two-handed-swordsman)
+=>
+	(research ri-two-handed-swordsman)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-champion)
+=>
+	(research ri-champion)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
+	(can-research ri-supplies)
+=>
+	(research ri-supplies)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(research-completed ri-champion)
+	(can-train militiaman-line)
+=>
+	(train militiaman-line)
+)
+
+#end-if
+
+#load-if-defined SICILIANS-CIV
 (defrule
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
