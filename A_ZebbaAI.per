@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.1.2
-;last update: 12th April 2023
+;last update: 13th April 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -759,6 +759,7 @@
 	(set-strategic-number sn-disable-builder-assistance 1)
 	(set-strategic-number sn-disable-defend-groups 1)
 	(set-strategic-number sn-dock-proximity-factor 100)
+	;(set-strategic-number sn-keystates 2) ;1 or 3 are breaking DUC tasks
 	(disable-self)
 )
 
@@ -15418,6 +15419,7 @@
 	(up-find-status-remote c: tower-type c: 10)
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-enemy-towers g:= gl-remote-total)
+	;(up-chat-data-to-self "nr towers: %d" g: gl-enemy-towers)
 )
 
 (defrule
@@ -15434,6 +15436,7 @@
 	(up-get-point position-object enemy-tower-point-x)
 	(up-set-target-point enemy-tower-point-x)
 	;(up-get-search-state gl-local-total)
+	;(chat-to-player my-player-number "Test 1")
 )
 
 (defrule ; skip if tower is not garrisoned
@@ -15466,11 +15469,12 @@
 	; (up-remove-objects search-local object-data-class == infantry-class)
 	; (up-remove-objects search-local object-data-type == armored-elephant)
 	(set-goal split-rule-goal 6)
+	;(chat-to-player my-player-number "Test 1")
 )
 
 (defrule	
 	(goal split-rule-goal 6)
-	(up-find-local c: 1 c: 1)
+	(up-find-local c: -1 c: 1)
 	(up-set-target-object search-local c: 0)
 =>
 	(up-set-target-object search-local c: 0)
@@ -15481,6 +15485,7 @@
 	(set-goal retreating-goal YES)
 	(enable-timer retreating-timer 3)
 	(set-goal split-rule-goal 7)
+	;(chat-to-player my-player-number "Test 2")
 )
 
 (defrule
@@ -15504,9 +15509,11 @@
 	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
+	;(up-target-point enemy-tower-point-x action-move -1 stance-stand-ground) ;run units under the tower
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
-	(enable-timer split-stance-timer 6)
+	(enable-timer split-stance-timer 3)
+	;(chat-to-player my-player-number "Test 3")
 )
 
 (defrule ; skip if tower is garrisoned
@@ -15538,11 +15545,12 @@
 	; (up-remove-objects search-local object-data-class == infantry-class)
 	; (up-remove-objects search-local object-data-type == armored-elephant)
 	(set-goal split-rule-goal 8)
+	;(chat-to-player my-player-number "Test 4")
 )
 
 (defrule	
 	(goal split-rule-goal 8)
-	(up-find-local c: 1 c: 1)
+	(up-find-local c: -1 c: 1)
 	(up-set-target-object search-local c: 0)
 =>
 	(up-set-target-object search-local c: 0)
@@ -15553,6 +15561,7 @@
 	(set-goal retreating-goal YES)
 	(enable-timer retreating-timer 3)
 	(set-goal split-rule-goal 9)
+	;(chat-to-player my-player-number "Test 5")
 )
 
 (defrule
@@ -15576,9 +15585,11 @@
 	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
+	;(up-target-point enemy-tower-point-x action-move -1 stance-stand-ground) ; run units under the tower
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
-	(enable-timer split-stance-timer 6)
+	(enable-timer split-stance-timer 3)
+	;(chat-to-player my-player-number "Test 6")
 )
 
 (defrule
@@ -22669,10 +22680,11 @@
 (defrule
 	(current-age >= feudal-age)
 	(civ-selected ethiopian)
-	(building-type-count-total outpost < 2)	
+	(building-type-count-total outpost < 4)	
 	(up-compare-goal gl-military-advantage >= 4)
 	(not (town-under-attack))
 	(can-build outpost)
+	(wood-amount > 125)
 	(up-pending-objects c: outpost < 1)
 =>
 	(build outpost)
