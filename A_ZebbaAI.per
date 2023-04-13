@@ -1,6 +1,6 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 1.1.2
+;Version: 1.2.0
 ;last update: 13th April 2023
 
 ;region Chats at match-start =======================================
@@ -9,7 +9,7 @@
 (defrule
 	(game-time > 10)
 =>
-	(chat-to-all "ZebbaAI: Version 1.1.2 by Zebba")
+	(chat-to-all "ZebbaAI: Version 1.2.0 by Zebba")
 	(disable-self)
 )
 
@@ -561,6 +561,7 @@
 (defconst gl-castleage-stableunit 251)
 (defconst gl-castleage-rangeunit 252)
 (defconst gl-castleage-eagles 253)
+(defconst gl-castleage-siege-infantry 254)
 (defconst flare 274)
 (defconst g-boar-id 280)
 (defconst g-boar-status 281)
@@ -1086,7 +1087,8 @@
 )
 
 (defrule
-	(goal ca-strategy gl-castleage-eagles)
+	(or (goal ca-strategy gl-castleage-eagles)
+	(goal ca-strategy gl-castleage-siege-infantry))
 	(current-age >= castle-age)
 	(up-compare-goal gl-priority-goal != 5)
 =>
@@ -2288,23 +2290,30 @@
 
 (defrule
 	(game-time > 10)
-	(goal meso-civ NO)
-	(not (goal ca-strategy gl-castleage-stableunit))
-	(not (civ-selected dravidians))
+	(or (civ-selected celtic)
+	(or (civ-selected dravidians)
+	(or (civ-selected gothic)
+	(or (civ-selected malay)
+	(civ-selected viking)))))
+	(not (goal ca-strategy gl-castleage-siege-infantry))
 =>
-	(set-goal ca-strategy gl-castleage-stableunit)
-	(chat-local-to-self "Castle-Age strategy: Cavalry")
+	(set-goal ca-strategy gl-castleage-siege-infantry)
+	(chat-local-to-self "Castle-Age strategy: Siege & Infantry")
 	(disable-self)
 )
 
 (defrule
 	(game-time > 10)
 	(goal meso-civ NO)
-	(not (goal ca-strategy gl-castleage-rangeunit))
-	(civ-selected dravidians)
+	(not (goal ca-strategy gl-castleage-stableunit))
+	(not (civ-selected celtic))
+	(not (civ-selected dravidians))
+	(not (civ-selected gothic))
+	(not (civ-selected malay))
+	(not (civ-selected viking))
 =>
-	(set-goal ca-strategy gl-castleage-rangeunit)
-	(chat-local-to-self "Castle-Age strategy: ranged units")
+	(set-goal ca-strategy gl-castleage-stableunit)
+	(chat-local-to-self "Castle-Age strategy: Cavalry")
 	(disable-self)
 )
 
@@ -2546,7 +2555,7 @@
 	(up-modify-goal civ-cavalry-s c: 5)
 	(up-modify-goal civ-siege-s c: 10)
 	(up-modify-goal civ-uu-s c: 7)
-	(set-goal ca-strategy gl-castleage-stableunit)
+	(set-goal ca-strategy gl-castleage-siege-infantry)
 	(disable-self)
 )
 
@@ -2603,9 +2612,22 @@
 	(up-modify-goal civ-cavalry-s c: 2)
 	(up-modify-goal civ-siege-s c: 8)
 	(up-modify-goal civ-uu-s c: 7)
+	(set-goal ca-strategy gl-castleage-siege-infantry)
+	(disable-self)
+)
+
+#load-if-defined UP-2-PLAYER-GAME
+
+(defrule
+	(game-time > 60)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(goal strategy-goal sg-archerrush)
+=>
 	(set-goal ca-strategy gl-castleage-rangeunit)
 	(disable-self)
 )
+		
+#end-if
 
 #end-if
 
@@ -2645,7 +2667,7 @@
 	(disable-self)
 )
 
-#end-if ;updated until here
+#end-if 
 
 #load-if-defined GOTHIC-CIV
 
@@ -2660,7 +2682,7 @@
 	(up-modify-goal civ-cavalry-s c: 0)
 	(up-modify-goal civ-siege-s c: 9)
 	(up-modify-goal civ-uu-s c: 6)
-	(set-goal ca-strategy gl-castleage-stableunit)
+	(set-goal ca-strategy gl-castleage-siege-infantry)
 	(disable-self)
 )
 
@@ -2685,7 +2707,7 @@
 
 #end-if
 
-#load-if-defined HUN-CIV
+#load-if-defined HUN-CIV ;updated until here
 
 (defrule
 	(true)
@@ -2869,9 +2891,22 @@
 	(up-modify-goal civ-cavalry-s c: 0)
 	(up-modify-goal civ-siege-s c: 9)
 	(up-modify-goal civ-uu-s c: 6)
+	(set-goal ca-strategy gl-castleage-siege-infantry)
+	(disable-self)
+)
+
+#load-if-defined UP-2-PLAYER-GAME
+
+(defrule
+	(game-time > 60)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(goal strategy-goal sg-archerrush)
+=>
 	(set-goal ca-strategy gl-castleage-rangeunit)
 	(disable-self)
 )
+		
+#end-if
 
 #end-if
 
@@ -3044,6 +3079,19 @@
 	(disable-self)
 )
 
+#load-if-defined UP-2-PLAYER-GAME
+
+(defrule
+	(game-time > 60)
+	(not (goal ca-strategy gl-castleage-siege-infantry))
+	(not (goal strategy-goal sg-scoutrush))
+=>
+	(set-goal ca-strategy gl-castleage-siege-infantry)
+	(disable-self)
+)
+		
+#end-if
+
 #end-if
 
 #load-if-defined SPANISH-CIV
@@ -3154,9 +3202,22 @@
 	(up-modify-goal civ-cavalry-s c: 0)
 	(up-modify-goal civ-siege-s c: 9)
 	(up-modify-goal civ-uu-s c: 6)
+	(set-goal ca-strategy gl-castleage-siege-infantry)
+	(disable-self)
+)
+
+#load-if-defined UP-2-PLAYER-GAME
+
+(defrule
+	(game-time > 60)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(goal strategy-goal sg-archerrush)
+=>
 	(set-goal ca-strategy gl-castleage-rangeunit)
 	(disable-self)
 )
+		
+#end-if
 
 #end-if
 
@@ -4473,6 +4534,7 @@
 	(current-age == imperial-age)
 	(can-train jaguar-man-line)
 	(research-completed ri-elite-jaguar-man)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train jaguar-man-line)
 )
@@ -4524,6 +4586,7 @@
 	(current-age == imperial-age)
 	(can-train ratha-train)
 	(research-completed ri-elite-ratha)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train ratha-train)
 )
@@ -4576,6 +4639,7 @@
 	(current-age == imperial-age)
 	(can-train camel-archer-line)
 	(research-completed ri-elite-camel-archer)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train camel-archer-line)
 )
@@ -4632,6 +4696,7 @@
 	(current-age == imperial-age)
 	(can-train hussite-wagon-line)
 	(research-completed ri-elite-hussite-wagon)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train hussite-wagon-line)
 )
@@ -4694,6 +4759,7 @@
 	(can-train longbowman-line)
 	(unit-type-count archer-line < 5)
 	(research-completed ri-elite-longbowman)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train longbowman-line)
 )
@@ -4757,6 +4823,7 @@
 	(can-train konnik-line)
 	(unit-type-count knight-line < 5)
 	(research-completed ri-elite-konnik)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train konnik-line)
 )
@@ -4776,6 +4843,7 @@
 	(can-train krepost-konnik-line)
 	(unit-type-count knight-line < 5)
 	(research-completed ri-elite-konnik)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train krepost-konnik-line)
 )
@@ -4818,6 +4886,7 @@
 	(current-age == imperial-age)
 	(can-train coustillier-line)
 	(research-completed ri-elite-coustillier)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train coustillier-line)
 )
@@ -4860,6 +4929,7 @@
 	(current-age == imperial-age)
 	(can-train arambai-line)
 	(research-completed ri-elite-arambai)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train arambai-line)
 )
@@ -4947,6 +5017,7 @@
 	(can-train cataphract-line)
 	(unit-type-count knight-line < 5)
 	(research-completed ri-elite-cataphract)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train cataphract-line)
 )
@@ -5001,6 +5072,7 @@
 	(can-train chu-ko-nu-line)
 	(unit-type-count archer-line < 5)
 	(research-completed ri-elite-chu-ko-nu)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train chu-ko-nu-line)
 )
@@ -5046,6 +5118,7 @@
 	(current-age == imperial-age)
 	(can-train shotel-line)
 	(research-completed ri-elite-shotel)
+	(up-compare-goal gl-number-trebs >= 1)
 	(food-amount > 75)
 =>
 	(train shotel-line)
@@ -5100,6 +5173,7 @@
 	(current-age == imperial-age)
 	(can-train woad-raider-line)
 	(research-completed ri-elite-woad-raider)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train woad-raider-line)
 )
@@ -5156,6 +5230,7 @@
 	(can-train kipchak-line)
 	(unit-type-count cavalry-archer-line < 5)
 	(research-completed ri-elite-kipchak)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train kipchak-line)
 )
@@ -5204,6 +5279,7 @@
 	(current-age == imperial-age)
 	(can-train urumi-swordsman-line)
 	(research-completed ri-elite-urumi-swordsman)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train urumi-swordsman-line)
 )
@@ -5267,6 +5343,7 @@
 	(current-age == imperial-age)
 	(can-train huskarl-line)
 	(research-completed ri-elite-huskarl)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train huskarl-line)
 )
@@ -5337,6 +5414,7 @@
 	(current-age == imperial-age)
 	(can-train chakram-thrower-line)
 	(research-completed ri-elite-chakram-thrower)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train chakram-thrower-line)
 )
@@ -5389,6 +5467,7 @@
 	(current-age == imperial-age)
 	(can-train tarkan-line)
 	(research-completed ri-elite-tarkan)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train tarkan-line)
 )
@@ -5461,6 +5540,7 @@
 	(current-age == imperial-age)
 	(can-train ghulam-line)
 	(research-completed ri-elite-ghulam)
+	(up-compare-goal gl-number-trebs >= 1)
 	(food-amount > 75)
 =>
 	(train ghulam-line)
@@ -5524,6 +5604,7 @@
 	(current-age == imperial-age)
 	(can-train kamayuk-line)
 	(research-completed ri-elite-kamayuk)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train kamayuk-line)
 )
@@ -5578,6 +5659,7 @@
 	(can-train genoese-crossbowman-line)
 	(unit-type-count archer-line < 5)
 	(research-completed ri-elite-genoese-crossbow)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train genoese-crossbowman-line)
 )
@@ -5629,6 +5711,7 @@
 	(current-age == imperial-age)
 	(can-train samurai-line)
 	(research-completed ri-elite-samurai)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train samurai-line)
 )
@@ -5690,6 +5773,7 @@
 	(current-age == imperial-age)
 	(can-train war-wagon-line)
 	(research-completed ri-elite-war-wagon)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train war-wagon-line)
 )
@@ -5744,6 +5828,7 @@
 	(current-age == imperial-age)
 	(can-train ballista-elephant-line)
 	(research-completed ri-elite-ballista-elephant)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train ballista-elephant-line)
 )
@@ -5807,6 +5892,7 @@
 	(can-train leitis-line)
 	(unit-type-count knight-line < 5)
 	(research-completed ri-elite-leitis)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train leitis-line)
 )
@@ -5865,6 +5951,7 @@
 	(unit-type-count scout-cavalry-line < 5)
 	(research-completed ri-elite-magyar-huszar)
 	(research-completed my-unique-research)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train magyar-huszar-line)
 )
@@ -5919,6 +6006,7 @@
 	(can-train karambit-warrior-line)
 	(food-amount > 75)
 	(research-completed ri-elite-karambit-warrior)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train karambit-warrior-line)
 )
@@ -5963,6 +6051,7 @@
 	(current-age == imperial-age)
 	(can-train gbeto-line)
 	(research-completed ri-elite-gbeto)
+	(up-compare-goal gl-number-trebs >= 1)
 	(food-amount > 75)
 =>
 	(train gbeto-line)
@@ -6019,6 +6108,7 @@
 	(can-train plumed-archer-line)
 	(unit-type-count archer-line < 5)
 	(research-completed ri-elite-plumed-archer)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train plumed-archer-line)
 )
@@ -6076,6 +6166,7 @@
 	(can-train mangudai-line)
 	(unit-type-count cavalry-archer-line < 5)
 	(research-completed ri-elite-mangudai)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train mangudai-line)
 )
@@ -6161,6 +6252,7 @@
 	(current-age == imperial-age)
 	(can-train obuch-line)
 	(research-completed ri-elite-obuch)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train obuch-line)
 )
@@ -6213,6 +6305,7 @@
 	(current-age == imperial-age)
 	(can-train organ-gun-line)
 	(research-completed ri-elite-organ-gun)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train organ-gun-line)
 )
@@ -6255,6 +6348,7 @@
 	(current-age == imperial-age)
 	(can-train serjeant-line)
 	(research-completed ri-elite-serjeant)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train serjeant-line)
 )
@@ -6300,6 +6394,7 @@
 	(can-train boyar-line)
 	(unit-type-count knight-line < 5)
 	(research-completed ri-elite-boyar)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train boyar-line)
 )
@@ -6351,6 +6446,7 @@
 	(current-age == imperial-age)
 	(can-train conquistador-line)
 	(research-completed ri-elite-conquistador)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train conquistador-line)
 )
@@ -6430,6 +6526,7 @@
 	(can-train keshik-line)
 	(unit-type-count knight-line < 5)
 	(research-completed ri-elite-keshik)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train keshik-line)
 )
@@ -6472,6 +6569,7 @@
 	(current-age == imperial-age)
 	(can-train teutonic-knight-line)
 	(research-completed ri-elite-teutonic-knight)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train teutonic-knight-line)
 )
@@ -6514,6 +6612,7 @@
 	(current-age == imperial-age)
 	(can-train janissary-line)
 	(research-completed ri-elite-janissary)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train janissary-line)
 )
@@ -6568,6 +6667,7 @@
 	(can-train rattan-archer-line)
 	(unit-type-count archer-line < 5)
 	(research-completed ri-elite-rattan-archer)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train rattan-archer-line)
 )
@@ -6638,6 +6738,7 @@
 	(current-age == imperial-age)
 	(can-train berserk-line)
 	(research-completed ri-elite-berserk)
+	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train berserk-line)
 )
@@ -17901,7 +18002,7 @@
 
 (defrule
 	(game-time > 3000)
-	(unit-type-count villager > 130)
+	(unit-type-count villager > 120)
 	(population >= 180)
 	(population-headroom <= 20)
 	(current-age >= imperial-age)
@@ -20729,7 +20830,8 @@
 	(current-age == feudal-age)
 	(civilian-population >= 20)
 	(or (building-type-count-total stable > 0)
-	(building-type-count-total barracks > 1))
+	(or (building-type-count-total archery-range > 0)
+	(building-type-count-total barracks > 1)))
 	(up-research-status c: ri-horse-collar >= research-pending)
 	(idle-farm-count < 1)
 	(can-build farm)
@@ -20744,7 +20846,8 @@
 	(current-age == feudal-age)
 	(civilian-population >= 20)
 	(or (building-type-count-total stable > 0)
-	(building-type-count-total barracks > 1))
+	(or (building-type-count-total archery-range > 0)
+	(building-type-count-total barracks > 1)))
 	(idle-farm-count < 1)
 	(can-build farm)
 	(up-compare-goal gl-water-on-map == 1)
@@ -20760,7 +20863,8 @@
 	(current-age == feudal-age)
 	(civilian-population >= 20)
 	(or (building-type-count-total stable > 0)
-	(building-type-count-total barracks > 1))
+	(or (building-type-count-total archery-range > 0)
+	(building-type-count-total barracks > 1)))
 	(idle-farm-count < 1)
 	(can-build farm)
 	(up-compare-goal gl-water-on-map == 1)
@@ -24245,7 +24349,8 @@
 	(or (goal strategy-goal sg-fastcastle-gu)
 	(or (goal strategy-goal sg-fastcastle-uu)
 	(goal strategy-goal sg-scoutrush)))
-	(goal ca-strategy gl-castleage-eagles)
+	(or (goal ca-strategy gl-castleage-eagles)
+	(goal ca-strategy gl-castleage-siege-infantry))
 	(current-age == castle-age)
 	(building-type-count-total barracks < 3)
 	(building-type-count-total town-center >= 1)
@@ -24261,7 +24366,8 @@
 	(or (goal strategy-goal sg-fastcastle-gu)
 	(or (goal strategy-goal sg-fastcastle-uu)
 	(goal strategy-goal sg-scoutrush)))
-	(goal ca-strategy gl-castleage-eagles)
+	(or (goal ca-strategy gl-castleage-eagles)
+	(goal ca-strategy gl-castleage-siege-infantry))
 	(current-age == castle-age)
 	(building-type-count-total barracks < 3)
 	(building-type-count-total town-center >= 1)
@@ -24338,9 +24444,11 @@
 	(can-train knight-line)
 	(unit-type-count-total knight-line < 5)
 	(or (unit-type-count-total archer-line > 8)
-	(unit-type-count-total camel-line > 8))
+	(or (unit-type-count-total militiaman-line > 8)
+	(unit-type-count-total camel-line > 8)))
 	(or (unit-type-count-total archer-line < 20)
-	(unit-type-count-total camel-line < 20))
+	(or (unit-type-count-total militiaman-line < 20)
+	(unit-type-count-total camel-line < 20)))
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 	(or 
@@ -24366,6 +24474,8 @@
 	(unit-type-count-total archer-line >= 20))
 	(or (unit-type-count-total camel-line <= 8)
 	(unit-type-count-total camel-line >= 20))
+	(or (unit-type-count-total militiaman-line <= 8)
+	(unit-type-count-total militiaman-line >= 20))
 	(unit-type-count-total my-unique-unit-line <= 8)
 	(unit-type-count-total battle-elephant-line <= 4)
 	(unit-type-count-total steppe-lancer-line <= 4)
@@ -24391,6 +24501,8 @@
 	(unit-type-count-total archer-line >= 20))
 	(or (unit-type-count-total camel-line <= 8)
 	(unit-type-count-total camel-line >= 20))
+	(or (unit-type-count-total militiaman-line <= 8)
+	(unit-type-count-total militiaman-line >= 20))
 	(unit-type-count-total my-unique-unit-line <= 8)
 	(unit-type-count-total battle-elephant-line <= 4)
 	(unit-type-count-total steppe-lancer-line <= 4)
@@ -24403,6 +24515,112 @@
 	)
 =>
 	(train knight-line)
+)
+
+(defrule
+	(current-age == castle-age)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(not (research-completed ri-man-at-arms))
+	(can-research ri-man-at-arms)
+=>
+	(research ri-man-at-arms)
+)
+
+(defrule
+	(current-age == castle-age)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(not (research-completed ri-long-swordsman))
+	(can-research ri-long-swordsman)
+=>
+	(research ri-long-swordsman)
+)
+
+(defrule
+	(current-age == castle-age)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(not (research-completed ri-supplies))
+	(can-research ri-supplies)
+=>
+	(research ri-supplies)
+)
+
+(defrule
+	(current-age == castle-age)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(not (research-completed ri-gambesons))
+	(can-research ri-gambesons)
+=>
+	(research ri-gambesons)
+)
+	
+(defrule
+	(current-age == castle-age)
+	(can-train militiaman-line)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(up-research-status c: ri-long-swordsman >= research-pending)
+	(or (civ-selected gothic)
+	(up-research-status c: ri-gambesons >= research-pending))
+=>
+	(train militiaman-line)
+)
+
+(defrule
+	(current-age == castle-age)
+	(can-train militiaman-line)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(up-research-status c: ri-long-swordsman >= research-pending)
+	(or (civ-selected gothic)
+	(up-research-status c: ri-gambesons >= research-pending))
+=>
+	(train militiaman-line)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(not (research-completed ri-two-handed-swordsman))
+	(can-research ri-two-handed-swordsman)
+=>
+	(research ri-two-handed-swordsman)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(can-train militiaman-line)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
+=>
+	(train militiaman-line)
+)
+
+(defrule
+	(current-age == castle-age)
+	(can-train spearman-line)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(up-research-status c: ri-pikeman >= research-pending)
+	(or (civ-selected gothic)
+	(up-research-status c: ri-gambesons >= research-pending))
+=>
+	(train spearman-line)
+)
+
+(defrule
+	(current-age == castle-age)
+	(can-build siege-workshop)
+	(building-type-count-total siege-workshop < 1)
+	(goal ca-strategy gl-castleage-siege-infantry)
+=>
+	(up-set-placement-data my-player-number -1 c: 14)
+    (up-build place-control 0 c: siege-workshop)
+)
+
+(defrule
+	(current-age == castle-age)
+	(can-train mangonel-line)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(unit-type-count-total infantry-class >= 10)
+=>
+	(train mangonel-line)
 )
 
 (defrule
@@ -26886,6 +27104,7 @@
 	(current-age == imperial-age)
 	(can-train villager)
 	(unit-type-count-total villager < 140)
+	(population-headroom > 20)
 =>
 	(train villager)
 	(up-get-fact civilian-population 0 civilian-pop) 
@@ -26938,7 +27157,8 @@
 (defrule
 	(goal strategy-goal sg-boom-imp)
 	(up-research-status c: imperial-age >= research-pending)
-	(goal ca-strategy gl-castleage-eagles)
+	(or (goal ca-strategy gl-castleage-eagles)
+	(goal ca-strategy gl-castleage-siege-infantry))
 	(building-type-count-total barracks < 4)
 	(building-type-count-total town-center >= 1)
 	(can-build barracks)
@@ -27796,6 +28016,16 @@
 )
 
 (defrule
+	(goal strategy-goal sg-boom-imp)
+	(current-age == imperial-age)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(can-train militiaman-line)
+	(unit-type-count-total militiaman-line < 30)
+=>
+	(train militiaman-line)
+)
+
+(defrule
 	(current-age == castle-age)
 	(can-train battle-elephant-line)
 	(unit-type-count knight-line < 5)
@@ -28461,9 +28691,11 @@
 	(can-train camel-line)
 	(unit-type-count-total camel-line < 6)
 	(or (up-compare-goal gl-cavalry-archer-units >= 8)
-	(unit-type-count-total knight-line >= 8))
+	(or (unit-type-count-total militiaman-line >= 8)
+	(unit-type-count-total knight-line >= 8)))
 	(or (up-compare-goal gl-cavalry-archer-units < 20)
-	(unit-type-count-total knight-line < 20))
+	(or (unit-type-count-total militiaman-line < 20)
+	(unit-type-count-total knight-line < 20)))
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 	(or 
@@ -28481,9 +28713,11 @@
 	(current-age == castle-age)
 	(can-train camel-line)
 	(or (up-compare-goal gl-cavalry-archer-units < 8)
-	(unit-type-count-total knight-line < 8))
+	(or (unit-type-count-total militiaman-line < 8)
+	(unit-type-count-total knight-line < 8)))
 	(or (up-compare-goal gl-cavalry-archer-units >= 20)
-	(unit-type-count-total knight-line >= 20))
+	(or (unit-type-count-total militiaman-line >= 20)
+	(unit-type-count-total knight-line >= 20)))
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 	(or 
@@ -28717,7 +28951,8 @@
 
 (defrule
 	(current-age == castle-age)
-	(goal meso-civ YES)
+	(or (goal meso-civ YES)
+	(goal ca-strategy gl-castleage-siege-infantry))
 	(can-build barracks)
 	(building-type-count-total barracks < 4)
 	(building-type-count-total town-center >= 1)
@@ -28731,7 +28966,8 @@
 
 (defrule
 	(current-age == castle-age)
-	(goal meso-civ YES)
+	(or (goal meso-civ YES)
+	(goal ca-strategy gl-castleage-siege-infantry))
 	(can-build barracks)
 	(building-type-count-total barracks < 4)
 	(building-type-count-total town-center >= 1)
@@ -33440,7 +33676,6 @@
 	(goal ca-strategy gl-castleage-eagles)
 	(not (goal strategy-goal sg-fastcastle-uu))
 	(not (goal strategy-goal sg-boom-imp))
-	(civilian-population g:>= f-villager-goal)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 29)
 	(set-strategic-number sn-food-gatherer-percentage 40)
@@ -33452,10 +33687,23 @@
 
 (defrule
 	(current-age == castle-age)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(not (goal strategy-goal sg-fastcastle-uu))
+	(not (goal strategy-goal sg-boom-imp))
+=>
+	(set-strategic-number sn-wood-gatherer-percentage 25)
+	(set-strategic-number sn-food-gatherer-percentage 44)
+	(set-strategic-number sn-gold-gatherer-percentage 25)
+	(set-strategic-number sn-stone-gatherer-percentage 6)
+	(chat-to-player my-player-number "Setting up Economy for Castle-Age eagles")
+	(disable-self)
+)
+
+(defrule
+	(current-age == castle-age)
 	(goal ca-strategy gl-castleage-rangeunit)
 	(not (goal strategy-goal sg-fastcastle-uu))
 	(not (goal strategy-goal sg-boom-imp))
-	(civilian-population g:>= f-villager-goal)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 35)
 	(set-strategic-number sn-food-gatherer-percentage 39)
@@ -33470,7 +33718,6 @@
 	(goal ca-strategy gl-castleage-stableunit)
 	(not (goal strategy-goal sg-fastcastle-uu))
 	(not (goal strategy-goal sg-boom-imp))
-	(civilian-population g:>= f-villager-goal)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 29)
 	(set-strategic-number sn-food-gatherer-percentage 50)
