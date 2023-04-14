@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.0
-;last update: 13th April 2023
+;last update: 14th April 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -84,22 +84,37 @@
 
 ;what's up next:
 
+; - adjust farm-placement & tc placement rules for fc-gu strategy to only build if required amount of offense buildings have been placed
+; - deactivate sending units to own buildings under constructions
+; - add option to attack in castle-age when having a specific number of army and the opponent is still in feudal-age,
+; but has the army lead
+; - stop training archers as spanish & bulgarians in archerrushes when going up to castle-age
+; - fix retreating of militias in drushes
+; - find a way to improve scoutrush attack time
+; - fix forward siege-workshop placement to consider military-advantage instead of just own military numbers
+; - fix retreat code bug, causing the AI to have units on stand ground without being set back to offensive (check if all units that should not retreat are excluded everywhere)
+; - release escrow to research cavalier for burgundians in castle-age
+; - in castle-age & imperial-age, check if attack now is being spammed (it should)
+; - find restriction rules for rams in imperial age to not waste them unneccesarily and to encourage train trebs
+; - trebs are still not being produced at all
+; - implement more precise conditions for imperial age units (champions/knights/camels/archers/steppe-lancers/eagles/halbs/hc/siege/uu/cav-archers)
+; - add production-restrictions for champions if the opponent has hc/catas/heavy-scorpions
+; - fix scout-group after scouting opponent and opponent wasn't found yet (unknown reason)
+; - try chaging amount of attackers on scouts & militias to 2 if having more than at least 2 (testing)
+; - fix siege workshop placement for siege-infantry strategy when under attack (testing)
+; - try to always attack with at least 2 rams instead of only one (testing)
+; - reduce priority of enemy dropoff buildings (and all other buildings) (testing)
+
 ; - rework sn-camp-max-distance modifier
 ; - fix fc-uu bo before going up to castle-age (testing)
-; - use scout retreat rules for all scout-types (testing)
-; - fix militia retreat rules to retreat with the correct militia
-; - take blacksmith upgrades more into consideration after castle-age (testing)
 
-; - fix targeting enemy buildings instead of enemy units (testing)
 ; - fix rare boar hunting bug, where the AI wouldn't garrison villagers under tc for unknown reasons
-; - fix issue where militia & scouts wouldn't target enemy villagers nearby, but instead prefer to target the enemy tc
 ; - add next ally information in TGs: in 3v3s & 4v4s, identify which flanks belong to which pocket. Then gather information about
 ; allied military to improve combined attacks and army-evaluation. Add this information for 2v2s. The easiest way to implement this
 ; would be to modify the military advantage calculation rules, selecting different methods based on how many allies the AI has
 ; - implement player-loop for fortification-retreat-rules
 
 ; - fix strategy choice in 2v2s: there should always be 1 cav & 1 archer player
-; - try to always attack with at least 2 rams instead of only one
 ; - generally improve speed to kill a player when in advantage
 ; - fix bug in escrow saving system (or notification) the notification keeps getting spammed for some reason
 ; - fix preferation of training gold units (knights/archers) in imp over getting their upgrades first
@@ -808,24 +823,24 @@
 =>
 	(up-set-offense-priority c: town-center c: -1)
 	(up-set-offense-priority c: house c: -1)
-	(up-set-offense-priority c: mill c: 5)
-	(up-set-offense-priority c: lumber-camp c: 5)
-	(up-set-offense-priority c: mining-camp c: 5)
+	(up-set-offense-priority c: mill c: 3)
+	(up-set-offense-priority c: lumber-camp c: 3)
+	(up-set-offense-priority c: mining-camp c: 3)
 	(up-set-offense-priority c: blacksmith c: 1)
-	(up-set-offense-priority c: market c: 3)
+	(up-set-offense-priority c: market c: 2)
 	(up-set-offense-priority c: university c: 1)
 	(up-set-offense-priority c: castle c: 1)
 	(up-set-offense-priority c: krepost c: 1)
-	(up-set-offense-priority c: watch-tower c: 3)
-	(up-set-offense-priority c: donjon c: 3)
+	(up-set-offense-priority c: watch-tower c: 2)
+	(up-set-offense-priority c: donjon c: 2)
 	(up-set-offense-priority c: bombard-tower c: 1)
 	(up-set-offense-priority c: caravanserai c: 1)
 	(up-set-offense-priority c: feitoria c: 1)
-	(up-set-offense-priority c: dock c: 5)
-	(up-set-offense-priority c: barracks c: 5)
-	(up-set-offense-priority c: stable c: 5)
-	(up-set-offense-priority c: archery-range c: 5)
-	(up-set-offense-priority c: siege-workshop c: 5)
+	(up-set-offense-priority c: dock c: 3)
+	(up-set-offense-priority c: barracks c: 3)
+	(up-set-offense-priority c: stable c: 3)
+	(up-set-offense-priority c: archery-range c: 3)
+	(up-set-offense-priority c: siege-workshop c: 3)
 	(up-set-offense-priority c: monastery c: 1)
 )
 
@@ -877,24 +892,24 @@
 =>
 	(up-set-offense-priority c: town-center c: -1)
 	(up-set-offense-priority c: house c: -1)
-	(up-set-offense-priority c: mill c: 5)
-	(up-set-offense-priority c: lumber-camp c: 5)
-	(up-set-offense-priority c: mining-camp c: 5)
+	(up-set-offense-priority c: mill c: 3)
+	(up-set-offense-priority c: lumber-camp c: 3)
+	(up-set-offense-priority c: mining-camp c: 3)
 	(up-set-offense-priority c: blacksmith c: 1)
 	(up-set-offense-priority c: market c: 1)
 	(up-set-offense-priority c: university c: 1)
 	(up-set-offense-priority c: castle c: 1)
 	(up-set-offense-priority c: krepost c: 1)
-	(up-set-offense-priority c: watch-tower c: 3)
-	(up-set-offense-priority c: donjon c: 3)
+	(up-set-offense-priority c: watch-tower c: 2)
+	(up-set-offense-priority c: donjon c: 2)
 	(up-set-offense-priority c: bombard-tower c: 1)
 	(up-set-offense-priority c: caravanserai c: 1)
 	(up-set-offense-priority c: feitoria c: 1)
-	(up-set-offense-priority c: dock c: 5)
-	(up-set-offense-priority c: barracks c: 5)
-	(up-set-offense-priority c: stable c: 5)
-	(up-set-offense-priority c: archery-range c: 5)
-	(up-set-offense-priority c: siege-workshop c: 5)
+	(up-set-offense-priority c: dock c: 3)
+	(up-set-offense-priority c: barracks c: 3)
+	(up-set-offense-priority c: stable c: 3)
+	(up-set-offense-priority c: archery-range c: 3)
+	(up-set-offense-priority c: siege-workshop c: 3)
 	(up-set-offense-priority c: monastery c: 1)
 )
 
@@ -946,25 +961,25 @@
 =>
 	(up-set-offense-priority c: town-center c: -1)
 	(up-set-offense-priority c: house c: -1)
-	(up-set-offense-priority c: mill c: 5)
-	(up-set-offense-priority c: lumber-camp c: 5)
-	(up-set-offense-priority c: mining-camp c: 5)
+	(up-set-offense-priority c: mill c: 3)
+	(up-set-offense-priority c: lumber-camp c: 3)
+	(up-set-offense-priority c: mining-camp c: 3)
 	(up-set-offense-priority c: blacksmith c: 1)
-	(up-set-offense-priority c: market c: 5)
+	(up-set-offense-priority c: market c: 3)
 	(up-set-offense-priority c: university c: 1)
 	(up-set-offense-priority c: castle c: 1)
 	(up-set-offense-priority c: krepost c: 1)
-	(up-set-offense-priority c: watch-tower c: 5)
-	(up-set-offense-priority c: donjon c: 5)
+	(up-set-offense-priority c: watch-tower c: 3)
+	(up-set-offense-priority c: donjon c: 3)
 	(up-set-offense-priority c: bombard-tower c: 1)
 	(up-set-offense-priority c: caravanserai c: 1)
 	(up-set-offense-priority c: feitoria c: 1)
-	(up-set-offense-priority c: dock c: 5)
-	(up-set-offense-priority c: barracks c: 4)
-	(up-set-offense-priority c: stable c: 5)
-	(up-set-offense-priority c: archery-range c: 5)
-	(up-set-offense-priority c: siege-workshop c: 5)
-	(up-set-offense-priority c: monastery c: 5)
+	(up-set-offense-priority c: dock c: 3)
+	(up-set-offense-priority c: barracks c: 3)
+	(up-set-offense-priority c: stable c: 3)
+	(up-set-offense-priority c: archery-range c: 3)
+	(up-set-offense-priority c: siege-workshop c: 3)
+	(up-set-offense-priority c: monastery c: 3)
 )
 
 (defrule
@@ -1015,24 +1030,24 @@
 =>
 	(up-set-offense-priority c: town-center c: -1)
 	(up-set-offense-priority c: house c: -1)
-	(up-set-offense-priority c: mill c: 4)
-	(up-set-offense-priority c: lumber-camp c: 4)
-	(up-set-offense-priority c: mining-camp c: 4)
+	(up-set-offense-priority c: mill c: 3)
+	(up-set-offense-priority c: lumber-camp c: 3)
+	(up-set-offense-priority c: mining-camp c: 3)
 	(up-set-offense-priority c: blacksmith c: 1)
-	(up-set-offense-priority c: market c: 3)
+	(up-set-offense-priority c: market c: 2)
 	(up-set-offense-priority c: university c: 1)
 	(up-set-offense-priority c: castle c: 1)
 	(up-set-offense-priority c: krepost c: 1)
-	(up-set-offense-priority c: watch-tower c: 5)
-	(up-set-offense-priority c: donjon c: 5)
+	(up-set-offense-priority c: watch-tower c: 3)
+	(up-set-offense-priority c: donjon c: 3)
 	(up-set-offense-priority c: bombard-tower c: 1)
 	(up-set-offense-priority c: caravanserai c: 1)
 	(up-set-offense-priority c: feitoria c: 1)
-	(up-set-offense-priority c: dock c: 4)
-	(up-set-offense-priority c: barracks c: 4)
-	(up-set-offense-priority c: stable c: 4)
-	(up-set-offense-priority c: archery-range c: 4)
-	(up-set-offense-priority c: siege-workshop c: 4)
+	(up-set-offense-priority c: dock c: 3)
+	(up-set-offense-priority c: barracks c: 3)
+	(up-set-offense-priority c: stable c: 3)
+	(up-set-offense-priority c: archery-range c: 3)
+	(up-set-offense-priority c: siege-workshop c: 3)
 	(up-set-offense-priority c: monastery c: 1)
 )
 
@@ -1100,25 +1115,25 @@
 =>
 	(up-set-offense-priority c: town-center c: 4)
 	(up-set-offense-priority c: house c: -1)
-	(up-set-offense-priority c: mill c: 5)
-	(up-set-offense-priority c: lumber-camp c: 5)
-	(up-set-offense-priority c: mining-camp c: 5)
+	(up-set-offense-priority c: mill c: 2)
+	(up-set-offense-priority c: lumber-camp c: 2)
+	(up-set-offense-priority c: mining-camp c: 2)
 	(up-set-offense-priority c: blacksmith c: 1)
-	(up-set-offense-priority c: market c: 3)
+	(up-set-offense-priority c: market c: 2)
 	(up-set-offense-priority c: university c: 1)
 	(up-set-offense-priority c: castle c: -1)
 	(up-set-offense-priority c: krepost c: -1)
-	(up-set-offense-priority c: watch-tower c: 4)
-	(up-set-offense-priority c: donjon c: 4)
+	(up-set-offense-priority c: watch-tower c: 3)
+	(up-set-offense-priority c: donjon c: 3)
 	(up-set-offense-priority c: bombard-tower c: -1)
 	(up-set-offense-priority c: caravanserai c: 1)
-	(up-set-offense-priority c: feitoria c: 3)
-	(up-set-offense-priority c: dock c: 4)
-	(up-set-offense-priority c: barracks c: 4)
-	(up-set-offense-priority c: stable c: 4)
-	(up-set-offense-priority c: archery-range c: 4)
-	(up-set-offense-priority c: siege-workshop c: 4)
-	(up-set-offense-priority c: monastery c: 5)
+	(up-set-offense-priority c: feitoria c: 2)
+	(up-set-offense-priority c: dock c: 3)
+	(up-set-offense-priority c: barracks c: 3)
+	(up-set-offense-priority c: stable c: 3)
+	(up-set-offense-priority c: archery-range c: 3)
+	(up-set-offense-priority c: siege-workshop c: 3)
+	(up-set-offense-priority c: monastery c: 4)
 )
 
 (defrule
@@ -1172,24 +1187,24 @@
 =>
 	(up-set-offense-priority c: town-center c: 4)
 	(up-set-offense-priority c: house c: -1)
-	(up-set-offense-priority c: mill c: 5)
-	(up-set-offense-priority c: lumber-camp c: 5)
-	(up-set-offense-priority c: mining-camp c: 5)
+	(up-set-offense-priority c: mill c: 2)
+	(up-set-offense-priority c: lumber-camp c: 2)
+	(up-set-offense-priority c: mining-camp c: 2)
 	(up-set-offense-priority c: blacksmith c: 1)
-	(up-set-offense-priority c: market c: 3)
+	(up-set-offense-priority c: market c: 2)
 	(up-set-offense-priority c: university c: 1)
 	(up-set-offense-priority c: castle c: -1)
 	(up-set-offense-priority c: krepost c: -1)
-	(up-set-offense-priority c: watch-tower c: 4)
-	(up-set-offense-priority c: donjon c: 4)
+	(up-set-offense-priority c: watch-tower c: 3)
+	(up-set-offense-priority c: donjon c: 3)
 	(up-set-offense-priority c: bombard-tower c: -1)
 	(up-set-offense-priority c: caravanserai c: 1)
-	(up-set-offense-priority c: feitoria c: 3)
-	(up-set-offense-priority c: dock c: 4)
-	(up-set-offense-priority c: barracks c: 4)
-	(up-set-offense-priority c: stable c: 4)
-	(up-set-offense-priority c: archery-range c: 4)
-	(up-set-offense-priority c: siege-workshop c: 4)
+	(up-set-offense-priority c: feitoria c: 2)
+	(up-set-offense-priority c: dock c: 3)
+	(up-set-offense-priority c: barracks c: 3)
+	(up-set-offense-priority c: stable c: 3)
+	(up-set-offense-priority c: archery-range c: 3)
+	(up-set-offense-priority c: siege-workshop c: 3)
 	(up-set-offense-priority c: monastery c: 4)
 )
 
@@ -1244,25 +1259,25 @@
 =>
 	(up-set-offense-priority c: town-center c: 4)
 	(up-set-offense-priority c: house c: -1)
-	(up-set-offense-priority c: mill c: 4)
-	(up-set-offense-priority c: lumber-camp c: 4)
-	(up-set-offense-priority c: mining-camp c: 4)
+	(up-set-offense-priority c: mill c: 2)
+	(up-set-offense-priority c: lumber-camp c: 2)
+	(up-set-offense-priority c: mining-camp c: 2)
 	(up-set-offense-priority c: blacksmith c: 1)
-	(up-set-offense-priority c: market c: 3)
+	(up-set-offense-priority c: market c: 2)
 	(up-set-offense-priority c: university c: 1)
 	(up-set-offense-priority c: castle c: -1)
 	(up-set-offense-priority c: krepost c: -1)
-	(up-set-offense-priority c: watch-tower c: 4)
-	(up-set-offense-priority c: donjon c: 4)
+	(up-set-offense-priority c: watch-tower c: 3)
+	(up-set-offense-priority c: donjon c: 3)
 	(up-set-offense-priority c: bombard-tower c: -1)
 	(up-set-offense-priority c: caravanserai c: 1)
-	(up-set-offense-priority c: feitoria c: 3)
-	(up-set-offense-priority c: dock c: 4)
-	(up-set-offense-priority c: barracks c: 4)
-	(up-set-offense-priority c: stable c: 4)
-	(up-set-offense-priority c: archery-range c: 4)
-	(up-set-offense-priority c: siege-workshop c: 4)
-	(up-set-offense-priority c: monastery c: 4)
+	(up-set-offense-priority c: feitoria c: 2)
+	(up-set-offense-priority c: dock c: 3)
+	(up-set-offense-priority c: barracks c: 3)
+	(up-set-offense-priority c: stable c: 3)
+	(up-set-offense-priority c: archery-range c: 3)
+	(up-set-offense-priority c: siege-workshop c: 3)
+	(up-set-offense-priority c: monastery c: 3)
 )
 
 (defrule
@@ -15879,7 +15894,7 @@
 	(current-age < castle-age)
 	(up-compare-goal attack-now-goal == 1)
 	(unit-type-count militiaman-line == 3)
-	(up-compare-goal gl-remote-total >= 3)
+	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
 	(up-set-target-object search-remote c: 0)
 	;(up-object-data object-data-action == actionid-attack)
@@ -15903,7 +15918,7 @@
 	(current-age < castle-age)
 	(up-compare-goal attack-now-goal == 1)
 	(unit-type-count militiaman-line == 3)
-	(up-compare-goal gl-remote-total >= 3)
+	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
 	(up-set-target-object search-remote c: 1)
 	;(up-object-data object-data-action == actionid-attack)
@@ -15927,7 +15942,7 @@
 	(current-age < castle-age)
 	(up-compare-goal attack-now-goal == 1)
 	(unit-type-count militiaman-line == 3)
-	(up-compare-goal gl-remote-total >= 3)
+	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
 	(up-set-target-object search-remote c: 2)
 	;(up-object-data object-data-action == actionid-attack)
@@ -15953,7 +15968,7 @@
 	(current-age < castle-age)
 	(up-compare-goal attack-now-goal == 1)
 	(unit-type-count militiaman-line == 4)
-	(up-compare-goal gl-remote-total >= 4)
+	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
 	(up-set-target-object search-remote c: 0)
 	;(up-object-data object-data-action == actionid-attack)
@@ -15977,7 +15992,7 @@
 	(current-age < castle-age)
 	(up-compare-goal attack-now-goal == 1)
 	(unit-type-count militiaman-line == 4)
-	(up-compare-goal gl-remote-total >= 4)
+	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
 	(up-set-target-object search-remote c: 1)
 	;(up-object-data object-data-action == actionid-attack)
@@ -16001,7 +16016,7 @@
 	(current-age < castle-age)
 	(up-compare-goal attack-now-goal == 1)
 	(unit-type-count militiaman-line == 4)
-	(up-compare-goal gl-remote-total >= 4)
+	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
 	(up-set-target-object search-remote c: 2)
 	;(up-object-data object-data-action == actionid-attack)
@@ -16025,7 +16040,7 @@
 	(current-age < castle-age)
 	(up-compare-goal attack-now-goal == 1)
 	(unit-type-count militiaman-line == 4)
-	(up-compare-goal gl-remote-total >= 4)
+	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
 	(up-set-target-object search-remote c: 3)
 	;(up-object-data object-data-action == actionid-attack)
@@ -16171,7 +16186,7 @@
 	(or (unit-type-count scout-cavalry-line == 3)
 	(or (unit-type-count eagle-warrior-line == 3)
 	(unit-type-count camel-scout == 3)))
-	(up-compare-goal gl-remote-total >= 3)
+	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
 	(up-set-target-object search-remote c: 0)
 	;(up-object-data object-data-action == actionid-attack)
@@ -16197,7 +16212,7 @@
 	(or (unit-type-count scout-cavalry-line == 3)
 	(or (unit-type-count eagle-warrior-line == 3)
 	(unit-type-count camel-scout == 3)))
-	(up-compare-goal gl-remote-total >= 3)
+	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
 	(up-set-target-object search-remote c: 1)
 	;(up-object-data object-data-action == actionid-attack)
@@ -16223,7 +16238,7 @@
 	(or (unit-type-count scout-cavalry-line == 3)
 	(or (unit-type-count eagle-warrior-line == 3)
 	(unit-type-count camel-scout == 3)))
-	(up-compare-goal gl-remote-total >= 3)
+	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
 	(up-set-target-object search-remote c: 2)
 	;(up-object-data object-data-action == actionid-attack)
@@ -16251,7 +16266,7 @@
 	(or (unit-type-count scout-cavalry-line == 4)
 	(or (unit-type-count eagle-warrior-line == 4)
 	(unit-type-count camel-scout == 4)))
-	(up-compare-goal gl-remote-total >= 4)
+	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
 	(up-set-target-object search-remote c: 0)
 	;(up-object-data object-data-action == actionid-attack)
@@ -16277,7 +16292,7 @@
 	(or (unit-type-count scout-cavalry-line == 4)
 	(or (unit-type-count eagle-warrior-line == 4)
 	(unit-type-count camel-scout == 4)))
-	(up-compare-goal gl-remote-total >= 4)
+	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
 	(up-set-target-object search-remote c: 1)
 	;(up-object-data object-data-action == actionid-attack)
@@ -16303,7 +16318,7 @@
 	(or (unit-type-count scout-cavalry-line == 4)
 	(or (unit-type-count eagle-warrior-line == 4)
 	(unit-type-count camel-scout == 4)))
-	(up-compare-goal gl-remote-total >= 4)
+	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
 	(up-set-target-object search-remote c: 2)
 	;(up-object-data object-data-action == actionid-attack)
@@ -16329,7 +16344,7 @@
 	(or (unit-type-count scout-cavalry-line == 4)
 	(or (unit-type-count eagle-warrior-line == 4)
 	(unit-type-count camel-scout == 4)))
-	(up-compare-goal gl-remote-total >= 4)
+	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
 	(up-set-target-object search-remote c: 3)
 	;(up-object-data object-data-action == actionid-attack)
@@ -21083,6 +21098,7 @@
 (defrule
 	(goal strategy-goal sg-archerrush)
 	(current-age == feudal-age)
+	(goal ca-strategy gl-castleage-rangeunit)
 	(building-type-count-total town-center >= 1)
 	(building-type-count-total archery-range < 3)
 	(can-build-with-escrow archery-range)
@@ -24607,10 +24623,24 @@
 (defrule
 	(current-age == castle-age)
 	(can-build siege-workshop)
+	(not (town-under-attack))
 	(building-type-count-total siege-workshop < 1)
 	(goal ca-strategy gl-castleage-siege-infantry)
 =>
 	(up-set-placement-data my-player-number -1 c: 14)
+    (up-build place-control 0 c: siege-workshop)
+)
+
+(defrule
+	(current-age == castle-age)
+	(can-build siege-workshop)
+	(town-under-attack)
+	(building-type-count-total siege-workshop < 1)
+	(goal ca-strategy gl-castleage-siege-infantry)
+=>
+	(up-set-placement-data my-player-number -1 c: 6)
+	(set-strategic-number sn-placement-zone-size 5)
+	(set-strategic-number sn-placement-fail-delta 0)
     (up-build place-control 0 c: siege-workshop)
 )
 
@@ -24622,6 +24652,22 @@
 =>
 	(train mangonel-line)
 )
+
+;ram-micro
+
+(defrule
+	(current-age == castle-age)
+	(up-compare-goal attack-now-goal == 1)
+	(unit-type-count battering-ram-line == 1)
+=>
+	(up-full-reset-search)
+	(up-find-local c: battering-ram c: 1)
+	(up-find-local c: feudal-battering-ram c: 1)
+	(up-find-remote c: building-class c: 1)
+	(up-target-objects 0 action-default -1 -1)
+	;(chat-to-player my-player-number "ram micro test")
+)
+
 
 (defrule
 	(can-research ri-fletching)
@@ -29497,6 +29543,53 @@
 
 #end-if
 
+#load-if-defined BOHEMIANS-CIV
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-man-at-arms)
+=>
+	(research ri-man-at-arms)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-long-swordsman)
+=>
+	(research ri-long-swordsman)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-two-handed-swordsman)
+=>
+	(research ri-two-handed-swordsman)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-champion)
+=>
+	(research ri-champion)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
+	(can-research ri-supplies)
+=>
+	(research ri-supplies)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(research-completed ri-champion)
+	(can-train militiaman-line)
+=>
+	(train militiaman-line)
+)
+
+#end-if
+
 #load-if-defined BRITON-CIV
 (defrule
 	(current-age >= imperial-age)
@@ -29703,7 +29796,6 @@
 )
 
 #end-if
-
 
 #load-if-defined DRAVIDIANS-CIV
 (defrule
@@ -29943,6 +30035,52 @@
 	(train militiaman-line)
 )
 
+#end-if
+
+#load-if-defined SARACEN-CIV
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-man-at-arms)
+=>
+	(research ri-man-at-arms)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-long-swordsman)
+=>
+	(research ri-long-swordsman)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-two-handed-swordsman)
+=>
+	(research ri-two-handed-swordsman)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-champion)
+=>
+	(research ri-champion)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(up-research-status c: ri-two-handed-swordsman >= research-pending)
+	(can-research ri-supplies)
+=>
+	(research ri-supplies)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(research-completed ri-champion)
+	(can-train militiaman-line)
+=>
+	(train militiaman-line)
+)
 #end-if
 
 #load-if-defined SICILIANS-CIV
