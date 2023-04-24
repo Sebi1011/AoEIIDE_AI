@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.0
-;last update: 14th April 2023
+;last update: 24th April 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -80,34 +80,40 @@
 ; - AI will now send all its resources to a random ally when resigning. It's unchecked if it also sends res to defeated players
 ; - improved speed for scoutrush attack from pockets in TGs
 
+; - AI can now train spears from donjons
+; - added option to attack in castle-age when having a specific number of army and the opponent is still in feudal-age,
+; but has the army lead
+; - improved scoutrush attack time
+
 ;ToDo: 
 
 ;what's up next:
 
-; - adjust farm-placement & tc placement rules for fc-gu strategy to only build if required amount of offense buildings have been placed
-; - deactivate sending units to own buildings under constructions
-; - add option to attack in castle-age when having a specific number of army and the opponent is still in feudal-age,
-; but has the army lead
-; - stop training archers as spanish & bulgarians in archerrushes when going up to castle-age
-; - fix retreating of militias in drushes
-; - find a way to improve scoutrush attack time
-; - fix forward siege-workshop placement to consider military-advantage instead of just own military numbers
-; - fix retreat code bug, causing the AI to have units on stand ground without being set back to offensive (check if all units that should not retreat are excluded everywhere)
-; - release escrow to research cavalier for burgundians in castle-age
-; - in castle-age & imperial-age, check if attack now is being spammed (it should)
-; - find restriction rules for rams in imperial age to not waste them unneccesarily and to encourage train trebs
+; - use military evaluation to build buildings for countering enemy army 
+; - add condition for defensive tower placement in feudal-age to consider if AI is going up to castle-age
+; - check excluded units from search in retreat rules
+; - add conditions for 2nd armor upgrade research for ranged units (crossbow/elite-skirm)
+; - fix continuous production of skirms in castle-age
+; - improve conditions for cumans 2nd tc (military buildings required)
+; - keep training villagers if c-villager-goal is being met, but age-research cannot start and AI has more food than required
+; - crossbows & knights are still being produced in castle-age when going for longswords
+; - implement scouting-pattern for scouting own base
 ; - trebs are still not being produced at all
 ; - implement more precise conditions for imperial age units (champions/knights/camels/archers/steppe-lancers/eagles/halbs/hc/siege/uu/cav-archers)
 ; - add production-restrictions for champions if the opponent has hc/catas/heavy-scorpions
-; - fix scout-group after scouting opponent and opponent wasn't found yet (unknown reason)
-; - try chaging amount of attackers on scouts & militias to 2 if having more than at least 2 (testing)
-; - fix siege workshop placement for siege-infantry strategy when under attack (testing)
-; - try to always attack with at least 2 rams instead of only one (testing)
-; - reduce priority of enemy dropoff buildings (and all other buildings) (testing)
 
-; - rework sn-camp-max-distance modifier
+; - adjust farm-placement & tc placement rules to only build if required amount of offense buildings have been placed (3bar/2ran/2stable) (testing)
+; - deactivate gathering units at buildings under constructions/ rather gather units to tc (testing)
+; - stop training archers as spanish & bulgarians in archerrushes when going up to castle-age (testing)
+; - fix forward siege-workshop placement to consider military-advantage instead of just own military numbers (testing)
+; - find restriction rules for rams in imperial age to not waste them unneccesarily and to encourage train trebs (testing)
 ; - fix fc-uu bo before going up to castle-age (testing)
+; - fix scout-group after scouting opponent and opponent wasn't found yet (waiting for bug fix)
 
+
+; - try to always attack with at least 2 rams instead of only one 
+; - fix retreating of militias in drushes
+; - rework sn-camp-max-distance modifier
 ; - fix rare boar hunting bug, where the AI wouldn't garrison villagers under tc for unknown reasons
 ; - add next ally information in TGs: in 3v3s & 4v4s, identify which flanks belong to which pocket. Then gather information about
 ; allied military to improve combined attacks and army-evaluation. Add this information for 2v2s. The easiest way to implement this
@@ -116,18 +122,13 @@
 
 ; - fix strategy choice in 2v2s: there should always be 1 cav & 1 archer player
 ; - generally improve speed to kill a player when in advantage
-; - fix bug in escrow saving system (or notification) the notification keeps getting spammed for some reason
-; - fix preferation of training gold units (knights/archers) in imp over getting their upgrades first
+; - fix preferration of training gold units (knights/archers) in imp over getting their upgrades first
 ; - split up retreat rules for enemy towers into pre- & and post-castle-age
 ; - enhance retreat code to let monks retreat as well
-; - fix production of trebs
 ; - improve drush into feudal rush build order to reduce idle time (idea: reduce amount of wood-escrow savings to get more farms?)
 ; - implement debug rules for every resource-saving goal
 ; - place additional tcs more controlled (reduce town-size before building?)
-; - enhance house placement rules, to get a more random placement around the base to increase the AIs LOS
-; - try skipping tc-retreat code if AI is already retreating (retreating-timer)
 
-; - retreat only 1 unit at a time from enemy fortifications
 ; - implement tc-garrison code for every tc (testing) (partly fixed, but not properly working)
 ; - test scoutrush (retreat scouts from spearmen(not working))
 ; - partly fixed boar-hunting situation where not enough villagers are under the tc to garrison. Issue remains that once the boar-luring
@@ -139,11 +140,9 @@
 ; - test towerrush
 ; - add ability to garrison low-hp villagers under attack in the next tc
 ; - implement and test sn-special-attack-type2
-; - add a "closest-player-next" rule and set it to focus-players for team-game pocket-players
 ; - add market-price check before buying/selling resources
 ; - improve dark-age builder selection for building resource drop-off points
 ; - Eat only one sheep at a time 
-; - implement scouting-pattern for scouting own base
 ; - decrease d-villager-goal for mongols by 1 when scout/archer-rushing, in addition to that changes need to be made to 
 ; constructions of buildings connected to villager count
 
@@ -154,8 +153,8 @@
 
 ;improving scoutrush:
 ; - use one scout to block villagers for other scouts
-; - retreat with scouts when villager numbers are too high/spearmen are nearby
-; - build farms faster (tested)
+; - retreat with scouts when villager numbers are too high/spearmen are nearby (testing)
+; - build farms faster (testing)
 ; - move army around enemy tc and target selected areas in enemy base
 
 ;improving archerrush:
@@ -222,6 +221,7 @@
 ; - fix sending builders to regions on the map that are guarded by the enemy 
 ; - fix counting of enemy warships
 ; - fix auto-garrison in towers when enemy units are close (currently deactivated)
+; - fix bug in escrow saving system (or notification) the notification keeps getting spammed for some reason
 
 ;endregion
 
@@ -726,7 +726,8 @@
 	(set-strategic-number sn-intelligent-gathering 1)
 	(set-strategic-number sn-consecutive-idle-unit-limit 0)
 	(set-strategic-number sn-group-form-distance 60)
-	(set-strategic-number sn-gather-defense-units 1)
+	(set-strategic-number sn-gather-defense-units 0)
+	(set-strategic-number sn-gather-idle-soldiers-at-center 0)
 	(set-strategic-number sn-livestock-to-town-center 1)
 	(set-strategic-number sn-allow-capturing-gaia-units 1)
 	(set-strategic-number sn-dropsite-separation-distance 5)
@@ -6989,7 +6990,8 @@
 	(building-type-count-total archery-range == 0)
 =>
 	(up-modify-escrow wood c:- 175)
-	(build archery-range)
+	(up-set-placement-data my-player-number -1 c: 8)
+    (up-build place-control 0 c: archery-range)
 	;(chat-to-player my-player-number "Baue Schiessanlage, um Bogenschuetzen zu kontern")
 )
 
@@ -7270,6 +7272,15 @@
 )
 
 (defrule
+	(can-train donjon-spearman-line)
+	(current-age == feudal-age)
+	(unit-type-count-total spearman-line < 4)
+	(unit-type-count-total donjon-spearman-line < 4)
+=>
+	(train donjon-spearman-line)
+)
+
+(defrule
 	(current-age == feudal-age)
 	(players-unit-type-count focus-player scout-cavalry-line >= 3)
 	(can-train spearman-line)
@@ -7333,6 +7344,7 @@
 (defrule
 	(current-age == feudal-age)
 	(players-unit-type-count focus-player militiaman-line > 0)
+	(unit-type-count-total archer-line < 8)
 	(can-train-with-escrow archer-line)
 	(up-compare-goal gl-military-advantage < 25)
 	(or 
@@ -7801,8 +7813,24 @@
 	(not (research-available ri-siege-ram))
 	(research-completed ri-capped-ram)
 	(unit-type-count battering-ram-line < 6)
+	(building-type-count castle < 1)
 =>
 	(train battering-ram-line)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(or (players-building-type-count focus-player castle >= 1)
+	(players-building-type-count focus-player krepost >= 1))
+	(can-train-with-escrow trebuchet)
+	(not (research-available ri-siege-ram))
+	(research-completed ri-capped-ram)
+	(unit-type-count trebuchet-set < 6)
+	(building-type-count castle >= 1)
+=>
+	(up-modify-escrow wood c:- 200)
+	(up-modify-escrow gold c:- 200)
+	(train trebuchet)
 )
 
 (defrule
@@ -12525,6 +12553,9 @@
 	(current-age < imperial-age)
 	(building-type-count-total town-center < 3)
 	(up-compare-goal gl-military-advantage >= -10)
+	(or (building-type-count-total stable > 1)
+	(or (building-type-count-total archery-range > 1)
+	(building-type-count-total barracks > 2)))
 	(goal gl-wood-saving 0)
 	(goal gl-stone-saving 0)
 	(not (goal strategy-goal sg-fastcastle-uu))
@@ -12603,6 +12634,9 @@
 	(current-age < imperial-age)
 	(building-type-count-total town-center < 3)
 	(up-compare-goal gl-military-advantage >= -10)
+	(or (building-type-count-total stable > 1)
+	(or (building-type-count-total archery-range > 1)
+	(building-type-count-total barracks > 2)))
 	(goal gl-wood-saving 0)
 	(goal gl-stone-saving 0)
 	(not (goal strategy-goal sg-fastcastle-uu))
@@ -16914,28 +16948,28 @@
 	;(chat-to-player my-player-number "Test")
 )
 
-(defrule
+(defrule ;prevent sending scout to edge of the map
 	(up-set-target-object search-remote c: 0)
 	(up-compare-goal sheep-point-x c:== 0)
 =>
 	(up-modify-goal sheep-point-x c:+ 1)
 )
 
-(defrule
+(defrule ;prevent sending scout to edge of the map
 	(up-set-target-object search-remote c: 0)
 	(up-compare-goal sheep-point-x g:== FULL-MAP-SIZE)
 =>
 	(up-modify-goal sheep-point-x c:- 1)
 )
 
-(defrule
+(defrule ;prevent sending scout to edge of the map
 	(up-set-target-object search-remote c: 0)
 	(up-compare-goal sheep-point-y c:== 0)
 =>
 	(up-modify-goal sheep-point-y c:+ 1)
 )
 
-(defrule
+(defrule ;prevent sending scout to edge of the map
 	(up-set-target-object search-remote c: 0)
 	(up-compare-goal sheep-point-y g:== FULL-MAP-SIZE)
 =>
@@ -20197,6 +20231,17 @@
 #end-if
 
 (defrule
+	(or (goal strategy-goal sg-archerrush)
+	(or (goal strategy-goal sg-scoutrush)
+	(goal strategy-goal sg-towerrush)))
+	(goal drush-goal 1)
+	(building-type-count barracks > 0)
+=>
+	(up-modify-goal gl-drush-militia-count c:- 1)
+	(disable-self)
+)
+
+(defrule
 	(building-type-count-total town-center >= 1)
 	(goal drush-goal 1)
 	(can-build-with-escrow barracks)
@@ -21416,11 +21461,13 @@
 	(train eagle-warrior-line)
 )
 
-(defrule
+(defrule ;release escrow to mass up archers faster
 	(goal strategy-goal sg-archerrush)
 	(current-age == feudal-age)
 	(or (civilian-population g:< f-villager-goal)
-	(up-research-status c: castle-age == research-pending))
+		(and (up-research-status c: castle-age == research-pending)
+		(and (not (civ-selected bulgarians))
+			 (not (civ-selected spanish)))))
 	(can-train-with-escrow archer-line)
 	(or (players-unit-type-count focus-player skirmisher-line < 3) 
 	(unit-type-count-total scout-cavalry-line >= 1))
@@ -21433,11 +21480,13 @@
 	(train archer-line)
 )
 
-(defrule
+(defrule ;we have enough archers, don't release escrow
 	(goal strategy-goal sg-archerrush)
 	(current-age == feudal-age)
 	(or (civilian-population g:< f-villager-goal)
-	(up-research-status c: castle-age == research-pending))
+		(and (up-research-status c: castle-age == research-pending)
+		(and (not (civ-selected bulgarians))
+			 (not (civ-selected spanish)))))
 	(can-train archer-line)
 	(or (players-unit-type-count focus-player skirmisher-line < 3) 
 	(unit-type-count-total scout-cavalry-line >= 1))
@@ -21759,7 +21808,7 @@
 	(not (town-under-attack))
 	(players-building-count focus-player > 0)
 	(not (up-research-status c: castle-age >= research-pending))
-	(or (military-population >= 4)
+	(or (military-population >= 3)
 	(up-compare-goal gl-military-advantage >= 3))
 	(up-compare-goal gl-military-advantage >= -2)
 =>
@@ -23075,6 +23124,9 @@
 	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 1)
 	(building-type-count-total town-center < 3)
+	(or (building-type-count-total stable > 1)
+	(or (building-type-count-total archery-range > 1)
+	(building-type-count-total barracks > 2)))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
 	(random-number <= 50)
@@ -23100,6 +23152,9 @@
 	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 1)
 	(building-type-count-total town-center < 3)
+	(or (building-type-count-total stable > 1)
+	(or (building-type-count-total archery-range > 1)
+	(building-type-count-total barracks > 2)))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
 	(random-number > 50)
@@ -23125,6 +23180,9 @@
 	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 2)
 	(building-type-count-total town-center < 3)
+	(or (building-type-count-total stable > 1)
+	(or (building-type-count-total archery-range > 1)
+	(building-type-count-total barracks > 2)))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
 	(random-number > 50)
@@ -23150,6 +23208,9 @@
 	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 2)
 	(building-type-count-total town-center < 3)
+	(or (building-type-count-total stable > 1)
+	(or (building-type-count-total archery-range > 1)
+	(building-type-count-total barracks > 2)))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
 	(random-number <= 50)
@@ -23173,6 +23234,9 @@
 	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 1)
 	(building-type-count-total town-center < 3)
+	(or (building-type-count-total stable > 1)
+	(or (building-type-count-total archery-range > 1)
+	(building-type-count-total barracks > 2)))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
 	(random-number <= 50)
@@ -23190,6 +23254,9 @@
 	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 1)
 	(building-type-count-total town-center < 3)
+	(or (building-type-count-total stable > 1)
+	(or (building-type-count-total archery-range > 1)
+	(building-type-count-total barracks > 2)))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
 	(random-number > 50)
@@ -23207,6 +23274,9 @@
 	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 2)
 	(building-type-count-total town-center < 3)
+	(or (building-type-count-total stable > 1)
+	(or (building-type-count-total archery-range > 1)
+	(building-type-count-total barracks > 2)))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
 	(random-number > 50)
@@ -23224,6 +23294,9 @@
 	(up-compare-goal gl-military-advantage >= -12)
 	(building-type-count-total town-center == 2)
 	(building-type-count-total town-center < 3)
+	(or (building-type-count-total stable > 1)
+	(or (building-type-count-total archery-range > 1)
+	(building-type-count-total barracks > 2)))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
 	(random-number <= 50)
@@ -23304,9 +23377,9 @@
 (defrule
 	(current-age == castle-age)
 	(building-type-count-total lumber-camp > 0)
-	(or (building-type-count-total stable > 0)
-	(or (building-type-count-total archery-range > 0)
-	(building-type-count-total barracks > 1)))
+	(or (building-type-count-total stable > 1)
+	(or (building-type-count-total archery-range > 1)
+	(building-type-count-total barracks > 2)))
 	(up-pending-objects c: farm < 8)
 	(idle-farm-count < 5)
 	(wood-amount > 100)
@@ -23358,9 +23431,9 @@
 	(current-age == castle-age)
 	(can-build siege-workshop)
 	(building-type-count-total siege-workshop < 1)
-	(or (military-population >= 10)
+	(military-population >= 10)
 	(or (players-current-age focus-player < castle-age)
-	(up-compare-goal gl-military-advantage >= 12)))
+	(up-compare-goal gl-military-advantage >= 12))
 =>
 	(up-assign-builders c: siege-workshop c: 2)
 	(build-forward siege-workshop)
@@ -23978,7 +24051,7 @@
 (defrule
 	(current-age == castle-age)
 	(goal attack-now-goal 1)
-	(goal retreat-now-goal 0)
+	;(goal retreat-now-goal 0)
 	(or (military-population >= 18)
 	(up-compare-goal gl-military-advantage >= 8))
 	(up-compare-goal gl-military-advantage >= -4)
@@ -23998,6 +24071,28 @@
 	;(chat-to-allies "31")
 )
 
+(defrule
+	(current-age == castle-age)
+	(goal attack-now-goal 1)
+	;(goal retreat-now-goal 0)
+	(or (military-population >= 12)
+	(up-compare-goal gl-military-advantage >= 2))
+	(players-current-age focus-player < castle-age)
+	(civilian-population g:< c-villager-goal)
+=>
+	;(set-goal attack-now-goal 1)
+	(up-gather-inside c: barracks c: 0)
+	(up-gather-inside c: archery-range c: 0)
+	(up-gather-inside c: stable c: 0)
+	(up-gather-inside c: siege-workshop c: 0)
+	(up-ungarrison c: barracks)
+	(up-ungarrison c: archery-range)
+	(up-ungarrison c: stable)
+	(up-ungarrison c: siege-workshop)
+	(attack-now)
+	;(chat-to-player my-player-number "Starting an attack")
+	;(chat-to-allies "31")
+)
 
 (defrule
 	(current-age >= castle-age)
@@ -24715,8 +24810,10 @@
 
 (defrule
 	(up-compare-goal gl-archery-class-units > 5)
-	(can-research ri-ballistics)
+	(can-research-with-escrow ri-ballistics)
 =>
+	(up-modify-escrow wood c:- 300)
+	(up-modify-escrow gold c:- 175)
 	(research ri-ballistics)
 )
 
@@ -27317,8 +27414,23 @@
 	(research-completed ri-capped-ram)
 	(unit-type-count battering-ram-line < 10)
 	(military-population >= 10)
+	(building-type-count castle < 1)
 =>
 	(train battering-ram-line)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(can-train-with-escrow trebuchet)
+	(not (research-available ri-siege-ram))
+	(research-completed ri-capped-ram)
+	(unit-type-count trebuchet-set < 10)
+	(military-population >= 10)
+	(building-type-count castle >= 1)
+=>
+	(up-modify-escrow wood c:- 200)
+	(up-modify-escrow gold c:- 200)
+	(train trebuchet)
 )
 
 (defrule
@@ -27630,8 +27742,8 @@
 
 (defrule
 	(current-age == imperial-age)
-	;(goal retreat-now-goal 0)
 	(goal attack-now-goal 1)
+	;(goal retreat-now-goal 0)
 	(or (military-population >= 23)
 	(up-compare-goal gl-military-advantage >= 10))
 	(up-compare-goal gl-military-advantage >= -5)
@@ -28141,6 +28253,28 @@
 	(research ri-cavalier)
 	(set-goal gl-gold-saving 0)
 	(set-goal gl-food-saving 0)
+)
+
+(defrule
+	(current-age == castle-age)
+	(civ-selected burgundians)
+	(can-research-with-escrow ri-cavalier)
+	(unit-type-count-total knight-line >= 4)
+=>
+	(up-modify-escrow food c:- 150)
+	(up-modify-escrow gold c:- 150)
+	(research ri-cavalier)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(civ-selected burgundians)
+	(can-research-with-escrow ri-paladin)
+	(unit-type-count-total knight-line >= 4)
+=>
+	(up-modify-escrow food c:- 650)
+	(up-modify-escrow gold c:- 375)
+	(research ri-paladin)
 )
 
 (defrule
