@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.0
-;last update: 24th April 2023
+;last update: 25th April 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -89,14 +89,15 @@
 
 ;what's up next:
 
-; - use military evaluation to build buildings for countering enemy army 
-; - add condition for defensive tower placement in feudal-age to consider if AI is going up to castle-age
-; - check excluded units from search in retreat rules
-; - add conditions for 2nd armor upgrade research for ranged units (crossbow/elite-skirm)
-; - fix continuous production of skirms in castle-age
-; - improve conditions for cumans 2nd tc (military buildings required)
-; - keep training villagers if c-villager-goal is being met, but age-research cannot start and AI has more food than required
-; - crossbows & knights are still being produced in castle-age when going for longswords
+; - use military evaluation to build buildings for countering enemy army (stable against skirms in feudal) (in progress)
+; - reduce distance for meso-scoutrush barracks to tc
+; - fix retreat rule issue for tcs
+; - fix a bug causing the AI to set the enemy tc point on its own tc (probably when playing gurjaras)
+; - limit number of archers produced in longswords, knight or eagle-warrior strategies (25)
+; - fix chat bug: focus player is being chatted twice
+; - fix continuous production of skirms in castle-age (testing)
+; - improve conditions for cumans 2nd tc (military buildings required) (testing)
+; - keep training villagers if c-villager-goal is being met, but age-research cannot start and AI has more food than required (testing)
 ; - implement scouting-pattern for scouting own base
 ; - trebs are still not being produced at all
 ; - implement more precise conditions for imperial age units (champions/knights/camels/archers/steppe-lancers/eagles/halbs/hc/siege/uu/cav-archers)
@@ -109,6 +110,8 @@
 ; - find restriction rules for rams in imperial age to not waste them unneccesarily and to encourage train trebs (testing)
 ; - fix fc-uu bo before going up to castle-age (testing)
 ; - fix scout-group after scouting opponent and opponent wasn't found yet (waiting for bug fix)
+; - fix boar-hunting bugs: - villagers are around the tc, but are not garrisoned. - not enough villagers around the tc, but alternative
+; boar-hunting mode does not trigger.
 
 
 ; - try to always attack with at least 2 rams instead of only one 
@@ -1750,6 +1753,371 @@
 
 ;endregion
 
+;region Find Fortification positions
+
+;saving center-point of the map
+
+(defrule
+	(true)
+=>
+	(up-get-point position-center gl-center-x)
+	(disable-self)
+)
+
+#load-if-not-defined UP-NOMAD-STYLE
+
+;region Finding Enemy TC x/y position (not working on Nomad)
+
+
+(defrule
+	(players-building-type-count any-enemy town-center > 0)
+=>	
+	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	(up-full-reset-search)
+	(up-find-remote c: town-center c: 1)
+)
+
+(defrule
+	(players-building-type-count any-enemy town-center > 0)
+	(up-set-target-object search-remote c: 0)
+=>
+	(up-get-point position-object enemy-point-x)
+	;(up-send-flare enemy-point-x)
+)
+
+(defrule
+	(up-set-target-object search-remote c: 0)
+	(game-time > 5)
+	(players-building-type-count any-enemy town-center > 0)
+=>
+	(up-full-reset-search)
+	; (up-filter-status c: status-ready c: list-active)
+	; (up-find-status-remote c: town-center c: 1)
+	(up-find-remote c: town-center c: 1)
+	(up-set-target-object search-remote c: 0)
+	(up-get-point position-object enemy-point-x)
+	(up-send-flare enemy-point-x)
+	; (up-store-player-name focus-player)
+	; (up-chat-data-to-player every-ally text-enemy-located-here c: 7031232)
+	(chat-to-allies " 16 Enemy Town Center here")
+	(up-chat-data-to-self "My enemy is player %d" s: sn-target-player-number)
+	(up-chat-data-to-self "My enemy is %s" c: 7031232)
+	(disable-self)
+)
+
+#end-if
+
+#load-if-defined UP-NOMAD-STYLE
+
+(defrule
+	(players-building-type-count any-enemy town-center > 0)
+=>	
+	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	(up-full-reset-search)
+	(up-find-remote c: town-center c: 1)
+)
+
+(defrule
+	(players-building-type-count any-enemy town-center > 0)
+	(up-set-target-object search-remote c: 0)
+=>
+	(up-get-point position-object enemy-point-x)
+	;(up-send-flare enemy-point-x)
+)
+
+(defrule
+	(game-time > 5)
+	(players-building-type-count any-enemy town-center > 0)
+=>
+	(up-full-reset-search)
+	; (up-filter-status c: status-ready c: list-active)
+	; (up-find-status-remote c: town-center c: 1)
+	(up-find-remote c: town-center c: 1)
+)
+
+(defrule
+	(game-time > 5)
+	(players-building-type-count any-enemy town-center > 0)
+	(up-set-target-object search-remote c: 0)
+=>
+	(up-get-point position-object enemy-point-x)
+)
+
+(defrule
+	(up-point-explored enemy-point-x != explored-no)
+	(game-time > 5)
+	(players-building-type-count any-enemy town-center > 0)
+=>
+	(up-send-flare enemy-point-x)
+	; (up-store-player-name focus-player)
+	; (up-chat-data-to-player every-ally text-enemy-located-here c: 7031232)
+	(chat-to-allies " 16 Enemy Town Center here")
+	(up-chat-data-to-self "My enemy is player %d" s: sn-target-player-number)
+	(up-chat-data-to-self "My enemy is %s" c: 7031232)
+	(disable-self)
+)
+
+
+;endregion
+
+;region Finding Enemy Castle x/y position
+
+(defrule
+	(players-building-type-count any-enemy castle > 0)
+	(timer-triggered t-3-sec)
+=>	
+	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	(up-full-reset-search)
+	(up-filter-status c: status-ready c: list-active)
+	(up-find-status-remote c: castle c: 1)
+	(up-set-target-object search-remote c: 0)
+	(up-get-point position-object enemy-castle-point-x)
+	;(up-send-flare enemy-point-x)
+)
+
+(defrule
+	(up-set-target-object search-remote c: 0)
+	(game-time > 5)
+	(players-building-type-count any-enemy castle > 0)
+=>
+	(up-full-reset-search)
+	(up-filter-status c: status-ready c: list-active)
+	(up-find-status-remote c: castle c: 1)
+	(up-set-target-object search-remote c: 0)
+	(up-get-point position-object enemy-castle-point-x)
+	(up-send-flare enemy-castle-point-x)
+	(chat-to-allies "Enemy Castle here")
+	(disable-self)
+)
+
+;endregion
+
+;region Finding Enemy Towers x/y position
+
+(defrule
+	(players-building-type-count any-enemy watch-tower-line > 0)
+	(timer-triggered t-3-sec)
+=>	
+	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	(up-full-reset-search)
+	(up-filter-status c: status-ready c: list-active)
+	(up-find-status-remote c: tower-type c: 1)
+	(up-set-target-object search-remote c: 0)
+	(up-get-point position-object enemy-tower-point-x)
+	;(up-send-flare enemy-point-x)
+)
+
+(defrule
+	(up-set-target-object search-remote c: 0)
+	(game-time > 5)
+	(players-building-type-count any-enemy watch-tower-line > 0)
+=>
+	(up-full-reset-search)
+	(up-filter-status c: status-ready c: list-active)
+	(up-find-status-remote c: tower-type c: 1)
+	(up-set-target-object search-remote c: 0)
+	(up-get-point position-object enemy-tower-point-x)
+	(up-send-flare enemy-tower-point-x)
+	(chat-to-allies "Enemy Tower here")
+	(disable-self)
+)
+
+;endregion
+
+;region Finding TC x/y position
+
+#load-if-defined UP-NOMAD-STYLE
+
+(defrule
+	(building-type-count town-center > 0)
+	(timer-triggered t-3-sec)
+=>
+	(up-full-reset-search)
+	(up-find-local c: town-center c: 1)
+	(up-set-target-object search-local c: 0)
+	(up-get-object-data object-data-id gl-main-tc-id)
+	(up-get-point position-object gl-starting-tc-x) ; Finding and saving starting TC x/y coordinates
+	(disable-self)
+)
+
+(defrule
+	(game-time > 5)
+	(building-type-count town-center > 0)
+=>
+	(up-full-reset-search)
+	(up-find-local c: town-center c: 1)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object gl-starting-tc-x)
+	(up-send-flare gl-starting-tc-x)
+	(chat-to-allies "I am here!")
+	(disable-self)
+)
+
+#end-if
+
+#load-if-not-defined UP-NOMAD-STYLE
+
+(defrule
+	(building-type-count town-center > 0)
+	(timer-triggered t-3-sec)
+=>
+	(up-full-reset-search)
+	(up-find-local c: town-center c: 1)
+	(up-set-target-object search-local c: 0)
+	(up-get-object-data object-data-id gl-main-tc-id)
+	(up-get-point position-object gl-starting-tc-x) ; Finding and saving starting TC x/y coordinates
+	(disable-self)
+)
+
+(defrule
+	(game-time > 5)
+	(building-type-count town-center > 0)
+=>
+	(up-full-reset-search)
+	(up-find-local c: town-center c: 1)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object gl-starting-tc-x)
+	;(up-send-flare gl-starting-tc-x)
+	;(chat-to-allies "Ich bin hier!")
+	(disable-self)
+)
+
+#end-if
+
+;endregion
+
+#end-if
+
+#load-if-not-defined UP-ALLY-IN-GAME
+
+;region Finding Enemy TC x/y position (not working on Nomad)
+
+
+(defrule
+	(players-building-type-count any-enemy town-center > 0)
+	;(timer-triggered t-3-sec)
+	;(up-compare-goal enemy-point-x == -1) ;todo
+=>	
+	(up-full-reset-search)
+	(up-find-remote c: town-center c: 1)
+)
+
+(defrule
+	(players-building-type-count any-enemy town-center > 0)
+	(up-set-target-object search-remote c: 0)
+=>
+	(up-get-point position-object enemy-point-x)
+	;(up-send-flare enemy-point-x)
+)
+
+(defrule
+	(game-time > 5)
+	(players-building-type-count any-enemy town-center > 0)
+=>
+	(up-full-reset-search)
+	(up-find-remote c: town-center c: 1)
+	(up-set-target-object search-remote c: 0)
+	(up-get-point position-object enemy-point-x)
+	(up-send-flare enemy-point-x)
+	; (up-store-player-name focus-player)
+	; (up-chat-data-to-player every-ally text-enemy-located-here c: 7031232)
+	;(chat-to-allies " 16 Enemy Town Center here")
+	(up-chat-data-to-self "My enemy is player %d" s: sn-target-player-number)
+	(up-chat-data-to-self "My enemy is %s" c: 7031232)
+	(disable-self)
+)
+;endregion
+
+;region Finding Enemy Castle x/y position
+
+(defrule
+	(players-building-type-count any-enemy castle > 0)
+	(timer-triggered t-3-sec)
+=>	
+	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	(up-full-reset-search)
+	(up-find-remote c: castle c: 1)
+	(up-set-target-object search-remote c: 0)
+	(up-get-point position-object enemy-castle-point-x)
+	;(up-send-flare enemy-point-x)
+)
+
+(defrule
+	(game-time > 5)
+	(players-building-type-count any-enemy castle > 0)
+=>
+	(up-full-reset-search)
+	(up-find-remote c: castle c: 1)
+	(up-set-target-object search-remote c: 0)
+	(up-get-point position-object enemy-castle-point-x)
+	(up-send-flare enemy-castle-point-x)
+	(chat-to-allies "21 Enemy Castle here")
+	(disable-self)
+)
+
+;endregion
+
+;region Finding Enemy Tower x/y position
+
+(defrule
+	(players-building-type-count any-enemy watch-tower-line > 0)
+	(timer-triggered t-3-sec)
+=>	
+	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	(up-full-reset-search)
+	(up-find-remote c: watch-tower c: 1)
+	(up-set-target-object search-remote c: 0)
+	(up-get-point position-object enemy-tower-point-x)
+	;(up-send-flare enemy-point-x)
+)
+
+(defrule
+	(game-time > 5)
+	(players-building-type-count any-enemy watch-tower-line > 0)
+=>
+	(up-full-reset-search)
+	(up-find-remote c: watch-tower c: 1)
+	(up-set-target-object search-remote c: 0)
+	(up-get-point position-object enemy-tower-point-x)
+	(up-send-flare enemy-tower-point-x)
+	(chat-to-allies "21 Enemy Tower here")
+	(disable-self)
+)
+
+;endregion
+
+;region Finding TC x/y position
+
+(defrule
+	(building-type-count town-center > 0)
+=>
+	(up-full-reset-search)
+	(up-find-local c: town-center c: 1)
+	(up-set-target-object search-local c: 0)
+	(up-get-object-data object-data-id gl-main-tc-id)
+	(up-get-point position-object gl-starting-tc-x) ; Finding and saving starting TC x/y coordinates
+	(disable-self)
+)
+
+(defrule
+	(game-time > 5)
+	(building-type-count town-center > 0)
+=>
+	(up-full-reset-search)
+	(up-find-local c: town-center c: 1)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object gl-starting-tc-x)
+	;(up-send-flare gl-starting-tc-x)
+	;(chat-to-allies "I am here!")
+	(disable-self)
+)
+
+;endregion
+
+#end-if
+
+;endregion
+
 ;region Check enemy's military population ==========================
 
 (defrule
@@ -1992,6 +2360,7 @@
 	(current-age == dark-age)
 	(building-type-count mill > 0)
 	(unit-type-count villager < 27)
+	(goal attack-now-goal 0)
 =>
 	(up-full-reset-search)
 	(up-find-local c: livestock-class c: 8)
@@ -2003,6 +2372,7 @@
 	(current-age == dark-age)
 	(building-type-count mill > 0)
 	(unit-type-count villager < 27)
+	(goal attack-now-goal 0)
 	(up-set-target-object search-remote c: 0)
 	(up-object-data object-data-garrison-count < 10)
 =>
@@ -6976,6 +7346,22 @@
 	(players-unit-type-count focus-player militiaman-line > 0)))
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range == 0)
+	(not (town-under-attack))
+=>
+	(up-modify-escrow wood c:- 175)
+	(up-set-placement-data my-player-number -1 c: 8)
+    (up-build place-control 0 c: archery-range)
+	;(chat-to-player my-player-number "Baue Schiessanlage, um gegnerische Armee zu kontern")
+)
+
+(defrule
+	(current-age == feudal-age)
+	(or (players-unit-type-count focus-player archer-line >= 4)
+	(or (players-unit-type-count focus-player spearman-line >= 4)
+	(players-unit-type-count focus-player militiaman-line > 0)))
+	(can-build-with-escrow archery-range)
+	(building-type-count-total archery-range == 0)
+	(town-under-attack)
 =>
 	(up-modify-escrow wood c:- 175)
 	(build archery-range)
@@ -6988,10 +7374,24 @@
 	(goal strategy-goal sg-scoutrush)
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range == 0)
+	(not (town-under-attack))
 =>
 	(up-modify-escrow wood c:- 175)
 	(up-set-placement-data my-player-number -1 c: 8)
     (up-build place-control 0 c: archery-range)
+	;(chat-to-player my-player-number "Baue Schiessanlage, um Bogenschuetzen zu kontern")
+)
+
+(defrule
+	(current-age == feudal-age)
+	(players-building-type-count focus-player archery-range >= 1)
+	(goal strategy-goal sg-scoutrush)
+	(can-build-with-escrow archery-range)
+	(building-type-count-total archery-range == 0)
+	(town-under-attack)
+=>
+	(up-modify-escrow wood c:- 175)
+	(build archery-range)
 	;(chat-to-player my-player-number "Baue Schiessanlage, um Bogenschuetzen zu kontern")
 )
 
@@ -7068,6 +7468,7 @@
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 2)
 	(not (goal gl-stone-saving 7))
+	(up-research-status c: castle-age != research-pending)
 =>
 	(up-modify-escrow wood c:- 50)
 	(up-modify-escrow stone c:- 125)
@@ -7089,6 +7490,7 @@
 	(can-build-with-escrow donjon)
 	(building-type-count-total donjon < 2)
 	(not (goal gl-stone-saving 7))
+	(up-research-status c: castle-age != research-pending)
 =>
 	(up-modify-escrow wood c:- 75)
 	(up-modify-escrow stone c:- 175)
@@ -7111,6 +7513,7 @@
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 4)
 	(not (goal gl-stone-saving 7))
+	(up-research-status c: castle-age != research-pending)
 =>
 	(up-modify-escrow wood c:- 50)
 	(up-modify-escrow stone c:- 125)
@@ -7134,6 +7537,7 @@
 	(can-build-with-escrow donjon)
 	(building-type-count-total tower-class < 4)
 	(not (goal gl-stone-saving 7))
+	(up-research-status c: castle-age != research-pending)
 =>
 	(up-modify-escrow wood c:- 75)
 	(up-modify-escrow stone c:- 175)
@@ -7418,7 +7822,7 @@
 (defrule
 	(current-age == castle-age)
 	(or (players-unit-type-count focus-player spearman-line >= 6)
-	(players-unit-type-count focus-player archer-line >= 6))
+	(players-unit-type-count focus-player archer-line >= 8))
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range < 2)
 	(or (not (goal strategy-goal sg-boom-imp))
@@ -7432,8 +7836,8 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (players-unit-type-count focus-player spearman-line >= 5)
-	(players-unit-type-count focus-player archer-line >= 6))
+	(or (players-unit-type-count focus-player spearman-line >= 6)
+	(players-unit-type-count focus-player archer-line >= 8))
 	(can-train skirmisher-line)
 	(not (research-completed ri-elite-skirmisher))
 	(research-available ri-elite-skirmisher)
@@ -7449,8 +7853,8 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player spearman-line >= 5)
-	(players-unit-type-count focus-player archer-line >= 6))
+	(or (players-unit-type-count focus-player spearman-line >= 6)
+	(players-unit-type-count focus-player archer-line >= 8))
 	(can-research-with-escrow ri-elite-skirmisher)
 	(not (research-completed ri-elite-skirmisher))
 	(not (unit-available genitour-line))
@@ -7467,7 +7871,7 @@
 (defrule
 	(current-age == castle-age)
 	(or (players-unit-type-count focus-player spearman-line >= 6)
-	(players-unit-type-count focus-player archer-line >= 10))
+	(players-unit-type-count focus-player archer-line >= 8))
 	(can-train-with-escrow skirmisher-line)
 	(research-completed ri-elite-skirmisher)
 	(not (unit-available genitour-line))
@@ -7484,8 +7888,8 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player spearman-line >= 5)
-	(players-unit-type-count focus-player archer-line >= 6))
+	(or (players-unit-type-count focus-player spearman-line >= 10)
+	(players-unit-type-count focus-player archer-line >= 10))
 	(can-train skirmisher-line)
 	(research-completed ri-elite-skirmisher)
 	(not (unit-available genitour-line))
@@ -7499,8 +7903,8 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (players-unit-type-count focus-player spearman-line >= 5)
-	(players-unit-type-count focus-player archer-line >= 6))
+	(or (players-unit-type-count focus-player spearman-line >= 6)
+	(players-unit-type-count focus-player archer-line >= 8))
 	(can-train genitour-line)
 	(or (not (goal strategy-goal sg-boom-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
@@ -7512,8 +7916,8 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player spearman-line >= 5)
-	(players-unit-type-count focus-player archer-line >= 6))
+	(or (players-unit-type-count focus-player spearman-line >= 10)
+	(players-unit-type-count focus-player archer-line >= 10))
 	(can-train genitour-line)
 	(research-available ri-elite-genitour)
 	(unit-type-count genitour-line <= 6)
@@ -7527,8 +7931,8 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player spearman-line >= 5)
-	(players-unit-type-count focus-player archer-line >= 6))
+	(or (players-unit-type-count focus-player spearman-line >= 10)
+	(players-unit-type-count focus-player archer-line >= 10))
 	(can-train genitour-line)
 	(research-completed ri-elite-genitour)
 	(or (not (goal strategy-goal sg-boom-imp))
@@ -7541,7 +7945,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(players-unit-type-count focus-player archer-line >= 4)
+	(players-unit-type-count focus-player archer-line >= 6)
 	(can-research ri-elite-genitour)
 	(or (not (goal strategy-goal sg-boom-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
@@ -8551,12 +8955,12 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player archer-line >= 5)
-	(or (players-unit-type-count focus-player longbowman-line >= 5)
-	(or (players-unit-type-count focus-player chu-ko-nu-line >= 5)
-	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 5)
-	(or (players-unit-type-count focus-player plumed-archer-line >= 5)
-	(players-unit-type-count focus-player rattan-archer-line >= 5))))))
+	(or (players-unit-type-count focus-player archer-line >= 8)
+	(or (players-unit-type-count focus-player longbowman-line >= 8)
+	(or (players-unit-type-count focus-player chu-ko-nu-line >= 8)
+	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 8)
+	(or (players-unit-type-count focus-player plumed-archer-line >= 8)
+	(players-unit-type-count focus-player rattan-archer-line >= 8))))))
 	(can-train skirmisher-line)
 	(research-completed ri-elite-skirmisher)
 	(or (not (goal strategy-goal sg-boom-imp))
@@ -8569,12 +8973,12 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player cavalry-archer-line >= 5)
-	(or (players-unit-type-count focus-player mangudai-line >= 5)
-	(or (players-unit-type-count focus-player war-wagon-line >= 5)
-	(or (players-unit-type-count focus-player kipchak-set >= 5)
-	(or (players-unit-type-count focus-player elephant-archer-line >= 5)
-	(players-unit-type-count focus-player camel-archer-line >= 5))))))
+	(or (players-unit-type-count focus-player cavalry-archer-line >= 8)
+	(or (players-unit-type-count focus-player mangudai-line >= 8)
+	(or (players-unit-type-count focus-player war-wagon-line >= 8)
+	(or (players-unit-type-count focus-player kipchak-set >= 8)
+	(or (players-unit-type-count focus-player elephant-archer-line >= 6)
+	(players-unit-type-count focus-player camel-archer-line >= 8))))))
 	(can-research-with-escrow ri-elite-skirmisher)
 	(not (research-completed ri-elite-skirmisher))
 	(unit-type-count skirmisher-line > 3)
@@ -8590,12 +8994,12 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player cavalry-archer-line >= 5)
-	(or (players-unit-type-count focus-player mangudai-line >= 5)
-	(or (players-unit-type-count focus-player war-wagon-line >= 5)
-	(or (players-unit-type-count focus-player kipchak-set >= 5)
-	(or (players-unit-type-count focus-player elephant-archer-line >= 5)
-	(players-unit-type-count focus-player camel-archer-line >= 5))))))
+	(or (players-unit-type-count focus-player cavalry-archer-line >= 8)
+	(or (players-unit-type-count focus-player mangudai-line >= 8)
+	(or (players-unit-type-count focus-player war-wagon-line >= 8)
+	(or (players-unit-type-count focus-player kipchak-set >= 8)
+	(or (players-unit-type-count focus-player elephant-archer-line >= 6)
+	(players-unit-type-count focus-player camel-archer-line >= 8))))))
 	(can-train-with-escrow skirmisher-line)
 	(research-completed ri-elite-skirmisher)
 	(not (goal gl-food-saving 23))
@@ -8611,7 +9015,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(players-unit-type-count focus-player archer-line >= 6)
+	(players-unit-type-count focus-player archer-line >= 10)
 	(can-train genitour-line)
 	(research-completed ri-elite-genitour)
 	(or (not (goal strategy-goal sg-boom-imp))
@@ -8624,7 +9028,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(players-unit-type-count focus-player archer-line >= 6)
+	(players-unit-type-count focus-player archer-line >= 10)
 	(can-train-with-escrow eagle-warrior-line)
 	(research-completed ri-eagle-warrior)
 =>
@@ -8636,7 +9040,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(players-unit-type-count focus-player archer-line >= 6)
+	(players-unit-type-count focus-player archer-line >= 10)
 	(can-train eagle-warrior-line)
 	(research-completed ri-elite-eagle-warrior)
 =>
@@ -8854,7 +9258,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(players-unit-type-count focus-player skirmisher-line >= 6)
+	(players-unit-type-count focus-player skirmisher-line >= 8)
 	(can-train knight-line)
 =>
 	(train knight-line)
@@ -9033,8 +9437,8 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player eagle-warrior-line >= 6)
-	(players-unit-type-count focus-player huskarl-line >= 6))
+	(or (players-unit-type-count focus-player eagle-warrior-line >= 8)
+	(players-unit-type-count focus-player huskarl-line >= 8))
 	(research-completed ri-cavalier)
 	(can-train knight-line)
 =>
@@ -9453,7 +9857,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(players-unit-type-count focus-player arambai-line >= 6)
+	(players-unit-type-count focus-player arambai-line >= 8)
 	(research-available ri-arbalest)
 	(can-research ri-arbalest)
 	(building-type-count-total archery-range > 0)
@@ -9463,7 +9867,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(players-unit-type-count focus-player arambai-line >= 6)
+	(players-unit-type-count focus-player arambai-line >= 8)
 	(can-research ri-bracer)
 =>
 	(research ri-bracer)
@@ -9471,7 +9875,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(players-unit-type-count focus-player arambai-line >= 6)
+	(players-unit-type-count focus-player arambai-line >= 8)
 	(research-completed ri-arbalest)
 	(research-completed ri-bracer)
 	(can-train archer-line)
@@ -9481,7 +9885,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(players-unit-type-count focus-player arambai-line >= 6)
+	(players-unit-type-count focus-player arambai-line >= 8)
 	(can-train skirmisher-line)
 	(research-completed ri-elite-skirmisher)
 	(building-type-count-total archery-range > 0)
@@ -9526,7 +9930,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(players-unit-type-count focus-player ghulam-line >= 6)
+	(players-unit-type-count focus-player ghulam-line >= 8)
 	(not (research-available ri-cavalier))
 	(research-available ri-heavy-camel)
 	(can-research ri-heavy-camel)
@@ -9536,7 +9940,7 @@
 )
 
 (defrule
-	(current-age >= imperial-age)
+	(current-age >= castle-age)
 	(players-unit-type-count focus-player ghulam-line >= 6)
 	(research-available ri-cavalier)
 	(can-research ri-cavalier)
@@ -9547,7 +9951,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(players-unit-type-count focus-player ghulam-line >= 6)
+	(players-unit-type-count focus-player ghulam-line >= 8)
 	(can-train camel-line)
 	(research-completed ri-heavy-camel)
 =>
@@ -9556,7 +9960,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(players-unit-type-count focus-player ghulam-line >= 6)
+	(players-unit-type-count focus-player ghulam-line >= 8)
 	(can-train knight-line)
 	(research-completed ri-cavalier)
 =>
@@ -12713,16 +13117,9 @@
 	(up-research-status c: feudal-age >= research-pending)
 	(current-age < castle-age)
 	(building-type-count-total town-center < 2)
-	; (or (and (goal strategy-goal sg-archerrush)
-		; (building-type-count-total archery-range == 2))
-		; (or (and (goal strategy-goal sg-scoutrush)
-			; (building-type-count-total stable == 1))
-			; (or (and (goal strategy-goal sg-fastcastle-gu)
-				; (building-type-count-total blacksmith == 1))
-				; (or (and (goal strategy-goal sg-fastcastle-uu)
-					; (building-type-count-total blacksmith == 1))
-					; (or	(goal strategy-goal sg-drush)
-						; (goal strategy-goal sg-boom-imp))))))
+	(or (building-type-count-total stable > 0)
+	(or (building-type-count-total archery-range > 0)
+	(building-type-count-total barracks > 1)))
 	(goal gl-wood-saving 0)
 	(goal gl-stone-saving 0)
 =>
@@ -16505,7 +16902,8 @@
 	;resetting
 
 (defrule
-	(timer-triggered retreating-timer)
+	;(timer-triggered retreating-timer)
+	(timer-triggered split-stance-timer)
 =>	(up-full-reset-search)
 	(up-reset-unit c: infantry-class)
 	(up-reset-unit c: cavalry-class)
@@ -16516,16 +16914,19 @@
 	(up-set-attack-stance -1 c: stance-aggressive)
 	;(set-strategic-number sn-disable-defend-groups 0)
 	;(set-strategic-number sn-disable-attack-groups 0)
-	(disable-timer retreating-timer)
+	;(disable-timer retreating-timer)
+	(disable-timer split-stance-timer)
 )
 
 
 (defrule
-	(timer-triggered split-stance-timer)
+	;(timer-triggered split-stance-timer)
+	(timer-triggered retreating-timer)
 =>	(up-full-reset-search)
 	(up-find-local c: -1 c: 240)
 	(up-set-attack-stance -1 c: stance-aggressive)
-	(disable-timer split-stance-timer)
+	;(disable-timer split-stance-timer)
+	(disable-timer retreating-timer)
 	(up-reset-unit c: archery-class)
 ;	(up-reset-target-priorities priority-offense 1)
 )
@@ -16540,367 +16941,6 @@
 	(chat-to-all "glhf")
 	(disable-self)
 )
-
-;saving center-point of the map
-
-(defrule
-	(true)
-=>
-	(up-get-point position-center gl-center-x)
-	(disable-self)
-)
-
-#load-if-not-defined UP-NOMAD-STYLE
-
-;region Finding Enemy TC x/y position (not working on Nomad)
-
-
-(defrule
-	(players-building-type-count any-enemy town-center > 0)
-=>	
-	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
-	(up-full-reset-search)
-	(up-find-remote c: town-center c: 1)
-)
-
-(defrule
-	(players-building-type-count any-enemy town-center > 0)
-	(up-set-target-object search-remote c: 0)
-=>
-	(up-get-point position-object enemy-point-x)
-	;(up-send-flare enemy-point-x)
-)
-
-(defrule
-	(up-set-target-object search-remote c: 0)
-	(game-time > 5)
-	(players-building-type-count any-enemy town-center > 0)
-=>
-	(up-full-reset-search)
-	; (up-filter-status c: status-ready c: list-active)
-	; (up-find-status-remote c: town-center c: 1)
-	(up-find-remote c: town-center c: 1)
-	(up-set-target-object search-remote c: 0)
-	(up-get-point position-object enemy-point-x)
-	(up-send-flare enemy-point-x)
-	; (up-store-player-name focus-player)
-	; (up-chat-data-to-player every-ally text-enemy-located-here c: 7031232)
-	(chat-to-allies " 16 Enemy Town Center here")
-	(up-chat-data-to-self "My enemy is player %d" s: sn-target-player-number)
-	(up-chat-data-to-self "My enemy is %s" c: 7031232)
-	(disable-self)
-)
-
-#end-if
-
-#load-if-defined UP-NOMAD-STYLE
-
-(defrule
-	(players-building-type-count any-enemy town-center > 0)
-=>	
-	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
-	(up-full-reset-search)
-	(up-find-remote c: town-center c: 1)
-)
-
-(defrule
-	(players-building-type-count any-enemy town-center > 0)
-	(up-set-target-object search-remote c: 0)
-=>
-	(up-get-point position-object enemy-point-x)
-	;(up-send-flare enemy-point-x)
-)
-
-(defrule
-	(game-time > 5)
-	(players-building-type-count any-enemy town-center > 0)
-=>
-	(up-full-reset-search)
-	; (up-filter-status c: status-ready c: list-active)
-	; (up-find-status-remote c: town-center c: 1)
-	(up-find-remote c: town-center c: 1)
-)
-
-(defrule
-	(game-time > 5)
-	(players-building-type-count any-enemy town-center > 0)
-	(up-set-target-object search-remote c: 0)
-=>
-	(up-get-point position-object enemy-point-x)
-)
-
-(defrule
-	(up-point-explored enemy-point-x != explored-no)
-	(game-time > 5)
-	(players-building-type-count any-enemy town-center > 0)
-=>
-	(up-send-flare enemy-point-x)
-	; (up-store-player-name focus-player)
-	; (up-chat-data-to-player every-ally text-enemy-located-here c: 7031232)
-	(chat-to-allies " 16 Enemy Town Center here")
-	(up-chat-data-to-self "My enemy is player %d" s: sn-target-player-number)
-	(up-chat-data-to-self "My enemy is %s" c: 7031232)
-	(disable-self)
-)
-
-
-;endregion
-
-;region Finding Enemy Castle x/y position
-
-(defrule
-	(players-building-type-count any-enemy castle > 0)
-	(timer-triggered t-3-sec)
-=>	
-	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
-	(up-full-reset-search)
-	(up-filter-status c: status-ready c: list-active)
-	(up-find-status-remote c: castle c: 1)
-	(up-set-target-object search-remote c: 0)
-	(up-get-point position-object enemy-castle-point-x)
-	;(up-send-flare enemy-point-x)
-)
-
-(defrule
-	(up-set-target-object search-remote c: 0)
-	(game-time > 5)
-	(players-building-type-count any-enemy castle > 0)
-=>
-	(up-full-reset-search)
-	(up-filter-status c: status-ready c: list-active)
-	(up-find-status-remote c: castle c: 1)
-	(up-set-target-object search-remote c: 0)
-	(up-get-point position-object enemy-castle-point-x)
-	(up-send-flare enemy-castle-point-x)
-	(chat-to-allies "Enemy Castle here")
-	(disable-self)
-)
-
-;endregion
-
-;region Finding Enemy Towers x/y position
-
-(defrule
-	(players-building-type-count any-enemy watch-tower-line > 0)
-	(timer-triggered t-3-sec)
-=>	
-	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
-	(up-full-reset-search)
-	(up-filter-status c: status-ready c: list-active)
-	(up-find-status-remote c: tower-type c: 1)
-	(up-set-target-object search-remote c: 0)
-	(up-get-point position-object enemy-tower-point-x)
-	;(up-send-flare enemy-point-x)
-)
-
-(defrule
-	(up-set-target-object search-remote c: 0)
-	(game-time > 5)
-	(players-building-type-count any-enemy watch-tower-line > 0)
-=>
-	(up-full-reset-search)
-	(up-filter-status c: status-ready c: list-active)
-	(up-find-status-remote c: tower-type c: 1)
-	(up-set-target-object search-remote c: 0)
-	(up-get-point position-object enemy-tower-point-x)
-	(up-send-flare enemy-tower-point-x)
-	(chat-to-allies "Enemy Tower here")
-	(disable-self)
-)
-
-;endregion
-
-;region Finding TC x/y position
-
-#load-if-defined UP-NOMAD-STYLE
-
-(defrule
-	(building-type-count town-center > 0)
-	(timer-triggered t-3-sec)
-=>
-	(up-full-reset-search)
-	(up-find-local c: town-center c: 1)
-	(up-set-target-object search-local c: 0)
-	(up-get-object-data object-data-id gl-main-tc-id)
-	(up-get-point position-object gl-starting-tc-x) ; Finding and saving starting TC x/y coordinates
-	(disable-self)
-)
-
-(defrule
-	(game-time > 5)
-	(building-type-count town-center > 0)
-=>
-	(up-full-reset-search)
-	(up-find-local c: town-center c: 1)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object gl-starting-tc-x)
-	(up-send-flare gl-starting-tc-x)
-	(chat-to-allies "I am here!")
-	(disable-self)
-)
-
-#end-if
-
-#load-if-not-defined UP-NOMAD-STYLE
-
-(defrule
-	(building-type-count town-center > 0)
-	(timer-triggered t-3-sec)
-=>
-	(up-full-reset-search)
-	(up-find-local c: town-center c: 1)
-	(up-set-target-object search-local c: 0)
-	(up-get-object-data object-data-id gl-main-tc-id)
-	(up-get-point position-object gl-starting-tc-x) ; Finding and saving starting TC x/y coordinates
-	(disable-self)
-)
-
-(defrule
-	(game-time > 5)
-	(building-type-count town-center > 0)
-=>
-	(up-full-reset-search)
-	(up-find-local c: town-center c: 1)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object gl-starting-tc-x)
-	;(up-send-flare gl-starting-tc-x)
-	;(chat-to-allies "Ich bin hier!")
-	(disable-self)
-)
-
-#end-if
-
-;endregion
-
-#end-if
-
-#load-if-not-defined UP-ALLY-IN-GAME
-
-;region Finding Enemy TC x/y position (not working on Nomad)
-
-
-(defrule
-	(players-building-type-count any-enemy town-center > 0)
-	;(timer-triggered t-3-sec)
-	;(up-compare-goal enemy-point-x == -1) ;todo
-=>	
-	(up-full-reset-search)
-	(up-find-remote c: town-center c: 1)
-)
-
-(defrule
-	(players-building-type-count any-enemy town-center > 0)
-	(up-set-target-object search-remote c: 0)
-=>
-	(up-get-point position-object enemy-point-x)
-	;(up-send-flare enemy-point-x)
-)
-
-(defrule
-	(game-time > 5)
-	(players-building-type-count any-enemy town-center > 0)
-=>
-	(up-full-reset-search)
-	(up-find-remote c: town-center c: 1)
-	(up-set-target-object search-remote c: 0)
-	(up-get-point position-object enemy-point-x)
-	(up-send-flare enemy-point-x)
-	; (up-store-player-name focus-player)
-	; (up-chat-data-to-player every-ally text-enemy-located-here c: 7031232)
-	;(chat-to-allies " 16 Enemy Town Center here")
-	(up-chat-data-to-self "My enemy is player %d" s: sn-target-player-number)
-	(up-chat-data-to-self "My enemy is %s" c: 7031232)
-	(disable-self)
-)
-;endregion
-
-;region Finding Enemy Castle x/y position
-
-(defrule
-	(players-building-type-count any-enemy castle > 0)
-	(timer-triggered t-3-sec)
-=>	
-	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
-	(up-full-reset-search)
-	(up-find-remote c: castle c: 1)
-	(up-set-target-object search-remote c: 0)
-	(up-get-point position-object enemy-castle-point-x)
-	;(up-send-flare enemy-point-x)
-)
-
-(defrule
-	(game-time > 5)
-	(players-building-type-count any-enemy castle > 0)
-=>
-	(up-full-reset-search)
-	(up-find-remote c: castle c: 1)
-	(up-set-target-object search-remote c: 0)
-	(up-get-point position-object enemy-castle-point-x)
-	(up-send-flare enemy-castle-point-x)
-	(chat-to-allies "21 Enemy Castle here")
-	(disable-self)
-)
-
-;endregion
-
-;region Finding Enemy Tower x/y position
-
-(defrule
-	(players-building-type-count any-enemy watch-tower-line > 0)
-	(timer-triggered t-3-sec)
-=>	
-	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
-	(up-full-reset-search)
-	(up-find-remote c: watch-tower c: 1)
-	(up-set-target-object search-remote c: 0)
-	(up-get-point position-object enemy-tower-point-x)
-	;(up-send-flare enemy-point-x)
-)
-
-(defrule
-	(game-time > 5)
-	(players-building-type-count any-enemy watch-tower-line > 0)
-=>
-	(up-full-reset-search)
-	(up-find-remote c: watch-tower c: 1)
-	(up-set-target-object search-remote c: 0)
-	(up-get-point position-object enemy-tower-point-x)
-	(up-send-flare enemy-tower-point-x)
-	(chat-to-allies "21 Enemy Tower here")
-	(disable-self)
-)
-
-;endregion
-
-;region Finding TC x/y position
-
-(defrule
-	(building-type-count town-center > 0)
-=>
-	(up-full-reset-search)
-	(up-find-local c: town-center c: 1)
-	(up-set-target-object search-local c: 0)
-	(up-get-object-data object-data-id gl-main-tc-id)
-	(up-get-point position-object gl-starting-tc-x) ; Finding and saving starting TC x/y coordinates
-	(disable-self)
-)
-
-(defrule
-	(game-time > 5)
-	(building-type-count town-center > 0)
-=>
-	(up-full-reset-search)
-	(up-find-local c: town-center c: 1)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object gl-starting-tc-x)
-	;(up-send-flare gl-starting-tc-x)
-	;(chat-to-allies "I am here!")
-	(disable-self)
-)
-
-;endregion
-
-#end-if
 
 ;region finding explored & uncaptured sheep
 
@@ -22742,7 +22782,8 @@
 	(current-age == castle-age)
 	(can-train-with-escrow villager)
 	(or (unit-type-count-total villager g:< c-villager-goal)
-	(up-research-status c: imperial-age == research-pending))
+	(or (up-research-status c: imperial-age == research-pending)
+	(not (can-research imperial-age))))
 	(unit-type-count-total villager < 130)
 	(food-amount >= 300)
 	(not (goal strategy-goal sg-boom-imp))
@@ -22759,7 +22800,8 @@
 	(current-age == castle-age)
 	(can-train-with-escrow villager)
 	(or (unit-type-count-total villager g:< c-villager-goal)
-	(up-research-status c: imperial-age == research-pending))
+	(or (up-research-status c: imperial-age == research-pending)
+	(not (can-research imperial-age))))
 	(unit-type-count-total villager < 130)
 	(food-amount >= 300)
 	(or (goal strategy-goal sg-boom-imp)
@@ -23068,12 +23110,9 @@
 	(can-build-with-escrow town-center)
 	(building-type-count-total town-center < 2)
 	(random-number <= 50)
-	; (or (and (goal strategy-goal sg-archerrush)
-		; (building-type-count-total archery-range == 2))
-		; (or (and (goal strategy-goal sg-scoutrush)
-			; (building-type-count-total stable == 1))
-			; (or	(goal strategy-goal sg-drush)
-				; (goal strategy-goal sg-boom-imp))))
+	(or (building-type-count-total stable > 0)
+	(or (building-type-count-total archery-range > 0)
+	(building-type-count-total barracks > 1)))
 =>
 	(release-escrow wood)
 	(release-escrow stone)
@@ -23096,12 +23135,9 @@
 	(can-build-with-escrow town-center)
 	(building-type-count-total town-center < 2)
 	(random-number > 50)
-	; (or (and (goal strategy-goal sg-archerrush)
-		; (building-type-count-total archery-range == 2))
-		; (or (and (goal strategy-goal sg-scoutrush)
-			; (building-type-count-total stable == 1))
-			; (or	(goal strategy-goal sg-drush)
-				; (goal strategy-goal sg-boom-imp))))
+	(or (building-type-count-total stable > 0)
+	(or (building-type-count-total archery-range > 0)
+	(building-type-count-total barracks > 1)))
 =>
 	(release-escrow wood)
 	(release-escrow stone)
@@ -24555,7 +24591,7 @@
 	(can-train knight-line)
 	(unit-type-count-total knight-line < 5)
 	(or (unit-type-count-total archer-line > 8)
-	(or (unit-type-count-total militiaman-line > 8)
+	(or (unit-type-count-total militiaman-line > 4)
 	(unit-type-count-total camel-line > 8)))
 	(or (unit-type-count-total archer-line < 20)
 	(or (unit-type-count-total militiaman-line < 20)
@@ -24585,7 +24621,7 @@
 	(unit-type-count-total archer-line >= 20))
 	(or (unit-type-count-total camel-line <= 8)
 	(unit-type-count-total camel-line >= 20))
-	(or (unit-type-count-total militiaman-line <= 8)
+	(or (unit-type-count-total militiaman-line <= 4)
 	(unit-type-count-total militiaman-line >= 20))
 	(unit-type-count-total my-unique-unit-line <= 8)
 	(unit-type-count-total battle-elephant-line <= 4)
@@ -24612,7 +24648,7 @@
 	(unit-type-count-total archer-line >= 20))
 	(or (unit-type-count-total camel-line <= 8)
 	(unit-type-count-total camel-line >= 20))
-	(or (unit-type-count-total militiaman-line <= 8)
+	(or (unit-type-count-total militiaman-line <= 4)
 	(unit-type-count-total militiaman-line >= 20))
 	(unit-type-count-total my-unique-unit-line <= 8)
 	(unit-type-count-total battle-elephant-line <= 4)
@@ -24892,6 +24928,9 @@
 (defrule
 	(up-compare-goal gl-archery-class-units > 5)
 	(up-research-status c: ri-bodkin-arrow >= research-pending)
+	(or (up-research-status c: ri-crossbow >= research-pending)
+	(or (up-research-status c: ri-elite-skirmisher >= research-pending)
+	(unit-type-count-total cavalry-archer-class >= 5)))
 	(can-research ri-leather-archer-armor)
 =>
 	(research ri-leather-archer-armor)
@@ -28137,6 +28176,7 @@
 	(unit-type-count archer-line < 5)
 	(unit-type-count battle-elephant-line < 5)
 	(unit-type-count cavalry-archer-line < 5)
+	(unit-type-count militiaman-line < 5)
 	(research-completed ri-cavalier)
 	(not (research-available ri-paladin))
 =>
@@ -28224,6 +28264,7 @@
 	(unit-type-count knight-line < 10)
 	(unit-type-count archer-line < 5)
 	(unit-type-count cavalry-archer-line < 5)
+	(unit-type-count militiaman-line < 5)
 	(research-completed ri-cavalier)
 	(research-available ri-paladin)
 =>
@@ -33967,7 +34008,7 @@
 	(set-strategic-number sn-food-gatherer-percentage 44)
 	(set-strategic-number sn-gold-gatherer-percentage 25)
 	(set-strategic-number sn-stone-gatherer-percentage 6)
-	(chat-to-player my-player-number "Setting up Economy for Castle-Age eagles")
+	(chat-to-player my-player-number "Setting up Economy for Castle-Age longswords")
 	(disable-self)
 )
 
