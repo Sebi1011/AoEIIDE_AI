@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.0
-;last update: 25th April 2023
+;last update: 26th April 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -84,34 +84,34 @@
 ; - added option to attack in castle-age when having a specific number of army and the opponent is still in feudal-age,
 ; but has the army lead
 ; - improved scoutrush attack time
+; - fixed khmer military-building issue
 
 ;ToDo: 
 
 ;what's up next:
 
-; - use military evaluation to build buildings for countering enemy army (stable against skirms in feudal) (in progress)
-; - reduce distance for meso-scoutrush barracks to tc
 ; - fix retreat rule issue for tcs
-; - fix a bug causing the AI to set the enemy tc point on its own tc (probably when playing gurjaras)
-; - limit number of archers produced in longswords, knight or eagle-warrior strategies (25)
-; - fix chat bug: focus player is being chatted twice
+; - fix boar-hunting bugs: - villagers are around the tc, but are not garrisoned. - not enough villagers around the tc, but alternative
+; boar-hunting mode does not trigger.
+; - fix non-preferation of enemy monks
+
+; - limit number of archers produced in longswords, knight or eagle-warrior strategies (16) (testing)
+; - change villager-goal modificator for scoutrushes, considering wheel-barrow research (testing)
+; - fix cumans 2nd tc rule for teamgames in pocket positions (testing)
+; - keep training villagers if c-villager-goal is being met, but age-research cannot start and AI has more food than required (testing)
+; - use military evaluation to build buildings for countering enemy army (testing)
 ; - fix continuous production of skirms in castle-age (testing)
 ; - improve conditions for cumans 2nd tc (military buildings required) (testing)
-; - keep training villagers if c-villager-goal is being met, but age-research cannot start and AI has more food than required (testing)
-; - implement scouting-pattern for scouting own base
-; - trebs are still not being produced at all
+; - fix a bug causing the AI to set the enemy tc point on its own tc (probably when playing gurjaras) (testing)
+
 ; - implement more precise conditions for imperial age units (champions/knights/camels/archers/steppe-lancers/eagles/halbs/hc/siege/uu/cav-archers)
 ; - add production-restrictions for champions if the opponent has hc/catas/heavy-scorpions
-
+; - implement scouting-pattern for scouting own base
 ; - adjust farm-placement & tc placement rules to only build if required amount of offense buildings have been placed (3bar/2ran/2stable) (testing)
-; - deactivate gathering units at buildings under constructions/ rather gather units to tc (testing)
 ; - stop training archers as spanish & bulgarians in archerrushes when going up to castle-age (testing)
-; - fix forward siege-workshop placement to consider military-advantage instead of just own military numbers (testing)
 ; - find restriction rules for rams in imperial age to not waste them unneccesarily and to encourage train trebs (testing)
 ; - fix fc-uu bo before going up to castle-age (testing)
 ; - fix scout-group after scouting opponent and opponent wasn't found yet (waiting for bug fix)
-; - fix boar-hunting bugs: - villagers are around the tc, but are not garrisoned. - not enough villagers around the tc, but alternative
-; boar-hunting mode does not trigger.
 
 
 ; - try to always attack with at least 2 rams instead of only one 
@@ -1764,9 +1764,9 @@
 	(disable-self)
 )
 
-#load-if-not-defined UP-NOMAD-STYLE
+; Finding Enemy TC x/y position (not working on Nomad)
 
-;region Finding Enemy TC x/y position (not working on Nomad)
+#load-if-not-defined UP-NOMAD-STYLE
 
 
 (defrule
@@ -1856,11 +1856,11 @@
 	(up-chat-data-to-self "My enemy is %s" c: 7031232)
 	(disable-self)
 )
+#end-if
 
+#load-if-defined UP-ALLY-IN-GAME
 
-;endregion
-
-;region Finding Enemy Castle x/y position
+; Finding Enemy Castle x/y position
 
 (defrule
 	(players-building-type-count any-enemy castle > 0)
@@ -1890,9 +1890,7 @@
 	(disable-self)
 )
 
-;endregion
-
-;region Finding Enemy Towers x/y position
+; Finding Enemy Towers x/y position
 
 (defrule
 	(players-building-type-count any-enemy watch-tower-line > 0)
@@ -1922,9 +1920,7 @@
 	(disable-self)
 )
 
-;endregion
-
-;region Finding TC x/y position
+; Finding own TC x/y position
 
 #load-if-defined UP-NOMAD-STYLE
 
@@ -1983,50 +1979,47 @@
 )
 
 #end-if
-
-;endregion
-
 #end-if
 
 #load-if-not-defined UP-ALLY-IN-GAME
 
-;region Finding Enemy TC x/y position (not working on Nomad)
+; ;region Finding Enemy TC x/y position (not working on Nomad)
 
 
-(defrule
-	(players-building-type-count any-enemy town-center > 0)
-	;(timer-triggered t-3-sec)
-	;(up-compare-goal enemy-point-x == -1) ;todo
-=>	
-	(up-full-reset-search)
-	(up-find-remote c: town-center c: 1)
-)
+; (defrule
+	; (players-building-type-count any-enemy town-center > 0)
+	; ;(timer-triggered t-3-sec)
+	; ;(up-compare-goal enemy-point-x == -1) ;todo
+; =>	
+	; (up-full-reset-search)
+	; (up-find-remote c: town-center c: 1)
+; )
 
-(defrule
-	(players-building-type-count any-enemy town-center > 0)
-	(up-set-target-object search-remote c: 0)
-=>
-	(up-get-point position-object enemy-point-x)
-	;(up-send-flare enemy-point-x)
-)
+; (defrule
+	; (players-building-type-count any-enemy town-center > 0)
+	; (up-set-target-object search-remote c: 0)
+; =>
+	; (up-get-point position-object enemy-point-x)
+	; ;(up-send-flare enemy-point-x)
+; )
 
-(defrule
-	(game-time > 5)
-	(players-building-type-count any-enemy town-center > 0)
-=>
-	(up-full-reset-search)
-	(up-find-remote c: town-center c: 1)
-	(up-set-target-object search-remote c: 0)
-	(up-get-point position-object enemy-point-x)
-	(up-send-flare enemy-point-x)
-	; (up-store-player-name focus-player)
-	; (up-chat-data-to-player every-ally text-enemy-located-here c: 7031232)
-	;(chat-to-allies " 16 Enemy Town Center here")
-	(up-chat-data-to-self "My enemy is player %d" s: sn-target-player-number)
-	(up-chat-data-to-self "My enemy is %s" c: 7031232)
-	(disable-self)
-)
-;endregion
+; (defrule
+	; (game-time > 5)
+	; (players-building-type-count any-enemy town-center > 0)
+; =>
+	; (up-full-reset-search)
+	; (up-find-remote c: town-center c: 1)
+	; (up-set-target-object search-remote c: 0)
+	; (up-get-point position-object enemy-point-x)
+	; (up-send-flare enemy-point-x)
+	; ; (up-store-player-name focus-player)
+	; ; (up-chat-data-to-player every-ally text-enemy-located-here c: 7031232)
+	; ;(chat-to-allies " 16 Enemy Town Center here")
+	; (up-chat-data-to-self "My enemy is player %d" s: sn-target-player-number)
+	; (up-chat-data-to-self "My enemy is %s" c: 7031232)
+	; (disable-self)
+; )
+; ;endregion
 
 ;region Finding Enemy Castle x/y position
 
@@ -7400,6 +7393,20 @@
 	(players-unit-type-count focus-player skirmisher-line >= 3)
 	(can-build-with-escrow stable)
 	(building-type-count-total stable == 0)
+	(not (town-under-attack))
+=>
+	(up-modify-escrow wood c:- 175)
+	(up-set-placement-data my-player-number -1 c: 8)
+    (up-build place-control 0 c: stable)
+	;(chat-to-player my-player-number "Baue Stall, um feindliche Plaenkler zu kontern")
+)
+
+(defrule
+	(current-age == feudal-age)
+	(players-unit-type-count focus-player skirmisher-line >= 3)
+	(can-build-with-escrow stable)
+	(building-type-count-total stable == 0)
+	(town-under-attack)
 =>
 	(up-modify-escrow wood c:- 175)
 	(build stable)
@@ -7702,6 +7709,20 @@
 	(players-unit-type-count focus-player eagle-warrior-line >= 4))
 	(can-build-with-escrow stable)
 	(building-type-count-total stable == 0)
+	(not (town-under-attack))
+=>
+	(up-modify-escrow wood c:- 175)
+	(up-set-placement-data my-player-number -1 c: 8)
+    (up-build place-control 0 c: stable)
+)
+
+(defrule
+	(current-age == feudal-age)
+	(or (players-unit-type-count focus-player skirmisher-line >= 4)
+	(players-unit-type-count focus-player eagle-warrior-line >= 4))
+	(can-build-with-escrow stable)
+	(building-type-count-total stable == 0)
+	(town-under-attack)
 =>
 	(up-modify-escrow wood c:- 175)
 	(build stable)
@@ -12418,9 +12439,32 @@
 
 (defrule
 	(current-age == feudal-age)
+	(not (goal strategy-goal sg-scoutrush))
 	(timer-triggered 8)
 	(or 
 		(food-amount >= 450) ;600
+	(or	
+		(and (gold-amount >= 325) ;375
+		(building-type-count market >= 1))
+		(up-compare-goal gl-military-advantage >= 10))
+	)
+	(up-modify-goal gl-feudalup-compare g:= f-villager-goal)
+	(up-modify-goal gl-feudalup-compare c:- 5)
+	(unit-type-count-total villager g:< gl-feudalup-compare)
+	(up-research-status c: castle-age != research-pending)
+=>
+	(disable-timer 8)
+	(up-modify-goal f-villager-goal c:- 1)
+	(up-chat-data-to-self "Feudal-Age villager goal: %d" g: f-villager-goal)
+	(enable-timer 8 30)
+)
+
+(defrule
+	(current-age == feudal-age)
+	(goal strategy-goal sg-scoutrush)
+	(timer-triggered 8)
+	(or 
+		(food-amount >= 275) ;600
 	(or	
 		(and (gold-amount >= 325) ;375
 		(building-type-count market >= 1))
@@ -12740,7 +12784,8 @@
 (defrule
 	(goal strategy-goal sg-archerrush)
 	(current-age <= feudal-age)
-	(building-type-count-total barracks >= 1)
+	(or (building-type-count-total barracks >= 1)
+	(civ-selected khmer))
 	(civilian-population g:>= d-villager-goal)
 	(building-type-count-total archery-range < 2)
 	(goal gl-wood-saving 0)
@@ -12754,7 +12799,8 @@
 (defrule
 	(goal strategy-goal sg-archerrush)
 	(or (current-age > feudal-age)
-	(or (building-type-count-total barracks < 1)
+	(or (and (building-type-count-total barracks < 1)
+		(not (civ-selected khmer)))
 	(or (civilian-population g:< d-villager-goal)
 	(building-type-count-total archery-range >= 2))))
 	(goal gl-wood-saving 3)
@@ -12768,7 +12814,8 @@
 (defrule
 	(goal strategy-goal sg-scoutrush)
 	(current-age == feudal-age)
-	(building-type-count-total barracks >= 1)
+	(or (building-type-count-total barracks >= 1)
+	(civ-selected khmer))
 	(civilian-population >= 25)
 	(building-type-count-total archery-range < 1)
 	(building-type-count-total farm >= 8)
@@ -12784,7 +12831,8 @@
 (defrule
 	(goal strategy-goal sg-scoutrush)
 	(or (current-age != feudal-age)
-	(or (building-type-count-total barracks < 1)
+	(or (and (building-type-count-total barracks < 1)
+		(not (civ-selected khmer)))
 	(or (civilian-population < 25)
 	(or (building-type-count-total farm < 8)
 	(or (game-time < 780) ;13mins
@@ -12801,7 +12849,8 @@
 	(goal strategy-goal sg-scoutrush)
 	(goal meso-civ NO)
 	(current-age <= feudal-age)
-	(building-type-count-total barracks >= 1)
+	(or (building-type-count-total barracks >= 1)
+	(civ-selected khmer))
 	(civilian-population g:>= d-villager-goal)
 	(building-type-count-total stable < 1)
 	(goal gl-wood-saving 0)
@@ -12816,7 +12865,8 @@
 	(goal strategy-goal sg-scoutrush)
 	(or (goal meso-civ YES)
 	(or (current-age > feudal-age)
-	(or (building-type-count-total barracks < 1)
+	(or (and (building-type-count-total barracks < 1)
+		(not (civ-selected khmer)))
 	(or (civilian-population g:< d-villager-goal)
 	(building-type-count-total stable >= 1)))))
 	(goal gl-wood-saving 4)
@@ -13112,6 +13162,30 @@
 #end-if
 #end-if
 
+#load-if-defined UP-POCKET-POSITION
+
+(defrule
+	(civ-selected cumans)
+	(up-research-status c: feudal-age >= research-pending)
+	(current-age < castle-age)
+	(building-type-count-total town-center < 2)
+	; (or (building-type-count-total stable > 0)
+	; (or (building-type-count-total archery-range > 0)
+	; (building-type-count-total barracks > 1)))
+	(goal gl-wood-saving 0)
+	(goal gl-stone-saving 0)
+=>
+	(set-escrow-percentage wood 40)
+	(set-escrow-percentage stone 25)
+	(set-goal gl-wood-saving 8)
+	(set-goal gl-stone-saving 8)
+	(enable-timer 9 1)
+	;(chat-to-player my-player-number "Spare auf weiteres Dorfzentrum")
+)
+#end-if
+
+#load-if-not-defined UP-POCKET-POSITION
+
 (defrule
 	(civ-selected cumans)
 	(up-research-status c: feudal-age >= research-pending)
@@ -13130,6 +13204,7 @@
 	(enable-timer 9 1)
 	;(chat-to-player my-player-number "Spare auf weiteres Dorfzentrum")
 )
+#end-if
 
 ; (defrule
 	; (civ-selected cumans)
@@ -21131,7 +21206,6 @@
 	(current-age == feudal-age)
 	(can-build-with-escrow archery-range)
 	(building-type-count-total town-center >= 1)
-	(building-type-count-total barracks >= 1)
 	(building-type-count-total archery-range < 1)
 	(building-type-count-total farm >= 12)
 	(civilian-population >= 26)
@@ -21153,7 +21227,6 @@
 	(current-age == feudal-age)
 	(can-build-with-escrow archery-range)
 	(building-type-count-total town-center >= 1)
-	(building-type-count-total barracks >= 1)
 	(building-type-count-total archery-range < 1)
 	(building-type-count-total farm >= 12)
 	(civilian-population >= 26)
@@ -23102,6 +23175,55 @@
 	(research ri-town-patrol)
 )
 
+#load-if-defined UP-POCKET-POSITION
+
+(defrule
+	(civ-selected cumans)
+	(current-age >= feudal-age)
+	(goal gl-wood-saving 8)
+	(goal gl-stone-saving 8)
+	(can-build-with-escrow town-center)
+	(building-type-count-total town-center < 2)
+	(random-number <= 50)
+=>
+	(release-escrow wood)
+	(release-escrow stone)
+	(set-escrow-percentage wood 0)
+	(set-escrow-percentage stone 0)
+	(set-strategic-number sn-allow-adjacent-dropsites 1)
+	(set-strategic-number sn-town-center-placement mining-camp)
+	(up-assign-builders c: town-center-foundation c: 8)
+	(up-assign-builders c: town-center c: 8)
+	(build town-center)
+	(set-goal gl-wood-saving 0)
+	(set-goal gl-stone-saving 0)
+)
+
+(defrule
+	(civ-selected cumans)
+	(current-age >= feudal-age)
+	(goal gl-wood-saving 8)
+	(goal gl-stone-saving 8)
+	(can-build-with-escrow town-center)
+	(building-type-count-total town-center < 2)
+	(random-number > 50)
+=>
+	(release-escrow wood)
+	(release-escrow stone)
+	(set-escrow-percentage wood 0)
+	(set-escrow-percentage stone 0)
+	(set-strategic-number sn-allow-adjacent-dropsites 1)
+	(set-strategic-number sn-town-center-placement lumber-camp)
+	(up-assign-builders c: town-center-foundation c: 8)
+	(up-assign-builders c: town-center c: 8)
+	(build town-center)
+	(set-goal gl-wood-saving 0)
+	(set-goal gl-stone-saving 0)
+)
+#end-if
+
+#load-if-not-defined UP-POCKET-POSITION
+
 (defrule
 	(civ-selected cumans)
 	(current-age >= feudal-age)
@@ -23151,6 +23273,7 @@
 	(set-goal gl-wood-saving 0)
 	(set-goal gl-stone-saving 0)
 )
+#end-if
 
 (defrule
 	(current-age >= castle-age)
@@ -23969,10 +24092,44 @@
 	(up-research-status c: ri-crossbow >= research-pending)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
-	(unit-type-count-total cavalry-archer-line < 5)
-	(unit-type-count-total elephant-archer-line < 5)
+	(unit-type-count-total cavalry-archer-class < 5)
 	(or (unit-type-count-total knight-line < 5)
 	(unit-type-count-total knight-line >= 20))
+	(or (unit-type-count-total militiaman-line < 5)
+	(unit-type-count-total militiaman-line >= 20))
+	(or (unit-type-count-total eagle-warrior-line < 5)
+	(unit-type-count-total eagle-warrior-line >= 20))
+	(or
+		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
+		(or (players-unit-type-count focus-player scorpion-line >= 3)
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (unit-type-count-total cavalry-class < 3)
+		(unit-type-count-total siege-weapon-class < 3))
+	)
+=>
+	(train archer-line)
+)
+
+(defrule
+	(current-age == castle-age)
+	(can-train archer-line)
+	(wood-amount > 75)
+	(up-research-status c: ri-crossbow >= research-pending)
+	(or (civilian-population g:< c-villager-goal)
+	(up-research-status c: imperial-age == research-pending))
+	(unit-type-count-total archer-line < 16)
+	(unit-type-count-total cavalry-archer-class < 5)
+	(or
+		(or (unit-type-count-total knight-line >= 5)
+		(unit-type-count-total knight-line < 20))
+		(or 
+			(or (unit-type-count-total militiaman-line >= 5)
+			(unit-type-count-total militiaman-line < 20))
+			(or (unit-type-count-total eagle-warrior-line >= 5)
+			(unit-type-count-total eagle-warrior-line < 20))
+		)
+	)
 	(or
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
 		(or (players-unit-type-count focus-player scorpion-line >= 3)
@@ -24823,6 +24980,8 @@
 (defrule
 	(up-compare-goal gl-archery-class-units > 5)
 	(can-research ri-bodkin-arrow)
+	(or (up-research-status c: ri-crossbow >= research-pending)
+	(up-research-status c: ri-elite-skirmisher >= research-pending))
 =>
 	(research ri-bodkin-arrow)
 )
@@ -24890,6 +25049,8 @@
 (defrule
 	(up-compare-goal gl-archery-class-units > 5)
 	(can-research-with-escrow ri-bodkin-arrow)
+	(or (up-research-status c: ri-crossbow >= research-pending)
+	(up-research-status c: ri-elite-skirmisher >= research-pending))
 	(goal gl-gold-saving 14)
 	(goal gl-food-saving 14)
 =>
@@ -25061,6 +25222,7 @@
 (defrule
 	(unit-type-count-total archer-line >= 5)
 	(can-research-with-escrow ri-bodkin-arrow)
+	(up-research-status c: ri-crossbow >= research-pending)
 	(goal gl-gold-saving 14)
 	(goal gl-food-saving 14)
 =>
@@ -25184,6 +25346,7 @@
 (defrule
 	(unit-type-count-total skirmisher-line >= 3)
 	(can-research-with-escrow ri-bodkin-arrow)
+	(up-research-status c: ri-elite-skirmisher >= research-pending)
 	(goal gl-gold-saving 14)
 	(goal gl-food-saving 14)
 =>
@@ -25222,6 +25385,7 @@
 (defrule
 	(unit-type-count-total skirmisher-line >= 3)
 	(can-research ri-bodkin-arrow)
+	(up-research-status c: ri-elite-skirmisher >= research-pending)
 =>
 	(research ri-bodkin-arrow)
 )
