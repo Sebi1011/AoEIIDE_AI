@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.0
-;last update: 27th April 2023
+;last update: 28th April 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -92,7 +92,7 @@
 ;what's up next:
 
 ; - don't build 2nd barracks for meso-scoutrushes (testing)
-; - try to exclude stronger units from castle-retreat-rules (eagles/knights/some uus)
+; - try to exclude stronger units from castle-retreat-rules (eagles/knights/some uus) (testing)
 ; - fix retreat rule issue for tcs (testing)
 ; - fix boar-hunting bugs: - villagers are around the tc, but are not garrisoned. - not enough villagers around the tc, but alternative
 ; boar-hunting mode does not trigger.
@@ -15937,6 +15937,7 @@
 	(up-filter-include cmdid-military -1 -1 -1)
 	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
 	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
+	(up-filter-exclude -1 -1 -1 cavalry-class)
 	(up-find-local c: -1 c: 1)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == battering-ram)
@@ -15944,6 +15945,12 @@
 	(up-remove-objects search-local object-data-upgrade-type == siege-ram)
 	(up-remove-objects search-local object-data-type == armored-elephant)
 	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
+	(up-remove-objects search-local object-data-type == eagle-warrior)
+	(up-remove-objects search-local object-data-upgrade-type == heavy-eagle-warrior)
+	(up-remove-objects search-local object-data-upgrade-type == elite-eagle-warrior)
+	(up-remove-objects search-local object-data-type == huskarl)
+	(up-remove-objects search-local object-data-upgrade-type == elite-huskarl)
+	(up-remove-objects search-local object-data-class == cavalry-class)
 	(set-goal split-rule-goal 3)
 )
 
@@ -15970,6 +15977,7 @@
 	(up-filter-include cmdid-military -1 -1 -1)	
 	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
 	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
+	(up-filter-exclude -1 -1 -1 cavalry-class)
 	(up-find-local c: -1 c: 40)	
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == battering-ram)
@@ -15977,6 +15985,12 @@
 	(up-remove-objects search-local object-data-upgrade-type == siege-ram)
 	(up-remove-objects search-local object-data-type == armored-elephant)
 	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
+	(up-remove-objects search-local object-data-type == eagle-warrior)
+	(up-remove-objects search-local object-data-upgrade-type == heavy-eagle-warrior)
+	(up-remove-objects search-local object-data-upgrade-type == elite-eagle-warrior)
+	(up-remove-objects search-local object-data-type == huskarl)
+	(up-remove-objects search-local object-data-upgrade-type == elite-huskarl)
+	(up-remove-objects search-local object-data-class == cavalry-class)
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
@@ -16975,8 +16989,8 @@
 	;resetting
 
 (defrule
-	;(timer-triggered retreating-timer)
-	(timer-triggered split-stance-timer)
+	(timer-triggered retreating-timer)
+	;(timer-triggered split-stance-timer)
 =>	(up-full-reset-search)
 	(up-reset-unit c: infantry-class)
 	(up-reset-unit c: cavalry-class)
@@ -16987,19 +17001,19 @@
 	(up-set-attack-stance -1 c: stance-aggressive)
 	;(set-strategic-number sn-disable-defend-groups 0)
 	;(set-strategic-number sn-disable-attack-groups 0)
-	;(disable-timer retreating-timer)
-	(disable-timer split-stance-timer)
+	(disable-timer retreating-timer)
+	;(disable-timer split-stance-timer)
 )
 
 
 (defrule
-	;(timer-triggered split-stance-timer)
-	(timer-triggered retreating-timer)
+	(timer-triggered split-stance-timer)
+	;(timer-triggered retreating-timer)
 =>	(up-full-reset-search)
 	(up-find-local c: -1 c: 240)
 	(up-set-attack-stance -1 c: stance-aggressive)
-	;(disable-timer split-stance-timer)
-	(disable-timer retreating-timer)
+	(disable-timer split-stance-timer)
+	;(disable-timer retreating-timer)
 	(up-reset-unit c: archery-class)
 ;	(up-reset-target-priorities priority-offense 1)
 )
@@ -24078,6 +24092,8 @@
 	(current-age == castle-age)
 	(can-train archer-line)
 	(unit-type-count-total archer-line < 3)
+	(or (goal strategy-goal sg-archerrush)
+	(goal ca-strategy gl-castleage-rangeunit))
 	(wood-amount > 75)
 	(up-research-status c: ri-crossbow < research-pending)
 	(research-available ri-crossbow)
