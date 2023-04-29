@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.0
-;last update: 28th April 2023
+;last update: 29th April 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -91,6 +91,8 @@
 
 ;what's up next:
 
+; - change scoutrush build order to go on gold 1 villager later (testing)
+; - fix scout ignoring tc retreat code due to mass spamming attack on villager under tc (no solution found yet) (testing)
 ; - don't build 2nd barracks for meso-scoutrushes (testing)
 ; - try to exclude stronger units from castle-retreat-rules (eagles/knights/some uus) (testing)
 ; - fix retreat rule issue for tcs (testing)
@@ -110,13 +112,8 @@
 ; - implement more precise conditions for imperial age units (champions/knights/camels/archers/steppe-lancers/eagles/halbs/hc/siege/uu/cav-archers)
 ; - add production-restrictions for champions if the opponent has hc/catas/heavy-scorpions
 ; - adjust farm-placement & tc placement rules to only build if required amount of offense buildings have been placed (3bar/2ran/2stable) (testing)
-; - stop training archers as spanish & bulgarians in archerrushes when going up to castle-age (testing)
-; - find restriction rules for rams in imperial age to not waste them unneccesarily and to encourage train trebs (testing)
 ; - fix fc-uu bo before going up to castle-age (testing)
-; - fix scout-group after scouting opponent and opponent wasn't found yet (waiting for bug fix)
 ; - fix non-preferation of enemy monks (no solution found yet)
-; - fix scout ignoring tc retreat code due to mass spamming attack on villager under tc (no solution found yet)
-
 
 ; - try to always attack with at least 2 rams instead of only one 
 ; - fix retreating of militias in drushes
@@ -15562,7 +15559,7 @@
 	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
 	(up-filter-exclude -1 -1 -1 cavalry-class)
 	(up-filter-exclude -1 -1 -1 scout-cavalry-class)
-	(up-find-local c: -1 c: 1)
+	(up-find-local c: -1 c: 40)
 	(up-remove-objects search-local object-data-class == cavalry-class)
 	(up-remove-objects search-local object-data-class == scout-cavalry-class)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
@@ -15647,7 +15644,7 @@
 	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
 	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
 	(up-filter-exclude -1 -1 -1 cavalry-class)
-	(up-find-local c: -1 c: 1)
+	(up-find-local c: -1 c: 40)
 	(set-goal split-rule-goal 53)
 )
 
@@ -16304,6 +16301,13 @@
 
 ;region Militia Retreat Rules
 
+(defrule
+	(current-age == dark-age)
+	(goal retreating-goal YES)
+=>
+	(up-jump-rule 12)
+)
+
 ;retreat with militia from enemy villagers
 (defrule
 	(current-age < castle-age)
@@ -16582,6 +16586,13 @@
 
 
 ;region Scout temporary Retreat Rules (works for up to 4 scouts)
+
+(defrule
+	(current-age == dark-age)
+	(goal retreating-goal YES)
+=>
+	(up-jump-rule 12)
+)
 
 ;retreat with scouts from enemy threats
 (defrule
@@ -33870,9 +33881,9 @@
 	(civilian-population == 25)
 	(current-age == feudal-age)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 40)
+	(set-strategic-number sn-wood-gatherer-percentage 44)
 	(set-strategic-number sn-food-gatherer-percentage 56)
-	(set-strategic-number sn-gold-gatherer-percentage 4)
+	(set-strategic-number sn-gold-gatherer-percentage 0)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -33939,9 +33950,9 @@
 	(civilian-population == 31)
 	(current-age == feudal-age)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 29)
-	(set-strategic-number sn-food-gatherer-percentage 55)
-	(set-strategic-number sn-gold-gatherer-percentage 16)
+	(set-strategic-number sn-wood-gatherer-percentage 33)
+	(set-strategic-number sn-food-gatherer-percentage 60)
+	(set-strategic-number sn-gold-gatherer-percentage 7)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -33950,9 +33961,9 @@
 	(civilian-population == 32)
 	(current-age == feudal-age)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 31)
+	(set-strategic-number sn-wood-gatherer-percentage 36)
 	(set-strategic-number sn-food-gatherer-percentage 53)
-	(set-strategic-number sn-gold-gatherer-percentage 16)
+	(set-strategic-number sn-gold-gatherer-percentage 11)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
