@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.0
-;last update: 29th April 2023
+;last update: 30th April 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -91,14 +91,10 @@
 
 ;what's up next:
 
-; - change scoutrush build order to go on gold 1 villager later (testing)
-; - fix scout ignoring tc retreat code due to mass spamming attack on villager under tc (no solution found yet) (testing)
-; - don't build 2nd barracks for meso-scoutrushes (testing)
 ; - try to exclude stronger units from castle-retreat-rules (eagles/knights/some uus) (testing)
-; - fix retreat rule issue for tcs (testing)
+; - fix retreat rule issue for tcs (works better, but still happens)
 ; - fix boar-hunting bugs: - villagers are around the tc, but are not garrisoned. - not enough villagers around the tc, but alternative
 ; boar-hunting mode does not trigger.
-
 ; - limit number of archers produced in longswords, knight or eagle-warrior strategies (16) (testing)
 ; - change villager-goal modificator for scoutrushes, considering wheel-barrow research (testing)
 ; - fix cumans 2nd tc rule for teamgames in pocket positions (testing)
@@ -106,12 +102,10 @@
 ; - use military evaluation to build buildings for countering enemy army (testing)
 ; - fix continuous production of skirms in castle-age (testing)
 ; - improve conditions for cumans 2nd tc (military buildings required) (testing)
-; - fix a bug causing the AI to set the enemy tc point on its own tc (probably when playing gurjaras) (testing)
 
 ; - implement scouting-pattern for scouting own base
 ; - implement more precise conditions for imperial age units (champions/knights/camels/archers/steppe-lancers/eagles/halbs/hc/siege/uu/cav-archers)
-; - add production-restrictions for champions if the opponent has hc/catas/heavy-scorpions
-; - adjust farm-placement & tc placement rules to only build if required amount of offense buildings have been placed (3bar/2ran/2stable) (testing)
+; - add production-restrictions for champions if the opponent has hc/catas/heavy-scorpions (testing)
 ; - fix fc-uu bo before going up to castle-age (testing)
 ; - fix non-preferation of enemy monks (no solution found yet)
 
@@ -2352,8 +2346,8 @@
 (defrule
 	(current-age == dark-age)
 	(building-type-count mill > 0)
-	(unit-type-count villager < 27)
-	(goal attack-now-goal 0)
+	(unit-type-count villager < 16)
+	;(goal attack-now-goal 0)
 =>
 	(up-full-reset-search)
 	(up-find-local c: livestock-class c: 8)
@@ -2364,8 +2358,8 @@
 (defrule
 	(current-age == dark-age)
 	(building-type-count mill > 0)
-	(unit-type-count villager < 27)
-	(goal attack-now-goal 0)
+	(unit-type-count villager < 16)
+	;(goal attack-now-goal 0)
 	(up-set-target-object search-remote c: 0)
 	(up-object-data object-data-garrison-count < 10)
 =>
@@ -17903,9 +17897,10 @@
 (defrule
 	(goal gl-house 1)
 	(up-pending-objects c: house < 1)
-	(up-can-build-line 0 gl-temp-x c: house)
+	(up-can-build-line 0 gl-temp-x c: house) ;add with-escrow
 =>
 	;(chat-to-all "255")
+	;(up-modify-escrow wood c:- 25)
     (up-build-line gl-temp-x gl-temp-x c: house)
 	(set-goal gl-house 0)
 	(set-goal gl-temp 0)
@@ -18704,7 +18699,7 @@
 	(goal strategy-goal sg-scoutrush)
 	(goal meso-civ YES)
 	(current-age >= dark-age)
-	(civilian-population >= 21)
+	(civilian-population >= 20)
 	(building-type-count-total mining-camp == 0)
 	(resource-found gold)
 	(dropsite-min-distance gold < 255)
