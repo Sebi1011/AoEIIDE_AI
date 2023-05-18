@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 1.2.0
-;last update: 30th April 2023
+;Version: 1.2.1
+;last update: 18th May 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -9,7 +9,7 @@
 (defrule
 	(game-time > 10)
 =>
-	(chat-to-all "ZebbaAI: Version 1.2.0 by Zebba")
+	(chat-to-all "ZebbaAI: Version 1.2.1 by Zebba")
 	(disable-self)
 )
 
@@ -44,7 +44,7 @@
 ;Before any match set the difficulty level to extreme to get the best results since the game nerfs AIs speed on lower difficulty levels
 
 ;recently added:
-; - AI will now retreat from battles/stop sending more reinforcements if army numbers are too low 
+; - AI will now retreat from battles/stop sending more reinforcements if army numbers are too low
 ; - significantly improved forage gathering
 ; - improved scouting-pattern for finding the enemy base in 1v1s
 ; - added elite-skirmisher, halberdier and chemistry to the targetable resource saving list
@@ -86,11 +86,16 @@
 ; - improved scoutrush attack time
 ; - fixed khmer military-building issue
 ; - fixed issue in auto-garrisoning-tc code: AI will now consistently garrison any tc where enemy units are around if having enough vills
+; - AI can now play the Romans. Performance with this civ is untested
 
 ;ToDo: 
 
 ;what's up next:
 
+; - stop training rams against enemy fortifications when in military disadvantage
+; - train archers in castle-age if enemy is going for infantry and our strategy is archers (release escrow)
+; - always train skirms for scouts -> skirms
+; - add ability for villagers to attack enemy scouts in dark-age when they are next to them
 ; - try to exclude stronger units from castle-retreat-rules (eagles/knights/some uus) (testing)
 ; - fix retreat rule issue for tcs (works better, but still happens)
 ; - fix boar-hunting bugs: - villagers are around the tc, but are not garrisoned. - not enough villagers around the tc, but alternative
@@ -3080,7 +3085,7 @@
 
 #end-if
 
-#load-if-defined HUN-CIV ;updated until here
+#load-if-defined HUN-CIV 
 
 (defrule
 	(true)
@@ -3088,10 +3093,10 @@
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
 	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
+	(up-modify-goal civ-archery-s c: 9)
+	(up-modify-goal civ-infantry-s c: 5)
+	(up-modify-goal civ-cavalry-s c: 9)
+	(up-modify-goal civ-siege-s c: 7)
 	(up-modify-goal civ-uu-s c: 6)
 	(set-goal ca-strategy gl-castleage-stableunit)
 	(disable-self)
@@ -3106,12 +3111,12 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
+	(up-modify-goal civ-eco-s c: 8)
+	(up-modify-goal civ-archery-s c: 8)
+	(up-modify-goal civ-infantry-s c: 8)
 	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
-	(up-modify-goal civ-uu-s c: 6)
+	(up-modify-goal civ-siege-s c: 7)
+	(up-modify-goal civ-uu-s c: 7)
 	(set-goal ca-strategy gl-castleage-eagles)	
 	(disable-self)
 )
@@ -3125,12 +3130,12 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
-	(up-modify-goal civ-uu-s c: 6)
+	(up-modify-goal civ-eco-s c: 10)
+	(up-modify-goal civ-archery-s c: 8)
+	(up-modify-goal civ-infantry-s c: 5)
+	(up-modify-goal civ-cavalry-s c: 9)
+	(up-modify-goal civ-siege-s c: 8)
+	(up-modify-goal civ-uu-s c: 7)
 	(set-goal ca-strategy gl-castleage-stableunit)
 	(disable-self)
 )
@@ -3144,12 +3149,12 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
-	(up-modify-goal civ-uu-s c: 6)
+	(up-modify-goal civ-eco-s c: 7)
+	(up-modify-goal civ-archery-s c: 9)
+	(up-modify-goal civ-infantry-s c: 8)
+	(up-modify-goal civ-cavalry-s c: 7)
+	(up-modify-goal civ-siege-s c: 7)
+	(up-modify-goal civ-uu-s c: 8)
 	(set-goal ca-strategy gl-castleage-rangeunit)
 	(disable-self)
 )
@@ -3163,11 +3168,11 @@
 =>
 	(set-goal gl-drush-militia-count 4)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
+	(up-modify-goal civ-eco-s c: 8)
+	(up-modify-goal civ-archery-s c: 8)
 	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
+	(up-modify-goal civ-cavalry-s c: 5)
+	(up-modify-goal civ-siege-s c: 7)
 	(up-modify-goal civ-uu-s c: 6)
 	(set-goal ca-strategy gl-castleage-rangeunit)
 	(disable-self)
@@ -3182,12 +3187,12 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
+	(up-modify-goal civ-eco-s c: 10)
+	(up-modify-goal civ-archery-s c: 6)
 	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
+	(up-modify-goal civ-cavalry-s c: 8)
 	(up-modify-goal civ-siege-s c: 9)
-	(up-modify-goal civ-uu-s c: 6)
+	(up-modify-goal civ-uu-s c: 7)
 	(set-goal ca-strategy gl-castleage-stableunit)
 	(disable-self)
 )
@@ -3202,11 +3207,11 @@
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 2)
 	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
+	(up-modify-goal civ-archery-s c: 9)
+	(up-modify-goal civ-infantry-s c: 7)
+	(up-modify-goal civ-cavalry-s c: 4)
 	(up-modify-goal civ-siege-s c: 9)
-	(up-modify-goal civ-uu-s c: 6)
+	(up-modify-goal civ-uu-s c: 9)
 	(set-goal ca-strategy gl-castleage-rangeunit)
 	(disable-self)
 )
@@ -3220,10 +3225,10 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
+	(up-modify-goal civ-eco-s c: 9)
+	(up-modify-goal civ-archery-s c: 6)
+	(up-modify-goal civ-infantry-s c: 6)
+	(up-modify-goal civ-cavalry-s c: 10)
 	(up-modify-goal civ-siege-s c: 9)
 	(up-modify-goal civ-uu-s c: 6)
 	(set-goal ca-strategy gl-castleage-stableunit)
@@ -3239,12 +3244,12 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
-	(up-modify-goal civ-uu-s c: 6)
+	(up-modify-goal civ-eco-s c: 5)
+	(up-modify-goal civ-archery-s c: 10)
+	(up-modify-goal civ-infantry-s c: 5)
+	(up-modify-goal civ-cavalry-s c: 10)
+	(up-modify-goal civ-siege-s c: 5)
+	(up-modify-goal civ-uu-s c: 8)
 	(set-goal ca-strategy gl-castleage-stableunit)
 	(disable-self)
 )
@@ -3258,11 +3263,11 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
+	(up-modify-goal civ-eco-s c: 7)
+	(up-modify-goal civ-archery-s c: 8)
 	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
+	(up-modify-goal civ-cavalry-s c: 4)
+	(up-modify-goal civ-siege-s c: 8)
 	(up-modify-goal civ-uu-s c: 6)
 	(set-goal ca-strategy gl-castleage-siege-infantry)
 	(disable-self)
@@ -3290,12 +3295,12 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 5)
+	(up-modify-goal civ-eco-s c: 8)
 	(up-modify-goal civ-archery-s c: 7)
 	(up-modify-goal civ-infantry-s c: 9)
 	(up-modify-goal civ-cavalry-s c: 8)
 	(up-modify-goal civ-siege-s c: 7)
-	(up-modify-goal civ-uu-s c: 5)
+	(up-modify-goal civ-uu-s c: 6)
 	(set-goal ca-strategy gl-castleage-stableunit)
 	(disable-self)
 )
@@ -3309,12 +3314,12 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 1)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
+	(up-modify-goal civ-eco-s c: 10)
+	(up-modify-goal civ-archery-s c: 10)
+	(up-modify-goal civ-infantry-s c: 8)
 	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
-	(up-modify-goal civ-uu-s c: 6)
+	(up-modify-goal civ-siege-s c: 7)
+	(up-modify-goal civ-uu-s c: 10)
 	(set-goal ca-strategy gl-castleage-rangeunit)
 	(disable-self)
 )
@@ -3328,11 +3333,11 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
+	(up-modify-goal civ-eco-s c: 10)
+	(up-modify-goal civ-archery-s c: 6)
+	(up-modify-goal civ-infantry-s c: 6)
+	(up-modify-goal civ-cavalry-s c: 9)
+	(up-modify-goal civ-siege-s c: 7)
 	(up-modify-goal civ-uu-s c: 6)
 	(set-goal ca-strategy gl-castleage-stableunit)
 	(disable-self)
@@ -3347,11 +3352,11 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
+	(up-modify-goal civ-eco-s c: 10)
+	(up-modify-goal civ-archery-s c: 5)
+	(up-modify-goal civ-infantry-s c: 5)
+	(up-modify-goal civ-cavalry-s c: 9)
+	(up-modify-goal civ-siege-s c: 8)
 	(up-modify-goal civ-uu-s c: 6)
 	(set-goal ca-strategy gl-castleage-stableunit)
 	(disable-self)
@@ -3366,12 +3371,12 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
-	(up-modify-goal civ-uu-s c: 6)
+	(up-modify-goal civ-eco-s c: 10)
+	(up-modify-goal civ-archery-s c: 8)
+	(up-modify-goal civ-infantry-s c: 5)
+	(up-modify-goal civ-cavalry-s c: 9)
+	(up-modify-goal civ-siege-s c: 8)
+	(up-modify-goal civ-uu-s c: 8)
 	(set-goal ca-strategy gl-castleage-stableunit)
 	(disable-self)
 )
@@ -3385,16 +3390,47 @@
 =>
 	(set-goal gl-drush-militia-count 4)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
-	(up-modify-goal civ-uu-s c: 6)
+	(up-modify-goal civ-eco-s c: 9)
+	(up-modify-goal civ-archery-s c: 8)
+	(up-modify-goal civ-infantry-s c: 5)
+	(up-modify-goal civ-cavalry-s c: 8)
+	(up-modify-goal civ-siege-s c: 8)
+	(up-modify-goal civ-uu-s c: 9)
 	(set-goal ca-strategy gl-castleage-rangeunit)
 	(disable-self)
 )
 
+#end-if
+
+#load-if-defined ROMANS-CIV
+
+(defrule
+	(true)
+=>
+	(set-goal gl-drush-militia-count 4)
+	(set-goal gl-civ-uu-cost 3)
+	(up-modify-goal civ-eco-s c: 9)
+	(up-modify-goal civ-archery-s c: 3)
+	(up-modify-goal civ-infantry-s c: 10)
+	(up-modify-goal civ-cavalry-s c: 7)
+	(up-modify-goal civ-siege-s c: 10)
+	(up-modify-goal civ-uu-s c: 8)
+	(set-goal ca-strategy gl-castleage-stableunit)
+	(disable-self)
+)
+
+#load-if-defined UP-2-PLAYER-GAME
+
+(defrule
+	(game-time > 60)
+	(not (goal ca-strategy gl-castleage-siege-infantry))
+	(not (goal strategy-goal sg-scoutrush))
+=>
+	(set-goal ca-strategy gl-castleage-siege-infantry)
+	(disable-self)
+)
+		
+#end-if
 #end-if
 
 #load-if-defined SARACEN-CIV
@@ -3404,11 +3440,11 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
+	(up-modify-goal civ-eco-s c: 7)
+	(up-modify-goal civ-archery-s c: 8)
+	(up-modify-goal civ-infantry-s c: 7)
+	(up-modify-goal civ-cavalry-s c: 9)
+	(up-modify-goal civ-siege-s c: 10)
 	(up-modify-goal civ-uu-s c: 6)
 	(set-goal ca-strategy gl-castleage-rangeunit)
 	(disable-self)
@@ -3423,12 +3459,12 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
-	(up-modify-goal civ-uu-s c: 6)
+	(up-modify-goal civ-eco-s c: 9)
+	(up-modify-goal civ-archery-s c: 5)
+	(up-modify-goal civ-infantry-s c: 9)
+	(up-modify-goal civ-cavalry-s c: 8)
+	(up-modify-goal civ-siege-s c: 8)
+	(up-modify-goal civ-uu-s c: 8)
 	(set-goal ca-strategy gl-castleage-stableunit)
 	(disable-self)
 )
@@ -3442,12 +3478,12 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
+	(up-modify-goal civ-eco-s c: 9)
+	(up-modify-goal civ-archery-s c: 3)
 	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
+	(up-modify-goal civ-cavalry-s c: 8)
 	(up-modify-goal civ-siege-s c: 9)
-	(up-modify-goal civ-uu-s c: 6)
+	(up-modify-goal civ-uu-s c: 8)
 	(set-goal ca-strategy gl-castleage-stableunit)
 	(disable-self)
 )
@@ -3474,12 +3510,12 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
-	(up-modify-goal civ-uu-s c: 6)
+	(up-modify-goal civ-eco-s c: 8)
+	(up-modify-goal civ-archery-s c: 4)
+	(up-modify-goal civ-infantry-s c: 8)
+	(up-modify-goal civ-cavalry-s c: 9)
+	(up-modify-goal civ-siege-s c: 8)
+	(up-modify-goal civ-uu-s c: 10)
 	(set-goal ca-strategy gl-castleage-stableunit)
 	(disable-self)
 )
@@ -3493,12 +3529,12 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
-	(up-modify-goal civ-uu-s c: 6)
+	(up-modify-goal civ-eco-s c: 7)
+	(up-modify-goal civ-archery-s c: 10)
+	(up-modify-goal civ-infantry-s c: 3)
+	(up-modify-goal civ-cavalry-s c: 9)
+	(up-modify-goal civ-siege-s c: 6)
+	(up-modify-goal civ-uu-s c: 7)
 	(set-goal ca-strategy gl-castleage-stableunit)
 	(disable-self)
 )
@@ -3512,12 +3548,12 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
+	(up-modify-goal civ-eco-s c: 8)
+	(up-modify-goal civ-archery-s c: 5)
 	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
-	(up-modify-goal civ-uu-s c: 6)
+	(up-modify-goal civ-cavalry-s c: 9)
+	(up-modify-goal civ-siege-s c: 10)
+	(up-modify-goal civ-uu-s c: 7)
 	(set-goal ca-strategy gl-castleage-stableunit)
 	(disable-self)
 )
@@ -3532,11 +3568,11 @@
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
 	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
-	(up-modify-goal civ-uu-s c: 6)
+	(up-modify-goal civ-archery-s c: 8)
+	(up-modify-goal civ-infantry-s c: 5)
+	(up-modify-goal civ-cavalry-s c: 9)
+	(up-modify-goal civ-siege-s c: 8)
+	(up-modify-goal civ-uu-s c: 9)
 	(set-goal ca-strategy gl-castleage-stableunit)
 	(disable-self)
 )
@@ -3550,12 +3586,12 @@
 =>
 	(set-goal gl-drush-militia-count 3)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
-	(up-modify-goal civ-archery-s c: 7)
-	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
-	(up-modify-goal civ-siege-s c: 9)
-	(up-modify-goal civ-uu-s c: 6)
+	(up-modify-goal civ-eco-s c: 7)
+	(up-modify-goal civ-archery-s c: 10)
+	(up-modify-goal civ-infantry-s c: 6)
+	(up-modify-goal civ-cavalry-s c: 8)
+	(up-modify-goal civ-siege-s c: 7)
+	(up-modify-goal civ-uu-s c: 9)
 	(set-goal ca-strategy gl-castleage-rangeunit)
 	(disable-self)
 )
@@ -3569,12 +3605,12 @@
 =>
 	(set-goal gl-drush-militia-count 4)
 	(set-goal gl-civ-uu-cost 3)
-	(up-modify-goal civ-eco-s c: 6)
+	(up-modify-goal civ-eco-s c: 10)
 	(up-modify-goal civ-archery-s c: 7)
 	(up-modify-goal civ-infantry-s c: 10)
-	(up-modify-goal civ-cavalry-s c: 0)
+	(up-modify-goal civ-cavalry-s c: 2)
 	(up-modify-goal civ-siege-s c: 9)
-	(up-modify-goal civ-uu-s c: 6)
+	(up-modify-goal civ-uu-s c: 8)
 	(set-goal ca-strategy gl-castleage-siege-infantry)
 	(disable-self)
 )
@@ -4692,6 +4728,24 @@
 	(can-research my-unique-research)
 	(or (unit-type-count-total archery-cannon-class >= 5)
 	(unit-type-count-total bombard-cannon-line >= 2))
+=>
+	(research my-unique-research)
+)
+
+#end-if
+
+#load-if-defined ROMANS-CIV
+
+(defrule ;ballistas
+	(can-research my-second-unique-research)
+	(or (unit-type-count-total scorpion-line >= 3)
+	(unit-type-count-total galley-line >= 4))
+=>
+	(research my-second-unique-research)
+)
+
+(defrule ;comitatenses
+	(can-research my-unique-research)
 =>
 	(research my-unique-research)
 )
@@ -6681,6 +6735,61 @@
 	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train organ-gun-line)
+)
+
+(defrule
+	(current-age == castle-age)
+	(can-train centurion-line)
+	(unit-type-count centurion-line < 5)
+	(or (civilian-population g:< c-villager-goal)
+	(up-research-status c: imperial-age == research-pending))
+=>
+	(train centurion-line)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(can-research-with-escrow ri-elite-centurion)
+	(unit-type-count centurion-line > 2)
+	(goal gl-food-saving 34)
+	(goal gl-gold-saving 34)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-elite-centurion)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(can-train centurion-line)
+	(unit-type-count knight-line < 5)
+	(unit-type-count centurion-line < 5)
+	(not (research-completed ri-elite-centurion))
+=>
+	(train centurion-line)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(can-train centurion-line)
+	(unit-type-count knight-line < 5)
+	(research-completed ri-elite-centurion)
+	(up-compare-goal gl-number-trebs >= 1)
+=>
+	(train centurion-line)
+)
+
+(defrule
+	(current-age >= castle-age)
+	(players-unit-type-count focus-player infantry-class >= 5)
+	(can-train centurion-line)
+	(building-type-count-total castle > 0)
+=>
+	(train centurion-line)
 )
 
 (defrule
@@ -16295,12 +16404,12 @@
 
 ;region Militia Retreat Rules
 
-(defrule
-	(current-age == dark-age)
-	(goal retreating-goal YES)
-=>
-	(up-jump-rule 12)
-)
+; (defrule
+	; (current-age == dark-age)
+	; (goal retreating-goal YES)
+; =>
+	; (up-jump-rule 12)
+; )
 
 ;retreat with militia from enemy villagers
 (defrule
@@ -16581,12 +16690,12 @@
 
 ;region Scout temporary Retreat Rules (works for up to 4 scouts)
 
-(defrule
-	(current-age == dark-age)
-	(goal retreating-goal YES)
-=>
-	(up-jump-rule 12)
-)
+; (defrule
+	; (current-age == dark-age)
+	; (goal retreating-goal YES)
+; =>
+	; (up-jump-rule 12)
+; )
 
 ;retreat with scouts from enemy threats
 (defrule
@@ -18449,6 +18558,18 @@
 =>
 	(train cannon-galleon-line)
 	;(chat-to-player my-player-number "Baue Kanonenschiffe")
+)
+
+(defrule
+	(up-compare-goal gl-water-on-map == 1)
+	(current-age == imperial-age)
+	(can-train dromon)
+	(unit-type-count dromon < 8)
+	(or (unit-type-count fire-ship-line >= 8)
+	(unit-type-count galley-line >= 8))
+=>
+	(train dromon)
+	;(chat-to-player my-player-number "Building Dromons")
 )
 
 (defrule
@@ -27782,8 +27903,9 @@
 	(current-age == imperial-age)
 	(can-research ri-siege-engineers)
 	(or (unit-type-count-total mangonel-line > 3)
-	(or (unit-type-count-total bombard-cannon-line > 3)
-	(unit-type-count trebuchet > 3)))
+	(or (unit-type-count-total bombard-cannon-line >= 2)
+	(or (unit-type-count-total cannon-galleon-line >= 3)
+	(unit-type-count trebuchet >= 3))))
 =>
 	(research ri-siege-engineers)
 )
@@ -28485,7 +28607,7 @@
 )
 
 (defrule
-	(current-age == castle-age)
+	(current-age >= castle-age)
 	(civ-selected burgundians)
 	(can-research-with-escrow ri-cavalier)
 	(unit-type-count-total knight-line >= 0)
@@ -28502,7 +28624,7 @@
 )
 
 (defrule
-	(current-age == castle-age)
+	(current-age >= castle-age)
 	(civ-selected burgundians)
 	(can-research-with-escrow ri-cavalier)
 	(unit-type-count-total knight-line >= 4)
@@ -28541,6 +28663,18 @@
 )
 
 (defrule
+	(current-age == imperial-age)
+	(not (civ-selected burgundians))
+	(can-research-with-escrow ri-cavalier)
+	(unit-type-count-total knight-line >= 4)
+=>
+	(up-modify-escrow food c:- 300)
+	(up-modify-escrow gold c:- 300)
+	(research ri-cavalier)
+)
+
+
+(defrule
 	(can-research-with-escrow ri-paladin)
 	(goal gl-food-saving 19)
 	(goal gl-gold-saving 19)
@@ -28552,6 +28686,15 @@
 	(research ri-paladin)
 	(set-goal gl-gold-saving 0)
 	(set-goal gl-food-saving 0)
+)
+
+(defrule
+	(can-research-with-escrow ri-paladin)
+	(unit-type-count-total knight-line >= 4)
+=>
+	(up-modify-escrow food c:- 1300)
+	(up-modify-escrow gold c:- 750)
+	(research ri-paladin)
 )
 
 (defrule
@@ -30410,6 +30553,39 @@
 (defrule
 	(current-age >= imperial-age)
 	(research-completed ri-champion)
+	(can-train militiaman-line)
+=>
+	(train militiaman-line)
+)
+
+#end-if
+
+
+#load-if-defined ROMANS-CIV
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-man-at-arms)
+=>
+	(research ri-man-at-arms)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-long-swordsman)
+=>
+	(research ri-long-swordsman)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-legionary)
+=>
+	(research ri-legionary)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(research-completed ri-legionary)
 	(can-train militiaman-line)
 =>
 	(train militiaman-line)
