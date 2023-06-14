@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.3.0
-;last update: 10th June 2023
+;last update: 14th June 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -9,7 +9,7 @@
 (defrule
 	(game-time > 10)
 =>
-	(chat-to-all "ZebbaAI: Version 1.2.1 by Zebba")
+	(chat-to-all "ZebbaAI: Version 1.3.0 by Zebba")
 	(disable-self)
 )
 
@@ -703,6 +703,7 @@
 
 (defconst camel-scout 1755)
 (defconst ratha-train 1759)
+(defconst elite-ratha-train 1761)
 
 ;endregion
 
@@ -3864,15 +3865,16 @@
 	(disable-self)
 )
 
-(defrule
-	(game-time > 5)
-=>
-	(up-jump-rule 25) ;20
-)
+; (defrule
+	; (game-time > 5)
+; =>
+	; (up-jump-rule 25) ;20
+; )
 
 #load-if-defined UP-2-PLAYER-GAME
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number > 0)
 	(random-number <= 40)
 =>
@@ -3887,6 +3889,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number > 40)
 	(random-number <= 80)
 =>
@@ -3900,6 +3903,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number > 80)
 	(random-number <= 100)
 =>
@@ -3913,6 +3917,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number > 100)
 	(random-number <= 94)
 =>
@@ -3926,6 +3931,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number > 100)
 	(random-number <= 97)
 =>
@@ -3939,6 +3945,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number > 100)
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)	
@@ -3961,6 +3968,7 @@
 #load-if-not-defined UP-POCKET-POSITION
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number < 50)
 =>
 	(set-goal strategy-goal sg-archerrush)	
@@ -3973,6 +3981,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number >= 50)
 	(random-number < 75)
 =>
@@ -3987,6 +3996,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number >= 100)
 	(random-number < 75)
 =>
@@ -4000,6 +4010,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number >= 75)
 	(random-number < 90)
 =>
@@ -4013,6 +4024,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number >= 90)
 	(random-number < 100)
 =>
@@ -4026,6 +4038,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number >= 100) ;only go fc-gu if pocket is going scoutrush
 =>
 	(set-goal strategy-goal sg-fastcastle-gu)	
@@ -4042,6 +4055,7 @@
 #load-if-defined UP-POCKET-POSITION
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number < 20)
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)	
@@ -4054,6 +4068,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number >= 20)
 	(random-number < 45)
 =>
@@ -4067,6 +4082,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number >= 45)
 	(random-number < 90)
 =>
@@ -4080,6 +4096,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number >= 90)
 =>
 	(set-goal strategy-goal sg-boom-imp)	
@@ -4099,6 +4116,7 @@
 #end-if
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(goal gl-nomad-map YES)
 	(random-number < 15)
 =>
@@ -4111,6 +4129,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(goal gl-nomad-map YES)
 	(random-number >= 100)
 	(random-number < 40)
@@ -4125,6 +4144,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(goal gl-nomad-map YES)
 	(random-number >= 15)
 	(random-number < 50)
@@ -4138,6 +4158,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(goal gl-nomad-map YES)
 	(random-number >= 50)
 	(random-number < 90)
@@ -4151,6 +4172,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(goal gl-nomad-map YES)
 	(random-number >= 90)
 =>
@@ -4167,6 +4189,7 @@
 #load-if-defined UP-SCENARIO-GAME
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number < 17)
 =>
 	(set-goal strategy-goal sg-archerrush)	
@@ -4178,6 +4201,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number >= 17)
 	(random-number < 47)
 =>
@@ -4190,6 +4214,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number >= 47)
 	(random-number < 80)
 =>
@@ -4202,6 +4227,7 @@
 )
 
 (defrule
+	(up-compare-goal strategy-goal == -1)
 	(random-number >= 80)
 =>
 	(set-goal strategy-goal sg-scoutrush)	
@@ -4239,6 +4265,23 @@
 )
 #end-if
 
+#load-if-defined CUMANS-CIV
+
+(defrule
+	(up-research-status c: castle-age < research-pending)
+	(current-age == feudal-age)
+	(building-type-count town-center == 2)
+	(up-compare-goal strategy-goal != sg-boom-imp)
+	(up-compare-goal strategy-goal != sg-fastcastle-gu)
+	(up-compare-goal strategy-goal != sg-fastcastle-uu)
+=>
+	(up-modify-goal f-villager-goal c:= 54)
+	;(up-modify-goal c-villager-goal c:+ 2)
+	(up-chat-data-to-player my-player-number "Update Feudal-villager goal with 2nd tc: %d" g: f-villager-goal)
+	(disable-self)
+)
+#end-if
+
 ;endregion
 
 ;region Unique Upgrades ============================================
@@ -4251,6 +4294,7 @@
 	(up-find-local c: unpacked-trebuchet-class c: 240) 
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-number-trebs g:= gl-local-total)
+	;(up-chat-data-to-self "number trebs: %d" g: gl-local-total)
 )
 
 (defrule
@@ -4259,7 +4303,7 @@
 	(goal gl-wood-saving 25)
 	(goal gl-gold-saving 25)
 	(building-type-count-total castle >= 1)
-	(up-compare-goal gl-number-trebs < 2)
+	(up-compare-goal gl-number-trebs < 0)
 	(up-compare-goal gl-military-advantage >= -4)
 =>
 	(release-escrow wood)
@@ -4274,7 +4318,7 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train-with-escrow trebuchet)
-	(up-compare-goal gl-number-trebs < 2)
+	(up-compare-goal gl-number-trebs < 0)
 	(up-compare-goal gl-military-advantage >= -4)
 =>
 	(up-modify-escrow wood c:- 200)
@@ -4285,7 +4329,7 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train trebuchet)
-	(up-compare-goal gl-number-trebs < 6)
+	(up-compare-goal gl-number-trebs < 4)
 	(up-compare-goal gl-military-advantage >= -4)
 =>
 	(train trebuchet)
@@ -5238,6 +5282,7 @@
 	(not (research-completed ri-elite-ratha))
 =>
 	(train ratha-train)
+	;(chat-to-all "Test 1")
 )
 
 (defrule
@@ -5247,16 +5292,18 @@
 	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train ratha-train)
+	;(chat-to-all "Test 2")
 )
 
 (defrule
 	(current-age >= castle-age)
 	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 5)
 	(players-unit-type-count focus-player infantry-class >= 5))
-	(can-train ratha-set)
+	(can-train ratha-train)
 	(building-type-count-total castle > 0)
 =>
-	(train ratha-set)
+	(train ratha-train)
+	;(chat-to-all "Test 3")
 )
 
 (defrule
@@ -7519,6 +7566,54 @@
 
 ;region Microing Ranged Units
 
+; ;======== FIRE AFTER MOVING
+; ;fire when all units in the group are ready to fire and the target is in range
+; (defrule
+	; (unit-type-count-total archery-class > 3)
+	; (up-group-size c: 6 >= 4)
+; =>
+    ; (up-full-reset-search)
+    ; (up-set-group search-local c: 6)
+    ; (up-remove-objects search-local object-data-next-attack == 0)
+    ; ;(up-remove-objects search-local object-data-type g:!= gl-rof-unit)
+    ; (up-get-search-state gl-local-total)
+; )
+
+; (defrule
+    ; (up-compare-goal gl-local-total < 1)
+    ; (up-compare-goal gl-time-to-fire != YES)
+; =>
+    ; (set-goal gl-time-to-fire YES)
+    ; (chat-to-all "Time To Fire")
+; )
+
+; ;======== MOVE AFTER FIRING
+; (defconst rangedunit-projectile-release-delay 1750)
+
+; ;move if there is any unit in the group not ready to fire(but also has had time to get a shot off), or if the target isn't in range
+
+; (defrule
+    ; (goal gl-rof-unit archer)
+; =>
+	; (up-modify-goal rangedunit-projectile-release-delay c:= 0)
+	; (up-modify-goal rangedunit-projectile-release-delay c:= 0)
+    ; (up-full-reset-search)
+    ; (up-set-group search-local c: 6)
+    ; (up-remove-objects search-local object-data-type != archer)
+    ; (up-remove-objects search-local object-data-next-attack == 0)
+    ; (up-remove-objects search-local object-data-next-attack g:> rangedunit-projectile-release-delay)
+    ; (up-get-search-state gl-local-total)
+; )
+
+; (defrule
+    ; (up-compare-goal gl-local-total >= 1)
+    ; (goal gl-time-to-fire YES)
+; =>
+    ; (set-goal gl-time-to-fire NO)
+    ; (chat-to-all "Time To Move")
+; )
+
+
 (defrule	
 	(true)
 =>
@@ -7570,92 +7665,95 @@
 	(up-get-search-state gl-local-total)
 	;(up-chat-data-to-player my-player-number "nearby enemy units: %d" g: gl-remote-total)
 )
-;cavalry-archer-class
-(defrule
-	(unit-type-count-total cavalry-archer-class > 3)
-	(up-group-size c: 7 < 4)
-=>
-	(up-full-reset-search)
-	(up-find-local c: cavalry-archer-class c: 240)
-	(up-reset-group c: 7)
-	(up-create-group 0 0 c: 7) 
-	(up-modify-group-flag 1 c: 7)
-)
 
-(defrule	
-	(unit-type-count-total cavalry-archer-class > 3)
-	(up-group-size c: 7 >= 4)
-=>
-	(up-full-reset-search)
-	(up-set-group search-local c: 7)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object army-point-x)
-	;(up-send-flare army-point-x)
-	(up-set-target-point army-point-x)
-	(up-filter-distance c: -1 c: 10)
-	(up-find-remote c: -1 c: 40)
-	(up-remove-objects search-remote object-data-class == building-class)
-	(up-get-search-state gl-local-total)
-	;(up-chat-data-to-player my-player-number "nearby enemy units: %d" g: gl-remote-total)
-)
-;cavalry-cannon-class
-(defrule
-	(unit-type-count-total cavalry-cannon-class > 3)
-	(up-group-size c: 8 < 4)
-=>
-	(up-full-reset-search)
-	(up-find-local c: cavalry-cannon-class c: 240)
-	(up-reset-group c: 8)
-	(up-create-group 0 0 c: 8) 
-	(up-modify-group-flag 1 c: 8)
-)
+; ;cavalry-archer-class
+; (defrule
+	; (unit-type-count-total cavalry-archer-class > 3)
+	; (up-group-size c: 7 < 4)
+; =>
+	; (up-full-reset-search)
+	; (up-find-local c: cavalry-archer-class c: 240)
+	; (up-reset-group c: 7)
+	; (up-create-group 0 0 c: 7) 
+	; (up-modify-group-flag 1 c: 7)
+; )
 
-(defrule	
-	(unit-type-count-total cavalry-cannon-class > 3)
-	(up-group-size c: 8 >= 4)
-=>
-	(up-full-reset-search)
-	(up-set-group search-local c: 8)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object army-point-x)
-	;(up-send-flare army-point-x)
-	(up-set-target-point army-point-x)
-	(up-filter-distance c: -1 c: 10)
-	(up-find-remote c: -1 c: 40)
-	(up-remove-objects search-remote object-data-class == building-class)
-	(up-get-search-state gl-local-total)
-	;(up-chat-data-to-player my-player-number "nearby enemy units: %d" g: gl-remote-total)
-)
+; (defrule	
+	; (unit-type-count-total cavalry-archer-class > 3)
+	; (up-group-size c: 7 >= 4)
+; =>
+	; (up-full-reset-search)
+	; (up-set-group search-local c: 7)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object army-point-x)
+	; ;(up-send-flare army-point-x)
+	; (up-set-target-point army-point-x)
+	; (up-filter-distance c: -1 c: 10)
+	; (up-find-remote c: -1 c: 40)
+	; (up-remove-objects search-remote object-data-class == building-class)
+	; (up-get-search-state gl-local-total)
+	; ;(up-chat-data-to-player my-player-number "nearby enemy units: %d" g: gl-remote-total)
+; )
 
-;skirms
-(defrule
-	(unit-type-count-total skirmisher-line > 3)
-	(up-group-size c: 9 < 4)
-=>
-	(up-full-reset-search)
-	(up-find-local c: skirmisher-line c: 240)
-	;(up-remove-objects search-local object-data-type != skirmisher)
-	(up-reset-group c: 9)
-	(up-create-group 0 0 c: 9) 
-	(up-modify-group-flag 1 c: 9)
-)
+; ;cavalry-cannon-class
+; (defrule
+	; (unit-type-count-total cavalry-cannon-class > 3)
+	; (up-group-size c: 8 < 4)
+; =>
+	; (up-full-reset-search)
+	; (up-find-local c: cavalry-cannon-class c: 240)
+	; (up-reset-group c: 8)
+	; (up-create-group 0 0 c: 8) 
+	; (up-modify-group-flag 1 c: 8)
+; )
 
-(defrule	
-	(unit-type-count-total skirmisher-line > 3)
-	(up-group-size c: 9 >= 4)
-=>
-	(up-full-reset-search)
-	(up-set-group search-local c: 9)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object army-point-x)
-	;(up-send-flare army-point-x)
-	(up-set-target-point army-point-x)
-	(up-filter-distance c: -1 c: 10)
-	(up-find-remote c: -1 c: 40)
-	(up-remove-objects search-remote object-data-class == building-class)
-	(up-get-search-state gl-local-total)
-	;(up-chat-data-to-player my-player-number "nearby enemy units: %d" g: gl-remote-total)
-)
+; (defrule	
+	; (unit-type-count-total cavalry-cannon-class > 3)
+	; (up-group-size c: 8 >= 4)
+; =>
+	; (up-full-reset-search)
+	; (up-set-group search-local c: 8)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object army-point-x)
+	; ;(up-send-flare army-point-x)
+	; (up-set-target-point army-point-x)
+	; (up-filter-distance c: -1 c: 10)
+	; (up-find-remote c: -1 c: 40)
+	; (up-remove-objects search-remote object-data-class == building-class)
+	; (up-get-search-state gl-local-total)
+	; ;(up-chat-data-to-player my-player-number "nearby enemy units: %d" g: gl-remote-total)
+; )
+
+; ;skirms
+; (defrule
+	; (unit-type-count-total skirmisher-line > 3)
+	; (up-group-size c: 9 < 4)
+; =>
+	; (up-full-reset-search)
+	; (up-find-local c: skirmisher-line c: 240)
+	; ;(up-remove-objects search-local object-data-type != skirmisher)
+	; (up-reset-group c: 9)
+	; (up-create-group 0 0 c: 9) 
+	; (up-modify-group-flag 1 c: 9)
+; )
+
+; (defrule	
+	; (unit-type-count-total skirmisher-line > 3)
+	; (up-group-size c: 9 >= 4)
+; =>
+	; (up-full-reset-search)
+	; (up-set-group search-local c: 9)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object army-point-x)
+	; ;(up-send-flare army-point-x)
+	; (up-set-target-point army-point-x)
+	; (up-filter-distance c: -1 c: 10)
+	; (up-find-remote c: -1 c: 40)
+	; (up-remove-objects search-remote object-data-class == building-class)
+	; (up-get-search-state gl-local-total)
+	; ;(up-chat-data-to-player my-player-number "nearby enemy units: %d" g: gl-remote-total)
+; )
+
 ;archery-class
 
 (defrule
@@ -7693,7 +7791,7 @@
 	(up-compare-goal gl-moveranged == 0))
 =>
 	(disable-timer 21)
-	(up-cross-tiles army-point-x enemy-army-x c: 8)
+	(up-cross-tiles army-point-x enemy-army-x c: -8)
 	(up-bound-point army-point-x army-point-x)
 	(up-set-target-point army-point-x)
 	(up-target-point 0 action-attack-move formation-line stance-aggressive)
@@ -7717,7 +7815,7 @@
 	(up-compare-goal gl-moveranged == 0))
 =>
 	(disable-timer 21)
-	(up-cross-tiles army-point-x enemy-army-x c: -8)
+	(up-cross-tiles army-point-x enemy-army-x c: 8)
 	(up-bound-point army-point-x army-point-x)
 	(up-set-target-point army-point-x)
 	(up-target-point 0 action-attack-move formation-line stance-aggressive)
@@ -7851,7 +7949,7 @@
 	(goal attack-now-goal 0)
 	(goal retreat-now-goal 1)
 	(up-group-size c: 6 > 0)
-	(not (town-under-attack))
+	(up-enemy-units-in-town < 1)
 	(up-compare-goal gl-moveranged != -1)
 =>	
 	(disable-timer 21)
@@ -7865,7 +7963,7 @@
 )
 
 (defrule
-	(or (town-under-attack)
+	(or (up-enemy-units-in-town >= 1)
 	(and (goal attack-now-goal 1)
 	(goal retreat-now-goal 0)))
 	(up-group-size c: 6 > 0)
@@ -7877,661 +7975,661 @@
 	;(chat-to-all "Reset Archers")
 )
 
-;cavalry-archer-class
-(defrule
-	;(players-military-population focus-player > 0)
-	(unit-type-count cavalry-archer-class > 0)
-=>
-	(up-full-reset-search)
-	(up-find-local c: cavalry-archer-class c: 240)
-	(up-reset-group c: 7)
-	(up-create-group 0 0 c: 7) 
-	(up-modify-group-flag 1 c: 7)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object army-point-x)
-	(up-filter-distance c: -1 g: gl-ca-firing-range)
-	(up-find-remote c: -1 c: 40)
-	(up-remove-objects search-remote object-data-class == building-class)
-	(up-clean-search search-remote object-data-distance search-order-desc)
-	(up-set-target-object search-remote c: 0)
-	(up-get-search-state gl-local-total)
-	;(up-chat-data-to-self "enemy units found: %d" g: gl-remote-total)
-	(up-get-point position-object enemy-army-x)
-)
+; ;cavalry-archer-class
+; (defrule
+	; ;(players-military-population focus-player > 0)
+	; (unit-type-count cavalry-archer-class > 0)
+; =>
+	; (up-full-reset-search)
+	; (up-find-local c: cavalry-archer-class c: 240)
+	; (up-reset-group c: 7)
+	; (up-create-group 0 0 c: 7) 
+	; (up-modify-group-flag 1 c: 7)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object army-point-x)
+	; (up-filter-distance c: -1 g: gl-ca-firing-range)
+	; (up-find-remote c: -1 c: 40)
+	; (up-remove-objects search-remote object-data-class == building-class)
+	; (up-clean-search search-remote object-data-distance search-order-desc)
+	; (up-set-target-object search-remote c: 0)
+	; (up-get-search-state gl-local-total)
+	; ;(up-chat-data-to-self "enemy units found: %d" g: gl-remote-total)
+	; (up-get-point position-object enemy-army-x)
+; )
 
-(defrule
-	(up-set-target-object search-remote c: 0)
-	(players-military-population focus-player > 0)
-	(or (timer-triggered 23)
-	(up-compare-goal gl-moveranged == 0))
-	(or (not (timer-triggered 24))
-	(up-compare-goal gl-moveranged == 0))
-	(up-group-size c: 7 >= 4)
-	(up-compare-goal gl-remote-total > 0)
-	;(goal retreating-goal NO)
-	(or (up-compare-goal gl-moveranged == 1)
-	(up-compare-goal gl-moveranged == 0))
-=>
-	(disable-timer 23)
-	(up-cross-tiles army-point-x enemy-army-x c: 8)
-	(up-bound-point army-point-x army-point-x)
-	(up-set-target-point army-point-x)
-	(up-target-point 0 action-attack-move formation-line stance-aggressive)
-	;(up-target-objects 0 action-default -1 stance-aggressive)
-	;(chat-to-all "Patrol CA 1!")
-	(set-goal gl-moveranged 1)
-	(enable-timer 24 1)	
-)
-
-(defrule
-	(up-set-target-object search-remote c: 0)
-	(players-military-population focus-player > 0)
-	(or (timer-triggered 23)
-	(up-compare-goal gl-moveranged == 0))
-	(or (not (timer-triggered 24))
-	(up-compare-goal gl-moveranged == 0))
-	(up-group-size c: 7 >= 4)
-	(up-compare-goal gl-remote-total > 0)
-	;(goal retreating-goal NO)
-	(or (up-compare-goal gl-moveranged == 2)
-	(up-compare-goal gl-moveranged == 0))
-=>
-	(disable-timer 23)
-	(up-cross-tiles army-point-x enemy-army-x c: -8)
-	(up-bound-point army-point-x army-point-x)
-	(up-set-target-point army-point-x)
-	(up-target-point 0 action-attack-move formation-line stance-aggressive)
-	;(up-target-objects 0 action-default -1 stance-aggressive)
-	;(chat-to-all "Patrol CA 2!")
-	(set-goal gl-moveranged 2)
-	(enable-timer 24 1)	
-)	
-	
-(defrule	
-	(up-set-target-object search-remote c: 0)
-	(or (and (up-object-data object-data-class == archery-class)
-	(up-object-data object-data-type != skirmisher))
-	(or (up-object-data object-data-class == cavalry-archer-class)
-	(or (up-object-data object-data-class == cavalry-cannon-class)
-	(up-object-data object-data-class == villager-class))))
-	(up-compare-goal gl-moveranged == 1)
-	(timer-triggered 24)	
-	;(not (timer-triggered 22))
-	(up-group-size c: 7 >= 4)
-	(up-compare-goal gl-remote-total > 0)
-	(goal retreating-goal NO)
-=>	
-	(disable-timer 24)
-	(up-set-group search-local c: 7)
-	;(up-lerp-tiles army-point-x enemy-army-x c: -5) 
-	(up-cross-tiles army-point-x enemy-army-x c: 5)
-	(up-bound-point army-point-x army-point-x)
-	(up-target-point army-point-x action-move formation-line stance-no-attack)
-	(enable-timer 23 1)
-	(set-goal gl-moveranged 2)
-	;(chat-to-all "Run CA 1 side")
-)
-
-(defrule
-	(up-set-target-object search-remote c: 0)
-	(or (not (up-object-data object-data-class == archery-class))
-	(up-object-data object-data-type == skirmisher))
-	(not (up-object-data object-data-class == cavalry-archer-class))
-	(not (up-object-data object-data-class == cavalry-cannon-class))
-	(not (up-object-data object-data-class == villager-class))
-	(up-compare-goal gl-moveranged == 1)
-	(timer-triggered 24)	
-	;(not (timer-triggered 22))
-	(up-group-size c: 7 >= 4)
-	(up-compare-goal gl-remote-total > 0)
-	(goal retreating-goal NO)
-=>	
-	(disable-timer 24)
-	(up-set-group search-local c: 7)
-	(up-lerp-tiles army-point-x enemy-army-x c: -5) 
-	(up-cross-tiles army-point-x enemy-army-x c: -5)
-	(up-bound-point army-point-x army-point-x)
-	(up-target-point army-point-x action-move formation-line stance-no-attack)
-	(enable-timer 23 1)
-	(set-goal gl-moveranged 2)
-	;(chat-to-all "Run CA 1 back")
-)
-
-(defrule	
-	(up-set-target-object search-remote c: 0)
-	(or (up-object-data object-data-class == archery-class)
-	(or (up-object-data object-data-class == cavalry-archer-class)
-	(or (up-object-data object-data-class == cavalry-cannon-class)
-	(up-object-data object-data-class == villager-class))))
-	(up-compare-goal gl-moveranged == 2)
-	;(not (timer-triggered 21))	
-	(timer-triggered 24)
-	(up-group-size c: 7 >= 4)
-	(up-compare-goal gl-remote-total > 0)
-	(goal retreating-goal NO)
-=>	
-	(disable-timer 24)
-	(up-set-group search-local c: 7)
-	;(up-lerp-tiles army-point-x enemy-army-x c: 5) 
-	(up-cross-tiles army-point-x enemy-army-x c: -5)
-	(up-bound-point army-point-x army-point-x)
-	(up-target-point army-point-x action-move formation-line stance-no-attack)
-	(enable-timer 23 1)
-	(set-goal gl-moveranged 1)
-	;(chat-to-all "Run CA 2 side")
-)
-
-(defrule	
-	(up-set-target-object search-remote c: 0)
-	(not (up-object-data object-data-class == archery-class))
-	(not (up-object-data object-data-class == cavalry-archer-class))
-	(not (up-object-data object-data-class == cavalry-cannon-class))
-	(not (up-object-data object-data-class == villager-class))
-	(up-compare-goal gl-moveranged == 2)
-	;(not (timer-triggered 21))	
-	(timer-triggered 24)
-	(up-group-size c: 7 >= 4)
-	(up-compare-goal gl-remote-total > 0)
-	(goal retreating-goal NO)
-=>	
-	(disable-timer 24)
-	(up-set-group search-local c: 7)
-	(up-lerp-tiles army-point-x enemy-army-x c: -5) 
-	(up-cross-tiles army-point-x enemy-army-x c: -5)
-	(up-bound-point army-point-x army-point-x)
-	(up-target-point army-point-x action-move formation-line stance-no-attack)
-	(enable-timer 23 1)
-	(set-goal gl-moveranged 1)
-	;(chat-to-all "Run CA 2 back")
-)
-
-(defrule	
-	(or (timer-triggered 23)
-	(timer-triggered 24))
-	(up-group-size c: 7 >= 4)
-	(up-compare-goal gl-remote-total < 1)
-	(goal retreating-goal NO)
-	(or (up-compare-goal attack-now-goal == 1)
-	(up-compare-goal gl-military-advantage >= 0))
-	;(up-compare-goal gl-moveranged != 0)
-=>	
-	(disable-timer 24)
-	(up-set-group search-local c: 7)
-	; (up-lerp-tiles army-point-x enemy-army-x c: -9) 
-	; (up-cross-tiles army-point-x enemy-army-x c: -9)
+; (defrule
+	; (up-set-target-object search-remote c: 0)
+	; (players-military-population focus-player > 0)
+	; (or (timer-triggered 23)
+	; (up-compare-goal gl-moveranged == 0))
+	; (or (not (timer-triggered 24))
+	; (up-compare-goal gl-moveranged == 0))
+	; (up-group-size c: 7 >= 4)
+	; (up-compare-goal gl-remote-total > 0)
+	; ;(goal retreating-goal NO)
+	; (or (up-compare-goal gl-moveranged == 1)
+	; (up-compare-goal gl-moveranged == 0))
+; =>
+	; (disable-timer 23)
+	; (up-cross-tiles army-point-x enemy-army-x c: -8)
 	; (up-bound-point army-point-x army-point-x)
-	(up-target-point enemy-point-x action-move formation-line stance-aggressive)
-	;(enable-timer 24 1)
-	(enable-timer 23 10)
-	(set-goal gl-moveranged 0)
-	;(chat-to-all "Run CA 3")
-)
+	; (up-set-target-point army-point-x)
+	; (up-target-point 0 action-attack-move formation-line stance-aggressive)
+	; ;(up-target-objects 0 action-default -1 stance-aggressive)
+	; ;(chat-to-all "Patrol CA 1!")
+	; (set-goal gl-moveranged 1)
+	; (enable-timer 24 1)	
+; )
 
-(defrule	
-	(goal attack-now-goal 0)
-	(goal retreat-now-goal 1)
-	(up-group-size c: 7 > 0)
-	(not (town-under-attack))
-	(up-compare-goal gl-moveranged != -1)
-=>	
-	(disable-timer 23)
-	(disable-timer 24)
-	(up-set-group search-local c: 7)
-	(up-target-point gl-self-point-x action-move formation-line stance-no-attack)
-	;(enable-timer 24 1)
-	(enable-timer 23 1)
-	(set-goal gl-moveranged -1)
-	;(chat-to-all "Run CA 4")
-)
-
-(defrule
-	(or (town-under-attack)
-	(and (goal attack-now-goal 1)
-	(goal retreat-now-goal 0)))
-	(up-group-size c: 7 > 0)
-	(up-compare-goal gl-moveranged == -1)
-=>
-	(set-goal gl-moveranged 1)
-	(up-set-group search-local c: 7)
-	(up-target-point gl-self-point-x -1 formation-line stance-aggressive)
-	;(chat-to-all "Reset CA")
-)
-
-;cavalry-cannon-class
-(defrule
-	(unit-type-count cavalry-cannon-class > 0)
-=>
-	(up-full-reset-search)
-	(up-find-local c: cavalry-cannon-class c: 240)
-	(up-remove-objects search-local object-data-type == skirmisher)
-	(up-reset-group c: 8)
-	(up-create-group 0 0 c: 8) 
-	(up-modify-group-flag 1 c: 8)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object army-point-x)
-	(up-filter-distance c: -1 g: gl-cc-firing-range)
-	(up-find-remote c: -1 c: 40)
-	(up-remove-objects search-remote object-data-class == building-class)
-	(up-clean-search search-remote object-data-distance search-order-desc)
-	(up-set-target-object search-remote c: 0)
-	(up-get-search-state gl-local-total)
-	(up-get-point position-object enemy-army-x)
-)
-
-
-(defrule
-	(up-set-target-object search-remote c: 0)
-	(players-military-population focus-player > 0)
-	(or (timer-triggered 21)
-	(up-compare-goal gl-moveranged == 0))
-	(or (not (timer-triggered 22))
-	(up-compare-goal gl-moveranged == 0))
-	(up-group-size c: 8 >= 4)
-	(up-compare-goal gl-remote-total > 0)
-	;(goal retreating-goal NO)
-	(or (up-compare-goal gl-moveranged == 1)
-	(up-compare-goal gl-moveranged == 0))
-=>
-	(disable-timer 25)
-	(up-cross-tiles army-point-x enemy-army-x c: 8)
-	(up-bound-point army-point-x army-point-x)
-	(up-set-target-point army-point-x)
-	(up-target-point 0 action-attack-move formation-line stance-aggressive)
-	;(up-target-objects 0 action-default -1 stance-aggressive)
-	;(chat-to-all "Patrol cc 1!")
-	(set-goal gl-moveranged 1)
-	(enable-timer 26 1)	
-)
-
-(defrule
-	(up-set-target-object search-remote c: 0)
-	(players-military-population focus-player > 0)
-	(or (timer-triggered 25)
-	(up-compare-goal gl-moveranged == 0))
-	(or (not (timer-triggered 26))
-	(up-compare-goal gl-moveranged == 0))
-	(up-group-size c: 8 >= 4)
-	(up-compare-goal gl-remote-total > 0)
-	;(goal retreating-goal NO)
-	(or (up-compare-goal gl-moveranged == 2)
-	(up-compare-goal gl-moveranged == 0))
-=>
-	(disable-timer 25)
-	(up-cross-tiles army-point-x enemy-army-x c: -8)
-	(up-bound-point army-point-x army-point-x)
-	(up-set-target-point army-point-x)
-	(up-target-point 0 action-attack-move formation-line stance-aggressive)
-	;(up-target-objects 0 action-default -1 stance-aggressive)
-	;(chat-to-all "Patrol cc 2!")
-	(set-goal gl-moveranged 2)
-	(enable-timer 26 1)	
-)	
-	
-
-(defrule	
-	(up-set-target-object search-remote c: 0)
-	(or (and (up-object-data object-data-class == archery-class)
-	(up-object-data object-data-type != skirmisher))
-	(or (up-object-data object-data-class == cavalry-archer-class)
-	(or (up-object-data object-data-class == cavalry-cannon-class)
-	(up-object-data object-data-class == villager-class))))
-	(up-compare-goal gl-moveranged == 1)
-	(timer-triggered 26)	
-	;(not (timer-triggered 22))
-	(up-group-size c: 8 >= 4)
-	(up-compare-goal gl-remote-total > 0)
-	(goal retreating-goal NO)
-=>	
-	(disable-timer 26)
-	(up-set-group search-local c: 8)
-	(up-lerp-tiles army-point-x enemy-army-x c: 2) 
-	(up-cross-tiles army-point-x enemy-army-x c: 5)
-	(up-bound-point army-point-x army-point-x)
-	(up-target-point army-point-x action-move formation-line stance-no-attack)
-	(enable-timer 25 1)
-	(set-goal gl-moveranged 2)
-	;(chat-to-all "Run cc 1 side")
-)
-
-(defrule
-	(up-set-target-object search-remote c: 0)
-	(or (not (up-object-data object-data-class == archery-class))
-	(up-object-data object-data-type == skirmisher))
-	(not (up-object-data object-data-class == cavalry-archer-class))
-	(not (up-object-data object-data-class == cavalry-cannon-class))
-	(not (up-object-data object-data-class == villager-class))
-	(up-compare-goal gl-moveranged == 1)
-	(timer-triggered 26)	
-	;(not (timer-triggered 22))
-	(up-group-size c: 8 >= 4)
-	(up-compare-goal gl-remote-total > 0)
-	(goal retreating-goal NO)
-=>	
-	(disable-timer 26)
-	(up-set-group search-local c: 8)
-	(up-lerp-tiles army-point-x enemy-army-x c: -5) 
-	(up-cross-tiles army-point-x enemy-army-x c: -5)
-	(up-bound-point army-point-x army-point-x)
-	(up-target-point army-point-x action-move formation-line stance-no-attack)
-	(enable-timer 25 1)
-	(set-goal gl-moveranged 2)
-	;(chat-to-all "Run cc 1 back")
-)
-
-(defrule	
-	(up-set-target-object search-remote c: 0)
-	(or (up-object-data object-data-class == archery-class)
-	(or (up-object-data object-data-class == cavalry-archer-class)
-	(or (up-object-data object-data-class == cavalry-cannon-class)
-	(up-object-data object-data-class == villager-class))))
-	(up-compare-goal gl-moveranged == 2)
-	;(not (timer-triggered 21))	
-	(timer-triggered 26)
-	(up-group-size c: 8 >= 4)
-	(up-compare-goal gl-remote-total > 0)
-	(goal retreating-goal NO)
-=>	
-	(disable-timer 26)
-	(up-set-group search-local c: 8)
-	(up-lerp-tiles army-point-x enemy-army-x c: 2) 
-	(up-cross-tiles army-point-x enemy-army-x c: -5)
-	(up-bound-point army-point-x army-point-x)
-	(up-target-point army-point-x action-move formation-line stance-no-attack)
-	(enable-timer 25 1)
-	(set-goal gl-moveranged 1)
-	;(chat-to-all "Run cc 2 side")
-)
-
-(defrule	
-	(up-set-target-object search-remote c: 0)
-	(not (up-object-data object-data-class == archery-class))
-	(not (up-object-data object-data-class == cavalry-archer-class))
-	(not (up-object-data object-data-class == cavalry-cannon-class))
-	(not (up-object-data object-data-class == villager-class))
-	(up-compare-goal gl-moveranged == 2)
-	;(not (timer-triggered 21))	
-	(timer-triggered 26)
-	(up-group-size c: 8 >= 4)
-	(up-compare-goal gl-remote-total > 0)
-	(goal retreating-goal NO)
-=>	
-	(disable-timer 26)
-	(up-set-group search-local c: 8)
-	(up-lerp-tiles army-point-x enemy-army-x c: -5) 
-	(up-cross-tiles army-point-x enemy-army-x c: -5)
-	(up-bound-point army-point-x army-point-x)
-	(up-target-point army-point-x action-move formation-line stance-no-attack)
-	(enable-timer 25 1)
-	(set-goal gl-moveranged 1)
-	;(chat-to-all "Run cc 2 back")
-)
-
-(defrule	
-	(or(timer-triggered 25)
-	(timer-triggered 26))
-	(up-group-size c: 8 >= 4)
-	(up-compare-goal gl-remote-total < 1)
-	(goal retreating-goal NO)
-	(or (up-compare-goal attack-now-goal == 1)
-	(up-compare-goal gl-military-advantage >= 0))
-=>	
-	(disable-timer 26)
-	(up-set-group search-local c: 8)
-	(up-target-point enemy-point-x action-move formation-line stance-aggressive)
-	;(enable-timer 26 3)
-	(enable-timer 25 10)
-	(set-goal gl-moveranged 1)
-	;(chat-to-all "Run cc 3")
-)
-
-(defrule	
-	(goal attack-now-goal 0)
-	(goal retreat-now-goal 1)
-	(up-group-size c: 8 > 0)
-	(not (town-under-attack))
-	(up-compare-goal gl-moveranged != -1)
-=>	
-	(disable-timer 25)
-	(disable-timer 26)
-	(up-set-group search-local c: 8)
-	(up-target-point gl-self-point-x action-move formation-line stance-no-attack)
-	;(enable-timer 26 1)
-	(enable-timer 25 1)
-	(set-goal gl-moveranged -1)
-	;(chat-to-all "Run cc 4")
-)
-
-(defrule
-	(or (town-under-attack)
-	(and (goal attack-now-goal 1)
-	(goal retreat-now-goal 0)))
-	(up-group-size c: 8 > 0)
-	(up-compare-goal gl-moveranged == -1)
-=>
-	(set-goal gl-moveranged 1)
-	(up-set-group search-local c: 8)
-	(up-target-point gl-self-point-x -1 formation-line stance-aggressive)
-	;(chat-to-all "Reset cc")
-)
-
-;skirms
-
-(defrule
-	;(players-military-population focus-player > 0)
-	(unit-type-count skirmisher-line > 0)
-=>
-	(up-full-reset-search)
-	(up-find-local c: skirmisher-line c: 240)
-	;(up-remove-objects search-local object-data-type == skirmisher)
-	(up-reset-group c: 9)
-	(up-create-group 0 0 c: 9) 
-	(up-modify-group-flag 1 c: 9)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object army-point-x)
-	(up-filter-distance c: -1 g: gl-skirm-firing-range)
-	(up-find-remote c: -1 c: 40)
-	(up-remove-objects search-remote object-data-class == building-class)
-	(up-clean-search search-remote object-data-distance search-order-desc)
-	(up-set-target-object search-remote c: 0)
-	(up-get-search-state gl-local-total)
-	(up-get-point position-object enemy-army-x)
-)
-
-(defrule
-	(up-set-target-object search-remote c: 0)
-	(players-military-population focus-player > 0)
-	(or (timer-triggered 27)
-	(up-compare-goal gl-moveranged == 0))
-	(or (not (timer-triggered 28))
-	(up-compare-goal gl-moveranged == 0))
-	(up-group-size c: 9 >= 4)
-	(up-compare-goal gl-remote-total > 0)
-	;(goal retreating-goal NO)
-	(or (up-compare-goal gl-moveranged == 1)
-	(up-compare-goal gl-moveranged == 0))
-=>
-	(disable-timer 27)
-	(up-cross-tiles army-point-x enemy-army-x c: 8)
-	(up-bound-point army-point-x army-point-x)
-	(up-set-target-point army-point-x)
-	(up-target-point 0 action-attack-move formation-line stance-aggressive)
-	;(up-target-objects 0 action-default -1 stance-aggressive)
-	;(chat-to-all "Patrol Skirms 1!")
-	(set-goal gl-moveranged 1)
-	(enable-timer 28 2)	
-)
-
-(defrule
-	(up-set-target-object search-remote c: 0)
-	(players-military-population focus-player > 0)
-	(or (timer-triggered 27)
-	(up-compare-goal gl-moveranged == 0))
-	(or (not (timer-triggered 28))
-	(up-compare-goal gl-moveranged == 0))
-	(up-group-size c: 9 >= 4)
-	(up-compare-goal gl-remote-total > 0)
-	;(goal retreating-goal NO)
-	(or (up-compare-goal gl-moveranged == 2)
-	(up-compare-goal gl-moveranged == 0))
-=>
-	(disable-timer 27)
-	(up-cross-tiles army-point-x enemy-army-x c: -8)
-	(up-bound-point army-point-x army-point-x)
-	(up-set-target-point army-point-x)
-	(up-target-point 0 action-attack-move formation-line stance-aggressive)
-	;(up-target-objects 0 action-default -1 stance-aggressive)
-	;(chat-to-all "Patrol Skirms 2!")
-	(set-goal gl-moveranged 2)
-	(enable-timer 28 2)	
-)	
-	
-(defrule	
-	(up-set-target-object search-remote c: 0)
-	(or (up-object-data object-data-class == archery-class)
-	(or (up-object-data object-data-class == cavalry-archer-class)
-	(or (up-object-data object-data-class == cavalry-cannon-class)
-	(up-object-data object-data-class == villager-class))))
-	(up-compare-goal gl-moveranged == 1)
-	(timer-triggered 28)	
-	;(not (timer-triggered 22))
-	(up-group-size c: 9 >= 4)
-	(up-compare-goal gl-remote-total > 0)
-	(goal retreating-goal NO)
-=>	
-	(disable-timer 28)
-	(up-set-group search-local c: 9)
-	;(up-lerp-tiles army-point-x enemy-army-x c: -2) 
-	(up-cross-tiles army-point-x enemy-army-x c: 5)
-	(up-bound-point army-point-x army-point-x)
-	(up-target-point army-point-x action-move formation-line stance-no-attack)
-	(enable-timer 27 2)
-	(set-goal gl-moveranged 2)
-	;(chat-to-all "Run Skirms 1 side")
-)
-
-(defrule	
-	(up-set-target-object search-remote c: 0)
-	(not (up-object-data object-data-class == archery-class))
-	(not (up-object-data object-data-class == cavalry-archer-class))
-	(not (up-object-data object-data-class == cavalry-cannon-class))
-	(not (up-object-data object-data-class == villager-class))
-	(up-compare-goal gl-moveranged == 1)
-	(timer-triggered 28)	
-	;(not (timer-triggered 22))
-	(up-group-size c: 9 >= 4)
-	(up-compare-goal gl-remote-total > 0)
-	(goal retreating-goal NO)
-=>	
-	(disable-timer 28)
-	(up-set-group search-local c: 9)
-	(up-lerp-tiles army-point-x enemy-army-x c: -5) 
-	(up-cross-tiles army-point-x enemy-army-x c: -5)
-	(up-bound-point army-point-x army-point-x)
-	(up-target-point army-point-x action-move formation-line stance-no-attack)
-	(enable-timer 27 2)
-	(set-goal gl-moveranged 2)
-	;(chat-to-all "Run Skirms 1 back")
-)
-
-(defrule	
-	(up-set-target-object search-remote c: 0)
-	(or (up-object-data object-data-class == archery-class)
-	(or (up-object-data object-data-class == cavalry-archer-class)
-	(or (up-object-data object-data-class == cavalry-cannon-class)
-	(up-object-data object-data-class == villager-class))))
-	(up-compare-goal gl-moveranged == 2)
-	;(not (timer-triggered 21))	
-	(timer-triggered 28)
-	(up-group-size c: 9 >= 4)
-	(up-compare-goal gl-remote-total > 0)
-	(goal retreating-goal NO)
-=>	
-	(disable-timer 28)
-	(up-set-group search-local c: 9)
-	;(up-lerp-tiles army-point-x enemy-army-x c: -2) 
-	(up-cross-tiles army-point-x enemy-army-x c: -5)
-	(up-bound-point army-point-x army-point-x)
-	(up-target-point army-point-x action-move formation-line stance-no-attack)
-	(enable-timer 27 2)
-	(set-goal gl-moveranged 1)
-	;(chat-to-all "Run Skirms 2 side")
-)
-
-(defrule	
-	(up-set-target-object search-remote c: 0)
-	(not (up-object-data object-data-class == archery-class))
-	(not (up-object-data object-data-class == cavalry-archer-class))
-	(not (up-object-data object-data-class == cavalry-cannon-class))
-	(not (up-object-data object-data-class == villager-class))
-	(up-compare-goal gl-moveranged == 2)
-	;(not (timer-triggered 21))	
-	(timer-triggered 28)
-	(up-group-size c: 9 >= 4)
-	(up-compare-goal gl-remote-total > 0)
-	(goal retreating-goal NO)
-=>	
-	(disable-timer 28)
-	(up-set-group search-local c: 9)
-	(up-lerp-tiles army-point-x enemy-army-x c: -5) 
-	(up-cross-tiles army-point-x enemy-army-x c: -5)
-	(up-bound-point army-point-x army-point-x)
-	(up-target-point army-point-x action-move formation-line stance-no-attack)
-	(enable-timer 27 2)
-	(set-goal gl-moveranged 1)
-	;(chat-to-all "Run Skirms 2 back")
-)
-
-(defrule	
-	(or (timer-triggered 27)
-	(timer-triggered 28))
-	(up-group-size c: 9 >= 4)
-	(up-compare-goal gl-remote-total < 1)
-	(goal retreating-goal NO)
-	(or (up-compare-goal attack-now-goal == 1)
-	(up-compare-goal gl-military-advantage >= 0))
-	;(up-compare-goal gl-moveranged != 0)
-=>	
-	(disable-timer 28)
-	(up-set-group search-local c: 9)
-	; (up-lerp-tiles army-point-x enemy-army-x c: -9) 
-	; (up-cross-tiles army-point-x enemy-army-x c: -9)
+; (defrule
+	; (up-set-target-object search-remote c: 0)
+	; (players-military-population focus-player > 0)
+	; (or (timer-triggered 23)
+	; (up-compare-goal gl-moveranged == 0))
+	; (or (not (timer-triggered 24))
+	; (up-compare-goal gl-moveranged == 0))
+	; (up-group-size c: 7 >= 4)
+	; (up-compare-goal gl-remote-total > 0)
+	; ;(goal retreating-goal NO)
+	; (or (up-compare-goal gl-moveranged == 2)
+	; (up-compare-goal gl-moveranged == 0))
+; =>
+	; (disable-timer 23)
+	; (up-cross-tiles army-point-x enemy-army-x c: 8)
 	; (up-bound-point army-point-x army-point-x)
-	(up-target-point enemy-point-x action-move formation-line stance-aggressive)
-	;(enable-timer 28 3)
-	(enable-timer 27 10)
-	(set-goal gl-moveranged 0)
-	;(chat-to-all "Run Skirms 3")
-)
+	; (up-set-target-point army-point-x)
+	; (up-target-point 0 action-attack-move formation-line stance-aggressive)
+	; ;(up-target-objects 0 action-default -1 stance-aggressive)
+	; ;(chat-to-all "Patrol CA 2!")
+	; (set-goal gl-moveranged 2)
+	; (enable-timer 24 1)	
+; )	
+	
+; (defrule	
+	; (up-set-target-object search-remote c: 0)
+	; (or (and (up-object-data object-data-class == archery-class)
+	; (up-object-data object-data-type != skirmisher))
+	; (or (up-object-data object-data-class == cavalry-archer-class)
+	; (or (up-object-data object-data-class == cavalry-cannon-class)
+	; (up-object-data object-data-class == villager-class))))
+	; (up-compare-goal gl-moveranged == 1)
+	; (timer-triggered 24)	
+	; ;(not (timer-triggered 22))
+	; (up-group-size c: 7 >= 4)
+	; (up-compare-goal gl-remote-total > 0)
+	; (goal retreating-goal NO)
+; =>	
+	; (disable-timer 24)
+	; (up-set-group search-local c: 7)
+	; ;(up-lerp-tiles army-point-x enemy-army-x c: -5) 
+	; (up-cross-tiles army-point-x enemy-army-x c: 5)
+	; (up-bound-point army-point-x army-point-x)
+	; (up-target-point army-point-x action-move formation-line stance-no-attack)
+	; (enable-timer 23 1)
+	; (set-goal gl-moveranged 2)
+	; ;(chat-to-all "Run CA 1 side")
+; )
 
-(defrule	
-	(goal attack-now-goal 0)
-	(goal retreat-now-goal 1)
-	(up-group-size c: 9 > 0)
-	(not (town-under-attack))
-	(up-compare-goal gl-moveranged != -1)
-=>	
-	(disable-timer 27)
-	(disable-timer 28)
-	(up-set-group search-local c: 9)
-	(up-target-point gl-self-point-x action-move formation-line stance-no-attack)
-	;(enable-timer 28 3)
-	(enable-timer 27 1)
-	(set-goal gl-moveranged -1)
-	;(chat-to-all "Run Skirms 4")
-)
+; (defrule
+	; (up-set-target-object search-remote c: 0)
+	; (or (not (up-object-data object-data-class == archery-class))
+	; (up-object-data object-data-type == skirmisher))
+	; (not (up-object-data object-data-class == cavalry-archer-class))
+	; (not (up-object-data object-data-class == cavalry-cannon-class))
+	; (not (up-object-data object-data-class == villager-class))
+	; (up-compare-goal gl-moveranged == 1)
+	; (timer-triggered 24)	
+	; ;(not (timer-triggered 22))
+	; (up-group-size c: 7 >= 4)
+	; (up-compare-goal gl-remote-total > 0)
+	; (goal retreating-goal NO)
+; =>	
+	; (disable-timer 24)
+	; (up-set-group search-local c: 7)
+	; (up-lerp-tiles army-point-x enemy-army-x c: -5) 
+	; (up-cross-tiles army-point-x enemy-army-x c: -5)
+	; (up-bound-point army-point-x army-point-x)
+	; (up-target-point army-point-x action-move formation-line stance-no-attack)
+	; (enable-timer 23 1)
+	; (set-goal gl-moveranged 2)
+	; ;(chat-to-all "Run CA 1 back")
+; )
 
-(defrule
-	(or (town-under-attack)
-	(and (goal attack-now-goal 1)
-	(goal retreat-now-goal 0)))
-	(up-group-size c: 9 > 0)
-	(up-compare-goal gl-moveranged == -1)
-=>
-	(set-goal gl-moveranged 1)
-	(up-set-group search-local c: 9)
-	(up-target-point gl-self-point-x -1 formation-line stance-aggressive)
-	;(chat-to-all "Reset Skirms")
-)
+; (defrule	
+	; (up-set-target-object search-remote c: 0)
+	; (or (up-object-data object-data-class == archery-class)
+	; (or (up-object-data object-data-class == cavalry-archer-class)
+	; (or (up-object-data object-data-class == cavalry-cannon-class)
+	; (up-object-data object-data-class == villager-class))))
+	; (up-compare-goal gl-moveranged == 2)
+	; ;(not (timer-triggered 21))	
+	; (timer-triggered 24)
+	; (up-group-size c: 7 >= 4)
+	; (up-compare-goal gl-remote-total > 0)
+	; (goal retreating-goal NO)
+; =>	
+	; (disable-timer 24)
+	; (up-set-group search-local c: 7)
+	; ;(up-lerp-tiles army-point-x enemy-army-x c: 5) 
+	; (up-cross-tiles army-point-x enemy-army-x c: -5)
+	; (up-bound-point army-point-x army-point-x)
+	; (up-target-point army-point-x action-move formation-line stance-no-attack)
+	; (enable-timer 23 1)
+	; (set-goal gl-moveranged 1)
+	; ;(chat-to-all "Run CA 2 side")
+; )
+
+; (defrule	
+	; (up-set-target-object search-remote c: 0)
+	; (not (up-object-data object-data-class == archery-class))
+	; (not (up-object-data object-data-class == cavalry-archer-class))
+	; (not (up-object-data object-data-class == cavalry-cannon-class))
+	; (not (up-object-data object-data-class == villager-class))
+	; (up-compare-goal gl-moveranged == 2)
+	; ;(not (timer-triggered 21))	
+	; (timer-triggered 24)
+	; (up-group-size c: 7 >= 4)
+	; (up-compare-goal gl-remote-total > 0)
+	; (goal retreating-goal NO)
+; =>	
+	; (disable-timer 24)
+	; (up-set-group search-local c: 7)
+	; (up-lerp-tiles army-point-x enemy-army-x c: -5) 
+	; (up-cross-tiles army-point-x enemy-army-x c: -5)
+	; (up-bound-point army-point-x army-point-x)
+	; (up-target-point army-point-x action-move formation-line stance-no-attack)
+	; (enable-timer 23 1)
+	; (set-goal gl-moveranged 1)
+	; ;(chat-to-all "Run CA 2 back")
+; )
+
+; (defrule	
+	; (or (timer-triggered 23)
+	; (timer-triggered 24))
+	; (up-group-size c: 7 >= 4)
+	; (up-compare-goal gl-remote-total < 1)
+	; (goal retreating-goal NO)
+	; (or (up-compare-goal attack-now-goal == 1)
+	; (up-compare-goal gl-military-advantage >= 0))
+	; ;(up-compare-goal gl-moveranged != 0)
+; =>	
+	; (disable-timer 24)
+	; (up-set-group search-local c: 7)
+	; ; (up-lerp-tiles army-point-x enemy-army-x c: -9) 
+	; ; (up-cross-tiles army-point-x enemy-army-x c: -9)
+	; ; (up-bound-point army-point-x army-point-x)
+	; (up-target-point enemy-point-x action-move formation-line stance-aggressive)
+	; ;(enable-timer 24 1)
+	; (enable-timer 23 10)
+	; (set-goal gl-moveranged 0)
+	; ;(chat-to-all "Run CA 3")
+; )
+
+; (defrule	
+	; (goal attack-now-goal 0)
+	; (goal retreat-now-goal 1)
+	; (up-group-size c: 7 > 0)
+	; (up-enemy-units-in-town < 1)
+	; (up-compare-goal gl-moveranged != -1)
+; =>	
+	; (disable-timer 23)
+	; (disable-timer 24)
+	; (up-set-group search-local c: 7)
+	; (up-target-point gl-self-point-x action-move formation-line stance-no-attack)
+	; ;(enable-timer 24 1)
+	; (enable-timer 23 1)
+	; (set-goal gl-moveranged -1)
+	; ;(chat-to-all "Run CA 4")
+; )
+
+; (defrule
+	; (or (up-enemy-units-in-town >= 1)
+	; (and (goal attack-now-goal 1)
+	; (goal retreat-now-goal 0)))
+	; (up-group-size c: 7 > 0)
+	; (up-compare-goal gl-moveranged == -1)
+; =>
+	; (set-goal gl-moveranged 1)
+	; (up-set-group search-local c: 7)
+	; (up-target-point gl-self-point-x -1 formation-line stance-aggressive)
+	; ;(chat-to-all "Reset CA")
+; )
+
+; ;cavalry-cannon-class
+; (defrule
+	; (unit-type-count cavalry-cannon-class > 0)
+; =>
+	; (up-full-reset-search)
+	; (up-find-local c: cavalry-cannon-class c: 240)
+	; (up-remove-objects search-local object-data-type == skirmisher)
+	; (up-reset-group c: 8)
+	; (up-create-group 0 0 c: 8) 
+	; (up-modify-group-flag 1 c: 8)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object army-point-x)
+	; (up-filter-distance c: -1 g: gl-cc-firing-range)
+	; (up-find-remote c: -1 c: 40)
+	; (up-remove-objects search-remote object-data-class == building-class)
+	; (up-clean-search search-remote object-data-distance search-order-desc)
+	; (up-set-target-object search-remote c: 0)
+	; (up-get-search-state gl-local-total)
+	; (up-get-point position-object enemy-army-x)
+; )
+
+
+; (defrule
+	; (up-set-target-object search-remote c: 0)
+	; (players-military-population focus-player > 0)
+	; (or (timer-triggered 21)
+	; (up-compare-goal gl-moveranged == 0))
+	; (or (not (timer-triggered 22))
+	; (up-compare-goal gl-moveranged == 0))
+	; (up-group-size c: 8 >= 4)
+	; (up-compare-goal gl-remote-total > 0)
+	; ;(goal retreating-goal NO)
+	; (or (up-compare-goal gl-moveranged == 1)
+	; (up-compare-goal gl-moveranged == 0))
+; =>
+	; (disable-timer 25)
+	; (up-cross-tiles army-point-x enemy-army-x c: -8)
+	; (up-bound-point army-point-x army-point-x)
+	; (up-set-target-point army-point-x)
+	; (up-target-point 0 action-attack-move formation-line stance-aggressive)
+	; ;(up-target-objects 0 action-default -1 stance-aggressive)
+	; ;(chat-to-all "Patrol cc 1!")
+	; (set-goal gl-moveranged 1)
+	; (enable-timer 26 1)	
+; )
+
+; (defrule
+	; (up-set-target-object search-remote c: 0)
+	; (players-military-population focus-player > 0)
+	; (or (timer-triggered 25)
+	; (up-compare-goal gl-moveranged == 0))
+	; (or (not (timer-triggered 26))
+	; (up-compare-goal gl-moveranged == 0))
+	; (up-group-size c: 8 >= 4)
+	; (up-compare-goal gl-remote-total > 0)
+	; ;(goal retreating-goal NO)
+	; (or (up-compare-goal gl-moveranged == 2)
+	; (up-compare-goal gl-moveranged == 0))
+; =>
+	; (disable-timer 25)
+	; (up-cross-tiles army-point-x enemy-army-x c: 8)
+	; (up-bound-point army-point-x army-point-x)
+	; (up-set-target-point army-point-x)
+	; (up-target-point 0 action-attack-move formation-line stance-aggressive)
+	; ;(up-target-objects 0 action-default -1 stance-aggressive)
+	; ;(chat-to-all "Patrol cc 2!")
+	; (set-goal gl-moveranged 2)
+	; (enable-timer 26 1)	
+; )	
+	
+
+; (defrule	
+	; (up-set-target-object search-remote c: 0)
+	; (or (and (up-object-data object-data-class == archery-class)
+	; (up-object-data object-data-type != skirmisher))
+	; (or (up-object-data object-data-class == cavalry-archer-class)
+	; (or (up-object-data object-data-class == cavalry-cannon-class)
+	; (up-object-data object-data-class == villager-class))))
+	; (up-compare-goal gl-moveranged == 1)
+	; (timer-triggered 26)	
+	; ;(not (timer-triggered 22))
+	; (up-group-size c: 8 >= 4)
+	; (up-compare-goal gl-remote-total > 0)
+	; (goal retreating-goal NO)
+; =>	
+	; (disable-timer 26)
+	; (up-set-group search-local c: 8)
+	; (up-lerp-tiles army-point-x enemy-army-x c: 2) 
+	; (up-cross-tiles army-point-x enemy-army-x c: 5)
+	; (up-bound-point army-point-x army-point-x)
+	; (up-target-point army-point-x action-move formation-line stance-no-attack)
+	; (enable-timer 25 1)
+	; (set-goal gl-moveranged 2)
+	; ;(chat-to-all "Run cc 1 side")
+; )
+
+; (defrule
+	; (up-set-target-object search-remote c: 0)
+	; (or (not (up-object-data object-data-class == archery-class))
+	; (up-object-data object-data-type == skirmisher))
+	; (not (up-object-data object-data-class == cavalry-archer-class))
+	; (not (up-object-data object-data-class == cavalry-cannon-class))
+	; (not (up-object-data object-data-class == villager-class))
+	; (up-compare-goal gl-moveranged == 1)
+	; (timer-triggered 26)	
+	; ;(not (timer-triggered 22))
+	; (up-group-size c: 8 >= 4)
+	; (up-compare-goal gl-remote-total > 0)
+	; (goal retreating-goal NO)
+; =>	
+	; (disable-timer 26)
+	; (up-set-group search-local c: 8)
+	; (up-lerp-tiles army-point-x enemy-army-x c: -5) 
+	; (up-cross-tiles army-point-x enemy-army-x c: -5)
+	; (up-bound-point army-point-x army-point-x)
+	; (up-target-point army-point-x action-move formation-line stance-no-attack)
+	; (enable-timer 25 1)
+	; (set-goal gl-moveranged 2)
+	; ;(chat-to-all "Run cc 1 back")
+; )
+
+; (defrule	
+	; (up-set-target-object search-remote c: 0)
+	; (or (up-object-data object-data-class == archery-class)
+	; (or (up-object-data object-data-class == cavalry-archer-class)
+	; (or (up-object-data object-data-class == cavalry-cannon-class)
+	; (up-object-data object-data-class == villager-class))))
+	; (up-compare-goal gl-moveranged == 2)
+	; ;(not (timer-triggered 21))	
+	; (timer-triggered 26)
+	; (up-group-size c: 8 >= 4)
+	; (up-compare-goal gl-remote-total > 0)
+	; (goal retreating-goal NO)
+; =>	
+	; (disable-timer 26)
+	; (up-set-group search-local c: 8)
+	; (up-lerp-tiles army-point-x enemy-army-x c: 2) 
+	; (up-cross-tiles army-point-x enemy-army-x c: -5)
+	; (up-bound-point army-point-x army-point-x)
+	; (up-target-point army-point-x action-move formation-line stance-no-attack)
+	; (enable-timer 25 1)
+	; (set-goal gl-moveranged 1)
+	; ;(chat-to-all "Run cc 2 side")
+; )
+
+; (defrule	
+	; (up-set-target-object search-remote c: 0)
+	; (not (up-object-data object-data-class == archery-class))
+	; (not (up-object-data object-data-class == cavalry-archer-class))
+	; (not (up-object-data object-data-class == cavalry-cannon-class))
+	; (not (up-object-data object-data-class == villager-class))
+	; (up-compare-goal gl-moveranged == 2)
+	; ;(not (timer-triggered 21))	
+	; (timer-triggered 26)
+	; (up-group-size c: 8 >= 4)
+	; (up-compare-goal gl-remote-total > 0)
+	; (goal retreating-goal NO)
+; =>	
+	; (disable-timer 26)
+	; (up-set-group search-local c: 8)
+	; (up-lerp-tiles army-point-x enemy-army-x c: -5) 
+	; (up-cross-tiles army-point-x enemy-army-x c: -5)
+	; (up-bound-point army-point-x army-point-x)
+	; (up-target-point army-point-x action-move formation-line stance-no-attack)
+	; (enable-timer 25 1)
+	; (set-goal gl-moveranged 1)
+	; ;(chat-to-all "Run cc 2 back")
+; )
+
+; (defrule	
+	; (or(timer-triggered 25)
+	; (timer-triggered 26))
+	; (up-group-size c: 8 >= 4)
+	; (up-compare-goal gl-remote-total < 1)
+	; (goal retreating-goal NO)
+	; (or (up-compare-goal attack-now-goal == 1)
+	; (up-compare-goal gl-military-advantage >= 0))
+; =>	
+	; (disable-timer 26)
+	; (up-set-group search-local c: 8)
+	; (up-target-point enemy-point-x action-move formation-line stance-aggressive)
+	; ;(enable-timer 26 3)
+	; (enable-timer 25 10)
+	; (set-goal gl-moveranged 1)
+	; ;(chat-to-all "Run cc 3")
+; )
+
+; (defrule	
+	; (goal attack-now-goal 0)
+	; (goal retreat-now-goal 1)
+	; (up-group-size c: 8 > 0)
+	; (up-enemy-units-in-town < 1)
+	; (up-compare-goal gl-moveranged != -1)
+; =>	
+	; (disable-timer 25)
+	; (disable-timer 26)
+	; (up-set-group search-local c: 8)
+	; (up-target-point gl-self-point-x action-move formation-line stance-no-attack)
+	; ;(enable-timer 26 1)
+	; (enable-timer 25 1)
+	; (set-goal gl-moveranged -1)
+	; ;(chat-to-all "Run cc 4")
+; )
+
+; (defrule
+	; (or (up-enemy-units-in-town >= 1)
+	; (and (goal attack-now-goal 1)
+	; (goal retreat-now-goal 0)))
+	; (up-group-size c: 8 > 0)
+	; (up-compare-goal gl-moveranged == -1)
+; =>
+	; (set-goal gl-moveranged 1)
+	; (up-set-group search-local c: 8)
+	; (up-target-point gl-self-point-x -1 formation-line stance-aggressive)
+	; ;(chat-to-all "Reset cc")
+; )
+
+; ;skirms
+
+; (defrule
+	; ;(players-military-population focus-player > 0)
+	; (unit-type-count skirmisher-line > 0)
+; =>
+	; (up-full-reset-search)
+	; (up-find-local c: skirmisher-line c: 240)
+	; ;(up-remove-objects search-local object-data-type == skirmisher)
+	; (up-reset-group c: 9)
+	; (up-create-group 0 0 c: 9) 
+	; (up-modify-group-flag 1 c: 9)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object army-point-x)
+	; (up-filter-distance c: -1 g: gl-skirm-firing-range)
+	; (up-find-remote c: -1 c: 40)
+	; (up-remove-objects search-remote object-data-class == building-class)
+	; (up-clean-search search-remote object-data-distance search-order-desc)
+	; (up-set-target-object search-remote c: 0)
+	; (up-get-search-state gl-local-total)
+	; (up-get-point position-object enemy-army-x)
+; )
+
+; (defrule
+	; (up-set-target-object search-remote c: 0)
+	; (players-military-population focus-player > 0)
+	; (or (timer-triggered 27)
+	; (up-compare-goal gl-moveranged == 0))
+	; (or (not (timer-triggered 28))
+	; (up-compare-goal gl-moveranged == 0))
+	; (up-group-size c: 9 >= 4)
+	; (up-compare-goal gl-remote-total > 0)
+	; ;(goal retreating-goal NO)
+	; (or (up-compare-goal gl-moveranged == 1)
+	; (up-compare-goal gl-moveranged == 0))
+; =>
+	; (disable-timer 27)
+	; (up-cross-tiles army-point-x enemy-army-x c: -8)
+	; (up-bound-point army-point-x army-point-x)
+	; (up-set-target-point army-point-x)
+	; (up-target-point 0 action-attack-move formation-line stance-aggressive)
+	; ;(up-target-objects 0 action-default -1 stance-aggressive)
+	; ;(chat-to-all "Patrol Skirms 1!")
+	; (set-goal gl-moveranged 1)
+	; (enable-timer 28 2)	
+; )
+
+; (defrule
+	; (up-set-target-object search-remote c: 0)
+	; (players-military-population focus-player > 0)
+	; (or (timer-triggered 27)
+	; (up-compare-goal gl-moveranged == 0))
+	; (or (not (timer-triggered 28))
+	; (up-compare-goal gl-moveranged == 0))
+	; (up-group-size c: 9 >= 4)
+	; (up-compare-goal gl-remote-total > 0)
+	; ;(goal retreating-goal NO)
+	; (or (up-compare-goal gl-moveranged == 2)
+	; (up-compare-goal gl-moveranged == 0))
+; =>
+	; (disable-timer 27)
+	; (up-cross-tiles army-point-x enemy-army-x c: 8)
+	; (up-bound-point army-point-x army-point-x)
+	; (up-set-target-point army-point-x)
+	; (up-target-point 0 action-attack-move formation-line stance-aggressive)
+	; ;(up-target-objects 0 action-default -1 stance-aggressive)
+	; ;(chat-to-all "Patrol Skirms 2!")
+	; (set-goal gl-moveranged 2)
+	; (enable-timer 28 2)	
+; )	
+	
+; (defrule	
+	; (up-set-target-object search-remote c: 0)
+	; (or (up-object-data object-data-class == archery-class)
+	; (or (up-object-data object-data-class == cavalry-archer-class)
+	; (or (up-object-data object-data-class == cavalry-cannon-class)
+	; (up-object-data object-data-class == villager-class))))
+	; (up-compare-goal gl-moveranged == 1)
+	; (timer-triggered 28)	
+	; ;(not (timer-triggered 22))
+	; (up-group-size c: 9 >= 4)
+	; (up-compare-goal gl-remote-total > 0)
+	; (goal retreating-goal NO)
+; =>	
+	; (disable-timer 28)
+	; (up-set-group search-local c: 9)
+	; ;(up-lerp-tiles army-point-x enemy-army-x c: -2) 
+	; (up-cross-tiles army-point-x enemy-army-x c: 5)
+	; (up-bound-point army-point-x army-point-x)
+	; (up-target-point army-point-x action-move formation-line stance-no-attack)
+	; (enable-timer 27 2)
+	; (set-goal gl-moveranged 2)
+	; ;(chat-to-all "Run Skirms 1 side")
+; )
+
+; (defrule	
+	; (up-set-target-object search-remote c: 0)
+	; (not (up-object-data object-data-class == archery-class))
+	; (not (up-object-data object-data-class == cavalry-archer-class))
+	; (not (up-object-data object-data-class == cavalry-cannon-class))
+	; (not (up-object-data object-data-class == villager-class))
+	; (up-compare-goal gl-moveranged == 1)
+	; (timer-triggered 28)	
+	; ;(not (timer-triggered 22))
+	; (up-group-size c: 9 >= 4)
+	; (up-compare-goal gl-remote-total > 0)
+	; (goal retreating-goal NO)
+; =>	
+	; (disable-timer 28)
+	; (up-set-group search-local c: 9)
+	; (up-lerp-tiles army-point-x enemy-army-x c: -5) 
+	; (up-cross-tiles army-point-x enemy-army-x c: -5)
+	; (up-bound-point army-point-x army-point-x)
+	; (up-target-point army-point-x action-move formation-line stance-no-attack)
+	; (enable-timer 27 2)
+	; (set-goal gl-moveranged 2)
+	; ;(chat-to-all "Run Skirms 1 back")
+; )
+
+; (defrule	
+	; (up-set-target-object search-remote c: 0)
+	; (or (up-object-data object-data-class == archery-class)
+	; (or (up-object-data object-data-class == cavalry-archer-class)
+	; (or (up-object-data object-data-class == cavalry-cannon-class)
+	; (up-object-data object-data-class == villager-class))))
+	; (up-compare-goal gl-moveranged == 2)
+	; ;(not (timer-triggered 21))	
+	; (timer-triggered 28)
+	; (up-group-size c: 9 >= 4)
+	; (up-compare-goal gl-remote-total > 0)
+	; (goal retreating-goal NO)
+; =>	
+	; (disable-timer 28)
+	; (up-set-group search-local c: 9)
+	; ;(up-lerp-tiles army-point-x enemy-army-x c: -2) 
+	; (up-cross-tiles army-point-x enemy-army-x c: -5)
+	; (up-bound-point army-point-x army-point-x)
+	; (up-target-point army-point-x action-move formation-line stance-no-attack)
+	; (enable-timer 27 2)
+	; (set-goal gl-moveranged 1)
+	; ;(chat-to-all "Run Skirms 2 side")
+; )
+
+; (defrule	
+	; (up-set-target-object search-remote c: 0)
+	; (not (up-object-data object-data-class == archery-class))
+	; (not (up-object-data object-data-class == cavalry-archer-class))
+	; (not (up-object-data object-data-class == cavalry-cannon-class))
+	; (not (up-object-data object-data-class == villager-class))
+	; (up-compare-goal gl-moveranged == 2)
+	; ;(not (timer-triggered 21))	
+	; (timer-triggered 28)
+	; (up-group-size c: 9 >= 4)
+	; (up-compare-goal gl-remote-total > 0)
+	; (goal retreating-goal NO)
+; =>	
+	; (disable-timer 28)
+	; (up-set-group search-local c: 9)
+	; (up-lerp-tiles army-point-x enemy-army-x c: -5) 
+	; (up-cross-tiles army-point-x enemy-army-x c: -5)
+	; (up-bound-point army-point-x army-point-x)
+	; (up-target-point army-point-x action-move formation-line stance-no-attack)
+	; (enable-timer 27 2)
+	; (set-goal gl-moveranged 1)
+	; ;(chat-to-all "Run Skirms 2 back")
+; )
+
+; (defrule	
+	; (or (timer-triggered 27)
+	; (timer-triggered 28))
+	; (up-group-size c: 9 >= 4)
+	; (up-compare-goal gl-remote-total < 1)
+	; (goal retreating-goal NO)
+	; (or (up-compare-goal attack-now-goal == 1)
+	; (up-compare-goal gl-military-advantage >= 0))
+	; ;(up-compare-goal gl-moveranged != 0)
+; =>	
+	; (disable-timer 28)
+	; (up-set-group search-local c: 9)
+	; ; (up-lerp-tiles army-point-x enemy-army-x c: -9) 
+	; ; (up-cross-tiles army-point-x enemy-army-x c: -9)
+	; ; (up-bound-point army-point-x army-point-x)
+	; (up-target-point enemy-point-x action-move formation-line stance-aggressive)
+	; ;(enable-timer 28 3)
+	; (enable-timer 27 10)
+	; (set-goal gl-moveranged 0)
+	; ;(chat-to-all "Run Skirms 3")
+; )
+
+; (defrule	
+	; (goal attack-now-goal 0)
+	; (goal retreat-now-goal 1)
+	; (up-group-size c: 9 > 0)
+	; (up-enemy-units-in-town < 1)
+	; (up-compare-goal gl-moveranged != -1)
+; =>	
+	; (disable-timer 27)
+	; (disable-timer 28)
+	; (up-set-group search-local c: 9)
+	; (up-target-point gl-self-point-x action-move formation-line stance-no-attack)
+	; ;(enable-timer 28 3)
+	; (enable-timer 27 1)
+	; (set-goal gl-moveranged -1)
+	; ;(chat-to-all "Run Skirms 4")
+; )
+
+; (defrule
+	; (or (up-enemy-units-in-town >= 1)
+	; (and (goal attack-now-goal 1)
+	; (goal retreat-now-goal 0)))
+	; (up-group-size c: 9 > 0)
+	; (up-compare-goal gl-moveranged == -1)
+; =>
+	; (set-goal gl-moveranged 1)
+	; (up-set-group search-local c: 9)
+	; (up-target-point gl-self-point-x -1 formation-line stance-aggressive)
+	; ;(chat-to-all "Reset Skirms")
+; )
 
 ;endregion
 
@@ -13384,7 +13482,8 @@
 
 (defrule
 	(or (wood-amount < 100)
-	(town-under-attack))
+	(or (town-under-attack)
+	(game-time < 10)))
 =>
 	(up-jump-rule 4) ;only delete camps if we have the wood to build new ones
 )
@@ -13445,7 +13544,8 @@
 
 (defrule
 	(or (wood-amount < 100)
-	(town-under-attack))
+	(or (town-under-attack)
+	(game-time < 10)))
 =>
 	(up-jump-rule 4) ;only delete camps if we have the wood to build new ones
 )
@@ -20705,6 +20805,19 @@
 
 #end-if
 #end-if
+#load-if-defined EMPIRE-WARS
+
+(defrule 
+	(players-building-count any-enemy < 1)
+	(game-time > 5)
+=>
+	;(enable-timer 19 5)
+	(up-send-scout group-type-land-explore scout-flank)
+	(set-goal gl-scout-map YES)
+	;(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
+	(disable-self)
+)
+#end-if
 
 (defrule
 	;(goal strategy-goal sg-drush)
@@ -21673,7 +21786,7 @@
 (defrule
 	(building-type-count-total barracks > 0)
 	(goal strategy-goal sg-drush)
-	(random-number <= 40)
+	(random-number <= 45)
 	(goal gl-house 0)
 =>
 	(set-goal strategy-goal sg-archerrush)
@@ -21691,8 +21804,8 @@
 (defrule
 	(building-type-count-total barracks > 0)
 	(goal strategy-goal sg-drush)
-	(random-number > 40)
-	(random-number <= 65)
+	(random-number > 45)
+	(random-number <= 60)
 	(goal gl-house 0)
 =>
 	(set-goal strategy-goal sg-scoutrush)
@@ -21729,7 +21842,7 @@
 (defrule
 	(building-type-count-total barracks > 0)
 	(goal strategy-goal sg-drush)
-	(random-number > 65)
+	(random-number > 60)
 	(random-number <= 85)
 	(goal gl-house 0)
 =>
@@ -22257,6 +22370,19 @@
 	(unit-type-count-total villager < 55)
 =>
 	(up-modify-escrow food c:- 50)
+	(train villager)
+	(up-get-fact civilian-population 0 civilian-pop) 
+	;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
+)
+
+(defrule
+	(current-age == feudal-age)
+	(civ-selected cumans)
+	(building-type-count town-center == 2)
+	(can-train villager)
+	(unit-type-count-total villager g:>= f-villager-goal)
+	(up-research-status c: castle-age == research-pending)
+=>
 	(train villager)
 	(up-get-fact civilian-population 0 civilian-pop) 
 	;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
