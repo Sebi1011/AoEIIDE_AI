@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 1.3.0
-;last update: 15th June 2023
+;Version: 1.2.2
+;last update: 16th June 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -9,7 +9,7 @@
 (defrule
 	(game-time > 10)
 =>
-	(chat-to-all "ZebbaAI: Version 1.3.0 by Zebba")
+	(chat-to-all "ZebbaAI: Version 1.2.2 by Zebba")
 	(disable-self)
 )
 
@@ -789,7 +789,8 @@
 	(set-strategic-number sn-ignore-tower-elevation 1)
 	(set-strategic-number sn-zero-priority-distance 255)
 	(set-strategic-number sn-percent-attack-soldiers 100)
-	(set-strategic-number sn-enable-patrol-attack 1)
+	(set-strategic-number sn-enable-patrol-attack 0)
+	(set-strategic-number sn-maximum-patrol-distance -1)
 	;(set-strategic-number sn-number-attack-groups 500)
 	;(set-strategic-number sn-minimum-attack-group-size 1)
 	;(set-strategic-number sn-maximum-attack-group-size 1)
@@ -1474,6 +1475,24 @@
 	(set-strategic-number sn-percent-building-cancellation 35)
 	(up-assign-builders c: watch-tower c: 3)
 	(disable-self)
+)
+
+(defrule
+	(or (players-current-age focus-player > feudal-age)
+	(game-time > 1200))
+	(up-compare-goal gl-military-advantage <= -3)
+	(up-compare-sn sn-allow-civilian-defense != 0)
+=>
+	(set-strategic-number sn-allow-civilian-defense 0)
+)
+
+(defrule
+	(or (players-current-age focus-player > feudal-age)
+	(game-time > 1200))
+	(up-compare-goal gl-military-advantage > -3)
+	(up-compare-sn sn-allow-civilian-defense != 1)
+=>
+	(set-strategic-number sn-allow-civilian-defense 1)
 )
 
 (defrule
@@ -5231,6 +5250,8 @@
 	(can-train jaguar-man-line)
 	(unit-type-count jaguar-man-line < 5)
 	(not (research-completed ri-elite-jaguar-man))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train jaguar-man-line)
 )
@@ -5239,7 +5260,8 @@
 	(current-age == imperial-age)
 	(can-train jaguar-man-line)
 	(research-completed ri-elite-jaguar-man)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train jaguar-man-line)
 )
@@ -5283,6 +5305,8 @@
 	(can-train ratha-train)
 	(unit-type-count ratha-set < 5)
 	(not (research-completed ri-elite-ratha))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train ratha-train)
 	;(chat-to-all "Test 1")
@@ -5292,7 +5316,8 @@
 	(current-age == imperial-age)
 	(can-train ratha-train)
 	(research-completed ri-elite-ratha)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train ratha-train)
 	;(chat-to-all "Test 2")
@@ -5339,6 +5364,8 @@
 	(can-train camel-archer-line)
 	(unit-type-count camel-archer-line < 5)
 	(not (research-completed ri-elite-camel-archer))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train camel-archer-line)
 )
@@ -5347,7 +5374,8 @@
 	(current-age == imperial-age)
 	(can-train camel-archer-line)
 	(research-completed ri-elite-camel-archer)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train camel-archer-line)
 )
@@ -5396,6 +5424,8 @@
 	(can-train hussite-wagon-line)
 	(unit-type-count hussite-wagon-line < 5)
 	(not (research-completed ri-elite-hussite-wagon))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train hussite-wagon-line)
 )
@@ -5404,7 +5434,8 @@
 	(current-age == imperial-age)
 	(can-train hussite-wagon-line)
 	(research-completed ri-elite-hussite-wagon)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train hussite-wagon-line)
 )
@@ -5458,6 +5489,8 @@
 	(unit-type-count archer-line < 5)
 	(unit-type-count longbowman-line < 5)
 	(not (research-completed ri-elite-longbowman))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train longbowman-line)
 )
@@ -5467,7 +5500,8 @@
 	(can-train longbowman-line)
 	(unit-type-count archer-line < 5)
 	(research-completed ri-elite-longbowman)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train longbowman-line)
 )
@@ -5522,6 +5556,8 @@
 	(unit-type-count knight-line < 5)
 	(unit-type-count konnik-line < 5)
 	(not (research-completed ri-elite-konnik))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train konnik-line)
 )
@@ -5531,7 +5567,8 @@
 	(can-train konnik-line)
 	(unit-type-count knight-line < 5)
 	(research-completed ri-elite-konnik)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train konnik-line)
 )
@@ -5551,7 +5588,6 @@
 	(can-train krepost-konnik-line)
 	(unit-type-count knight-line < 5)
 	(research-completed ri-elite-konnik)
-	(up-compare-goal gl-number-trebs >= 1)
 =>
 	(train krepost-konnik-line)
 )
@@ -5586,6 +5622,8 @@
 	(can-train coustillier-line)
 	(unit-type-count coustillier-line < 5)
 	(not (research-completed ri-elite-coustillier))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train coustillier-line)
 )
@@ -5594,7 +5632,8 @@
 	(current-age == imperial-age)
 	(can-train coustillier-line)
 	(research-completed ri-elite-coustillier)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train coustillier-line)
 )
@@ -5629,6 +5668,8 @@
 	(can-train arambai-line)
 	(unit-type-count arambai-line < 5)
 	(not (research-completed ri-elite-arambai))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train arambai-line)
 )
@@ -5637,7 +5678,8 @@
 	(current-age == imperial-age)
 	(can-train arambai-line)
 	(research-completed ri-elite-arambai)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train arambai-line)
 )
@@ -5716,6 +5758,8 @@
 	(unit-type-count knight-line < 5)
 	(unit-type-count cataphract-line < 5)
 	(not (research-completed ri-elite-cataphract))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train cataphract-line)
 )
@@ -5725,7 +5769,8 @@
 	(can-train cataphract-line)
 	(unit-type-count knight-line < 5)
 	(research-completed ri-elite-cataphract)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train cataphract-line)
 )
@@ -5771,6 +5816,8 @@
 	(unit-type-count archer-line < 5)
 	(unit-type-count chu-ko-nu-line < 5)
 	(not (research-completed ri-elite-chu-ko-nu))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train chu-ko-nu-line)
 )
@@ -5780,7 +5827,8 @@
 	(can-train chu-ko-nu-line)
 	(unit-type-count archer-line < 5)
 	(research-completed ri-elite-chu-ko-nu)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train chu-ko-nu-line)
 )
@@ -5818,6 +5866,8 @@
 	(unit-type-count shotel-line < 5)
 	(food-amount > 75)
 	(not (research-completed ri-elite-shotel))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train shotel-line)
 )
@@ -5826,7 +5876,8 @@
 	(current-age == imperial-age)
 	(can-train shotel-line)
 	(research-completed ri-elite-shotel)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 	(food-amount > 75)
 =>
 	(train shotel-line)
@@ -5873,6 +5924,8 @@
 	(can-train woad-raider-line)
 	(unit-type-count woad-raider-line < 5)
 	(not (research-completed ri-elite-woad-raider))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train woad-raider-line)
 )
@@ -5881,7 +5934,8 @@
 	(current-age == imperial-age)
 	(can-train woad-raider-line)
 	(research-completed ri-elite-woad-raider)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train woad-raider-line)
 )
@@ -5929,6 +5983,8 @@
 	(unit-type-count cavalry-archer-line < 5)
 	(unit-type-count kipchak-line < 5)
 	(not (research-completed ri-elite-kipchak))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train kipchak-line)
 )
@@ -5938,7 +5994,8 @@
 	(can-train kipchak-line)
 	(unit-type-count cavalry-archer-line < 5)
 	(research-completed ri-elite-kipchak)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train kipchak-line)
 )
@@ -5979,6 +6036,8 @@
 	(can-train urumi-swordsman-line)
 	(unit-type-count urumi-swordsman-line < 5)
 	(not (research-completed ri-elite-urumi-swordsman))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train urumi-swordsman-line)
 )
@@ -5987,7 +6046,8 @@
 	(current-age == imperial-age)
 	(can-train urumi-swordsman-line)
 	(research-completed ri-elite-urumi-swordsman)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train urumi-swordsman-line)
 )
@@ -6043,6 +6103,8 @@
 	(can-train huskarl-line)
 	(unit-type-count huskarl-line < 5)
 	(not (research-completed ri-elite-huskarl))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train huskarl-line)
 )
@@ -6051,7 +6113,8 @@
 	(current-age == imperial-age)
 	(can-train huskarl-line)
 	(research-completed ri-elite-huskarl)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train huskarl-line)
 )
@@ -6114,6 +6177,8 @@
 	(can-train chakram-thrower-line)
 	(unit-type-count chakram-thrower-line < 5)
 	(not (research-completed ri-elite-chakram-thrower))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train chakram-thrower-line)
 )
@@ -6122,7 +6187,8 @@
 	(current-age == imperial-age)
 	(can-train chakram-thrower-line)
 	(research-completed ri-elite-chakram-thrower)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train chakram-thrower-line)
 )
@@ -6167,6 +6233,8 @@
 	(can-train tarkan-line)
 	(unit-type-count tarkan-line < 5)
 	(not (research-completed ri-elite-tarkan))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train tarkan-line)
 )
@@ -6175,7 +6243,8 @@
 	(current-age == imperial-age)
 	(can-train tarkan-line)
 	(research-completed ri-elite-tarkan)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train tarkan-line)
 )
@@ -6240,6 +6309,8 @@
 	(unit-type-count ghulam-line < 5)
 	(food-amount > 75)
 	(not (research-completed ri-elite-ghulam))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train ghulam-line)
 )
@@ -6248,7 +6319,8 @@
 	(current-age == imperial-age)
 	(can-train ghulam-line)
 	(research-completed ri-elite-ghulam)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 	(food-amount > 75)
 =>
 	(train ghulam-line)
@@ -6304,6 +6376,8 @@
 	(can-train kamayuk-line)
 	(unit-type-count kamayuk-line < 5)
 	(not (research-completed ri-elite-kamayuk))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train kamayuk-line)
 )
@@ -6312,7 +6386,8 @@
 	(current-age == imperial-age)
 	(can-train kamayuk-line)
 	(research-completed ri-elite-kamayuk)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train kamayuk-line)
 )
@@ -6358,6 +6433,8 @@
 	(unit-type-count archer-line < 5)
 	(unit-type-count genoese-crossbowman-line < 10)
 	(not (research-completed ri-elite-genoese-crossbow))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train genoese-crossbowman-line)
 )
@@ -6367,7 +6444,8 @@
 	(can-train genoese-crossbowman-line)
 	(unit-type-count archer-line < 5)
 	(research-completed ri-elite-genoese-crossbow)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train genoese-crossbowman-line)
 )
@@ -6411,6 +6489,8 @@
 	(can-train samurai-line)
 	(unit-type-count samurai-line < 5)
 	(not (research-completed ri-elite-samurai))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train samurai-line)
 )
@@ -6419,7 +6499,8 @@
 	(current-age == imperial-age)
 	(can-train samurai-line)
 	(research-completed ri-elite-samurai)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train samurai-line)
 )
@@ -6473,6 +6554,8 @@
 	(can-train war-wagon-line)
 	(unit-type-count war-wagon-line < 5)
 	(not (research-completed ri-elite-war-wagon))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train war-wagon-line)
 )
@@ -6481,7 +6564,8 @@
 	(current-age == imperial-age)
 	(can-train war-wagon-line)
 	(research-completed ri-elite-war-wagon)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train war-wagon-line)
 )
@@ -6528,6 +6612,8 @@
 	(can-train ballista-elephant-line)
 	(unit-type-count ballista-elephant-line < 5)
 	(not (research-completed ri-elite-ballista-elephant))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train ballista-elephant-line)
 )
@@ -6536,7 +6622,8 @@
 	(current-age == imperial-age)
 	(can-train ballista-elephant-line)
 	(research-completed ri-elite-ballista-elephant)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train ballista-elephant-line)
 )
@@ -6591,6 +6678,8 @@
 	(unit-type-count knight-line < 5)
 	(unit-type-count leitis-line < 5)
 	(not (research-completed ri-elite-leitis))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train leitis-line)
 )
@@ -6600,7 +6689,8 @@
 	(can-train leitis-line)
 	(unit-type-count knight-line < 5)
 	(research-completed ri-elite-leitis)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train leitis-line)
 )
@@ -6649,6 +6739,8 @@
 	(unit-type-count magyar-huszar-line < 5)
 	(not (research-completed ri-elite-magyar-huszar))
 	(research-completed my-unique-research)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train magyar-huszar-line)
 )
@@ -6659,7 +6751,8 @@
 	(unit-type-count scout-cavalry-line < 5)
 	(research-completed ri-elite-magyar-huszar)
 	(research-completed my-unique-research)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train magyar-huszar-line)
 )
@@ -6705,6 +6798,8 @@
 	(unit-type-count karambit-warrior-line < 5)
 	(food-amount > 75)
 	(not (research-completed ri-elite-karambit-warrior))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train karambit-warrior-line)
 )
@@ -6714,7 +6809,8 @@
 	(can-train karambit-warrior-line)
 	(food-amount > 75)
 	(research-completed ri-elite-karambit-warrior)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train karambit-warrior-line)
 )
@@ -6751,6 +6847,8 @@
 	(unit-type-count gbeto-line < 5)
 	(food-amount > 75)
 	(not (research-completed ri-elite-gbeto))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train gbeto-line)
 )
@@ -6759,7 +6857,8 @@
 	(current-age == imperial-age)
 	(can-train gbeto-line)
 	(research-completed ri-elite-gbeto)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 	(food-amount > 75)
 =>
 	(train gbeto-line)
@@ -6807,6 +6906,8 @@
 	(unit-type-count archer-line < 5)
 	(unit-type-count plumed-archer-line < 5)
 	(not (research-completed ri-elite-plumed-archer))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train plumed-archer-line)
 )
@@ -6816,7 +6917,8 @@
 	(can-train plumed-archer-line)
 	(unit-type-count archer-line < 5)
 	(research-completed ri-elite-plumed-archer)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train plumed-archer-line)
 )
@@ -6865,6 +6967,8 @@
 	(unit-type-count mangudai-line < 5)
 	(unit-type-count cavalry-archer-line < 5)
 	(not (research-completed ri-elite-mangudai))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train mangudai-line)
 )
@@ -6874,7 +6978,8 @@
 	(can-train mangudai-line)
 	(unit-type-count cavalry-archer-line < 5)
 	(research-completed ri-elite-mangudai)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train mangudai-line)
 )
@@ -6892,6 +6997,7 @@
 
 (defrule
 	(current-age == castle-age)
+	(players-unit-type-count focus-player monk < 3)
 	(can-train war-elephant-line)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
@@ -6918,6 +7024,22 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train war-elephant-line)
+	(players-unit-type-count focus-player monk < 3)
+	(unit-type-count war-elephant-line < 5)
+	(not (research-completed ri-elite-war-elephant))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
+=>
+	(train mangudai-line)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(players-unit-type-count focus-player monk < 3)
+	(can-train war-elephant-line)
+	(research-completed ri-elite-war-elephant)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train war-elephant-line)
 )
@@ -6952,6 +7074,8 @@
 	(can-train obuch-line)
 	(unit-type-count obuch-line < 5)
 	(not (research-completed ri-elite-obuch))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train obuch-line)
 )
@@ -6960,7 +7084,8 @@
 	(current-age == imperial-age)
 	(can-train obuch-line)
 	(research-completed ri-elite-obuch)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train obuch-line)
 )
@@ -7005,6 +7130,8 @@
 	(can-train organ-gun-line)
 	(unit-type-count organ-gun-line < 5)
 	(not (research-completed ri-elite-organ-gun))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train organ-gun-line)
 )
@@ -7013,7 +7140,8 @@
 	(current-age == imperial-age)
 	(can-train organ-gun-line)
 	(research-completed ri-elite-organ-gun)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train organ-gun-line)
 )
@@ -7050,6 +7178,8 @@
 	(unit-type-count knight-line < 5)
 	(unit-type-count centurion-line < 5)
 	(not (research-completed ri-elite-centurion))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train centurion-line)
 )
@@ -7059,7 +7189,8 @@
 	(can-train centurion-line)
 	(unit-type-count knight-line < 5)
 	(research-completed ri-elite-centurion)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train centurion-line)
 )
@@ -7103,6 +7234,8 @@
 	(can-train serjeant-line)
 	(unit-type-count serjeant-line < 5)
 	(not (research-completed ri-elite-serjeant))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train serjeant-line)
 )
@@ -7111,7 +7244,8 @@
 	(current-age == imperial-age)
 	(can-train serjeant-line)
 	(research-completed ri-elite-serjeant)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train serjeant-line)
 )
@@ -7148,6 +7282,8 @@
 	(unit-type-count knight-line < 5)
 	(unit-type-count boyar-line < 5)
 	(not (research-completed ri-elite-boyar))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train boyar-line)
 )
@@ -7157,7 +7293,8 @@
 	(can-train boyar-line)
 	(unit-type-count knight-line < 5)
 	(research-completed ri-elite-boyar)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train boyar-line)
 )
@@ -7201,6 +7338,8 @@
 	(can-train conquistador-line)
 	(unit-type-count conquistador-line < 5)
 	(not (research-completed ri-elite-conquistador))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train conquistador-line)
 )
@@ -7209,7 +7348,8 @@
 	(current-age == imperial-age)
 	(can-train conquistador-line)
 	(research-completed ri-elite-conquistador)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train conquistador-line)
 )
@@ -7280,6 +7420,8 @@
 	(unit-type-count knight-line < 5)
 	(unit-type-count keshik-line < 5)
 	(not (research-completed ri-elite-keshik))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train keshik-line)
 )
@@ -7289,7 +7431,8 @@
 	(can-train keshik-line)
 	(unit-type-count knight-line < 5)
 	(research-completed ri-elite-keshik)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train keshik-line)
 )
@@ -7324,6 +7467,8 @@
 	(can-train teutonic-knight-line)
 	(unit-type-count teutonic-knight-line < 5)
 	(not (research-completed ri-elite-teutonic-knight))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train teutonic-knight-line)
 )
@@ -7332,7 +7477,8 @@
 	(current-age == imperial-age)
 	(can-train teutonic-knight-line)
 	(research-completed ri-elite-teutonic-knight)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train teutonic-knight-line)
 )
@@ -7367,6 +7513,8 @@
 	(can-train janissary-line)
 	(unit-type-count janissary-line < 5)
 	(not (research-completed ri-elite-janissary))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train janissary-line)
 )
@@ -7375,7 +7523,8 @@
 	(current-age == imperial-age)
 	(can-train janissary-line)
 	(research-completed ri-elite-janissary)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train janissary-line)
 )
@@ -7421,6 +7570,8 @@
 	(unit-type-count archer-line < 5)
 	(unit-type-count rattan-archer-line < 5)
 	(not (research-completed ri-elite-rattan-archer))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train rattan-archer-line)
 )
@@ -7430,7 +7581,8 @@
 	(can-train rattan-archer-line)
 	(unit-type-count archer-line < 5)
 	(research-completed ri-elite-rattan-archer)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train rattan-archer-line)
 )
@@ -7493,6 +7645,8 @@
 	(can-train berserk-line)
 	(unit-type-count berserk-line < 5)
 	(not (research-completed ri-elite-berserk))
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train berserk-line)
 )
@@ -7501,7 +7655,8 @@
 	(current-age == imperial-age)
 	(can-train berserk-line)
 	(research-completed ri-elite-berserk)
-	(up-compare-goal gl-number-trebs >= 1)
+	(or (up-compare-goal gl-number-trebs >= 1)
+	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train berserk-line)
 )
@@ -14141,7 +14296,7 @@
 	(can-research-with-escrow imperial-age)
 	(up-modify-goal gl-castleup-compare g:= c-villager-goal)
 	(up-modify-goal gl-castleup-compare c:- 9)
-	(unit-type-count-total villager g:< gl-castleup-compare)
+	;(unit-type-count-total villager g:< gl-castleup-compare)
 	(up-research-status c: imperial-age != research-pending)
 =>
 	(disable-timer 8)
@@ -17863,7 +18018,7 @@
 ;retreat with militia from enemy villagers
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(not (enemy-buildings-in-town))
 	(unit-type-count militiaman-line >= 1)
 =>
@@ -17891,7 +18046,7 @@
 ;1 militia
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(unit-type-count militiaman-line == 1)
 	(up-compare-goal gl-remote-total >= 1)
 	(up-object-data object-data-tasks-count > 0)
@@ -17917,7 +18072,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(unit-type-count militiaman-line == 2)
 	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
@@ -17941,7 +18096,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(unit-type-count militiaman-line == 2)
 	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
@@ -17967,7 +18122,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(unit-type-count militiaman-line == 3)
 	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
@@ -17991,7 +18146,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(unit-type-count militiaman-line == 3)
 	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
@@ -18015,7 +18170,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(unit-type-count militiaman-line == 3)
 	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
@@ -18041,7 +18196,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(unit-type-count militiaman-line == 4)
 	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
@@ -18065,7 +18220,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(unit-type-count militiaman-line == 4)
 	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
@@ -18089,7 +18244,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(unit-type-count militiaman-line == 4)
 	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
@@ -18113,7 +18268,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(unit-type-count militiaman-line == 4)
 	(up-compare-goal gl-remote-total >= 2)
 	(up-object-data object-data-tasks-count > 0)
@@ -18150,7 +18305,7 @@
 ;retreat with scouts from enemy threats
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(not (enemy-buildings-in-town))
 	(or (unit-type-count scout-cavalry-line >= 1)
 	(or (unit-type-count eagle-warrior-line >= 1)
@@ -18162,7 +18317,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(or (unit-type-count scout-cavalry-line >= 1)
 	(or (unit-type-count eagle-warrior-line >= 1)
 	(unit-type-count camel-scout >= 1)))
@@ -18183,7 +18338,7 @@
 ;1 scout
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(or (unit-type-count scout-cavalry-line == 1)
 	(or (unit-type-count eagle-warrior-line == 1)
 	(unit-type-count camel-scout == 1)))
@@ -18211,7 +18366,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(or (unit-type-count scout-cavalry-line == 2)
 	(or (unit-type-count eagle-warrior-line == 2)
 	(unit-type-count camel-scout == 2)))
@@ -18237,7 +18392,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(or (unit-type-count scout-cavalry-line == 2)
 	(or (unit-type-count eagle-warrior-line == 2)
 	(unit-type-count camel-scout == 2)))
@@ -18265,7 +18420,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(or (unit-type-count scout-cavalry-line == 3)
 	(or (unit-type-count eagle-warrior-line == 3)
 	(unit-type-count camel-scout == 3)))
@@ -18291,7 +18446,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(or (unit-type-count scout-cavalry-line == 3)
 	(or (unit-type-count eagle-warrior-line == 3)
 	(unit-type-count camel-scout == 3)))
@@ -18317,7 +18472,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(or (unit-type-count scout-cavalry-line == 3)
 	(or (unit-type-count eagle-warrior-line == 3)
 	(unit-type-count camel-scout == 3)))
@@ -18345,7 +18500,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(or (unit-type-count scout-cavalry-line == 4)
 	(or (unit-type-count eagle-warrior-line == 4)
 	(unit-type-count camel-scout == 4)))
@@ -18371,7 +18526,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(or (unit-type-count scout-cavalry-line == 4)
 	(or (unit-type-count eagle-warrior-line == 4)
 	(unit-type-count camel-scout == 4)))
@@ -18397,7 +18552,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(or (unit-type-count scout-cavalry-line == 4)
 	(or (unit-type-count eagle-warrior-line == 4)
 	(unit-type-count camel-scout == 4)))
@@ -18423,7 +18578,7 @@
 
 (defrule
 	(current-age < castle-age)
-	(up-compare-goal attack-now-goal == 1)
+	;(up-compare-goal attack-now-goal == 1)
 	(or (unit-type-count scout-cavalry-line == 4)
 	(or (unit-type-count eagle-warrior-line == 4)
 	(unit-type-count camel-scout == 4)))
@@ -22501,8 +22656,8 @@
 	(up-research-status c: ri-double-bit-axe >= research-pending)
 	(building-type-count-total lumber-camp > 0)
 	(building-type-count-total archery-range >= 1)
-	(building-type-count-total farm < 6)
-	(building-type-count-total blacksmith < 1)
+	(or (building-type-count-total farm < 6)
+	(building-type-count-total blacksmith < 1))
 	(idle-farm-count < 1)
 	(can-build farm)
 	(up-compare-goal gl-water-on-map != 1)
@@ -22519,8 +22674,8 @@
 	(up-research-status c: ri-double-bit-axe >= research-pending)
 	(building-type-count-total lumber-camp > 0)
 	(building-type-count-total archery-range >= 1)
-	(building-type-count-total farm < 6)
-	(building-type-count-total blacksmith < 1)
+	(or (building-type-count-total farm < 6)
+	(building-type-count-total blacksmith < 1))
 	(idle-farm-count < 1)
 	(can-build farm)
 	(up-compare-goal gl-water-on-map == 1)
@@ -24545,7 +24700,8 @@
 	(can-train-with-escrow villager)
 	(or (unit-type-count-total villager g:< c-villager-goal)
 	(or (up-research-status c: imperial-age == research-pending)
-	(not (can-research imperial-age))))
+	(and (not (can-research imperial-age))
+		 (not (goal strategy-goal sg-boom-imp)))))
 	(unit-type-count-total villager < 130)
 	(food-amount >= 300)
 	(or (goal strategy-goal sg-boom-imp)
@@ -29614,7 +29770,7 @@
 (defrule
 	(goal attack-now-goal 0)
 	(goal retreat-now-goal 1)
-	(or (military-population >= 23)
+	(or (military-population >= 26)
 	(up-compare-goal gl-military-advantage >= 0))
 	(current-age == imperial-age)
 =>
@@ -29628,7 +29784,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(military-population < 23)
+	(military-population < 26)
 	(up-compare-goal gl-military-advantage < -5)
 	(goal attack-now-goal 1)
 	(goal retreat-now-goal 0)
@@ -29649,7 +29805,7 @@
 	(current-age == imperial-age)
 	(goal attack-now-goal 1)
 	;(goal retreat-now-goal 0)
-	(or (military-population >= 23)
+	(or (military-population >= 26)
 	(up-compare-goal gl-military-advantage >= 10))
 	(up-compare-goal gl-military-advantage >= -5)
 =>
@@ -32941,6 +33097,16 @@
 	;(chat-to-player my-player-number "Schicke Truppen aus den Waffenschmieden.")
 )
 
+(defrule
+	(building-type-count-total town-center == 0)
+	(current-age >= feudal-age)
+=>
+	(up-ungarrison c: barracks)
+	(up-ungarrison c: archery-range)
+	(up-ungarrison c: stable)
+	(up-ungarrison c: siege-workshop)
+	(disable-self)
+)
 
 ;endregion
 
