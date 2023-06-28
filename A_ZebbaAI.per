@@ -92,10 +92,12 @@
 
 ;what's up next:
 
+; - change static build order in feudal-age to dynamic after initial villager goal has been reached
+; - garrison boar luring villager in tc when villager stands right under the tc, the boar has more than 25 hp & the tc is already garrisoned with hunting group
+; - improve defensive tower placement: get the most exposed camp and place tower next to it
+; - add DUC code to send villagers to destroy forward towers when being towerrushed
 ; - retreat with ls and knights from tcs if armor upgrades are not researched yet
-; - stop training rams against enemy fortifications when in military disadvantage
-; - train archers in castle-age if enemy is going for infantry and our strategy is archers (release escrow)
-; - always train skirms for scouts -> skirms
+; - train archers,scorpions or knights in castle-age if enemy is going for infantry and our strategy is archers (release escrow)
 ; - add ability for villagers to attack enemy scouts in dark-age when they are next to them
 ; - try to exclude stronger units from castle-retreat-rules (eagles/knights/some uus) (testing)
 ; - fix retreat rule issue for tcs (works better, but still happens)
@@ -105,17 +107,14 @@
 ; - change villager-goal modificator for scoutrushes, considering wheel-barrow research (testing)
 ; - fix cumans 2nd tc rule for teamgames in pocket positions (testing)
 ; - keep training villagers if c-villager-goal is being met, but age-research cannot start and AI has more food than required (testing)
-; - use military evaluation to build buildings for countering enemy army (testing)
-; - fix continuous production of skirms in castle-age (testing)
-; - improve conditions for cumans 2nd tc (military buildings required) (testing)
 
 ; - implement scouting-pattern for scouting own base
 ; - implement more precise conditions for imperial age units (champions/knights/camels/archers/steppe-lancers/eagles/halbs/hc/siege/uu/cav-archers)
 ; - add production-restrictions for champions if the opponent has hc/catas/heavy-scorpions (testing)
+; - add production restriction for champions if AI is training a different main unit already
 ; - fix fc-uu bo before going up to castle-age (testing)
 ; - fix non-preferation of enemy monks (no solution found yet)
 
-; - try to always attack with at least 2 rams instead of only one 
 ; - fix retreating of militias in drushes
 ; - rework sn-camp-max-distance modifier
 ; - fix rare boar hunting bug, where the AI wouldn't garrison villagers under tc for unknown reasons
@@ -178,23 +177,22 @@
 ;improving fastcastle gu & uu
 ; - start walling base earlier
 ; - overall improve build order and eco management to minimize idle time and get to castle-age faster
+; - in tgs, prioritize building 3 TCs
 ; - change fcgu builds to build stable/archery-range instead of a market
 
 ;improving fastimp
 ; - start training army faster
+; - overall improve strategy: for every civ, select a fast imp goal and fully prioritize army over eco
 
 ;improving general behaviour
 ; - find rules to make a switch to main-gold-unit later/ at a more fitting time
-; - improve defensive tower placement to select dangerous areas more precisely
-; - improve retreating code from enemy castles, to also retreat from buildings not obtained by the focus-player
-; - add a new strategy "defensive fast-feudal", 22-pop feudal, change to this strategy in fc builds if researching to castle-age 
+; - add a new strategy "defensive fast-feudal", 19-pop feudal, change to this strategy in fc builds if researching to castle-age 
 ; does not work due to enemy pressure
 ; - implement taunt "31" ("Attack an enemy now!") and taunt reaction to enable combined attacks in teamgames
 ; - Saving resources for upgrades/buildings (work in progress) (missing: Capped/Siege Ram/Elephant, Onager, Siege Engineers, UTs, Redemption)
 ; - optimization of prioritisation of upgrades (work in progress)
-; - improve behaviour of villagers defending from enemy scout rushes/drushes
 ; - evacuate base to new safe position in TG when old base is being destroyed (work in progress)
-; - improve attack intelligence, such as grouping up units before attack/ retreating when enemy military-count is too high/
+; - improve attack intelligence, such as grouping up units before attack/
 ;/retreating single units from enemy-counter unit/ patrol-attacking, target areas with army more precisely/
 ; add ability to micro ranged-units
 ; - More accurate scouting
@@ -219,7 +217,6 @@
 ; - fix non-ranged-units behaviour to ignore ranged units standing inside their own tc/tower/castle range.
 ; causing the AI units trying to attack them, but retreating once they touch the tc-range
 ; - fix constant switching targets of military units
-; - fix flare-sending enemy tcs at the start at nomad
 ; - fix sn-camp-max-distance issue; gold/stone/wood piles are not being found correctly
 ; - fix sending builders to regions on the map that are guarded by the enemy 
 ; - fix counting of enemy warships
@@ -9422,7 +9419,7 @@
 (defrule
 	(current-age == feudal-age)
 	(or (players-unit-type-count focus-player archer-line >= 4)
-	(players-unit-type-count focus-player spearman-line >= 3))
+	(players-unit-type-count focus-player spearman-line >= 4))
 	(can-train-with-escrow skirmisher-line)
 	(food-amount < 600)
 	(up-compare-goal gl-military-advantage < 25)
@@ -9637,7 +9634,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (players-unit-type-count focus-player spearman-line >= 6)
+	(or (players-unit-type-count focus-player spearman-line >= 7)
 	(players-unit-type-count focus-player archer-line >= 8))
 	(can-train skirmisher-line)
 	(not (research-completed ri-elite-skirmisher))
@@ -9654,7 +9651,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player spearman-line >= 6)
+	(or (players-unit-type-count focus-player spearman-line >= 7)
 	(players-unit-type-count focus-player archer-line >= 8))
 	(can-research-with-escrow ri-elite-skirmisher)
 	(not (research-completed ri-elite-skirmisher))
@@ -9671,7 +9668,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (players-unit-type-count focus-player spearman-line >= 6)
+	(or (players-unit-type-count focus-player spearman-line >= 7)
 	(players-unit-type-count focus-player archer-line >= 8))
 	(can-train-with-escrow skirmisher-line)
 	(research-completed ri-elite-skirmisher)
@@ -9689,7 +9686,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player spearman-line >= 10)
+	(or (players-unit-type-count focus-player spearman-line >= 12)
 	(players-unit-type-count focus-player archer-line >= 10))
 	(can-train skirmisher-line)
 	(research-completed ri-elite-skirmisher)
@@ -18352,13 +18349,14 @@
 	(set-goal retreating-goal YES)
 	(up-full-reset-search)
 	(up-find-local c: scout-type c: 4)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object gl-unit-x)
-	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
-	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
-	(up-bound-point gl-unit-x gl-unit-x)	
-	(enable-timer retreating-timer 2)
-	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object gl-unit-x)
+	; (up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	; (up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	; (up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 3)
+	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
 	;(chat-local-to-self "retreat with scout 1")
 )
 
@@ -18380,13 +18378,14 @@
 	(set-goal retreating-goal YES)
 	(up-full-reset-search)
 	(up-find-local c: scout-type c: 4)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object gl-unit-x)
-	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
-	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
-	(up-bound-point gl-unit-x gl-unit-x)	
-	(enable-timer retreating-timer 2)
-	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object gl-unit-x)
+	; (up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	; (up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	; (up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 3)
+	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
 ;	(chat-local-to-self "retreat with scout 2.1")
 )
 
@@ -18406,13 +18405,14 @@
 	(set-goal retreating-goal YES)
 	(up-full-reset-search)
 	(up-find-local c: scout-type c: 4)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object gl-unit-x)
-	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
-	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
-	(up-bound-point gl-unit-x gl-unit-x)	
-	(enable-timer retreating-timer 2)
-	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object gl-unit-x)
+	; (up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	; (up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	; (up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 3)
+	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
 ;	(chat-local-to-self "retreat with scout 2.2")
 )
 
@@ -18434,13 +18434,14 @@
 	(set-goal retreating-goal YES)
 	(up-full-reset-search)
 	(up-find-local c: scout-type c: 4)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object gl-unit-x)
-	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
-	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
-	(up-bound-point gl-unit-x gl-unit-x)	
-	(enable-timer retreating-timer 2)
-	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object gl-unit-x)
+	; (up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	; (up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	; (up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 3)
+	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
 ;	(chat-local-to-self "retreat with scout 3.1")
 )
 
@@ -18460,13 +18461,14 @@
 	(set-goal retreating-goal YES)
 	(up-full-reset-search)
 	(up-find-local c: scout-type c: 4)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object gl-unit-x)
-	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
-	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
-	(up-bound-point gl-unit-x gl-unit-x)	
-	(enable-timer retreating-timer 2)
-	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object gl-unit-x)
+	; (up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	; (up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	; (up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 3)
+	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
 ;	(chat-local-to-self "retreat with scout 3.2")
 )
 
@@ -18486,13 +18488,14 @@
 	(set-goal retreating-goal YES)
 	(up-full-reset-search)
 	(up-find-local c: scout-type c: 4)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object gl-unit-x)
-	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
-	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
-	(up-bound-point gl-unit-x gl-unit-x)	
-	(enable-timer retreating-timer 2)
-	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object gl-unit-x)
+	; (up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	; (up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	; (up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 3)
+	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
 ;	(chat-local-to-self "retreat with scout 3.3")
 )
 
@@ -18514,13 +18517,14 @@
 	(set-goal retreating-goal YES)
 	(up-full-reset-search)
 	(up-find-local c: scout-type c: 4)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object gl-unit-x)
-	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
-	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
-	(up-bound-point gl-unit-x gl-unit-x)	
-	(enable-timer retreating-timer 2)
-	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object gl-unit-x)
+	; (up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	; (up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	; (up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 3)
+	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
 ;	(chat-local-to-self "retreat with scout 4.1")
 )
 
@@ -18540,13 +18544,14 @@
 	(set-goal retreating-goal YES)
 	(up-full-reset-search)
 	(up-find-local c: scout-type c: 4)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object gl-unit-x)
-	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
-	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
-	(up-bound-point gl-unit-x gl-unit-x)	
-	(enable-timer retreating-timer 2)
-	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object gl-unit-x)
+	; (up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	; (up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	; (up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 3)
+	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
 ;	(chat-local-to-self "retreat with scout 4.2")
 )
 
@@ -18566,13 +18571,14 @@
 	(set-goal retreating-goal YES)
 	(up-full-reset-search)
 	(up-find-local c: scout-type c: 4)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object gl-unit-x)
-	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
-	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
-	(up-bound-point gl-unit-x gl-unit-x)	
-	(enable-timer retreating-timer 2)
-	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object gl-unit-x)
+	; (up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	; (up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	; (up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 3)
+	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
 ;	(chat-local-to-self "retreat with scout 4.3")
 )
 
@@ -18592,13 +18598,14 @@
 	(set-goal retreating-goal YES)
 	(up-full-reset-search)
 	(up-find-local c: scout-type c: 4)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object gl-unit-x)
-	(up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
-	(up-cross-tiles gl-unit-x enemy-point-x c: 6)
-	(up-bound-point gl-unit-x gl-unit-x)	
-	(enable-timer retreating-timer 2)
-	(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object gl-unit-x)
+	; (up-lerp-tiles gl-unit-x enemy-point-x c: -5) 
+	; (up-cross-tiles gl-unit-x enemy-point-x c: 6)
+	; (up-bound-point gl-unit-x gl-unit-x)	
+	(enable-timer retreating-timer 3)
+	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
+	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
 ;	(chat-local-to-self "retreat with scout 4.4")
 )
 
@@ -23033,9 +23040,9 @@
 	(can-build-with-escrow archery-range)
 	(building-type-count-total town-center >= 1)
 	(building-type-count-total archery-range < 1)
-	(building-type-count-total farm >= 12)
-	(civilian-population >= 26)
-	(game-time >= 840) ;13mins
+	(building-type-count-total farm >= 9)
+	(civilian-population >= 24)
+	(game-time >= 780) ;13mins
 	(or (not (town-under-attack))
 	(up-compare-goal gl-military-advantage >= -2))
 	(goal gl-wood-saving 3)
@@ -23054,9 +23061,9 @@
 	(can-build-with-escrow archery-range)
 	(building-type-count-total town-center >= 1)
 	(building-type-count-total archery-range < 1)
-	(building-type-count-total farm >= 12)
-	(civilian-population >= 26)
-	(game-time >= 840) ;13mins
+	(building-type-count-total farm >= 9)
+	(civilian-population >= 24)
+	(game-time >= 780) ;12mins
 	(town-under-attack)
 	(up-compare-goal gl-military-advantage < -2)
 	(goal gl-wood-saving 3)
@@ -23194,7 +23201,7 @@
 	(goal strategy-goal sg-scoutrush)
 	(current-age == feudal-age)
 	(building-type-count-total archery-range < 1)
-	(unit-type-count-total scout-cavalry-line >= 5)
+	(unit-type-count-total scout-cavalry-line >= 4)
 	(up-research-status c: castle-age != research-pending)
 	(can-build-with-escrow archery-range)
 	(up-compare-goal gl-military-advantage >= -6)
@@ -23474,6 +23481,44 @@
 	(can-train archer-line)
 	(wood-amount > 75)
 	(unit-type-count-total skirmisher-line >= 2)
+	(up-compare-goal gl-military-advantage < 25)
+=>
+	(train archer-line)
+)
+
+(defrule
+	(goal strategy-goal sg-scoutrush)
+	(current-age == feudal-age)
+	(or (civilian-population g:< f-villager-goal)
+	(up-research-status c: castle-age == research-pending))
+	(can-train skirmisher-line)
+	(gold-amount < 200)
+	(or 
+		(or (players-unit-type-count focus-player scout-cavalry-line < 4)
+		(players-unit-type-count focus-player eagle-warrior-line < 4))
+		(or (unit-type-count-total scout-cavalry-line >= 3)
+		(unit-type-count-total archer-line >= 4))
+	)
+	(players-current-age focus-player == feudal-age)
+	(up-compare-goal gl-military-advantage < 25)
+=>
+	(train skirmisher-line)
+)
+
+(defrule
+	(goal strategy-goal sg-scoutrush)
+	(current-age == feudal-age)
+	(or (civilian-population g:< f-villager-goal)
+	(up-research-status c: castle-age == research-pending))
+	(can-train archer-line)
+	(or (gold-amount >= 200)
+	(up-compare-goal gl-military-advantage <= -5))
+	(or 
+		(players-unit-type-count focus-player skirmisher-line < 6)
+		(or (unit-type-count-total scout-cavalry-line >= 1)
+		(unit-type-count-total skirmisher-line >= 4))
+	)
+	(players-current-age focus-player == feudal-age)
 	(up-compare-goal gl-military-advantage < 25)
 =>
 	(train archer-line)
@@ -31291,7 +31336,7 @@
 )
 
 (defrule
-	(unit-type-count-total infantry-class >= 5)
+	(unit-type-count-total infantry-class >= 10)
 	;(goal strategy-goal gl-archerrush)
 	(can-research ri-arson)
 =>
@@ -31299,7 +31344,7 @@
 )
 
 (defrule
-	(unit-type-count-total infantry-class >= 5)
+	(unit-type-count-total militiaman-line >= 5)
 	;(goal strategy-goal gl-archerrush)
 	(can-research ri-gambesons)
 =>
