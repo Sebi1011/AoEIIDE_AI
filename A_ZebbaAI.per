@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.2
-;last update: 16th June 2023
+;last update: 28th June 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -4366,7 +4366,7 @@
 #load-if-defined AZTEC-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;atlatl
 	(unit-type-count skirmisher-line >= 5)
 =>
 	(research my-second-unique-research)
@@ -4374,7 +4374,7 @@
 
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;garland wars
 	(unit-type-count eagle-warrior-line >= 5)
 	(research-completed ri-elite-eagle-warrior)
 =>
@@ -4386,7 +4386,7 @@
 #load-if-defined BENGALIS-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;paiks
 	(or (unit-type-count armored-elephant-line >= 3)
 	(or (unit-type-count my-unique-unit-line >= 5)
 	(or (unit-type-count battle-elephant-line >= 5)
@@ -4397,7 +4397,7 @@
 
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;mahayana
 	(or (civilian-population >= 100)
 	(unit-type-count-total monk >= 10))
 =>
@@ -4409,13 +4409,13 @@
 #load-if-defined BERBERS-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;kasbah
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;maghrebi camels
 	(unit-type-count camel-archer-line >= 5)
 	(research-completed ri-elite-camel-archer)
 =>
@@ -4427,15 +4427,15 @@
 #load-if-defined BOHEMIANS-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;wagenburg tactics
 	(unit-type-count hand-cannoneer >= 5)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
-	(unit-type-count monk >= 8)
+	(can-research my-unique-research) ;hussite reforms
+	(unit-type-count monk >= 5)
 =>
 	(research my-unique-research)
 )
@@ -4445,7 +4445,7 @@
 #load-if-defined BRITON-CIV
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;yeoman
 	(or(unit-type-count archer-line >= 3)
 	(unit-type-count longbowman-line >= 3))
 =>
@@ -4453,7 +4453,7 @@
 )
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;warwolf
 	(unit-type-count trebuchet >= 2)
 =>
 	(research my-second-unique-research)
@@ -4464,14 +4464,14 @@
 #load-if-defined BULGARIANS-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;stirrups
 	(unit-type-count cavalry-class >= 6)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;bagains
 	(unit-type-count-total militiaman-line >= 5)
 =>
 	(research my-unique-research)
@@ -4482,34 +4482,35 @@
 #load-if-defined BURGUNDIANS-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;burgundian vineyards
 =>
 	(research my-second-unique-research)
 )
 
-(defrule
-	(can-research my-unique-research)
-	(up-compare-goal gl-military-advantage <= -10)
-=>
-	(research my-unique-research)
-)
+; (defrule
+	; (can-research my-unique-research) ;flemish revolution
+	; (up-compare-goal gl-military-advantage <= -10)
+; =>
+	; (research my-unique-research)
+; )
 
 #end-if
 
 #load-if-defined BURMESE-CIV
 
 (defrule
-	(can-research my-second-unique-research)
-	(unit-type-count-total battle-elephant-line >= 5)
+	(can-research my-unique-research) ;manipur cavalry
+	(or (unit-type-count-total cavalry-class >= 5)
+	(unit-type-count-total scout-cavalry-line >= 5))
 =>
-	(research my-second-unique-research)
+	(research my-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
-	(unit-type-count-total cavalry-class >= 6)
+	(can-research my-second-unique-research) ;howdah
+	(unit-type-count-total battle-elephant-line >= 5)
 =>
-	(research my-unique-research)
+	(research my-second-unique-research)
 )
 
 #end-if
@@ -4517,15 +4518,16 @@
 #load-if-defined BYZANTINE-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;greek fire
 	(or (unit-type-count-total fire-ship-line >= 3)
-	(building-type-count-total bombard-tower >= 2))
+	(or (building-type-count-total bombard-tower >= 2)
+	(unit-type-count-total dromon >= 2)))
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;logistica
 	(unit-type-count-total cataphract-line >= 5)
 =>
 	(research my-unique-research)
@@ -4536,13 +4538,13 @@
 #load-if-defined CELTIC-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;stronghold
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;furor celctica
 	(unit-type-count-total siege-weapon-class >= 5)
 =>
 	(research my-unique-research)
@@ -4553,14 +4555,14 @@
 #load-if-defined CHINESE-CIV
 
 (defrule
-	(can-research my-second-unique-research)
-	(building-type-count-total watch-tower-line >= 5)
+	(can-research my-second-unique-research) ;great wall
+	(building-type-count-total watch-tower-line >= 2)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;rocketry
 	(or (unit-type-count-total chu-ko-nu-line >= 6)
 	(unit-type-count-total scorpion-line >= 4))
 =>
@@ -4571,15 +4573,15 @@
 
 #load-if-defined CUMANS-CIV
 
-(defrule
-	(can-research my-second-unique-research)
-	(unit-type-count-total cavalry-class >= 6)
+(defrule 
+	(can-research my-second-unique-research) ;steppe husbandry
+	(building-type-count-total stable >= 2)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;cuman mercenaries
 =>
 	(research my-unique-research)
 )
@@ -4589,16 +4591,16 @@
 #load-if-defined DRAVIDIANS-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;medical corps
 	(or (unit-type-count armored-elephant-line >= 3)
-	(or (unit-type-count battle-elephant-line >= 5)
+	(or (unit-type-count battle-elephant-line >= 5)	
 	(unit-type-count elephant-archer-line >= 5)))
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;wootz steel
 	(or (unit-type-count cavalry-class >= 5)
 	(unit-type-count infantry-class >= 5))
 =>
@@ -4610,18 +4612,19 @@
 #load-if-defined ETHIOPIAN-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-unique-research) ;royal heirs
 	(or (unit-type-count-total shotel-line >= 5)
 	(unit-type-count-total camel-line >= 3))
+	(players-unit-type-count focus-player cavalry-class >= 5)
 =>
-	(research my-second-unique-research)
+	(research my-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-second-unique-research) ;torsion engines
 	(unit-type-count-total siege-weapon-class >= 4)
 =>
-	(research my-unique-research)
+	(research my-second-unique-research)
 )
 
 #end-if
@@ -4629,14 +4632,14 @@
 #load-if-defined FRANKISH-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;barded axe
 	(unit-type-count-total throwing-axeman-line >= 5)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;chivalry
 	(unit-type-count-total cavalry-class >= 6)
 =>
 	(research my-unique-research)
@@ -4647,9 +4650,9 @@
 #load-if-defined GOTHIC-CIV
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-second-unique-research) ;anarchy
 =>
-	(research my-unique-research)
+	(research my-second-unique-research)
 )
 
 (defrule
@@ -4663,9 +4666,9 @@
 )
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-unique-research) ;perfusion
 =>
-	(research my-second-unique-research)
+	(research my-unique-research)
 )
 
 #end-if
@@ -4673,13 +4676,13 @@
 #load-if-defined GURJARAS-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;kshatriyas
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;frontier guards
 	(or (unit-type-count camel-line >= 5)
 	(unit-type-count elephant-archer-line >= 5))
 =>
@@ -4690,9 +4693,15 @@
 
 #load-if-defined HUN-CIV
 
+; (defrule ;marauders ;no implementation yet for training tarkans at stables
+	; (can-research my-second-unique-research)
+; =>
+	; (research my-second-unique-research)
+; )
+
 (defrule
-	(can-research my-unique-research)
-	(enemy-captured-relics)
+	(can-research my-unique-research) ;atheism
+	(enemy-captured-relics) ;untested
 =>
 	(research my-unique-research)
 )
@@ -4702,7 +4711,7 @@
 #load-if-defined INCAN-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;andean sling
 	(or (unit-type-count-total skirmisher-line >= 5)
 	(unit-type-count-total slinger >= 5))
 =>
@@ -4710,7 +4719,7 @@
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;fabric shields
 	(or (unit-type-count-total eagle-warrior-line >= 5)
 	(or (unit-type-count-total slinger >= 5)
 	(unit-type-count-total kamayuk-line >= 5)))
@@ -4723,14 +4732,15 @@
 #load-if-defined INDIAN-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;grand trunk road
+	(building-type-count-total market >= 1)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
-	(unit-type-count-total hand-cannoneer >= 6)
+	(can-research my-unique-research) ;shatagni
+	(unit-type-count-total hand-cannoneer >= 4)
 =>
 	(research my-unique-research)
 )
@@ -4740,15 +4750,16 @@
 #load-if-defined ITALIAN-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;pavise
 	(or (unit-type-count-total archer-line >= 3)
 	(unit-type-count-total genoese-crossbowman-line >= 3))
 =>
 	(research my-second-unique-research)
+
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;silk road
 	(building-type-count-total market >= 1)
 =>
 	(research my-unique-research)
@@ -4759,8 +4770,11 @@
 #load-if-defined JAPANESE-CIV
 
 (defrule
-	(can-research my-second-unique-research)
-	(current-age >= imperial-age)
+	(can-research my-second-unique-research) ;yasama
+	(or (building-type-count-total watch-tower-line >= 2)
+	(and (current-age == imperial-age)
+	(or (military-population < 8)
+	(up-compare-goal gl-military-advantage <= -6))))
 =>
 	(research my-second-unique-research)
 )
@@ -4785,7 +4799,7 @@
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;kataparuto
 	(unit-type-count trebuchet >= 3)
 =>
 	(research my-unique-research)
@@ -4796,14 +4810,14 @@
 #load-if-defined KHMER-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;tusk swords
 	(building-type-count-total battle-elephant-line >= 5)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;double crossbow
 	(or (unit-type-count-total ballista-elephant-line >= 5)
 	(unit-type-count-total scorpion-line >= 4))
 =>
@@ -4815,15 +4829,15 @@
 #load-if-defined KOREAN-CIV
 
 (defrule
-	(can-research my-second-unique-research)
-	(building-type-count-total watch-tower-line >= 3)
+	(can-research my-second-unique-research) ;eupseong
+	(building-type-count-total watch-tower-line >= 2)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
-	(unit-type-count-total mangonel-line >= 3)
+	(can-research my-unique-research) ;shinkichon
+	(unit-type-count-total mangonel-line >= 2)
 =>
 	(research my-unique-research)
 )
@@ -4833,14 +4847,14 @@
 #load-if-defined LITHUANIANS-CIV
 
 (defrule
-	(can-research my-second-unique-research)
-	(military-population < 5)
+	(can-research my-second-unique-research) ;hill forts
+	(up-compare-goal gl-military-advantage <= -12)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;tower shields
 	(or (unit-type-count-total spearman-line >= 6)
 	(unit-type-count-total skirmisher-line >= 6))
 =>
@@ -4852,13 +4866,13 @@
 #load-if-defined MAGYAR-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;corvinian army
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;recurve bow
 	(unit-type-count-total cavalry-archer-line >= 6)
 =>
 	(research my-unique-research)
@@ -4869,14 +4883,14 @@
 #load-if-defined MALAY-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;thalassocracy
 	(building-type-count-total dock >= 3)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;forced levy
 =>
 	(research my-unique-research)
 )
@@ -4932,14 +4946,15 @@
 #load-if-defined MALIAN-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;tigui
+	(up-compare-goal gl-military-advantage <= -8)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
-	(unit-type-count-total cavalry-class >= 10)
+	(can-research my-unique-research) ;farimba
+	(unit-type-count-total cavalry-class >= 6)
 =>
 	(research my-unique-research)
 )
@@ -4949,14 +4964,14 @@
 #load-if-defined MAYAN-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;hul'che javelineers
 	(unit-type-count skirmisher-line >= 5)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;el dorado
 	(unit-type-count-total eagle-warrior-line >= 6)
 =>
 	(research my-unique-research)
@@ -4967,9 +4982,15 @@
 #load-if-defined MONGOL-CIV
 
 
+; (defrule ;currently no way to determine if AI needs more space to build
+	; (can-research my-second-unique-research) ;nomads
+; =>
+	; (research my-second-unique-research)
+; )
+
 (defrule
-	(can-research my-unique-research)
-	(unit-type-count-total siege-weapon-class >= 5)
+	(can-research my-unique-research) ;drill
+	(unit-type-count-total siege-weapon-class >= 4)
 =>
 	(research my-unique-research)
 )
@@ -4979,14 +5000,13 @@
 #load-if-defined PERSIAN-CIV
 
 (defrule
-	(can-research my-second-unique-research)
-	(unit-type-count-total archer-line >= 3)
+	(can-research my-second-unique-research) ;camadaran
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;mahouts
 	(unit-type-count-total war-elephant-line >= 5)
 =>
 	(research my-unique-research)
@@ -4997,14 +5017,14 @@
 #load-if-defined POLES-CIV
 
 (defrule
-	(can-research my-second-unique-research)
-	(unit-type-count-total knight-line >= 5)
+	(can-research my-second-unique-research) ;szlachta privileges
+	(unit-type-count-total knight-line >= 4)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;lechitic legacy
 	(unit-type-count-total scout-cavalry-line >= 5)
 =>
 	(research my-unique-research)
@@ -5015,14 +5035,14 @@
 #load-if-defined PORTUGUESE-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;carrack
 	(unit-type-count-total warship-class >= 5)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;arquebus
 	(or (unit-type-count-total archery-cannon-class >= 5)
 	(unit-type-count-total bombard-cannon-line >= 2))
 =>
@@ -5052,36 +5072,33 @@
 #load-if-defined SARACEN-CIV
 
 (defrule
-	(can-research my-unique-research)
-	(unit-type-count-total camel-line >= 10)
-=>
-	(research my-unique-research)
-)
-
-(defrule
-	(can-research my-second-unique-research)
-	(or (unit-type-count-total mangonel-line >= 4)
-	(unit-type-count trebuchet >= 2))
+	(can-research my-second-unique-research) ;zealotry
+	(unit-type-count-total camel-line >= 6)
 =>
 	(research my-second-unique-research)
 )
 
-
+(defrule
+	(can-research my-unique-research) ;counterweights
+	(or (unit-type-count-total mangonel-line >= 3)
+	(unit-type-count trebuchet >= 2))
+=>
+	(research my-unique-research)
+)
 
 #end-if
 
 #load-if-defined SICILIANS-CIV
 
 (defrule
-	(can-research my-second-unique-research)
-	(building-type-count-total town-center >= 5)
+	(can-research my-second-unique-research) ;first crusade
+	(building-type-count town-center >= 5)
 =>
 	(research my-second-unique-research)
-	;(chat-to-player my-player-number "Entwickle First Crusade")
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;hauberk
 	(unit-type-count-total knight-line >= 6)
 =>
 	(research my-unique-research)
@@ -5092,13 +5109,13 @@
 #load-if-defined SLAVIC-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;detinets
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;druzhina
 	(unit-type-count-total infantry-class >= 6)
 =>
 	(research my-unique-research)
@@ -5109,14 +5126,14 @@
 #load-if-defined SPANISH-CIV
 
 (defrule
-	(can-research my-second-unique-research)
-	(unit-type-count-total monk >= 5)
+	(can-research my-second-unique-research) ;inquisition
+	(unit-type-count-total monk >= 4)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;supremacy
 =>
 	(research my-unique-research)
 )
@@ -5126,15 +5143,17 @@
 #load-if-defined TATARS-CIV
 
 (defrule
-	(can-research my-second-unique-research)
-	(unit-type-count-total cavalry-archer-line >= 5)
+	(can-research my-second-unique-research) ;silk armor
+	(or (unit-type-count-total scout-cavalry-line >= 5)
+	(or (unit-type-count-total steppe-lancer-line >= 5)
+	(unit-type-count-total cavalry-archer-line >= 5)))
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
-	(unit-type-count trebuchet >= 3)
+	(can-research my-unique-research) ;timurid siegecraft
+	(unit-type-count trebuchet >= 2)
 =>
 	(research my-unique-research)
 )
@@ -5144,14 +5163,14 @@
 #load-if-defined TEUTONIC-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;iron clad
 	(unit-type-count-total siege-weapon-class >= 3)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;crenellations
 =>
 	(research my-unique-research)
 )
@@ -5161,16 +5180,17 @@
 #load-if-defined TURKISH-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;sipahi
 	(unit-type-count-total cavalry-archer-line >= 5)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;artillery
 	(or (unit-type-count-total bombard-cannon-line >= 2)
-	(unit-type-count-total cannon-galleon-line >= 2))
+	(or (unit-type-count-total cannon-galleon-line >= 2)
+	(building-type-count-total bombard-tower >= 2)))
 =>
 	(research my-unique-research)
 )
@@ -5180,34 +5200,31 @@
 #load-if-defined VIETNAMESE-CIV
 
 (defrule
-	(can-research my-second-unique-research)
-	(unit-type-count-total battle-elephant-line >= 5)
+	(can-research my-second-unique-research) ;chatras
+	(unit-type-count-total battle-elephant-line >= 4)
 =>
 	(research my-second-unique-research)
 )
 
-#load-if-not-defined UP-2-PLAYER-GAME
-
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;paper money
 =>
 	(research my-unique-research)
 )
 
 #end-if
-#end-if
 
 #load-if-defined VIKING-CIV
 
 (defrule
-	(can-research my-second-unique-research)
+	(can-research my-second-unique-research) ;chieftains
 	(unit-type-count-total infantry-class >= 4)
 =>
 	(research my-second-unique-research)
 )
 
 (defrule
-	(can-research my-unique-research)
+	(can-research my-unique-research) ;bogsveigar
 	(or (unit-type-count-total archer-line >= 5)
 	(unit-type-count-total longboat-line >= 4))
 =>
@@ -5223,6 +5240,7 @@
 (defrule
 	(current-age == castle-age)
 	(can-train jaguar-man-line)
+	(players-unit-type-count focus-player infantry-class >= 6)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 =>
@@ -5233,6 +5251,7 @@
 	(current-age == imperial-age)
 	(can-research-with-escrow ri-elite-jaguar-man)
 	(unit-type-count jaguar-man-line > 2)
+	(players-unit-type-count focus-player infantry-class >= 6)
 	(goal gl-food-saving 34)
 	(goal gl-gold-saving 34)
 =>
@@ -5249,6 +5268,7 @@
 	(current-age == imperial-age)
 	(can-train jaguar-man-line)
 	(unit-type-count jaguar-man-line < 5)
+	(players-unit-type-count focus-player infantry-class >= 6)
 	(not (research-completed ri-elite-jaguar-man))
 	(or (up-compare-goal gl-number-trebs >= 1)
 	(up-compare-goal gl-military-advantage < -4))
@@ -5260,17 +5280,9 @@
 	(current-age == imperial-age)
 	(can-train jaguar-man-line)
 	(research-completed ri-elite-jaguar-man)
+	(players-unit-type-count focus-player infantry-class >= 6)
 	(or (up-compare-goal gl-number-trebs >= 1)
 	(up-compare-goal gl-military-advantage < -4))
-=>
-	(train jaguar-man-line)
-)
-
-(defrule
-	(current-age >= castle-age)
-	(players-unit-type-count focus-player infantry-class >= 5)
-	(can-train jaguar-man-line)
-	(building-type-count-total castle > 0)
 =>
 	(train jaguar-man-line)
 )
@@ -5309,7 +5321,6 @@
 	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train ratha-train)
-	;(chat-to-all "Test 1")
 )
 
 (defrule
@@ -5320,7 +5331,6 @@
 	(up-compare-goal gl-military-advantage < -4))
 =>
 	(train ratha-train)
-	;(chat-to-all "Test 2")
 )
 
 (defrule
@@ -5331,7 +5341,6 @@
 	(building-type-count-total castle > 0)
 =>
 	(train ratha-train)
-	;(chat-to-all "Test 3")
 )
 
 (defrule
@@ -6068,6 +6077,43 @@
 	(players-unit-type-count focus-player siege-weapon-class >= 4))
 	(can-train throwing-axeman-line)
 	(building-type-count-total castle > 0)
+=>
+	(train throwing-axeman-line)
+)
+
+
+(defrule
+	(current-age == castle-age)
+	(can-train throwing-axeman-line)
+	(players-unit-type-count focus-player infantry-class >= 6)
+=>
+	(train throwing-axeman-line)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(can-research ri-elite-throwing-axeman)
+	(players-unit-type-count focus-player infantry-class >= 6)
+	(unit-type-count-total throwing-axeman-line >= 3)
+=>
+	(research ri-elite-throwing-axeman)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(can-train throwing-axeman-line)
+	(not(research-completed ri-elite-throwing-axeman))
+	(players-unit-type-count focus-player infantry-class >= 6)
+	(unit-type-count-total throwing-axeman-line < 5)
+=>
+	(train throwing-axeman-line)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(can-train throwing-axeman-line)
+	(research-completed ri-elite-throwing-axeman)
+	(players-unit-type-count focus-player infantry-class >= 6)
 =>
 	(train throwing-axeman-line)
 )
@@ -7030,7 +7076,7 @@
 	(or (up-compare-goal gl-number-trebs >= 1)
 	(up-compare-goal gl-military-advantage < -4))
 =>
-	(train mangudai-line)
+	(train war-elephant-line)
 )
 
 (defrule
@@ -7202,6 +7248,46 @@
 	(building-type-count-total castle > 0)
 =>
 	(train centurion-line)
+)
+
+(defrule
+	(current-age == castle-age)
+	(can-train mameluke-line)
+	; (or (players-unit-type-count focus-player cavalry-class >= 6)
+	; (players-unit-type-count focus-player cavalry-archer-class >= 6))
+=>
+	(train mameluke-line)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(can-research ri-elite-mameluke)
+	(or (players-unit-type-count focus-player cavalry-class >= 6)
+	(players-unit-type-count focus-player cavalry-archer-class >= 6))
+	(unit-type-count-total mameluke-line >= 3)
+=>
+	(research ri-elite-mameluke)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(can-train mameluke-line)
+	(not(research-completed ri-elite-mameluke))
+	(or (players-unit-type-count focus-player cavalry-class >= 6)
+	(players-unit-type-count focus-player cavalry-archer-class >= 6))
+	(unit-type-count-total mameluke-line < 5)
+=>
+	(train mameluke-line)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(can-train mameluke-line)
+	(research-completed ri-elite-mameluke)
+	(or (players-unit-type-count focus-player cavalry-class >= 6)
+	(players-unit-type-count focus-player cavalry-archer-class >= 6))
+=>
+	(train mameluke-line)
 )
 
 (defrule
@@ -11054,92 +11140,6 @@
 =>
 	(train slinger)
 	;(chat-to-player my-player-number "Produziere Schleuderer gegen Infanterie")
-)
-
-(defrule
-	(current-age == castle-age)
-	(can-train throwing-axeman-line)
-	(players-unit-type-count focus-player infantry-class >= 6)
-	; (or (civilian-population g:< c-villager-goal)
-	; (up-research-status c: imperial-age == research-pending))
-=>
-	(train throwing-axeman-line)
-	;(chat-to-player my-player-number "Produziere Axtwerfer gegen Infanterie")
-)
-
-(defrule
-	(current-age == imperial-age)
-	(can-research ri-elite-throwing-axeman)
-	(players-unit-type-count focus-player infantry-class >= 6)
-	(unit-type-count-total throwing-axeman-line >= 3)
-=>
-	(research ri-elite-throwing-axeman)
-	;(chat-to-player my-player-number "Entwickle Elite-Axtwerfer gegen Infanterie")
-)
-
-(defrule
-	(current-age == imperial-age)
-	(can-train throwing-axeman-line)
-	(not(research-completed ri-elite-throwing-axeman))
-	(players-unit-type-count focus-player infantry-class >= 6)
-	(unit-type-count-total throwing-axeman-line < 5)
-=>
-	(train throwing-axeman-line)
-	;(chat-to-player my-player-number "Produziere Axtwerfer gegen Infanterie")
-)
-
-(defrule
-	(current-age == imperial-age)
-	(can-train throwing-axeman-line)
-	(research-completed ri-elite-throwing-axeman)
-	(players-unit-type-count focus-player infantry-class >= 6)
-=>
-	(train throwing-axeman-line)
-	;(chat-to-player my-player-number "Produziere Axtwerfer gegen Infanterie")
-)
-
-(defrule
-	(current-age == castle-age)
-	(can-train mameluke-line)
-	(or (players-unit-type-count focus-player cavalry-class >= 6)
-	(players-unit-type-count focus-player cavalry-archer-class >= 6))
-=>
-	(train mameluke-line)
-	;(chat-to-player my-player-number "Produziere Mameluken gegen Kavallerie")
-)
-
-(defrule
-	(current-age == imperial-age)
-	(can-research ri-elite-mameluke)
-	(or (players-unit-type-count focus-player cavalry-class >= 6)
-	(players-unit-type-count focus-player cavalry-archer-class >= 6))
-	(unit-type-count-total mameluke-line >= 3)
-=>
-	(research ri-elite-mameluke)
-	;(chat-to-player my-player-number "Entwickle Elite-Mameluken gegen Kavallerie")
-)
-
-(defrule
-	(current-age == imperial-age)
-	(can-train mameluke-line)
-	(not(research-completed ri-elite-mameluke))
-	(or (players-unit-type-count focus-player cavalry-class >= 6)
-	(players-unit-type-count focus-player cavalry-archer-class >= 6))
-	(unit-type-count-total mameluke-line < 5)
-=>
-	(train mameluke-line)
-	;(chat-to-player my-player-number "Produziere Mameluken gegen Kavallerie")
-)
-
-(defrule
-	(current-age == imperial-age)
-	(can-train mameluke-line)
-	(research-completed ri-elite-mameluke)
-	(or (players-unit-type-count focus-player cavalry-class >= 6)
-	(players-unit-type-count focus-player cavalry-archer-class >= 6))
-=>
-	(train mameluke-line)
-	;(chat-to-player my-player-number "Produziere Mameluken gegen Kavallerie")
 )
 
 (defrule
@@ -24310,13 +24310,25 @@
 	(set-goal gl-gold-saving 0)
 )
 
-(defrule
+#load-if-defined SCENARIO-GAME
+(defrule ;for custom maps starting with more than 55 villagers
 	(can-research castle-age)
 	(unit-type-count-total villager g:>= f-villager-goal)
 =>
 	(research castle-age)
 	(chat-to-allies "Going to castle-age")
 )
+
+(defrule
+	(can-research-with-escrow castle-age)
+	;(unit-type-count-total villager g:>= f-villager-goal)
+=>
+	(up-modify-escrow food c:- 800)
+	(up-modify-escrow gold c:- 200)
+	(research castle-age)
+	(chat-to-allies "Going to castle-age")
+)
+#end-if
 
 (defrule
 	(not(goal strategy-goal sg-boom-imp))
@@ -28341,6 +28353,13 @@
 
 (defrule
 	(unit-type-count-total mangudai-line > 5)
+	(can-research ri-chemistry)
+=>
+	(research ri-chemistry)
+)
+
+(defrule
+	(unit-type-count-total arambai-line > 5)
 	(can-research ri-chemistry)
 =>
 	(research ri-chemistry)
