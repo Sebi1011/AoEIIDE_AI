@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.3
-;last update: 1st July 2023
+;last update: 2nd July 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -476,11 +476,12 @@
 (defconst sg-fastcastle-gu 59)
 (defconst sg-waterplay 60)
 (defconst sg-boom-imp 61)
-(defconst team-military-pop 62)
-(defconst enemy-team-military-pop 63)
+(defconst sg-fastcastle-boom 62)
 (defconst relic-count 64)
 (defconst gold-mine 66)
 (defconst drush-goal 67)
+(defconst team-military-pop 68)
+(defconst enemy-team-military-pop 69)
 (defconst retreating-goal 70)
 (defconst object-data-group-flag 73)
 (defconst gl-drush-militia-count 80)
@@ -4552,6 +4553,77 @@
 )
 #end-if
 
+
+#load-if-defined ARENA-MAP
+
+(defrule
+	(goal strategy-goal sg-fastcastle-gu)
+	(up-research-status c: castle-age >= research-pending)
+	(goal sg-fastcastle-boom -1)
+=>
+	(generate-random-number 100)
+	(disable-self)
+)
+
+(defrule
+	(goal strategy-goal sg-fastcastle-gu)
+	(up-research-status c: castle-age >= research-pending)
+	(goal sg-fastcastle-boom -1)
+	(random-number <= 50)
+=>	
+	(set-goal sg-fastcastle-boom YES)
+	(chat-local-to-self "I will go for a boom")
+)
+
+(defrule
+	(goal strategy-goal sg-fastcastle-gu)
+	(up-research-status c: castle-age >= research-pending)
+	(goal sg-fastcastle-boom -1)
+	(random-number > 50)
+=>	
+	(set-goal sg-fastcastle-boom NO)
+	(chat-local-to-self "I will go for the relics")
+)
+	
+#end-if
+
+#load-if-not-defined ARENA-MAP
+#load-if-defined UP-ALLY-IN-GAME
+#load-if-defined UP-POCKET-POSITION
+
+(defrule
+	(goal strategy-goal sg-fastcastle-gu)
+	(up-research-status c: castle-age >= research-pending)
+	(goal sg-fastcastle-boom -1)
+=>
+	(generate-random-number 100)
+	(disable-self)
+)
+
+(defrule
+	(goal strategy-goal sg-fastcastle-gu)
+	(up-research-status c: castle-age >= research-pending)
+	(goal sg-fastcastle-boom -1)
+	(random-number <= 50)
+=>	
+	(set-goal sg-fastcastle-boom YES)
+	(chat-to-allies "I will go for a boom")
+)
+
+(defrule
+	(goal strategy-goal sg-fastcastle-gu)
+	(up-research-status c: castle-age >= research-pending)
+	(goal sg-fastcastle-boom -1)
+	(random-number > 50)
+=>	
+	(set-goal sg-fastcastle-boom -1)
+	(chat-to-allies "I will support with army")
+)
+	
+#end-if
+#end-if
+#end-if
+
 ;endregion
 
 ;region Unique Upgrades ============================================
@@ -8013,8 +8085,8 @@
 
 (defrule
 	(game-time > 2400)
-	(or (up-compare-goal gl-military-advantage >= 10)
-	(military-population >= 20))
+	(or (up-compare-goal gl-military-advantage >= 15)
+	(military-population >= 25))
 	(civilian-population >= 80)
 	(current-age >= imperial-age)
 	(not (town-under-attack))
@@ -23345,6 +23417,8 @@
 (defrule
 	(current-age == castle-age)
 	(not(goal strategy-goal sg-boom-imp))
+	(or (not (goal sg-fastcastle-boom YES))
+	(building-type-count-total town-center >= 3))
 	(building-type-count-total lumber-camp < 3)
 	(resource-found wood)
 	;(dropsite-min-distance wood > 4)
@@ -24892,6 +24966,9 @@
 	(building-type-count-total stable < 2)
 	(building-type-count-total town-center >= 1)
 	(up-research-status c: castle-age >= research-pending)
+	(or (goal sg-fastcastle-boom -1)
+	(or (building-type-count-total monastery >= 1)
+	(building-type-count-total town-center >= 3)))
 	(can-build stable)
 	(not (town-under-attack))
 =>
@@ -24908,6 +24985,9 @@
 	(building-type-count-total stable < 2)
 	(building-type-count-total town-center >= 1)
 	(up-research-status c: castle-age >= research-pending)
+	(or (goal sg-fastcastle-boom -1)
+	(or (building-type-count-total monastery >= 1)
+	(building-type-count-total town-center >= 3)))
 	(can-build stable)
 	(town-under-attack)
 =>
@@ -24922,6 +25002,9 @@
 	(building-type-count-total archery-range < 2)
 	(building-type-count-total town-center >= 1)
 	(up-research-status c: castle-age >= research-pending)
+	(or (goal sg-fastcastle-boom -1)
+	(or (building-type-count-total monastery >= 1)
+	(building-type-count-total town-center >= 3)))
 	(can-build archery-range)
 	(not (town-under-attack))
 =>
@@ -24939,6 +25022,9 @@
 	(building-type-count-total archery-range >= 1)
 	(building-type-count-total town-center >= 1)
 	(up-research-status c: castle-age >= research-pending)
+	(or (goal sg-fastcastle-boom -1)
+	(or (building-type-count-total monastery >= 1)
+	(building-type-count-total town-center >= 3)))
 	(can-train archer-line)
 	(not (town-under-attack))
 =>
@@ -24953,6 +25039,9 @@
 	(building-type-count-total archery-range < 2)
 	(building-type-count-total town-center >= 1)
 	(up-research-status c: castle-age >= research-pending)
+	(or (goal sg-fastcastle-boom -1)
+	(or (building-type-count-total monastery >= 1)
+	(building-type-count-total town-center >= 3)))
 	(can-build archery-range)
 	(town-under-attack)
 =>
@@ -24967,6 +25056,9 @@
 	(building-type-count-total barracks < 3)
 	(building-type-count-total town-center >= 1)
 	(up-research-status c: castle-age >= research-pending)
+	(or (goal sg-fastcastle-boom -1)
+	(or (building-type-count-total monastery >= 1)
+	(building-type-count-total town-center >= 3)))
 	(goal meso-civ YES)
 	(can-build barracks)
 	(not (town-under-attack))
@@ -24984,6 +25076,9 @@
 	(building-type-count-total barracks < 3)
 	(building-type-count-total town-center >= 1)
 	(up-research-status c: castle-age >= research-pending)
+	(or (goal sg-fastcastle-boom -1)
+	(or (building-type-count-total monastery >= 1)
+	(building-type-count-total town-center >= 3)))
 	(goal meso-civ YES)
 	(can-build barracks)
 	(town-under-attack)
@@ -25199,11 +25294,39 @@
 
 (defrule
 	(current-age == castle-age)
+	(can-train-with-escrow villager)
+	(not (goal strategy-goal sg-boom-imp))
+	(goal sg-fastcastle-boom YES)
+	(or (unit-type-count-total villager g:< c-villager-goal)
+	(up-research-status c: imperial-age == research-pending))
+	(unit-type-count-total villager < 130)
+=>
+	(up-modify-escrow food c:- 50)
+	(train villager)
+	(up-get-fact civilian-population 0 civilian-pop) 
+	;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
+)
+
+(defrule
+	(current-age == castle-age)
 	(players-current-age focus-player < castle-age)
 	(building-type-count stable > 0)
 	(can-train knight-line)
 =>
 	(train knight-line)
+)
+
+(defrule
+	(goal strategy-goal sg-fastcastle-gu)
+	(goal sg-fastcastle-boom NO)
+	(current-age == castle-age)
+	(can-build-with-escrow monastery)
+	(building-type-count-total monastery == 0)
+=>
+	(up-modify-escrow wood c:- 175)
+	(up-assign-builders c: monastery c: 2)
+	(up-set-placement-data my-player-number -1 c: 9)
+    (up-build place-control 0 c: monastery)
 )
 
 (defrule
@@ -25231,7 +25354,8 @@
 (defrule
 	(or (and (goal gl-fastimp-unit fi-bbc-hc)
 		(goal strategy-goal sg-boom-imp))
-	(not (goal strategy-goal sg-boom-imp)))
+		(and (not (goal strategy-goal sg-boom-imp))
+		(unit-type-count-total villager >= 40)))
 	(current-age == castle-age)
 	(can-build university)
 	(building-type-count-total university == 0)
@@ -25822,6 +25946,37 @@
 )
 
 #end-if
+
+
+(defrule
+	(current-age == castle-age)
+	(can-build-with-escrow town-center)
+	(building-type-count-total town-center == 2)
+	(building-type-count-total town-center < 3)
+	(goal sg-fastcastle-boom YES)
+=>
+	(up-modify-escrow wood c:- 275)
+	(up-modify-escrow stone c:- 100)
+	(set-strategic-number sn-town-center-placement lumber-camp)
+	(up-assign-builders c: town-center-foundation c: 6)
+	(up-assign-builders c: town-center c: 6)
+	(build town-center)
+)
+
+(defrule
+	(current-age == castle-age)
+	(can-build-with-escrow town-center)
+	(building-type-count-total town-center == 1)
+	(building-type-count-total town-center < 2)
+	(goal sg-fastcastle-boom YES)
+=>
+	(up-modify-escrow wood c:- 275)
+	(up-modify-escrow stone c:- 100)
+	(set-strategic-number sn-town-center-placement mining-camp)
+	(up-assign-builders c: town-center-foundation c: 6)
+	(up-assign-builders c: town-center c: 6)
+	(build town-center)
+)
 
 (defrule
 	(current-age == imperial-age)
@@ -27019,6 +27174,9 @@
 	(current-age == castle-age)
 	(building-type-count-total barracks < 3)
 	(building-type-count-total town-center >= 1)
+	(or (goal sg-fastcastle-boom -1)
+	(or (building-type-count-total monastery >= 1)
+	(building-type-count-total town-center >= 3)))
 	(can-build barracks)
 	(not (town-under-attack))
 =>
@@ -27036,6 +27194,9 @@
 	(current-age == castle-age)
 	(building-type-count-total barracks < 3)
 	(building-type-count-total town-center >= 1)
+	(or (goal sg-fastcastle-boom -1)
+	(or (building-type-count-total monastery >= 1)
+	(building-type-count-total town-center >= 3)))
 	(can-build barracks)
 	(town-under-attack)
 =>
@@ -27051,6 +27212,9 @@
 	(building-type-count-total archery-range < 3)
 	(building-type-count-total town-center >= 1)
 	(can-build archery-range)
+	(or (goal sg-fastcastle-boom -1)
+	(or (building-type-count-total monastery >= 1)
+	(building-type-count-total town-center >= 3)))
 	(research-available ri-crossbow)
 	(not (town-under-attack))
 =>
@@ -27068,6 +27232,9 @@
 	(building-type-count-total archery-range < 3)
 	(building-type-count-total town-center >= 1)
 	(can-build archery-range)
+	(or (goal sg-fastcastle-boom -1)
+	(or (building-type-count-total monastery >= 1)
+	(building-type-count-total town-center >= 3)))
 	(research-available ri-crossbow)
 	(town-under-attack)
 =>
@@ -27082,6 +27249,9 @@
 	(current-age == castle-age)
 	(building-type-count-total stable < 3)
 	(building-type-count-total town-center >= 1)
+	(or (goal sg-fastcastle-boom -1)
+	(or (building-type-count-total monastery >= 1)
+	(building-type-count-total town-center >= 3)))
 	(can-build stable)
 	(not (town-under-attack))
 =>
@@ -27098,6 +27268,9 @@
 	(current-age == castle-age)
 	(building-type-count-total stable < 3)
 	(building-type-count-total town-center >= 1)
+	(or (goal sg-fastcastle-boom -1)
+	(or (building-type-count-total monastery >= 1)
+	(building-type-count-total town-center >= 3)))
 	(can-build stable)
 	(town-under-attack)
 =>
@@ -33197,20 +33370,6 @@
 
 ;endregion
 
-;region Testing Area ===============================================
-
-(defconst gl-counter 1)
-(defconst game-time 0)
-
-(defrule 
-	(true)
-=>
-	(up-get-fact game-time 0 gl-counter)
-	;(up-chat-data-to-player my-player-number "Time: %d" g: gl-counter)
-)
-
-;endregion
-
 ;region Garrison Military Units ====================================
 
 (defrule
@@ -35951,11 +36110,13 @@
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
+
 (defrule
 	(goal gl-nomad-map NO)
 	(goal strategy-goal sg-fastcastle-gu)
 	(civilian-population >= 28)
 	(current-age == feudal-age)
+	(goal sg-fastcastle-boom -1)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 36)
 	(set-strategic-number sn-food-gatherer-percentage 43)
@@ -35963,16 +36124,32 @@
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
-; (defrule
-	; (goal strategy-goal sg-fastcastle-gu)
-	; (civilian-population >= 29)
-	; (civilian-population < 40)
-; =>
-	; (set-strategic-number sn-wood-gatherer-percentage 31)
-	; (set-strategic-number sn-food-gatherer-percentage 41)
-	; (set-strategic-number sn-gold-gatherer-percentage 20)
-	; (set-strategic-number sn-stone-gatherer-percentage 8)
-; )	
+(defrule
+	(goal gl-nomad-map NO)
+	(goal strategy-goal sg-fastcastle-gu)
+	(civilian-population >= 28)
+	(current-age == feudal-age)
+	(goal sg-fastcastle-boom YES)
+=>
+	(set-strategic-number sn-wood-gatherer-percentage 50)
+	(set-strategic-number sn-food-gatherer-percentage 43)
+	(set-strategic-number sn-gold-gatherer-percentage 7)
+	(set-strategic-number sn-stone-gatherer-percentage 0)
+)
+
+(defrule
+	(goal gl-nomad-map NO)
+	(goal strategy-goal sg-fastcastle-gu)
+	(civilian-population >= 28)
+	(current-age == feudal-age)
+	(goal sg-fastcastle-boom NO)
+=>
+	(set-strategic-number sn-wood-gatherer-percentage 43)
+	(set-strategic-number sn-food-gatherer-percentage 50)
+	(set-strategic-number sn-gold-gatherer-percentage 7)
+	(set-strategic-number sn-stone-gatherer-percentage 0)
+)
+
 #end-if
 
 ;fastcastle uu build order
@@ -36740,6 +36917,8 @@
 	(current-age == castle-age)
 	(goal ca-strategy gl-castleage-eagles)
 	(not (goal strategy-goal sg-fastcastle-uu))
+	(not (goal sg-fastcastle-boom YES))
+	(not (goal sg-fastcastle-boom NO))
 	(not (goal strategy-goal sg-boom-imp))
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 29)
@@ -36754,6 +36933,8 @@
 	(current-age == castle-age)
 	(goal ca-strategy gl-castleage-siege-infantry)
 	(not (goal strategy-goal sg-fastcastle-uu))
+	(not (goal sg-fastcastle-boom YES))
+	(not (goal sg-fastcastle-boom NO))
 	(not (goal strategy-goal sg-boom-imp))
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 25)
@@ -36768,6 +36949,8 @@
 	(current-age == castle-age)
 	(goal ca-strategy gl-castleage-rangeunit)
 	(not (goal strategy-goal sg-fastcastle-uu))
+	(not (goal sg-fastcastle-boom YES))
+	(not (goal sg-fastcastle-boom NO))
 	(not (goal strategy-goal sg-boom-imp))
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 35)
@@ -36782,6 +36965,8 @@
 	(current-age == castle-age)
 	(goal ca-strategy gl-castleage-stableunit)
 	(not (goal strategy-goal sg-fastcastle-uu))
+	(not (goal sg-fastcastle-boom YES))
+	(not (goal sg-fastcastle-boom NO))
 	(not (goal strategy-goal sg-boom-imp))
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 29)
@@ -36789,6 +36974,34 @@
 	(set-strategic-number sn-gold-gatherer-percentage 15)
 	(set-strategic-number sn-stone-gatherer-percentage 6)
 	(chat-to-player my-player-number "Setting up Economy for Castle-Age stable-unit")
+	(disable-self)
+)
+
+(defrule
+	(current-age == castle-age)
+	(goal ca-strategy gl-castleage-stableunit)
+	(goal strategy-goal sg-fastcastle-gu)
+	(goal sg-fastcastle-boom YES)
+=>
+	(set-strategic-number sn-wood-gatherer-percentage 44)
+	(set-strategic-number sn-food-gatherer-percentage 50)
+	(set-strategic-number sn-gold-gatherer-percentage 10)
+	(set-strategic-number sn-stone-gatherer-percentage 6)
+	(chat-to-player my-player-number "Setting up Economy for a Castle-Age Boom")
+	(disable-self)
+)
+
+(defrule
+	(current-age == castle-age)
+	(goal ca-strategy gl-castleage-stableunit)
+	(goal strategy-goal sg-fastcastle-gu)
+	(goal sg-fastcastle-boom NO)
+=>
+	(set-strategic-number sn-wood-gatherer-percentage 36)
+	(set-strategic-number sn-food-gatherer-percentage 42)
+	(set-strategic-number sn-gold-gatherer-percentage 16)
+	(set-strategic-number sn-stone-gatherer-percentage 6)
+	(chat-to-player my-player-number "Setting up Economy for capturing relics")
 	(disable-self)
 )
 
