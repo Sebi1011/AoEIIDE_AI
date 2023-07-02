@@ -564,6 +564,8 @@
 (defconst gl-enemy-towers 201)
 (defconst temp-goal-one 202)
 (defconst temp-counter-goal 203)
+(defconst gl-castle-drop-x 204)
+(defconst gl-castle-drop-y 205)
 (defconst gl-unit-x 206)
 (defconst gl-unit-y 207)
 (defconst object-point-x 208)
@@ -14845,6 +14847,7 @@
 	(set-goal gl-wood-saving 0)
 	;(chat-to-player my-player-number "Spare nicht mehr auf Schiessanlage")
 )
+#load-if-not-defined UP-POCKET-POSITION
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
@@ -14879,7 +14882,7 @@
 	(set-goal gl-wood-saving 0)
 	;(chat-to-player my-player-number "Spare nicht mehr auf Schiessanlage")
 )
-
+#end-if
 (defrule
 	(goal strategy-goal sg-scoutrush)
 	(goal meso-civ NO)
@@ -16042,16 +16045,17 @@
 
 (defrule
 	(up-research-status c: ri-two-handed-swordsman >= research-pending)
-	(goal strategy-goal sg-boom-imp)
 	(building-type-count-total barracks >= 1)
-	(goal gl-fastimp-unit fi-champs)
+	(or (and (goal gl-fastimp-unit fi-champs)
+	(goal strategy-goal sg-boom-imp))
+	(research-completed ri-two-handed-swordsman))
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
 	(set-escrow-percentage food 50)
 	(set-escrow-percentage gold 30)
-	(set-goal gl-food-saving 41)
-	(set-goal gl-gold-saving 41)
+	(set-goal gl-food-saving 42)
+	(set-goal gl-gold-saving 42)
 	(enable-timer 9 1)
 	;(chat-to-player my-player-number "Spare auf Champion")
 )
@@ -16062,8 +16066,8 @@
 		(or (not (goal strategy-goal sg-boom-imp))
 		(or (up-research-status c: ri-champion >= research-pending)
 		(up-research-status c: ri-two-handed-swordsman < research-pending))))
-	(goal gl-food-saving 41)
-	(goal gl-gold-saving 41)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
 =>
 	(release-escrow food)
 	(release-escrow gold)
@@ -16072,6 +16076,41 @@
 	(set-goal gl-food-saving 0)
 	(set-goal gl-gold-saving 0)
 	;(chat-to-player my-player-number "Spare nicht mehr auf Champion")
+)
+
+(defrule
+	(up-research-status c: ri-long-swordsman >= research-pending)
+	(building-type-count-total barracks >= 1)
+	(or (and (goal gl-fastimp-unit fi-champs)
+	(goal strategy-goal sg-boom-imp))
+	(research-completed ri-long-swordsman))
+	(goal gl-food-saving 0)
+	(goal gl-gold-saving 0)
+=>
+	(set-escrow-percentage food 50)
+	(set-escrow-percentage gold 30)
+	(set-goal gl-food-saving 42)
+	(set-goal gl-gold-saving 42)
+	(enable-timer 9 1)
+	;(chat-to-player my-player-number "Spare auf Legionary")
+)
+
+(defrule
+	(up-research-status c: imperial-age >= research-pending)
+	(or (building-type-count-total barracks < 1)
+		(or (not (goal strategy-goal sg-boom-imp))
+		(or (up-research-status c: ri-legionary >= research-pending)
+		(up-research-status c: ri-long-swordsman < research-pending))))
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
+	;(chat-to-player my-player-number "Spare nicht mehr auf Legionary")
 )
 
 (defrule
@@ -17166,6 +17205,20 @@
 (defrule
 	(goal gl-gold-saving 41)
 	(escrow-amount gold > 610)
+=>
+	(up-modify-escrow gold c:- 10)
+)
+
+(defrule
+	(goal gl-food-saving 42)
+	(escrow-amount food > 810)
+=>
+	(up-modify-escrow food c:- 10)
+)
+
+(defrule
+	(goal gl-gold-saving 42)
+	(escrow-amount gold > 410)
 =>
 	(up-modify-escrow gold c:- 10)
 )
@@ -23494,6 +23547,8 @@
 	(set-goal gl-wood-saving 0)
 )
 
+#load-if-not-defined UP-POCKET-POSITION
+
 (defrule
 	(goal strategy-goal sg-scoutrush)
 	(current-age == feudal-age)
@@ -23534,6 +23589,7 @@
     (up-build place-control 0 c: archery-range)
 	(set-goal gl-wood-saving 0)
 )
+#end-if
 
 (defrule
 	(goal strategy-goal sg-towerrush)
@@ -23946,6 +24002,8 @@
 	(train archer-line)
 )
 
+#load-if-not-defined UP-POCKET-POSITION
+
 (defrule
 	(goal strategy-goal sg-scoutrush)
 	(current-age == feudal-age)
@@ -23983,6 +24041,8 @@
 =>
 	(train archer-line)
 )
+
+#end-if
 
 (defrule
 	(goal strategy-goal sg-towerrush)
@@ -25459,10 +25519,11 @@
 	(build house)
 )
 
+#load-if-not-defined ARENA-MAP
+
 (defrule
 	(goal strategy-goal sg-fastcastle-uu)
 	(can-build-with-escrow castle)
-	(can-build castle)
 	(building-type-count-total castle == 0)
 	(building-type-count-total town-center >= 1)
 	(or (military-population < 15)
@@ -25502,7 +25563,6 @@
 (defrule
 	(goal strategy-goal sg-fastcastle-uu)
 	(can-build-with-escrow castle)
-	(can-build castle)
 	(building-type-count-total castle == 0)
 	(building-type-count-total town-center >= 1)
 	(or (military-population < 15)
@@ -25531,6 +25591,112 @@
 	(build-forward castle)
 	;(chat-to-player my-player-number "castle 2.5")
 )
+
+#end-if
+
+#load-if-defined ARENA-MAP
+
+(defrule
+	(goal strategy-goal sg-fastcastle-uu)
+	(can-build-with-escrow castle)
+	(building-type-count-total castle == 0)
+	(building-type-count-total town-center >= 1)
+	(goal gl-stone-saving 38)
+=>
+	(up-full-reset-search)
+	(up-find-remote c: gate-class c: 1)
+	(up-get-search-state gl-local-total)
+	(up-chat-data-to-self "gates found: %d" g: gl-remote-total)
+)
+
+(defrule
+	(goal strategy-goal sg-fastcastle-uu)
+	(can-build-with-escrow castle)
+	(building-type-count-total castle == 0)
+	(building-type-count-total town-center >= 1)
+	(up-set-target-object search-remote c: 0)
+	(goal gl-stone-saving 38)
+=>
+	(up-full-reset-search)
+	(up-find-remote c: gate-class c: 1)
+	(up-set-target-object search-remote c: 0)
+	(up-get-point position-object gl-castle-drop-x)
+	;(up-cross-tiles gl-castle-drop-x gl-starting-tc-x c: 2)
+	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 2)
+	(up-bound-point gl-castle-drop-x gl-castle-drop-x)
+	(set-strategic-number sn-percent-building-cancellation 0)
+	(release-escrow stone)
+	(set-escrow-percentage stone 0)
+	(up-assign-builders c: castle c: 8)
+	; (set-strategic-number sn-placement-zone-size 2)
+	; (set-strategic-number sn-placement-fail-delta 0)
+	(up-set-target-point gl-castle-drop-x)
+	(up-build place-point 0 c: castle)
+	(up-send-flare gl-castle-drop-x)
+	(chat-to-player my-player-number "Building forward castle 1")
+	(chat-to-allies "Building forward castle")
+	(set-goal gl-stone-saving 0)
+	(disable-self)
+)
+
+(defrule
+	(goal strategy-goal sg-fastcastle-uu)
+	(can-build-with-escrow castle)
+	(building-type-count-total castle == 0)
+	(building-type-count-total town-center >= 1)
+=>
+	(up-full-reset-search)
+	(up-find-remote c: gate-class c: 1)
+	(up-get-search-state gl-local-total)
+	(up-chat-data-to-self "gates found: %d" g: gl-remote-total)
+)
+
+(defrule
+	(goal strategy-goal sg-fastcastle-uu)
+	(can-build-with-escrow castle)
+	(building-type-count-total castle == 0)
+	(building-type-count-total town-center >= 1)
+	(up-set-target-object search-remote c: 0)
+=>
+	(up-set-target-object search-remote c: 0)
+	(up-get-point position-object gl-castle-drop-x)
+	;(up-cross-tiles gl-castle-drop-x gl-starting-tc-x c: 2)
+	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 2)
+	(up-bound-point gl-castle-drop-x gl-castle-drop-x)
+	(set-strategic-number sn-percent-building-cancellation 0)
+	(release-escrow stone)
+	(up-assign-builders c: castle c: 8)
+	; (set-strategic-number sn-placement-zone-size 2)
+	; (set-strategic-number sn-placement-fail-delta 0)
+	(up-set-target-point gl-castle-drop-x)
+	(up-build place-point 0 c: castle)
+	(up-send-flare gl-castle-drop-x)
+	(chat-to-player my-player-number "Building forward castle 2")
+	(chat-to-allies "Building forward castle")
+	(disable-self)
+)
+
+(defrule
+	(goal strategy-goal sg-fastcastle-uu)
+	(building-type-count castle == 1)
+=>
+	(set-strategic-number sn-percent-building-cancellation 35)
+	(disable-self)
+)
+
+(defrule
+	(goal strategy-goal sg-fastcastle-uu)
+	(building-type-count castle == 1)
+=>
+	(up-full-reset-search)
+	(up-find-local c: castle c: 1)
+	(up-find-remote c: gate-class c: 1)
+	(up-target-objects 0 action-default -1 -1)
+	(disable-self)
+)
+	
+
+#end-if
 
 (defrule
 	(current-age == castle-age)
@@ -26100,6 +26266,7 @@
 
 (defrule	
 	(current-age == castle-age)
+	(not (goal strategy-goal sg-fastcastle-uu))
 	(or (military-population < 15)
 	(up-compare-goal gl-military-advantage < 15))
 	(can-build-with-escrow castle)
@@ -26149,6 +26316,7 @@
 
 (defrule	
 	(current-age == castle-age)
+	(not (goal strategy-goal sg-fastcastle-uu))
 	(military-population >= 15)
 	(up-compare-goal gl-military-advantage >= 15)
 	(can-build-with-escrow castle)
@@ -26180,6 +26348,7 @@
 
 (defrule	
 	(current-age == castle-age)
+	(not (goal strategy-goal sg-fastcastle-uu))
 	(or (military-population < 15)
 	(up-compare-goal gl-military-advantage < 15))
 	(can-build-with-escrow castle)
@@ -26198,6 +26367,7 @@
 
 (defrule	
 	(current-age == castle-age)
+	(not (goal strategy-goal sg-fastcastle-uu))
 	(military-population >= 15)
 	(up-compare-goal gl-military-advantage >= 15)
 	(can-build-with-escrow castle)
@@ -26218,6 +26388,7 @@
 
 (defrule	
 	(current-age == castle-age)
+	(not (goal strategy-goal sg-fastcastle-uu))
 	(or (military-population < 15)
 	(up-compare-goal gl-military-advantage < 15))
 	(can-build-with-escrow castle)
@@ -26240,6 +26411,7 @@
 
 (defrule	
 	(current-age == castle-age)
+	(not (goal strategy-goal sg-fastcastle-uu))
 	(military-population >= 15)
 	(up-compare-goal gl-military-advantage >= 15)
 	(can-build-with-escrow castle)
@@ -26264,6 +26436,7 @@
 
 (defrule	
 	(current-age == castle-age)
+	(not (goal strategy-goal sg-fastcastle-uu))
 	(or (military-population < 15)
 	(up-compare-goal gl-military-advantage < 15))
 	(can-build castle)
@@ -26318,6 +26491,7 @@
 
 (defrule	
 	(current-age == castle-age)
+	(not (goal strategy-goal sg-fastcastle-uu))
 	(military-population >= 15)
 	(up-compare-goal gl-military-advantage >= 15)
 	(can-build castle)
@@ -26359,6 +26533,8 @@
 	(set-goal gl-stone-saving 0)
 )
 
+#load-if-not-defined ARENA-MAP
+
 (defrule	
 	(current-age == castle-age)
 	(or (military-population < 10)
@@ -26376,18 +26552,6 @@
 )
 
 (defrule	
-	(current-age >= imperial-age)
-	(or (military-population < 15)
-	(up-compare-goal gl-military-advantage < 15))
-	(can-build krepost)
-	(building-type-count-total castle >= 1)
-	(not (town-under-attack))
-=>
-	(up-assign-builders c: krepost c: 6)
-	(build krepost)
-)
-
-(defrule	
 	(current-age == castle-age)
 	(military-population >= 10)
 	(up-compare-goal gl-military-advantage >= 10)
@@ -26402,6 +26566,21 @@
 	(build-forward krepost)
 	(set-goal gl-stone-saving 0)
 )
+
+#end-if 
+
+(defrule	
+	(current-age >= imperial-age)
+	(or (military-population < 15)
+	(up-compare-goal gl-military-advantage < 15))
+	(can-build krepost)
+	(building-type-count-total castle >= 1)
+	(not (town-under-attack))
+=>
+	(up-assign-builders c: krepost c: 6)
+	(build krepost)
+)
+
 
 (defrule	
 	(current-age == imperial-age)
@@ -27357,10 +27536,17 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (not (goal strategy-goal sg-boom-imp))
-	(up-research-status c: imperial-age >= research-pending))
+	(or 
+		(and 
+			(not(goal strategy-goal sg-boom-imp))
+			(or 
+				(and(goal sg-fastcastle-boom YES)
+					(building-type-count-total town-center >= 3))
+				(and(goal sg-fastcastle-boom NO)
+					(building-type-count-total town-center >= 2))))
+		(up-research-status c: imperial-age >= research-pending)
+	)
 	(goal ca-strategy gl-castleage-siege-infantry)
-	(not (research-completed ri-man-at-arms))
 	(can-research ri-man-at-arms)
 =>
 	(research ri-man-at-arms)
@@ -27380,7 +27566,7 @@
 	(or (not (goal strategy-goal sg-boom-imp))
 	(up-research-status c: imperial-age >= research-pending))
 	(goal ca-strategy gl-castleage-siege-infantry)
-	(not (research-completed ri-supplies))
+	(up-research-status c: long-swordsman >= research-pending)
 	(can-research ri-supplies)
 =>
 	(research ri-supplies)
@@ -27389,7 +27575,6 @@
 (defrule
 	(current-age == castle-age)
 	(goal ca-strategy gl-castleage-siege-infantry)
-	(not (research-completed ri-gambesons))
 	(can-research ri-gambesons)
 =>
 	(research ri-gambesons)
@@ -27410,7 +27595,6 @@
 (defrule
 	(current-age == imperial-age)
 	(goal ca-strategy gl-castleage-siege-infantry)
-	(not (research-completed ri-two-handed-swordsman))
 	(can-research ri-two-handed-swordsman)
 =>
 	(research ri-two-handed-swordsman)
@@ -30034,7 +30218,9 @@
 	(can-train villager)
 	(unit-type-count-total villager < 140)
 	(population-headroom > 20)
-	(not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-boom-imp))
+	(and (goal strategy-goal sg-boom-imp)
+	(unit-type-count-total villager < 40)))
 =>
 	(train villager)
 	(up-get-fact civilian-population 0 civilian-pop) 
@@ -32482,8 +32668,8 @@
 	(goal strategy-goal sg-boom-imp)
 	(goal gl-fastimp-unit fi-champs)
 	(can-research-with-escrow ri-champion)
-	(goal gl-food-saving 41)
-	(goal gl-gold-saving 41)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
 	(building-type-count-total barracks >= 1)
 =>
 	(release-escrow food)
@@ -32543,6 +32729,21 @@
 )
 
 (defrule
+	(can-research-with-escrow ri-champion)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+	(building-type-count-total barracks >= 1)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-champion)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
+)
+
+(defrule
 	(current-age >= imperial-age)
 	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
@@ -32590,6 +32791,21 @@
 )
 
 (defrule
+	(can-research-with-escrow ri-champion)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+	(building-type-count-total barracks >= 1)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-champion)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
+)
+
+(defrule
 	(current-age >= imperial-age)
 	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
@@ -32634,6 +32850,21 @@
 	(can-research ri-champion)
 =>
 	(research ri-champion)
+)
+
+(defrule
+	(can-research-with-escrow ri-champion)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+	(building-type-count-total barracks >= 1)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-champion)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
 )
 
 (defrule
@@ -32704,6 +32935,21 @@
 )
 
 (defrule
+	(can-research-with-escrow ri-champion)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+	(building-type-count-total barracks >= 1)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-champion)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
+)
+
+(defrule
 	(current-age >= imperial-age)
 	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
@@ -32748,6 +32994,21 @@
 	(can-research ri-champion)
 =>
 	(research ri-champion)
+)
+
+(defrule
+	(can-research-with-escrow ri-champion)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+	(building-type-count-total barracks >= 1)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-champion)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
 )
 
 (defrule
@@ -32798,6 +33059,21 @@
 )
 
 (defrule
+	(can-research-with-escrow ri-champion)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+	(building-type-count-total barracks >= 1)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-champion)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
+)
+
+(defrule
 	(current-age >= imperial-age)
 	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
@@ -32841,6 +33117,21 @@
 	(can-research ri-champion)
 =>
 	(research ri-champion)
+)
+
+(defrule
+	(can-research-with-escrow ri-champion)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+	(building-type-count-total barracks >= 1)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-champion)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
 )
 
 (defrule
@@ -32888,6 +33179,21 @@
 	(can-research ri-champion)
 =>
 	(research ri-champion)
+)
+
+(defrule
+	(can-research-with-escrow ri-champion)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+	(building-type-count-total barracks >= 1)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-champion)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
 )
 
 (defrule
@@ -32942,6 +33248,21 @@
 )
 
 (defrule
+	(can-research-with-escrow ri-champion)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+	(building-type-count-total barracks >= 1)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-champion)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
+)
+
+(defrule
 	(current-age >= imperial-age)
 	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
@@ -32989,6 +33310,22 @@
 =>
 	(research ri-champion)
 )
+
+(defrule
+	(can-research-with-escrow ri-champion)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+	(building-type-count-total barracks >= 1)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-champion)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
+)
+
 (defrule
 	(current-age >= imperial-age)
 	(up-research-status c: ri-two-handed-swordsman >= research-pending)
@@ -33037,6 +33374,21 @@
 )
 
 (defrule
+	(can-research-with-escrow ri-champion)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+	(building-type-count-total barracks >= 1)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-champion)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
+)
+
+(defrule
 	(current-age >= imperial-age)
 	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
@@ -33079,6 +33431,21 @@
 
 (defrule
 	(current-age >= imperial-age)
+	(can-research-with-escrow ri-legionary)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-legionary)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
+)
+
+(defrule
+	(current-age >= imperial-age)
 	(research-completed ri-legionary)
 	(can-train militiaman-line)
 =>
@@ -33114,6 +33481,21 @@
 	(can-research ri-champion)
 =>
 	(research ri-champion)
+)
+
+(defrule
+	(can-research-with-escrow ri-champion)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+	(building-type-count-total barracks >= 1)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-champion)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
 )
 
 (defrule
@@ -33160,6 +33542,21 @@
 	(can-research ri-champion)
 =>
 	(research ri-champion)
+)
+
+(defrule
+	(can-research-with-escrow ri-champion)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+	(building-type-count-total barracks >= 1)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-champion)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
 )
 
 (defrule
@@ -33210,6 +33607,21 @@
 )
 
 (defrule
+	(can-research-with-escrow ri-champion)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+	(building-type-count-total barracks >= 1)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-champion)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
+)
+
+(defrule
 	(current-age >= imperial-age)
 	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
@@ -33254,6 +33666,21 @@
 	(can-research ri-champion)
 =>
 	(research ri-champion)
+)
+
+(defrule
+	(can-research-with-escrow ri-champion)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+	(building-type-count-total barracks >= 1)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-champion)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
 )
 
 (defrule
@@ -33304,6 +33731,21 @@
 )
 
 (defrule
+	(can-research-with-escrow ri-champion)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+	(building-type-count-total barracks >= 1)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-champion)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
+)
+
+(defrule
 	(current-age >= imperial-age)
 	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-research ri-supplies)
@@ -33348,6 +33790,21 @@
 	(can-research ri-champion)
 =>
 	(research ri-champion)
+)
+
+(defrule
+	(can-research-with-escrow ri-champion)
+	(goal gl-food-saving 42)
+	(goal gl-gold-saving 42)
+	(building-type-count-total barracks >= 1)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-champion)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
 )
 
 (defrule
@@ -34519,6 +34976,7 @@
 	(timer-triggered 17)
 	(military-population >= 8)
 	(up-compare-goal gl-local-total >= 1) ;did we find military units within 60 tiles to help?
+	(not (goal strategy-goal sg-boom-imp))
 =>
 	(disable-timer 17)
 	(set-goal gl-helping-ally 0)
@@ -34538,7 +34996,8 @@
 
 (defrule
 	(goal gl-helping-ally 1)
-	(up-compare-goal gl-local-total < 1)
+	(or (up-compare-goal gl-local-total < 1)
+	(goal strategy-goal sg-boom-imp))
 =>
 	(set-goal gl-helping-ally 0)
 )
@@ -34547,7 +35006,8 @@
 	(taunt-detected any-ally 48)
 	(or (military-population < 8)
 	(or (town-under-attack)
-	(up-compare-goal gl-local-total < 1)))
+	(or (up-compare-goal gl-local-total < 1)
+	(goal strategy-goal sg-boom-imp))))
 =>
 	(acknowledge-taunt this-any-ally 48)
 	(chat-to-allies "I can't help you at the moment, sorry.")
