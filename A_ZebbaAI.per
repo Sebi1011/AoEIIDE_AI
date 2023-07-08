@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.3
-;last update: 5th July 2023
+;last update: 8th July 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -403,7 +403,7 @@
 (defconst resign-timer 18)
 (defconst scouting-timer 19)
 (defconst t-3-sec 20)
-(defconst t-6-sec 21)
+(defconst t-eco-timer 21)
 ; (defconst t-arch-micro-timer 21)
 ; (defconst t-arch-micro-timer-two 22)
 ; (defconst t-ca-micro-timer 23)
@@ -4693,8 +4693,7 @@
 	(can-train-with-escrow trebuchet)
 	(goal gl-wood-saving 25)
 	(goal gl-gold-saving 25)
-	(building-type-count-total castle >= 1)
-	(up-compare-goal gl-number-trebs < 0)
+	(up-compare-goal gl-number-trebs < 2)
 	(up-compare-goal gl-military-advantage >= -4)
 =>
 	(release-escrow wood)
@@ -4719,7 +4718,7 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train-with-escrow trebuchet)
-	(up-compare-goal gl-number-trebs < 0)
+	(up-compare-goal gl-number-trebs < 2)
 	(up-compare-goal gl-military-advantage >= -4)
 =>
 	(up-modify-escrow wood c:- 200)
@@ -4730,7 +4729,7 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train trebuchet)
-	(up-compare-goal gl-number-trebs < 4)
+	(up-compare-goal gl-number-trebs < 6)
 	(up-compare-goal gl-military-advantage >= -4)
 =>
 	(train trebuchet)
@@ -8143,8 +8142,8 @@
 
 (defrule
 	(game-time > 2700)
-	(or (up-compare-goal gl-military-advantage >= 15)
-	(military-population >= 25))
+	(or (up-compare-goal gl-military-advantage >= 20)
+	(military-population >= 30))
 	(civilian-population >= 80)
 	(current-age >= imperial-age)
 	(not (town-under-attack))
@@ -9354,6 +9353,9 @@
 	(current-age >= castle-age)
 	(building-type-count-total barracks < 1)
 	(military-population < 2)
+	(can-build barracks)
+	(or (not (goal strategy-goal sg-boom-imp))
+	(up-research-status c: imperial-age >= research-pending))
 =>
 	(up-set-placement-data my-player-number -1 c: 13)
     (up-build place-control 0 c: barracks)
@@ -11223,6 +11225,8 @@
 	(can-train scout-cavalry-line)
 	(research-available ri-light-cavalry)
 	(unit-type-count-total scout-cavalry-line < 5)
+	(or (not (goal strategy-goal sg-boom-imp))
+	(up-research-status c: imperial-age >= research-pending))
 =>
 	(train scout-cavalry-line)
 	;(chat-to-player my-player-number "Produziere Scouts gegen Moenche")
@@ -11234,6 +11238,8 @@
 	(can-train scout-cavalry-line)
 	(not (research-available ri-light-cavalry))
 	(unit-type-count-total scout-cavalry-line < 10)
+	(or (not (goal strategy-goal sg-boom-imp))
+	(up-research-status c: imperial-age >= research-pending))
 =>
 	(train scout-cavalry-line)
 	;(chat-to-player my-player-number "Produziere Scouts gegen Moenche")
@@ -11244,6 +11250,8 @@
 	(players-unit-type-count focus-player monk > 3)
 	(can-train scout-cavalry-line)
 	(research-completed ri-light-cavalry)
+	(or (not (goal strategy-goal sg-boom-imp))
+	(up-research-status c: imperial-age >= research-pending))
 =>
 	(train scout-cavalry-line)
 	;(chat-to-player my-player-number "Produziere Scouts gegen Moenche")
@@ -11265,6 +11273,8 @@
 	(can-train eagle-warrior-line)
 	(research-completed ri-eagle-warrior)
 	(unit-type-count-total eagle-warrior-line < 20)
+	(or (not (goal strategy-goal sg-boom-imp))
+	(up-research-status c: imperial-age >= research-pending))
 =>
 	(train eagle-warrior-line)
 	;(chat-to-player my-player-number "Produziere Adlerkrieger gegen Moenche")
@@ -11275,6 +11285,8 @@
 	(players-unit-type-count focus-player monk > 3)
 	(can-research ri-eagle-warrior)
 	(not (research-completed ri-eagle-warrior))
+	(or (not (goal strategy-goal sg-boom-imp))
+	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research ri-eagle-warrior)
 	;(chat-to-player my-player-number "Entwickle Adlerkrieger gegen Moenche")
@@ -15913,8 +15925,8 @@
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
-	(set-escrow-percentage food 25)
-	(set-escrow-percentage gold 25)
+	(set-escrow-percentage food 40)
+	(set-escrow-percentage gold 40)
 	(set-goal gl-food-saving 13)
 	(set-goal gl-gold-saving 13)
 	(enable-timer 9 1)
@@ -16016,8 +16028,8 @@
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
-	(set-escrow-percentage food 25)
-	(set-escrow-percentage gold 25)
+	(set-escrow-percentage food 40)
+	(set-escrow-percentage gold 40)
 	(set-goal gl-food-saving 20)
 	(set-goal gl-gold-saving 20)
 	(enable-timer 9 1)
@@ -16051,8 +16063,8 @@
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
-	(set-escrow-percentage food 30)
-	(set-escrow-percentage gold 30)
+	(set-escrow-percentage food 35)
+	(set-escrow-percentage gold 35)
 	(set-goal gl-food-saving 9)
 	(set-goal gl-gold-saving 9)
 	(enable-timer 9 1)
@@ -16122,8 +16134,8 @@
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
-	(set-escrow-percentage food 20)
-	(set-escrow-percentage gold 40)
+	(set-escrow-percentage food 30)
+	(set-escrow-percentage gold 50)
 	(set-goal gl-food-saving 41)
 	(set-goal gl-gold-saving 41)
 	(enable-timer 9 1)
@@ -16156,8 +16168,8 @@
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
-	(set-escrow-percentage food 50)
-	(set-escrow-percentage gold 30)
+	(set-escrow-percentage food 60)
+	(set-escrow-percentage gold 40)
 	(set-goal gl-food-saving 42)
 	(set-goal gl-gold-saving 42)
 	(enable-timer 9 1)
@@ -16191,8 +16203,8 @@
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
-	(set-escrow-percentage food 50)
-	(set-escrow-percentage gold 30)
+	(set-escrow-percentage food 60)
+	(set-escrow-percentage gold 40)
 	(set-goal gl-food-saving 42)
 	(set-goal gl-gold-saving 42)
 	(enable-timer 9 1)
@@ -16326,8 +16338,8 @@
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
-	(set-escrow-percentage food 30)
-	(set-escrow-percentage gold 30)
+	(set-escrow-percentage food 35)
+	(set-escrow-percentage gold 35)
 	(set-goal gl-food-saving 18)
 	(set-goal gl-gold-saving 18)
 	(enable-timer 9 1)
@@ -16362,8 +16374,8 @@
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
-	(set-escrow-percentage food 20)
-	(set-escrow-percentage gold 20)
+	(set-escrow-percentage food 35)
+	(set-escrow-percentage gold 35)
 	(set-goal gl-food-saving 19)
 	(set-goal gl-gold-saving 19)
 	(enable-timer 9 1)
@@ -16398,8 +16410,8 @@
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
-	(set-escrow-percentage food 38)
-	(set-escrow-percentage gold 30)
+	(set-escrow-percentage food 43)
+	(set-escrow-percentage gold 35)
 	(set-goal gl-food-saving 19)
 	(set-goal gl-gold-saving 19)
 	(enable-timer 9 1)
@@ -16433,8 +16445,8 @@
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
-	(set-escrow-percentage food 20)
-	(set-escrow-percentage gold 20)
+	(set-escrow-percentage food 30)
+	(set-escrow-percentage gold 30)
 	(set-goal gl-food-saving 24)
 	(set-goal gl-gold-saving 24)
 	(enable-timer 9 1)
@@ -16473,8 +16485,8 @@
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
 =>
-	(set-escrow-percentage food 35)
-	(set-escrow-percentage gold 25)
+	(set-escrow-percentage food 60)
+	(set-escrow-percentage gold 40)
 	(set-goal gl-food-saving 24)
 	(set-goal gl-gold-saving 24)
 	(enable-timer 9 1)
@@ -23602,7 +23614,7 @@
 	(current-age == castle-age)
 	(not(goal strategy-goal sg-boom-imp))
 	(or (and (goal sg-fastcastle-boom YES)
-		(building-type-count-total town-center >= 3))
+		(building-type-count-total town-center >= 4))
 	(or (and (goal sg-fastcastle-boom NO)
 		(building-type-count-total town-center >= 2))
 		(and (goal sg-fastcastle-boom -1)
@@ -26070,6 +26082,52 @@
 )
 
 #end-if
+
+(defrule
+	(game-time < 3000)
+	(up-compare-goal gl-castle-drop-x > 0)
+	(building-type-count-total castle == 1)
+	(can-build-with-escrow castle)
+=>
+	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: -7) 
+	(up-bound-point gl-castle-drop-x gl-castle-drop-x)
+	(set-strategic-number sn-percent-building-cancellation 0)
+	(release-escrow stone)
+	(set-escrow-percentage stone 0)
+	(up-assign-builders c: castle c: 8)
+	(up-set-target-point gl-castle-drop-x)
+	(up-send-flare gl-castle-drop-x)
+	(up-build-line gl-castle-drop-x gl-castle-drop-x c: castle)
+	(chat-to-player my-player-number "Building follow-up castle")
+	(chat-to-allies "Building follow-up castle")
+	(set-goal gl-stone-saving 0)
+	(disable-self)	
+)
+	
+(defrule
+	;(not (up-can-build-line 0 gl-castle-drop-x c: castle))
+	(game-time < 3000)
+	(up-compare-goal gl-castle-drop-x > 0)
+	(can-build-with-escrow castle)
+	(current-age == castle-age)
+	(building-type-count-total castle == 1)
+	(building-type-count-total town-center >= 1)
+=>
+	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 1)
+	(up-send-flare gl-castle-drop-x)
+	(up-build-line gl-castle-drop-x gl-castle-drop-x c: castle)
+	(chat-to-player my-player-number "Adjusting follow-up castle position")
+)
+
+(defrule
+	;(not (up-can-build-line 0 gl-castle-drop-x c: castle))
+	(game-time < 3000)
+	(current-age == castle-age)
+	(building-type-count castle == 2)
+=>
+	(set-strategic-number sn-percent-building-cancellation 35)
+)
+	
 #end-if
 
 (defrule
@@ -27473,6 +27531,20 @@
 )
 
 (defrule
+	(goal strategy-goal sg-fastcastle-gu)
+	(goal sg-fastcastle-boom NO)
+	(current-age == castle-age)
+	(can-train monk)
+	(gold-amount > 300)
+	(or (civilian-population g:< c-villager-goal)
+	(up-research-status c: imperial-age == research-pending))
+	(goal gl-gold-saving 0)
+=>
+	(train monk)
+)
+
+
+(defrule
 	(current-age == imperial-age)
 	(not (goal strategy-goal sg-boom-imp))
 	(can-train monk)
@@ -28298,19 +28370,19 @@
 
 #load-if-defined ARENA-MAP
 
-(defrule
-	(current-age >= castle-age)
-	(or (not (goal strategy-goal sg-boom-imp))
-	(up-research-status c: imperial-age >= research-pending))
-	(can-train-with-escrow siege-tower)
-	(unit-type-count-total siege-tower < 1)
-	(up-compare-goal gl-military-advantage >= 8)
-	(goal ca-strategy gl-castleage-siege-infantry)
-=>
-	(up-modify-escrow wood c:- 200)
-	(up-modify-escrow gold c:- 160)
-	(train siege-tower)
-)
+; (defrule ;needs to be DUC tasked on a wall, then units need to be DUC tasked on the siege-tower
+	; (current-age >= castle-age)
+	; (or (not (goal strategy-goal sg-boom-imp))
+	; (up-research-status c: imperial-age >= research-pending))
+	; (can-train-with-escrow siege-tower)
+	; (unit-type-count-total siege-tower < 1)
+	; (up-compare-goal gl-military-advantage >= 8)
+	; (goal ca-strategy gl-castleage-siege-infantry)
+; =>
+	; (up-modify-escrow wood c:- 200)
+	; (up-modify-escrow gold c:- 160)
+	; (train siege-tower)
+; )
 
 #end-if
 
@@ -30881,46 +30953,6 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
-	(up-research-status c: imperial-age >= research-pending)
-	(goal ca-strategy gl-castleage-stableunit)
-	(building-type-count-total stable < 4)
-	(building-type-count-total town-center >= 1)
-	(can-build stable)
-=>
-	;(set-strategic-number sn-placement-zone-size 0)
-	(up-set-placement-data my-player-number -1 c: 16)
-    (up-build place-control 0 c: stable)
-)
-
-(defrule
-	(goal strategy-goal sg-boom-imp)
-	(up-research-status c: imperial-age >= research-pending)
-	(goal ca-strategy gl-castleage-rangeunit)
-	(building-type-count-total archery-range < 4)
-	(building-type-count-total town-center >= 1)
-	(can-build archery-range)
-=>
-	;(set-strategic-number sn-placement-zone-size 0)
-	(up-set-placement-data my-player-number -1 c: 16)
-    (up-build place-control 0 c: archery-range)
-)
-
-(defrule
-	(goal strategy-goal sg-boom-imp)
-	(up-research-status c: imperial-age >= research-pending)
-	(or (goal ca-strategy gl-castleage-eagles)
-	(goal ca-strategy gl-castleage-siege-infantry))
-	(building-type-count-total barracks < 4)
-	(building-type-count-total town-center >= 1)
-	(can-build barracks)
-=>
-	;(set-strategic-number sn-placement-zone-size 0)
-	(up-set-placement-data my-player-number -1 c: 16)
-    (up-build place-control 0 c: barracks)
-)
-
-(defrule
 	(current-age == imperial-age)
 	(civilian-population >= 125)
 	(can-research ri-crop-rotation)
@@ -31007,10 +31039,12 @@
 )
 
 (defrule
+	(and (not (goal strategy-goal sg-boom-imp))
+	(goal gl-fastimp-unit fi-bbc-hc))
 	(current-age == imperial-age)
 	(can-train armored-elephant-line)
 	(research-available ri-siege-elephant)
-	(unit-type-count armored-elephant-line < 1)
+	(unit-type-count-total armored-elephant-line < 1)
 =>
 	(train armored-elephant-line)
 )
@@ -31019,7 +31053,7 @@
 	(current-age == imperial-age)
 	(can-train armored-elephant-line)
 	(research-completed ri-siege-elephant)
-	(unit-type-count armored-elephant-line < 10)
+	(unit-type-count-total armored-elephant-line < 10)
 	(military-population >= 10)
 =>
 	(train armored-elephant-line)
@@ -31029,7 +31063,7 @@
 	(current-age == imperial-age)
 	(can-train battering-ram-line)
 	(research-available ri-capped-ram)
-	(unit-type-count battering-ram-line < 1)
+	(unit-type-count-total battering-ram-line < 1)
 	(or (up-compare-goal gl-military-advantage >= 10)
 	(military-population >= 18))
 =>
@@ -31039,9 +31073,9 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train battering-ram-line)
-	(not (research-available ri-siege-ram))
+	(not (research-completed ri-siege-ram))
 	(research-completed ri-capped-ram)
-	(unit-type-count battering-ram-line < 10)
+	(unit-type-count-total battering-ram-line < 10)
 	(military-population >= 10)
 	(building-type-count castle < 1)
 =>
@@ -31051,7 +31085,7 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train-with-escrow trebuchet)
-	(not (research-available ri-siege-ram))
+	(not (research-completed ri-siege-ram))
 	(research-completed ri-capped-ram)
 	(unit-type-count trebuchet-set < 10)
 	(military-population >= 10)
@@ -31067,7 +31101,7 @@
 	(can-train battering-ram-line)
 	(research-available ri-siege-ram)
 	(research-completed ri-capped-ram)
-	(unit-type-count battering-ram-line < 1)
+	(unit-type-count-total battering-ram-line < 1)
 =>
 	(train battering-ram-line)
 )
@@ -31076,7 +31110,7 @@
 	(current-age == imperial-age)
 	(can-train battering-ram-line)
 	(research-completed ri-siege-ram)
-	(unit-type-count battering-ram-line < 15)
+	(unit-type-count-total battering-ram-line < 15)
 	(military-population >= 10)
 =>
 	(train battering-ram-line)
@@ -31093,7 +31127,7 @@
 	(current-age == imperial-age)
 	(can-train mangonel-line)
 	(research-completed ri-onager)
-	(unit-type-count mangonel-line < 5)
+	(unit-type-count-total mangonel-line < 5)
 	(wood-amount > 75)
 	(or (not (goal strategy-goal sg-boom-imp))
 		(military-population >= 20))
@@ -31105,7 +31139,7 @@
 	(current-age == imperial-age)
 	(can-train mangonel-line)
 	(research-available ri-onager)
-	(unit-type-count mangonel-line < 2)
+	(unit-type-count-total mangonel-line < 2)
 	(wood-amount > 75)
 	(or (not (goal strategy-goal sg-boom-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
@@ -31117,7 +31151,7 @@
 (defrule
 	(current-age == imperial-age)
 	(can-research ri-onager)
-	(unit-type-count mangonel-line >= 1)
+	(unit-type-count-total mangonel-line >= 1)
 =>
 	(research ri-onager)
 )
@@ -31132,7 +31166,7 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train bombard-cannon-line)
-	(unit-type-count bombard-cannon-line < 6)
+	(unit-type-count-total bombard-cannon-line < 6)
 	(wood-amount > 300)
 =>
 	(train bombard-cannon-line)
@@ -31148,7 +31182,7 @@
 (defrule
 	(current-age == imperial-age)
 	(can-build bombard-tower)
-	(building-type-count bombard-tower < 6)
+	(building-type-count-total bombard-tower < 6)
 	(wood-amount > 300)
 	(military-population >= 25)
 	(up-compare-goal gl-military-advantage >= 15)
@@ -31167,10 +31201,10 @@
 (defrule
 	(current-age == imperial-age)
 	(can-research ri-siege-engineers)
-	(or (unit-type-count-total mangonel-line > 3)
+	(or (unit-type-count-total mangonel-line >= 2)
 	(or (unit-type-count-total bombard-cannon-line >= 2)
-	(or (unit-type-count-total cannon-galleon-line >= 3)
-	(unit-type-count trebuchet >= 3))))
+	(or (unit-type-count-total cannon-galleon-line >= 2)
+	(unit-type-count trebuchet >= 2))))
 =>
 	(research ri-siege-engineers)
 )
@@ -31178,7 +31212,7 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train archer-line)
-	(unit-type-count archer-line < 5)
+	(unit-type-count-total archer-line < 5)
 	(wood-amount > 75)
 	(research-available ri-arbalest)
 	(not (research-completed ri-arbalest))
@@ -31954,6 +31988,142 @@
 	(up-research-status c: ri-elite-eagle-warrior >= research-pending)
 =>
 	(train eagle-warrior-line)
+)
+
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(goal gl-fastimp-unit fi-champs)
+	(up-research-status c: imperial-age >= research-pending)
+	(can-research-with-escrow ri-man-at-arms)
+=>
+	(up-modify-escrow food c:- 100)
+	(up-modify-escrow gold c:- 40)
+	(research ri-man-at-arms)
+)
+
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(goal gl-fastimp-unit fi-champs)
+	(up-research-status c: imperial-age >= research-pending)
+	(can-research-with-escrow ri-long-swordsman)
+=>
+	(up-modify-escrow food c:- 150)
+	(up-modify-escrow gold c:- 65)
+	(research ri-long-swordsman)
+)
+
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(goal gl-fastimp-unit fi-champs)
+	(up-research-status c: imperial-age >= research-pending)
+	(can-research-with-escrow ri-two-handed-swordsman)
+=>
+	(up-modify-escrow food c:- 300)
+	(up-modify-escrow gold c:- 100)
+	(research ri-two-handed-swordsman)
+)
+
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(goal gl-fastimp-unit fi-champs)
+	(current-age == imperial-age)
+	(can-research-with-escrow ri-champion)
+=>
+	(up-modify-escrow food c:- 750)
+	(up-modify-escrow gold c:- 350)
+	(research ri-champion)
+)
+
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(goal gl-fastimp-unit fi-champs)
+	(current-age == imperial-age)
+	(can-research-with-escrow ri-legionary)
+=>
+	(up-modify-escrow food c:- 800)
+	(up-modify-escrow gold c:- 400)
+	(research ri-legionary)
+)
+
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(goal gl-fastimp-unit fi-champs)
+	(current-age == imperial-age)
+	(can-train militiaman-line)
+	(or (and 
+			(civ-selected bulgarians)
+			(up-research-status c: imperial-age >= research-pending))
+		(and 
+			(civ-selected malay)
+			(up-research-status c: ri-two-handed-swordsman >= research-pending)))
+	(unit-type-count-total militiaman-line < 30)
+=>
+	(train militiaman-line)
+)
+
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(goal gl-fastimp-unit fi-champs)
+	(current-age == imperial-age)
+	(can-train militiaman-line)
+	(unit-type-count-total militiaman-line < 30)
+	(or (up-research-status c: ri-champion >= research-pending)
+	(up-research-status c: ri-legionary >= research-pending))
+=>
+	(train militiaman-line)
+)
+
+
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(goal gl-fastimp-unit fi-bbc-hc)
+	(current-age == imperial-age)
+	(unit-type-count-total hand-cannoneer < 10)
+	(unit-type-count-total bombard-cannon < 2)
+	(can-train hand-cannoneer)
+=>
+	(train hand-cannoneer)
+)
+
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(goal gl-fastimp-unit fi-bbc-hc)
+	(current-age == imperial-age)
+	(unit-type-count-total hand-cannoneer < 20)
+	(unit-type-count-total bombard-cannon >= 2)
+	(unit-type-count-total bombard-cannon < 4)
+	(can-train hand-cannoneer)
+=>
+	(train hand-cannoneer)
+)
+
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(goal gl-fastimp-unit fi-bbc-hc)
+	(current-age == imperial-age)
+	(unit-type-count-total bombard-cannon >= 4)
+	(can-train hand-cannoneer)
+=>
+	(train hand-cannoneer)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(unit-type-count-total archer-line < 5)
+	(players-unit-type-count focus-player skirmisher-line < 10)
+	(can-train hand-cannoneer)
+=>
+	(train hand-cannoneer)
+)
+
+
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(goal gl-fastimp-unit fi-bbc-hc)
+	(current-age == imperial-age)
+	(can-train bombard-cannon-line)
+=>
+	(train bombard-cannon-line)
 )
 
 (defrule
@@ -33548,6 +33718,7 @@
 (defrule
 	(research-completed ri-champion)
 	(building-type-count-total barracks < 6)
+	(can-build barracks)
 =>
 	(up-set-placement-data my-player-number -1 c: 19)
 	(build barracks)
@@ -33558,6 +33729,7 @@
 	(research-completed ri-two-handed-swordsman)
 	(unit-type-count-total militiaman-line >= 10)
 	(building-type-count-total barracks < 6)
+	(can-build barracks)
 =>
 	(up-set-placement-data my-player-number -1 c: 19)
 	(build barracks)
@@ -38481,7 +38653,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
 	(food-amount > 500)
@@ -38495,7 +38667,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
 	(food-amount > 500)
@@ -38509,7 +38681,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
 	(wood-amount > 500)
@@ -38522,7 +38694,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
 	(wood-amount > 500)
@@ -38535,7 +38707,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
 	(gold-amount > 500)
@@ -38548,7 +38720,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age >= castle-age)
 	;(up-research-status c: imperial-age != research-pending)
 	(gold-amount > 500)
@@ -38561,7 +38733,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
 	(stone-amount < 100)
 	(building-type-count-total town-center < 2)
@@ -38574,7 +38746,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(and(not (goal strategy-goal sg-fastcastle-uu))
 		(current-age == castle-age))
 	(current-age >= castle-age)
@@ -38588,7 +38760,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(and(not (goal strategy-goal sg-fastcastle-uu))
 		(current-age == castle-age))
 	(current-age >= castle-age)
@@ -38602,7 +38774,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
 	(food-amount > 1000)
 	(wood-amount < 200)
@@ -38614,7 +38786,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
 	(food-amount > 1000)
 	(gold-amount < 200)
@@ -38626,7 +38798,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
 	(wood-amount > 1000)
 	(food-amount < 200)
@@ -38638,7 +38810,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
 	(wood-amount > 1000)
 	(gold-amount < 200)
@@ -38650,7 +38822,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
 	(gold-amount > 1000)
 	(food-amount < 200)
@@ -38662,7 +38834,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age >= imperial-age)
 	(gold-amount > 1000)
 	(wood-amount < 200)
@@ -38674,7 +38846,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
 	(food-amount > 1000)
 	(wood-amount < 200)
@@ -38686,7 +38858,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
 	(food-amount > 1000)
 	(gold-amount < 200)
@@ -38698,7 +38870,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
 	(wood-amount > 1000)
 	(food-amount < 200)
@@ -38710,7 +38882,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
 	(wood-amount > 1000)
 	(gold-amount < 200)
@@ -38722,7 +38894,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
 	(gold-amount > 2000)
 	(food-amount < 500)
@@ -38734,7 +38906,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age >= imperial-age)
 	(gold-amount > 2000)
 	(wood-amount < 500)
@@ -38747,7 +38919,7 @@
 
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age >= imperial-age)
 	(stone-amount > 2000)
 	(wood-amount < 500)
@@ -38759,7 +38931,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age >= imperial-age)
 	(stone-amount > 2000)
 	(food-amount < 500)
@@ -38771,7 +38943,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age >= imperial-age)
 	(stone-amount > 2000)
 	(gold-amount < 500)
@@ -38783,7 +38955,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(and(not (goal strategy-goal sg-fastcastle-uu))
 		(current-age == castle-age))
 	(current-age >= castle-age)
@@ -38797,7 +38969,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(and(not (goal strategy-goal sg-fastcastle-uu))
 		(current-age == castle-age))
 	(current-age >= castle-age)
@@ -38811,7 +38983,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(and(not (goal strategy-goal sg-fastcastle-uu))
 		(current-age == castle-age))
 	(current-age >= castle-age)
@@ -38825,7 +38997,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age >= imperial-age)
 	(stone-amount < 100)
 	(gold-amount > 800)
@@ -38837,7 +39009,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age >= imperial-age)
 	(stone-amount < 100)
 	(wood-amount > 800)
@@ -38849,7 +39021,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age >= imperial-age)
 	(stone-amount < 100)
 	(food-amount > 800)
@@ -38862,7 +39034,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age >= feudal-age)
 	(stone-amount < 100)
 	(goal gl-stone-saving 7)
@@ -38875,7 +39047,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age >= feudal-age)
 	(stone-amount < 100)
 	(goal gl-stone-saving 7)
@@ -38888,7 +39060,7 @@
 )
 
 (defrule
-	(timer-triggered t-6-sec)
+	(timer-triggered t-eco-timer)
 	(current-age >= castle-age)
 	(wood-amount >= 1000)
 	(food-amount < 1000)
@@ -39201,6 +39373,7 @@
 (defrule
     (gold-amount > 1000)
 	(wood-amount < 100)
+	(not (goal strategy-goal sg-boom-imp))
     (current-age >= castle-age)
     (building-type-count market >= 1)
 	(up-research-status c: imperial-age != research-pending)
@@ -39282,7 +39455,7 @@
     (building-type-count market >= 1)
 =>
 	(sell-commodity food)
-   ; (chat-to-player my-player-number "Kaufe Holz")
+   ; (chat-to-player my-player-number "Kaufe Nahrung")
 )
 
 (defrule
@@ -39305,33 +39478,58 @@
  ;   (chat-to-player my-player-number "Verkaufe Stein")
 )
 
+#load-if-defined ARENA-MAP
+
+(defrule
+	(goal strategy-goal sg-fastcastle-uu)
+	(current-age == castle-age)
+	(building-type-count-total castle < 1)
+    (stone-amount < 650)
+    (building-type-count market >= 1)
+=>
+	(buy-commodity stone)
+ ;   (chat-to-player my-player-number "Kaufe Stein")
+)
+
+#end-if
+
 (defrule
 	(goal strategy-goal sg-boom-imp)
+	(up-research-status c: imperial-age < research-pending)
 	(unit-type-count-total villager g:>= c-villager-goal)
     (food-amount < 1000)
 	(gold-amount > 1000)
     (building-type-count market >= 1)
 =>
 	(buy-commodity food)
- ;   (chat-to-player my-player-number "Verkaufe Stein")
+ ;   (chat-to-player my-player-number "Verkaufe Nahrung")
 )
 
 (defrule
 	(goal strategy-goal sg-boom-imp)
+	(up-research-status c: imperial-age < research-pending)
 	(unit-type-count-total villager g:>= c-villager-goal)
+	(or (building-type-count castle >= 1)
+	(or (and (building-type-count siege-workshop >= 1)
+	(building-type-count monastery >= 1))
+	(or (and (building-type-count siege-workshop >= 1)
+	(building-type-count university >= 1))
+	(and (building-type-count monastery >= 1)
+	(building-type-count university >= 1)))))
     (wood-amount >= 100)
-	(gold-amount < 800)
+	(gold-amount < 1000)
     (building-type-count market >= 1)
 =>
 	(sell-commodity wood)
- ;   (chat-to-player my-player-number "Verkaufe Stein")
+ ;   (chat-to-player my-player-number "Verkaufe Holz")
 )
 
 (defrule
 	(goal strategy-goal sg-boom-imp)
+	(up-research-status c: imperial-age < research-pending)
 	(unit-type-count-total villager g:>= c-villager-goal)
     (stone-amount >= 100)
-	(gold-amount < 800)
+	(gold-amount < 1000)
     (building-type-count market >= 1)
 =>
 	(sell-commodity stone)
@@ -39506,10 +39704,20 @@
 	(enable-timer t-3-sec 3)	
 )
 
-(defrule	
-	(timer-triggered t-6-sec)	
+(defrule
+	(current-age < imperial-age)
+	(timer-triggered t-eco-timer)	
 =>	
-	(disable-timer t-6-sec)	
+	(disable-timer t-eco-timer)	
 	;(chat-to-player my-player-number "Test")
-	(enable-timer t-6-sec 6)	
+	(enable-timer t-eco-timer 6)	
+)
+
+(defrule
+	(current-age == imperial-age)
+	(timer-triggered t-eco-timer)	
+=>	
+	(disable-timer t-eco-timer)	
+	;(chat-to-player my-player-number "Test")
+	(enable-timer t-eco-timer 3)	
 )
