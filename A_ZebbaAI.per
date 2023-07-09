@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.3
-;last update: 8th July 2023
+;last update: 9th July 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -18913,7 +18913,7 @@
 	(enable-timer retreating-timer 3)
 	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
-	;(chat-local-to-self "retreat with scout 1")
+	(chat-local-to-self "retreat with scout 1")
 )
 
 ;2 scouts
@@ -18942,7 +18942,7 @@
 	(enable-timer retreating-timer 3)
 	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
-;	(chat-local-to-self "retreat with scout 2.1")
+	(chat-local-to-self "retreat with scout 2.1")
 )
 
 (defrule
@@ -18969,7 +18969,7 @@
 	(enable-timer retreating-timer 3)
 	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
-;	(chat-local-to-self "retreat with scout 2.2")
+	(chat-local-to-self "retreat with scout 2.2")
 )
 
 ;3 scouts
@@ -18998,7 +18998,7 @@
 	(enable-timer retreating-timer 3)
 	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
-;	(chat-local-to-self "retreat with scout 3.1")
+	(chat-local-to-self "retreat with scout 3.1")
 )
 
 (defrule
@@ -19025,7 +19025,7 @@
 	(enable-timer retreating-timer 3)
 	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
-;	(chat-local-to-self "retreat with scout 3.2")
+	(chat-local-to-self "retreat with scout 3.2")
 )
 
 (defrule
@@ -19052,7 +19052,7 @@
 	(enable-timer retreating-timer 3)
 	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
-;	(chat-local-to-self "retreat with scout 3.3")
+	(chat-local-to-self "retreat with scout 3.3")
 )
 
 ;4 scouts
@@ -19081,7 +19081,7 @@
 	(enable-timer retreating-timer 3)
 	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
-;	(chat-local-to-self "retreat with scout 4.1")
+	(chat-local-to-self "retreat with scout 4.1")
 )
 
 (defrule
@@ -19108,7 +19108,7 @@
 	(enable-timer retreating-timer 3)
 	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
-;	(chat-local-to-self "retreat with scout 4.2")
+	(chat-local-to-self "retreat with scout 4.2")
 )
 
 (defrule
@@ -19135,7 +19135,7 @@
 	(enable-timer retreating-timer 3)
 	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
-;	(chat-local-to-self "retreat with scout 4.3")
+	(chat-local-to-self "retreat with scout 4.3")
 )
 
 (defrule
@@ -19162,7 +19162,7 @@
 	(enable-timer retreating-timer 3)
 	;(up-target-point gl-unit-x action-move -1 stance-no-attack)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
-;	(chat-local-to-self "retreat with scout 4.4")
+	(chat-local-to-self "retreat with scout 4.4")
 )
 
 ;endregion
@@ -23081,9 +23081,16 @@
 =>
 	(up-modify-escrow wood c:- 50)
 	(up-modify-escrow stone c:- 125)
-	(up-set-placement-data focus-player watch-tower c: -8)
+	(up-lerp-tiles enemy-tower-point-x gl-starting-tc-x c: 8)
+	(up-bound-point enemy-tower-point-x enemy-tower-point-x)
+	(set-strategic-number sn-percent-building-cancellation 0)
+	(release-escrow stone)
+	(set-escrow-percentage stone 0)
 	(up-assign-builders c: watch-tower c: 9)
-    (up-build place-control 0 c: watch-tower)
+	(up-set-target-point enemy-tower-point-x)
+	(up-send-flare enemy-tower-point-x)
+	(up-build-line enemy-tower-point-x enemy-tower-point-x c: watch-tower)
+	;(up-build place-point 0 c: watch-tower)
 	;(chat-to-player my-player-number "building counter tower")
 )
 
@@ -23098,9 +23105,16 @@
 =>
 	(up-modify-escrow wood c:- 75)
 	(up-modify-escrow stone c:- 175)
-	(up-set-placement-data focus-player watch-tower c: -8)
+	(up-lerp-tiles enemy-tower-point-x gl-starting-tc-x c: 8)
+	(up-bound-point enemy-tower-point-x enemy-tower-point-x)
+	(set-strategic-number sn-percent-building-cancellation 0)
+	(release-escrow stone)
+	(set-escrow-percentage stone 0)
 	(up-assign-builders c: donjon c: 9)
-    (up-build place-control 0 c: donjon)
+	(up-set-target-point enemy-tower-point-x)
+	(up-send-flare enemy-tower-point-x)
+	(up-build-line enemy-tower-point-x enemy-tower-point-x c: donjon)
+	;(up-build place-point 0 c: donjon)
 	;(chat-to-player my-player-number "building counter tower")
 )
 
@@ -23180,25 +23194,51 @@
 )
 
 (defrule
-	(enemy-buildings-in-town)
-	(players-building-type-count focus-player watch-tower >= 1)
+	;(enemy-buildings-in-town)
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
+	(or (building-type-count watch-tower < 1)
+	(building-type-count donjon < 1))
 	(current-age < castle-age)
+	(up-compare-goal gl-military-advantage >= -4)
 =>
 	(up-full-reset-search)
-	(up-find-local c: villager-class c: 15)
+	(up-find-local c: villager-class c: 10)
 	(up-set-target-point gl-starting-tc-x)
-	(up-filter-distance c: -1 c: 25)
+	(up-filter-distance c: -1 c: 30)
 	(up-find-remote c: watch-tower c: 1)
+	(up-find-remote c: donjon c: 1)
+	(up-find-remote c: villager-builder c: 1)
 )
 
 (defrule
-	(enemy-buildings-in-town)
-	(players-building-type-count focus-player watch-tower >= 1)
+	;(enemy-buildings-in-town)
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
+	(or (building-type-count watch-tower >= 1)
+	(building-type-count donjon >= 1))
+	(current-age < castle-age)
+	(up-compare-goal gl-military-advantage >= -4)
+=>
+	(up-full-reset-search)
+	(up-find-local c: villager-class c: 6)
+	(up-set-target-point gl-starting-tc-x)
+	(up-filter-distance c: -1 c: 30)
+	(up-find-remote c: watch-tower c: 1)
+	(up-find-remote c: donjon c: 1)
+	(up-find-remote c: villager-builder c: 1)
+)
+
+(defrule
+	;(enemy-buildings-in-town)
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
 	(current-age < castle-age)
 	(up-set-target-object search-remote c: 0)
+	(up-compare-goal gl-military-advantage >= -4)
 =>
 	(up-target-objects 0 action-default -1 -1)
-	(chat-to-player my-player-number "Sending villagers to destroy the tower")
+	;(chat-to-player my-player-number "Sending villagers to destroy the tower")
 )
 
 (defrule
@@ -24079,8 +24119,8 @@
 		(and (not (civ-selected bulgarians))
 			 (not (civ-selected spanish)))))
 	(can-train-with-escrow archer-line)
-	(or (players-unit-type-count focus-player skirmisher-line < 3) 
-	(unit-type-count-total scout-cavalry-line >= 1))
+	(or (players-unit-type-count focus-player skirmisher-line < 5) 
+	(unit-type-count-total scout-cavalry-line >= 2))
 	(unit-type-count-total archer-line < 8)
 	(game-time < 1000)
 	(up-compare-goal gl-military-advantage < 25)
@@ -24098,8 +24138,8 @@
 		(and (not (civ-selected bulgarians))
 			 (not (civ-selected spanish)))))
 	(can-train archer-line)
-	(or (players-unit-type-count focus-player skirmisher-line < 3) 
-	(unit-type-count-total scout-cavalry-line >= 1))
+	(or (players-unit-type-count focus-player skirmisher-line < 5) 
+	(unit-type-count-total scout-cavalry-line >= 2))
 	(wood-amount > 65)
 	(or (unit-type-count-total archer-line >= 8)
 	(game-time >= 1000))
@@ -24114,10 +24154,10 @@
 	(or (civilian-population g:< f-villager-goal)
 	(up-research-status c: castle-age == research-pending))
 	(can-train skirmisher-line)
-	(players-unit-type-count focus-player skirmisher-line >= 4)
-	(players-unit-type-count focus-player skirmisher-line < 8)
-	(unit-type-count-total scout-cavalry-line < 1)
-	(unit-type-count-total skirmisher-line < 8)
+	(players-unit-type-count focus-player skirmisher-line >= 5)
+	(players-unit-type-count focus-player skirmisher-line < 10)
+	(unit-type-count-total scout-cavalry-line < 2)
+	;(unit-type-count-total skirmisher-line < 10)
 	(players-current-age focus-player == feudal-age)
 	(up-compare-goal gl-military-advantage < 25)
 =>
@@ -24131,7 +24171,7 @@
 	(up-research-status c: castle-age == research-pending))
 	(can-train skirmisher-line)
 	(wood-amount > 85)
-	(unit-type-count-total skirmisher-line < 6)
+	(unit-type-count-total skirmisher-line < 8)
 	(up-compare-goal gl-military-advantage < 25)
 =>
 	(train skirmisher-line)
@@ -35277,6 +35317,16 @@
 	(military-population >= 12)
 	(or (up-compare-goal gl-military-advantage >= -8)
 	(military-population >= 18))
+=>
+	(up-ungarrison c: siege-workshop)
+	(up-gather-inside c: siege-workshop c: 0)
+	;(chat-to-player my-player-number "Schicke Truppen aus den Waffenschmiede.")
+)
+
+(defrule
+	(enemy-buildings-in-town)
+	(building-type-count-total siege-workshop > 0)
+	(unit-type-count-total battering-ram-line > 0)
 =>
 	(up-ungarrison c: siege-workshop)
 	(up-gather-inside c: siege-workshop c: 0)
