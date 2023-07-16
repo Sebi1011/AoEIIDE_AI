@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.3
-;last update: 15th July 2023
+;last update: 16th July 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -43,55 +43,12 @@
 ;Difficulty: there are no levels of difficulty for ZebbaAI. Its current level is comparable to the hard DE AI. 
 ;Before any match set the difficulty level to extreme to get the best results since the game nerfs AIs speed on lower difficulty levels
 
-;recently added:
-; - AI will now retreat from battles/stop sending more reinforcements if army numbers are too low
-; - significantly improved forage gathering
-; - improved scouting-pattern for finding the enemy base in 1v1s
-; - added elite-skirmisher, halberdier and chemistry to the targetable resource saving list
-; - improved placements of defensive towers
-; - fixed building forward tcs if military-advantage is too low
-; - improved resource drop-off buildings in certain circumstances
-; - added basic boar-hunting including tc-shooting
-; - improved AIs resource saving system
-; - fixed several boar-hunting issues in dark-age
-; - AI will now stop military production in feudal if it has a large advantage 
-; - greatly improved the archer-rush strategy
-; - improved drush and usage of initial scout
-; - fixed retreating of army
-; - added ability to deal with villager-harassments by enemy scouts in dark-age
-; - fixed boar-hunting issue where AI couldnt garrison villagers to shoot the boar with tc if there are no villagers
-; nearby. AI will now switch temporarily to standard boar-hunting if it has < 2 villagers next to tc
-; - improved retreating from enemy fortifications when in castle-age
-; - improved timing of horse collar & fletching in archerrushes
-; - improved placement of blacksmiths & markets (in feudal-age), universities & some military buildings
-; - AI will no longer build defensive towers as a pocket-player
-; - when playing fast-imp, the AI will try to go for condottieros if the unit is available
-; - AI will now be less likely to send villagers forward, and will no longer send new villagers after it in case of a failed attempt 
-; of building forward buildings.  
-; - slightly improved speed to get up to castle-& imperial-age
-; - fixed a rare bug that caused the AI to build too many tcs (more than 9)
-; - fixed fast-imp build order unit production before imperial-age, which made it impossible to get enough res for imp 
-; - fixed an issue in the retreating code for enemy towers and castles
-
-; - improved unit production in fast-imp
-; - improved farm-placement-rules in fast-imp
-; - added villager-production limit for feudal-age
-; - reduced villager-production limit in castle-age
-; - AI will now send all its resources to a random ally when resigning. It's unchecked if it also sends res to defeated players
-; - improved speed for scoutrush attack from pockets in TGs
-
-; - AI can now train spears from donjons
-; - added option to attack in castle-age when having a specific number of army and the opponent is still in feudal-age,
-; but has the army lead
-; - improved scoutrush attack time
-; - fixed khmer military-building issue
-; - fixed issue in auto-garrisoning-tc code: AI will now consistently garrison any tc where enemy units are around if having enough vills
-; - AI can now play the Romans. Performance with this civ is untested
-
 ;ToDo: 
 
 ;what's up next:
 
+; - pocket scoutrush should safe for bloodlines/armor upgrade when having at least 6 scouts
+; - fast imp strategies need to include unit upgrades
 ; - change static build order in feudal-age to dynamic after initial villager goal has been reached
 ; - garrison boar luring villager in tc when villager stands right under the tc, the boar has more than 25 hp & the tc is already garrisoned with hunting group
 ; - improve defensive tower placement: get the most exposed camp and place tower next to it
@@ -192,12 +149,10 @@
 ; - improve attack intelligence, such as grouping up units before attack/
 ;/retreating single units from enemy-counter unit/ patrol-attacking, target areas with army more precisely/
 ; add ability to micro ranged-units
-; - More accurate scouting
 ; - using scouting info for strategic decisions --> saving expected opponents strategy in a goal
 ; - improve rules of building outposts
 ; - more strategies(smush (needs deer pushing), defensive feudal & spear/skirm-rush are planned)
 ; - use sheep to scout
-; - implement deer-pushing
 ; (- implement build-order for cuman 2 TC-Feudal play)
 ; - implement intelligent civ-evaluation to improve decision making and strategy choice in any civ-matchup
 ; - building markets at the edges of the map in TGs
@@ -384,6 +339,7 @@
 
 (defconst retreating-timer 1)
 (defconst split-stance-timer 2)
+(defconst scout-base-point-timer 3)
 (defconst boar-luring-timer 5)
 (defconst tc-boar-shooting-timer 6)
 (defconst res-notification-timer 7)
@@ -528,6 +484,8 @@
 (defconst amnt-escrow-gold 137)
 (defconst amnt-escrow-stone 138)
 (defconst meso-civ 140)
+(defconst gl-curr-point 141) ;for getting current point goal for scouting base
+(defconst gl-curr-layer-timer 142) ;for setting dynamic timer values for scouting base
 (defconst gl-food-saving 143)
 (defconst gl-wood-saving 144)
 (defconst gl-gold-saving 145)
@@ -592,11 +550,12 @@
 (defconst gl-temp-y 231)
 (defconst gl-center-x 232)
 (defconst gl-center-y 233)
+(defconst deer-x 234)
+(defconst deer-y 235)
 
-(defconst d-villager-goal 235)
-(defconst f-villager-goal 236)
-(defconst c-villager-goal 237)
-
+(defconst d-villager-goal 236)
+(defconst f-villager-goal 237)
+(defconst c-villager-goal 238)
 (defconst gl-scout-base 239)
 (defconst gl-scout-map 240)
 (defconst gl-nomad-map 241)
@@ -623,6 +582,7 @@
 (defconst scout-base-four-x 272)
 (defconst scout-base-four-y 273)
 (defconst flare 274)
+(defconst g-deer-id 279)
 (defconst g-boar-id 280)
 (defconst g-boar-status 281)
 (defconst remaining-boar-food 282)
@@ -1737,6 +1697,8 @@
 	(set-goal retreat-now-goal 0)
 	(set-goal retreating-goal NO)
 	(set-goal gl-time-to-fire NO)
+	(set-goal gl-curr-point 1)
+	(set-goal gl-curr-layer-timer 30)
 	(disable-self)
 )
 
@@ -2625,25 +2587,24 @@
 	(up-compare-goal scout-base-one-x == -1)
 	(game-time > 5)
 =>
-	; (up-chat-data-to-player my-player-number "tcx: %d" g: gl-starting-tc-x)
-	; (up-chat-data-to-player my-player-number "tcy: %d" g: gl-starting-tc-y)
 	(up-copy-point scout-base-one-x gl-starting-tc-x)
-	(up-modify-goal scout-base-one-x c:- 13)
-	(up-modify-goal scout-base-one-y c:- 13)
+	(up-modify-goal scout-base-one-x c:- 15)
+	(up-modify-goal scout-base-one-y c:- 15)
 	(up-copy-point scout-base-two-x gl-starting-tc-x)
-	(up-modify-goal scout-base-two-x c:- 13)
-	(up-modify-goal scout-base-two-y c:+ 13)	
+	(up-modify-goal scout-base-two-x c:- 15)
+	(up-modify-goal scout-base-two-y c:+ 15)	
 	(up-copy-point scout-base-three-x gl-starting-tc-x)
-	(up-modify-goal scout-base-three-x c:+ 13)
-	(up-modify-goal scout-base-three-y c:+ 13)
+	(up-modify-goal scout-base-three-x c:+ 15)
+	(up-modify-goal scout-base-three-y c:+ 15)
 	(up-copy-point scout-base-four-x gl-starting-tc-x)
-	(up-modify-goal scout-base-four-x c:+ 13)
-	(up-modify-goal scout-base-four-y c:- 13)
-	(up-send-flare scout-base-one-x)
-	(up-send-flare scout-base-two-x)
-	(up-send-flare scout-base-three-x)
-	(up-send-flare scout-base-four-x)
+	(up-modify-goal scout-base-four-x c:+ 15)
+	(up-modify-goal scout-base-four-y c:- 15)
+	;(up-send-flare scout-base-one-x)
+	;(up-send-flare scout-base-two-x)
+	;(up-send-flare scout-base-three-x)
+	;(up-send-flare scout-base-four-x)
 	(chat-to-player my-player-number "Initializing scouting points")
+	(up-set-timer c: scout-base-point-timer g: 35)
 	(disable-self)
 )
 
@@ -2675,22 +2636,25 @@
 	(up-point-explored scout-base-four-x != explored-no)
 =>
 	(up-copy-point scout-base-one-x gl-starting-tc-x)
-	(up-modify-goal scout-base-one-x c:- 22)
-	(up-modify-goal scout-base-one-y c:- 22)
+	(up-modify-goal scout-base-one-x c:- 24)
+	(up-modify-goal scout-base-one-y c:- 24)
 	(up-copy-point scout-base-two-x gl-starting-tc-x)
-	(up-modify-goal scout-base-two-x c:- 22)
-	(up-modify-goal scout-base-two-y c:+ 22)	
+	(up-modify-goal scout-base-two-x c:- 24)
+	(up-modify-goal scout-base-two-y c:+ 24)	
 	(up-copy-point scout-base-three-x gl-starting-tc-x)
-	(up-modify-goal scout-base-three-x c:+ 22)
-	(up-modify-goal scout-base-three-y c:+ 22)
+	(up-modify-goal scout-base-three-x c:+ 24)
+	(up-modify-goal scout-base-three-y c:+ 24)
 	(up-copy-point scout-base-four-x gl-starting-tc-x)
-	(up-modify-goal scout-base-four-x c:+ 22)
-	(up-modify-goal scout-base-four-y c:- 22)
-	(up-send-flare scout-base-one-x)
-	(up-send-flare scout-base-two-x)
-	(up-send-flare scout-base-three-x)
-	(up-send-flare scout-base-four-x)
+	(up-modify-goal scout-base-four-x c:+ 24)
+	(up-modify-goal scout-base-four-y c:- 24)
+	;(up-send-flare scout-base-one-x)
+	;(up-send-flare scout-base-two-x)
+	;(up-send-flare scout-base-three-x)
+	;(up-send-flare scout-base-four-x)
 	(chat-to-player my-player-number "Initializing 2nd layer scouting points")
+	(set-goal gl-curr-layer-timer 35)
+	(up-set-timer c: scout-base-point-timer c: -1)
+	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
 	(disable-self)
 )
 
@@ -2701,16 +2665,17 @@
 )
 
 ;adjusting points if outside of the map
-(defrule
+(defrule 
 	(game-time > 10)
 	(goal gl-scout-base YES)
 	(current-age == dark-age)
 	(up-group-size c: 1 >= 1)
 	(up-compare-goal scout-base-one-x < 1)
 =>
-	(up-lerp-tiles scout-base-one-x gl-starting-tc-x c: 1)
-	(up-cross-tiles scout-base-one-x gl-starting-tc-x c: 1)
-	(up-send-flare scout-base-one-x)
+	(set-goal scout-base-one-x 1)
+	; (up-lerp-tiles scout-base-one-x gl-starting-tc-x c: 1)
+	; (up-cross-tiles scout-base-one-x gl-starting-tc-x c: 1)
+	;(up-send-flare scout-base-one-x)
 	(chat-to-player my-player-number "Adjusting x1")
 )
 
@@ -2721,9 +2686,10 @@
 	(up-group-size c: 1 >= 1)
 	(up-compare-goal scout-base-one-y < 1)
 =>
-	(up-lerp-tiles scout-base-one-y gl-starting-tc-y c: 1)
-	(up-cross-tiles scout-base-one-y gl-starting-tc-y c: 1)
-	(up-send-flare scout-base-one-x)
+	(set-goal scout-base-one-y 1)
+	;(up-lerp-tiles scout-base-one-y gl-starting-tc-y c: 1)
+	;(up-cross-tiles scout-base-one-y gl-starting-tc-y c: 1)
+	;(up-send-flare scout-base-one-x)
 	(chat-to-player my-player-number "Adjusting y1")
 )
 
@@ -2734,9 +2700,10 @@
 	(up-compare-goal scout-base-two-x < 1)
 	(game-time > 10)
 =>
-	(up-lerp-tiles scout-base-two-x gl-starting-tc-x c: 1)
-	(up-cross-tiles scout-base-two-x gl-starting-tc-x c: -1)
-	(up-send-flare scout-base-two-x)
+	(set-goal scout-base-two-x 1)
+	; (up-lerp-tiles scout-base-two-x gl-starting-tc-x c: 1)
+	; (up-cross-tiles scout-base-two-x gl-starting-tc-x c: -1)
+	;(up-send-flare scout-base-two-x)
 	(chat-to-player my-player-number "Adjusting x2")
 )
 
@@ -2747,9 +2714,10 @@
 	(up-compare-goal scout-base-two-y < 1)
 	(game-time > 10)
 =>
-	(up-lerp-tiles scout-base-two-y gl-starting-tc-y c: 1)
-	(up-cross-tiles scout-base-two-y gl-starting-tc-y c: -1)
-	(up-send-flare scout-base-two-x)
+	(set-goal scout-base-two-y 1)
+	; (up-lerp-tiles scout-base-two-y gl-starting-tc-y c: 1)
+	; (up-cross-tiles scout-base-two-y gl-starting-tc-y c: -1)
+	;(up-send-flare scout-base-two-x)
 	(chat-to-player my-player-number "Adjusting y2")
 )
 
@@ -2760,9 +2728,10 @@
 	(up-compare-goal scout-base-three-x < 1)
 	(game-time > 10)
 =>
-	(up-lerp-tiles scout-base-three-x gl-starting-tc-x c: -1)
-	(up-cross-tiles scout-base-three-x gl-starting-tc-x c: -1)
-	(up-send-flare scout-base-three-x)
+	(set-goal scout-base-three-x 1)
+	; (up-lerp-tiles scout-base-three-x gl-starting-tc-x c: -1)
+	; (up-cross-tiles scout-base-three-x gl-starting-tc-x c: -1)
+	;(up-send-flare scout-base-three-x)
 	(chat-to-player my-player-number "Adjusting x3")
 )
 
@@ -2773,9 +2742,10 @@
 	(up-compare-goal scout-base-three-y < 1)
 	(game-time > 10)
 =>
-	(up-lerp-tiles scout-base-three-y gl-starting-tc-y c: -1)
-	(up-cross-tiles scout-base-three-y gl-starting-tc-y c: -1)
-	(up-send-flare scout-base-three-x)
+	(set-goal scout-base-three-y 1)
+	; (up-lerp-tiles scout-base-three-y gl-starting-tc-y c: -1)
+	; (up-cross-tiles scout-base-three-y gl-starting-tc-y c: -1)
+	;(up-send-flare scout-base-three-x)
 	(chat-to-player my-player-number "Adjusting y3")
 )
 
@@ -2786,9 +2756,10 @@
 	(up-compare-goal scout-base-four-x < 1)
 	(game-time > 10)
 =>
-	(up-lerp-tiles scout-base-four-x gl-starting-tc-x c: -1)
-	(up-cross-tiles scout-base-four-x gl-starting-tc-x c: 1)
-	(up-send-flare scout-base-four-x)
+	(set-goal scout-base-four-x 1)
+	; (up-lerp-tiles scout-base-four-x gl-starting-tc-x c: -1)
+	; (up-cross-tiles scout-base-four-x gl-starting-tc-x c: 1)
+;	(up-send-flare scout-base-four-x)
 	(chat-to-player my-player-number "Adjusting x4")
 )
 
@@ -2799,9 +2770,114 @@
 	(up-compare-goal scout-base-four-y < 1)
 	(game-time > 10)
 =>
-	(up-lerp-tiles scout-base-four-y gl-starting-tc-y c: -1)
-	(up-cross-tiles scout-base-four-y gl-starting-tc-y c: 1)
-	(up-send-flare scout-base-four-x)
+	(set-goal scout-base-four-y 1)
+	; (up-lerp-tiles scout-base-four-y gl-starting-tc-y c: -1)
+	; (up-cross-tiles scout-base-four-y gl-starting-tc-y c: 1)
+	;(up-send-flare scout-base-four-x)
+	(chat-to-player my-player-number "Adjusting y4")
+)
+
+(defrule 
+	(game-time > 10)
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-base-one-x > FULL-MAP-SIZE)
+=>
+	(up-modify-goal scout-base-one-x g: FULL-MAP-SIZE)
+	(up-modify-goal scout-base-one-x c:- 1)
+	;(up-send-flare scout-base-one-x)
+	(chat-to-player my-player-number "Adjusting x1")
+)
+
+(defrule
+	(game-time > 10)
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-base-one-y < 1)
+=>
+	(up-modify-goal scout-base-one-y g: FULL-MAP-SIZE)
+	(up-modify-goal scout-base-one-y c:- 1)
+	;(up-send-flare scout-base-one-x)
+	(chat-to-player my-player-number "Adjusting y1")
+)
+
+(defrule
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-base-two-x < 1)
+	(game-time > 10)
+=>
+	(up-modify-goal scout-base-two-x g: FULL-MAP-SIZE)
+	(up-modify-goal scout-base-two-x c:- 1)
+	;(up-send-flare scout-base-two-x)
+	(chat-to-player my-player-number "Adjusting x2")
+)
+
+(defrule
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-base-two-y < 1)
+	(game-time > 10)
+=>
+	(up-modify-goal scout-base-two-y g: FULL-MAP-SIZE)
+	(up-modify-goal scout-base-two-y c:- 1)
+	;(up-send-flare scout-base-two-x)
+	(chat-to-player my-player-number "Adjusting y2")
+)
+
+(defrule
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-base-three-x < 1)
+	(game-time > 10)
+=>
+	(up-modify-goal scout-base-three-x g: FULL-MAP-SIZE)
+	(up-modify-goal scout-base-three-x c:- 1)
+	;(up-send-flare scout-base-three-x)
+	(chat-to-player my-player-number "Adjusting x3")
+)
+
+(defrule
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-base-three-y < 1)
+	(game-time > 10)
+=>
+	(up-modify-goal scout-base-three-y g: FULL-MAP-SIZE)
+	(up-modify-goal scout-base-three-y c:- 1)
+	;(up-send-flare scout-base-three-x)
+	(chat-to-player my-player-number "Adjusting y3")
+)
+
+(defrule
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-base-four-x < 1)
+	(game-time > 10)
+=>
+	(up-modify-goal scout-base-four-x g: FULL-MAP-SIZE)
+	(up-modify-goal scout-base-four-x c:- 1)
+	;(up-send-flare scout-base-four-x)
+	(chat-to-player my-player-number "Adjusting x4")
+)
+
+(defrule
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-base-four-y < 1)
+	(game-time > 10)
+=>
+	(up-modify-goal scout-base-four-y g: FULL-MAP-SIZE)
+	(up-modify-goal scout-base-four-y c:- 1)
+	;(up-send-flare scout-base-four-x)
 	(chat-to-player my-player-number "Adjusting y4")
 )
 
@@ -2809,8 +2885,10 @@
 	(goal gl-scout-base YES)
 	(current-age == dark-age)
 	(up-group-size c: 1 >= 1)
+	(goal gl-curr-point 1)
 	(up-compare-goal scout-base-one-x > 0)
 	(up-point-explored scout-base-one-x == explored-no)
+	;(up-point-explored scout-base-four-x == explored-no)
 =>
 	(up-set-group search-local c: 1)
 	;(up-set-target-point scout-base-one-x)
@@ -2822,6 +2900,21 @@
 	(goal gl-scout-base YES)
 	(current-age == dark-age)
 	(up-group-size c: 1 >= 1)
+	(goal gl-curr-point 1)
+	(or (timer-triggered scout-base-point-timer)
+	(up-point-explored scout-base-one-x != explored-no))
+=>
+	(up-modify-goal gl-curr-point c:+ 1)
+	(up-set-timer c: scout-base-point-timer c: -1)
+	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
+	(chat-to-player my-player-number "Send scout to next point")
+)
+	
+(defrule
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(goal gl-curr-point 2)
 	(up-compare-goal scout-base-two-x > 0)
 	(up-point-explored scout-base-one-x != explored-no)
 	(up-point-explored scout-base-two-x == explored-no)
@@ -2836,6 +2929,21 @@
 	(goal gl-scout-base YES)
 	(current-age == dark-age)
 	(up-group-size c: 1 >= 1)
+	(goal gl-curr-point 2)
+	(or (timer-triggered scout-base-point-timer)
+	(up-point-explored scout-base-two-x != explored-no))
+=>
+	(up-modify-goal gl-curr-point c:+ 1)
+	(up-set-timer c: scout-base-point-timer c: -1)
+	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
+	(chat-to-player my-player-number "Send scout to next point")
+)
+
+(defrule
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(goal gl-curr-point 3)
 	(up-compare-goal scout-base-three-x > 0)
 	(up-point-explored scout-base-two-x != explored-no)
 	(up-point-explored scout-base-three-x == explored-no)
@@ -2850,6 +2958,21 @@
 	(goal gl-scout-base YES)
 	(current-age == dark-age)
 	(up-group-size c: 1 >= 1)
+	(goal gl-curr-point 3)
+	(or (timer-triggered scout-base-point-timer)
+	(up-point-explored scout-base-three-x != explored-no))
+=>
+	(up-modify-goal gl-curr-point c:+ 1)
+	(up-set-timer c: scout-base-point-timer c: -1)
+	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
+	(chat-to-player my-player-number "Send scout to next point")
+)
+
+(defrule
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(goal gl-curr-point 4)
 	(up-compare-goal scout-base-four-x > 0)
 	(up-point-explored scout-base-three-x != explored-no)
 	(up-point-explored scout-base-four-x == explored-no)
@@ -2864,22 +2987,41 @@
 	(goal gl-scout-base YES)
 	(current-age == dark-age)
 	(up-group-size c: 1 >= 1)
-	(up-compare-goal scout-base-four-x > 0)
-	(up-point-explored scout-base-four-x != explored-no)
+	(goal gl-curr-point 4)
+	(or (timer-triggered scout-base-point-timer)
+	(up-point-explored scout-base-four-x != explored-no))
 =>
-	(up-set-group search-local c: 1)
-	;(up-set-target-point scout-base-one-x)
-	(up-target-point scout-base-one-x action-move -1 -1)
-	;(chat-to-player my-player-number "Sending scout back to 1st point")
+	(set-goal gl-curr-point 1)
+	(up-set-timer c: scout-base-point-timer c: -1)
+	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
+	(chat-to-player my-player-number "Send scout to next point")
 )
+
+; (defrule
+	; (goal gl-scout-base YES)
+	; (current-age == dark-age)
+	; (up-group-size c: 1 >= 1)
+	; (up-compare-goal scout-base-four-x > 0)
+	; (up-point-explored scout-base-four-x != explored-no)
+	; (up-point-explored scout-base-one-x != explored-no)
+; =>
+	; (up-set-group search-local c: 1)
+	; ;(up-set-target-point scout-base-one-x)
+	; (up-target-point scout-base-one-x action-move -1 -1)
+	; ;(chat-to-player my-player-number "Sending scout back to 1st point")
+; )
 
 (defrule
 	(goal gl-scout-base YES)
 	(current-age == dark-age)
 	(up-group-size c: 1 >= 1)
 	(up-compare-goal scout-base-four-x > 0)
-	(up-point-explored scout-base-four-x != explored-no)
-	(civilian-population >= 12)
+	(or (civilian-population >= 12)
+		(and (up-point-explored scout-base-one-x != explored-no)
+		(and (up-point-explored scout-base-two-x != explored-no)
+		(and (up-point-explored scout-base-three-x != explored-no)
+		(up-point-explored scout-base-four-x != explored-no))))
+	)
 =>
 	(set-goal gl-scout-base NO)
 	(set-goal gl-push-deer YES)
@@ -3410,7 +3552,7 @@
 #end-if
 
 #load-if-defined BENGALIS-CIV
-#load-if-defined ARENA-MAP
+#load-if-not-defined ARENA-MAP
 (defrule
 	(true)
 =>
@@ -5005,6 +5147,7 @@
 (defrule
 	(goal strategy-goal sg-fastcastle-gu)
 	(up-research-status c: castle-age >= research-pending)
+	(current-age < imperial-age)
 	(goal sg-fastcastle-boom -1)
 =>
 	(generate-random-number 100)
@@ -5014,6 +5157,7 @@
 (defrule
 	(goal strategy-goal sg-fastcastle-gu)
 	(up-research-status c: castle-age >= research-pending)
+	(current-age < imperial-age)
 	(goal sg-fastcastle-boom -1)
 	(random-number <= 50)
 =>	
@@ -5024,7 +5168,8 @@
 (defrule
 	(goal strategy-goal sg-fastcastle-gu)
 	(up-research-status c: castle-age >= research-pending)
-	(goal sg-fastcastle-boom -1)
+	(current-age < imperial-age)
+	(goal sg-fastcastle-boom YES)
 	(random-number > 50)
 =>	
 	(set-goal sg-fastcastle-boom -1)
@@ -12021,7 +12166,7 @@
 (defrule
 	(current-age == castle-age)
 	(can-train slinger)
-	(players-unit-type-count focus-player infantry-class >= 6)
+	(players-unit-type-count focus-player infantry-class >= 4)
 	; (or (civilian-population g:< c-villager-goal)
 	; (up-research-status c: imperial-age == research-pending))
 =>
@@ -22081,192 +22226,6 @@
 	(up-drop-resources gold c: 4)
 )
 
-#load-if-defined UP-2-PLAYER-GAME
-(defrule 
-	(or (goal strategy-goal sg-drush)
-	(goal strategy-goal sg-towerrush))
-	(civilian-population >= 14)
-	(players-building-count any-enemy < 1)
-=>
-	;(enable-timer 19 5)
-	(up-send-scout group-type-land-explore scout-flank)
-	(set-goal gl-scout-map YES)
-	;(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
-	(disable-self)
-)
-
-; (defrule 
-	; (or (goal strategy-goal sg-drush)
-	; (goal strategy-goal sg-towerrush))
-	; (civilian-population >= 14)
-	; (players-building-count any-enemy < 1)
-; =>
-	; ;(enable-timer 19 5)
-	; (up-send-scout group-type-land-explore scout-mirror)
-	; (set-goal gl-scout-map YES)
-	; (chat-to-player my-player-number "Scouting opponent for my upcoming attack")
-	; (disable-self)
-; )
-
-(defrule 
-	(or (goal strategy-goal sg-drush)
-	(goal strategy-goal sg-towerrush))
-	(current-age == dark-age)
-	(civilian-population >= 14)
-	(players-building-count any-enemy >= 1)
-=>
-	;(enable-timer 19 5)
-	(set-goal gl-scout-map YES)
-	(up-send-scout group-type-land-explore scout-enemy)
-	;(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
-	(disable-self)
-)
-
-#end-if
-
-#load-if-not-defined UP-2-PLAYER-GAME
-
-(defrule 
-	(or (goal strategy-goal sg-drush)
-	(goal strategy-goal sg-towerrush))
-	(civilian-population >= 14)
-	(players-building-count any-enemy < 1)
-=>
-	;(enable-timer 19 5)
-	(up-send-scout group-type-land-explore scout-flank)
-	;(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
-	(disable-self)
-)
-
-(defrule 
-	(or (goal strategy-goal sg-drush)
-	(goal strategy-goal sg-towerrush))
-	(current-age == dark-age)
-	(civilian-population >= 14)
-	(players-building-count focus-player >= 1)
-=>
-	;(enable-timer 19 5)
-	(up-send-scout group-type-land-explore scout-enemy)
-	;(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
-	(disable-self)
-)
-
-#end-if
-
-#load-if-defined UP-2-PLAYER-GAME
-
-(defrule 
-	(civilian-population >= 18)
-	(players-building-count any-enemy < 1)
-=>
-	;(enable-timer 19 5)
-	(set-goal gl-scout-map YES)
-	(up-send-scout group-type-land-explore scout-flank)
-	;(chat-to-player my-player-number "Scouting opponent")
-	(disable-self)
-)
-
-(defrule 
-	(or (goal strategy-goal sg-drush)
-	(goal strategy-goal sg-towerrush))
-	(current-age == dark-age)
-	(civilian-population >= 18)
-	(players-building-count any-enemy >= 1)
-=>
-	;(enable-timer 19 5)
-	(set-goal gl-scout-map YES)
-	(up-send-scout group-type-land-explore scout-enemy)
-	;(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
-	(disable-self)
-)
-
-#end-if
-
-#load-if-not-defined UP-2-PLAYER-GAME
-#load-if-not-defined UP-POCKET-POSITION
-(defrule 
-	(civilian-population >= 18)
-	(players-building-count any-enemy < 1)
-=>
-	;(enable-timer 19 5)
-	(up-send-scout group-type-land-explore scout-flank)
-	;(chat-to-player my-player-number "Looking for enemy")
-	(disable-self)
-)
-
-(defrule 
-	(current-age == dark-age)
-	(civilian-population >= 18)
-	(players-building-count focus-player >= 1)
-=>
-	;(enable-timer 19 5)
-	(up-send-scout group-type-land-explore scout-enemy)
-	;(chat-to-player my-player-number "Scouting opponent base")
-	(disable-self)
-)
-
-(defrule 
-	(current-age == dark-age)
-	(civilian-population g:>= d-villager-goal)
-	(players-building-count focus-player < 1)
-=>
-	;(enable-timer 19 5)
-	(up-send-scout group-type-land-explore scout-flank)
-	;(chat-to-player my-player-number "Scouting opponent base")
-	(disable-self)
-)
-
-#end-if
-
-#load-if-defined UP-POCKET-POSITION
-(defrule 
-	(civilian-population >= 20)
-	(players-building-count any-enemy < 1)
-=>
-	;(enable-timer 19 5)
-	(up-send-scout group-type-land-explore scout-mirror)
-	;(chat-to-player my-player-number "Looking for enemy")
-	(disable-self)
-)
-
-(defrule 
-	(current-age == dark-age)
-	(civilian-population >= 20)
-	(players-building-count focus-player >= 1)
-=>
-	;(enable-timer 19 5)
-	(up-send-scout group-type-land-explore scout-enemy)
-	;(chat-to-player my-player-number "Scouting opponent base")
-	(disable-self)
-)
-
-(defrule 
-	(current-age == dark-age)
-	(civilian-population g:>= d-villager-goal)
-	(players-building-count focus-player < 1)
-=>
-	;(enable-timer 19 5)
-	(up-send-scout group-type-land-explore scout-mirror)
-	;(chat-to-player my-player-number "Scouting opponent base")
-	(disable-self)
-)
-
-#end-if
-#end-if
-#load-if-defined EMPIRE-WARS
-
-(defrule 
-	(players-building-count any-enemy < 1)
-	(game-time > 5)
-=>
-	;(enable-timer 19 5)
-	(up-send-scout group-type-land-explore scout-flank)
-	(set-goal gl-scout-map YES)
-	(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
-	(disable-self)
-)
-#end-if
-
 (defrule
 	;(goal strategy-goal sg-drush)
 	(goal attack-now-goal 1)
@@ -22801,9 +22760,452 @@
 
 ;endregion
 
-;region Hunting Deer =============================================== 
+;region Pushing Deer =============================================== 
+
+(defrule
+	(goal gl-scout-base NO)
+	(goal gl-scout-map NO)
+	(up-compare-goal g-deer-id == -1) ;find new deer
+	(current-age == dark-age)
+=>
+	(up-full-reset-search)
+	(up-modify-sn sn-focus-player-number c:= 0)
+	(up-set-target-point gl-starting-tc-x)
+	(up-filter-distance c: -1 c: 40)
+	(up-find-remote c: deer-class c: 10)
+	(up-remove-objects search-remote object-data-carry < 1)
+	(up-clean-search search-remote object-data-distance search-order-asc)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-player my-player-number "Amount of deer: %d" g: gl-remote-total)
+)
+
+(defrule
+	(goal gl-scout-base NO)
+	(goal gl-scout-map NO)
+	(up-compare-goal g-deer-id == -1) 
+	(up-set-target-object search-remote c: 0)
+	(up-compare-goal gl-remote-total > 0)
+	(current-age == dark-age)
+=>
+	(set-goal gl-push-deer YES)
+	(up-set-target-object search-remote c: 0)
+	(up-get-object-data object-data-id g-deer-id)
+	(up-get-point position-object deer-x)
+	(chat-to-player my-player-number "Found a deer")
+)
+
+(defrule
+	(goal gl-scout-base NO)
+	(goal gl-push-deer YES)
+	(goal gl-scout-map NO)
+	(up-compare-goal g-deer-id != -1) 
+	(up-compare-goal deer-x < 0)
+=>
+	(set-goal deer-x 1)
+)
+
+(defrule
+	(goal gl-scout-base NO)
+	(goal gl-push-deer YES)
+	(goal gl-scout-map NO)
+	(up-compare-goal g-deer-id != -1)
+	(up-compare-goal deer-y < 0)
+=>
+	(set-goal deer-y 1)
+)
+
+(defrule
+	(goal gl-scout-base NO)
+	(goal gl-push-deer YES)
+	(goal gl-scout-map NO)
+	(up-compare-goal g-deer-id != -1)
+	(up-compare-goal deer-x > FULL-MAP-SIZE)
+=>
+	(set-goal deer-x FULL-MAP-SIZE)
+	(up-modify-goal deer-x c: -1)
+)
+
+(defrule
+	(goal gl-scout-base NO)
+	(goal gl-push-deer YES)
+	(goal gl-scout-map NO)
+	(up-compare-goal g-deer-id != -1)
+	(up-compare-goal deer-y > FULL-MAP-SIZE)
+=>
+	(set-goal deer-y FULL-MAP-SIZE)
+	(up-modify-goal deer-y c: -1)
+)
+
+(defrule
+	(goal gl-scout-base NO)
+	(goal gl-push-deer YES)
+	(goal gl-scout-map NO)
+	(up-compare-goal g-deer-id == -1) 
+	(not (up-set-target-object search-remote c: 0))
+	(up-compare-goal gl-remote-total < 1)
+	(current-age == dark-age)
+=>
+	(set-goal gl-push-deer NO)
+	(chat-to-player my-player-number "No deer found, finish deer pushing")
+)
+
+(defrule
+	(goal gl-scout-base NO)
+	(goal gl-push-deer YES)
+	(goal gl-scout-map NO)
+	(up-compare-goal g-deer-id != -1) ;get current deer position	
+	(current-age == dark-age)
+=>
+	(up-full-reset-search)
+	(up-set-target-by-id g: g-deer-id)
+	(up-get-point position-object deer-x)
+	;(chat-to-player my-player-number "Getting current deer location")
+)
+
+(defrule
+	(up-compare-goal g-deer-id != -1)	
+	(goal gl-push-deer YES)
+	(current-age == dark-age)
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 1)
+	(up-lerp-tiles deer-x gl-starting-tc-x c: -1) ;get point behind deer
+	(up-target-point deer-x action-move -1 -1) ;follow deer with scout
+	;(chat-to-player my-player-number "Send scout to deer")
+)
+
+(defrule
+	(up-compare-goal g-deer-id != -1)
+	(goal gl-push-deer YES) ;now check if deer is close to tc
+	(current-age == dark-age)
+=>
+	(up-full-reset-search)
+	(up-modify-sn sn-focus-player-number c:= 0)
+	(up-set-target-point gl-starting-tc-x)
+	(up-filter-distance c: -1 c: 3)
+	(up-find-remote c: deer-class c: 1)
+	(up-set-target-object search-remote c: 0)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-player my-player-number "deers nearby: %d" g: gl-remote-total)
+)
+
+(defrule
+	(up-group-size c: 4 >= 2)
+	(up-compare-goal g-deer-id != -1)	
+	(goal gl-push-deer YES)
+	(up-set-target-object search-remote c: 0)
+	(up-compare-goal gl-remote-total > 0)
+	(current-age == dark-age)
+=>
+	(up-full-reset-search)
+	(up-reset-group c: 4)
+	(up-set-target-point gl-starting-tc-x)
+	(up-filter-distance c: -1 c: 6)
+	(up-find-local c: 590 c: 240) ;female shepherd
+	(up-find-local c: 592 c: 240) ;male shepherd
+	(up-find-local c: 354 c: 240) ;female forager
+	(up-find-local c: 120 c: 240) ;male forager
+	(up-find-local c: 216 c: 240) ;female hunter
+	(up-find-local c: 122 c: 240) ;male hunter
+	(up-set-group search-local c: 4)
+	;(up-remove-objects search-local object-data-group-flag == 2) ;no villagers from group 2 
+	(up-remove-objects search-local object-data-group-flag == 3) ;or 3
+	(up-remove-objects search-local object-data-action == actionid-attack) ;prevent selecting boar hunting villagers
+	(up-remove-objects search-local -1 > 2) ;find two villagers
+	(up-create-group 0 0 c: 4) ;deer-hunting ctrl-group
+	(up-modify-group-flag 1 c: 4)
+	;(up-chat-data-to-player my-player-number "Number of deer hunters a: %d" g: gl-local-total) 
+)
+
+(defrule
+	(up-group-size c: 4 < 2)
+	(up-compare-goal g-deer-id != -1)	
+	(goal gl-push-deer YES)
+	(up-set-target-object search-remote c: 0)
+	(up-compare-goal gl-remote-total > 0)
+	(current-age == dark-age)
+=>
+	(up-full-reset-search)
+	(up-set-target-point gl-starting-tc-x)
+	(up-filter-distance c: -1 c: 6)
+	(up-find-local c: 590 c: 240) ;female shepherd
+	(up-find-local c: 592 c: 240) ;male shepherd
+	(up-find-local c: 216 c: 240) ;female hunter
+	(up-find-local c: 122 c: 240) ;male hunter
+	(up-find-local c: 354 c: 240) ;female forager
+	(up-find-local c: 120 c: 240) ;male forager
+	;(up-remove-objects search-local object-data-group-flag == 2) ;no villagers from group 2 
+	(up-remove-objects search-local object-data-group-flag == 3) ;or 3
+	(up-remove-objects search-local object-data-action == actionid-attack) ;prevent selecting boar hunting villagers
+	(up-remove-objects search-local -1 > 2) ;find two villagers
+	(up-reset-group c: 4)
+	(up-create-group 0 0 c: 4) ;deer-hunting ctrl-group
+	(up-modify-group-flag 1 c: 4)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-player my-player-number "Number of deer hunters b: %d" g: gl-local-total) 
+)
+
+(defrule
+	(up-compare-goal g-deer-id != -1)
+	(goal gl-push-deer YES) ;now check if deer is close to tc
+	(up-group-size c: 4 >= 2)
+	(current-age == dark-age)
+=>
+	(up-full-reset-search)
+	(up-modify-sn sn-focus-player-number c:= 0)
+	(up-set-target-point gl-starting-tc-x)
+	(up-filter-distance c: -1 c: 3)
+	(up-find-remote c: deer-class c: 1)
+	(up-set-target-object search-remote c: 0)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-player my-player-number "deers nearby: %d" g: gl-remote-total)
+)
+
+(defrule
+	(up-compare-goal g-deer-id != -1)
+	(goal gl-push-deer YES) ;now check if deer is close to tc#
+	(up-set-target-object search-remote c: 0)
+	(up-compare-goal gl-remote-total > 0)
+	(current-age == dark-age)
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 4)
+	(up-set-target-by-id g: g-deer-id)
+	(up-target-objects 1 action-default -1 -1)
+	(chat-to-player my-player-number "Kill the deer")
+)
+
+(defrule
+	(up-compare-goal g-deer-id != -1)
+	(goal gl-push-deer YES) ;now check if deer is close to tc#
+	(up-set-target-by-id g: g-deer-id)
+	(up-object-data object-data-hitpoints < 1)
+	(current-age == dark-age)
+=>
+	(set-goal g-deer-id -1)
+	(chat-to-player my-player-number "Resetting deer id")
+)
+
+;endregion
 
 
+;region Scout opponent
+#load-if-defined UP-2-PLAYER-GAME
+(defrule 
+	(or (goal strategy-goal sg-drush)
+	(goal strategy-goal sg-towerrush))
+	(civilian-population >= 14)
+	(players-building-count any-enemy < 1)
+	(up-compare-goal g-deer-id == -1)
+=>
+	;(enable-timer 19 5)
+	(up-send-scout group-type-land-explore scout-flank)
+	(set-goal gl-scout-map YES)
+	;(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
+	(disable-self)
+)
+
+; (defrule 
+	; (or (goal strategy-goal sg-drush)
+	; (goal strategy-goal sg-towerrush))
+	; (civilian-population >= 14)
+	; (players-building-count any-enemy < 1)
+; =>
+	; ;(enable-timer 19 5)
+	; (up-send-scout group-type-land-explore scout-mirror)
+	; (set-goal gl-scout-map YES)
+	; (chat-to-player my-player-number "Scouting opponent for my upcoming attack")
+	; (disable-self)
+; )
+
+(defrule 
+	(or (goal strategy-goal sg-drush)
+	(goal strategy-goal sg-towerrush))
+	(current-age == dark-age)
+	(civilian-population >= 14)
+	(players-building-count any-enemy >= 1)
+	(up-compare-goal g-deer-id == -1)
+=>
+	;(enable-timer 19 5)
+	(set-goal gl-scout-map YES)
+	(up-send-scout group-type-land-explore scout-enemy)
+	;(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
+	(disable-self)
+)
+
+#end-if
+
+#load-if-not-defined UP-2-PLAYER-GAME
+
+(defrule 
+	(or (goal strategy-goal sg-drush)
+	(goal strategy-goal sg-towerrush))
+	(civilian-population >= 14)
+	(players-building-count any-enemy < 1)
+	(up-compare-goal g-deer-id == -1)
+=>
+	;(enable-timer 19 5)
+	(up-send-scout group-type-land-explore scout-flank)
+	(set-goal gl-scout-map YES)
+	;(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
+	(disable-self)
+)
+
+(defrule 
+	(or (goal strategy-goal sg-drush)
+	(goal strategy-goal sg-towerrush))
+	(current-age == dark-age)
+	(civilian-population >= 14)
+	(players-building-count focus-player >= 1)
+	(up-compare-goal g-deer-id == -1)
+=>
+	;(enable-timer 19 5)
+	(up-send-scout group-type-land-explore scout-enemy)
+	(set-goal gl-scout-map YES)
+	;(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
+	(disable-self)
+)
+
+#end-if
+
+#load-if-defined UP-2-PLAYER-GAME
+#load-if-not-defined ARENA-MAP
+#load-if-not-defined FORTRESS-MAP
+
+(defrule 
+	(civilian-population >= 18)
+	(players-building-count any-enemy < 1)
+	(up-compare-goal g-deer-id == -1)
+=>
+	;(enable-timer 19 5)
+	(set-goal gl-scout-map YES)
+	(up-send-scout group-type-land-explore scout-flank)
+	;(chat-to-player my-player-number "Scouting opponent")
+	(disable-self)
+)
+
+(defrule 
+	(or (goal strategy-goal sg-drush)
+	(goal strategy-goal sg-towerrush))
+	(current-age == dark-age)
+	(civilian-population >= 18)
+	(players-building-count any-enemy >= 1)
+	(up-compare-goal g-deer-id == -1)
+=>
+	;(enable-timer 19 5)
+	(set-goal gl-scout-map YES)
+	(up-send-scout group-type-land-explore scout-enemy)
+	;(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
+	(disable-self)
+)
+#end-if
+#end-if
+#end-if
+
+#load-if-not-defined UP-2-PLAYER-GAME
+#load-if-not-defined UP-POCKET-POSITION
+#load-if-not-defined ARENA-MAP
+#load-if-not-defined FORTRESS-MAP
+(defrule 
+	(civilian-population >= 18)
+	(players-building-count any-enemy < 1)
+	(up-compare-goal g-deer-id == -1)
+=>
+	;(enable-timer 19 5)
+	(up-send-scout group-type-land-explore scout-flank)
+	(set-goal gl-scout-map YES)
+	;(chat-to-player my-player-number "Looking for enemy")
+	(disable-self)
+)
+
+(defrule 
+	(current-age == dark-age)
+	(civilian-population >= 18)
+	(players-building-count focus-player >= 1)
+	(up-compare-goal g-deer-id == -1)
+=>
+	;(enable-timer 19 5)
+	(up-send-scout group-type-land-explore scout-enemy)
+	(set-goal gl-scout-map YES)
+	;(chat-to-player my-player-number "Scouting opponent base")
+	(disable-self)
+)
+#end-if
+#end-if
+(defrule 
+	(current-age == dark-age)
+	(civilian-population g:>= d-villager-goal)
+	(players-building-count focus-player < 1)
+=>
+	;(enable-timer 19 5)
+	(up-send-scout group-type-land-explore scout-flank)
+	(set-goal gl-scout-map YES)
+	;(chat-to-player my-player-number "Scouting opponent base")
+	(disable-self)
+)
+#end-if
+
+#load-if-defined UP-POCKET-POSITION
+#load-if-not-defined ARENA-MAP
+#load-if-not-defined FORTRESS-MAP
+(defrule 
+	(civilian-population >= 20)
+	(players-building-count any-enemy < 1)
+=>
+	;(enable-timer 19 5)
+	(up-send-scout group-type-land-explore scout-mirror)
+	(set-goal gl-scout-map YES)
+	;(chat-to-player my-player-number "Looking for enemy")
+	(disable-self)
+)
+
+(defrule 
+	(current-age == dark-age)
+	(civilian-population >= 20)
+	(players-building-count focus-player >= 1)
+=>
+	;(enable-timer 19 5)
+	(up-send-scout group-type-land-explore scout-enemy)
+	(set-goal gl-scout-map YES)
+	;(chat-to-player my-player-number "Scouting opponent base")
+	(disable-self)
+)
+#end-if
+#end-if
+(defrule 
+	(current-age == dark-age)
+	(civilian-population g:>= d-villager-goal)
+	(players-building-count focus-player < 1)
+=>
+	;(enable-timer 19 5)
+	(up-send-scout group-type-land-explore scout-mirror)
+	(set-goal gl-scout-map YES)
+	;(chat-to-player my-player-number "Scouting opponent base")
+	(disable-self)
+)
+
+#end-if
+#end-if
+#load-if-defined EMPIRE-WARS
+
+(defrule 
+	(players-building-count any-enemy < 1)
+	(game-time > 5)
+=>
+	;(enable-timer 19 5)
+	(up-send-scout group-type-land-explore scout-flank)
+	(set-goal gl-scout-map YES)
+	(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
+	(disable-self)
+)
+#end-if
+
+(defrule
+	(goal gl-scout-map YES)
+	(goal gl-push-deer YES)	
+=>
+	(set-goal gl-push-deer NO)
+)
 
 ;endregion
 
@@ -27263,10 +27665,12 @@
 		(and (goal sg-fastcastle-boom YES)
 		(and (building-type-count-total town-center >= 3)
 		(building-type-count-total farm < 12)))
-		(and (goal sg-fastcastle-boom NO)
+	(or	(and (goal sg-fastcastle-boom NO)
 		(and (building-type-count-total town-center >= 2)
 		(building-type-count-total farm < 8)))
-	)
+		(and (goal sg-fastcastle-boom -1)
+		(building-type-count-total farm < 8))
+	))
 	(up-pending-objects c: farm < 8)
 	(idle-farm-count < 5)
 	(can-build-with-escrow farm)
@@ -31572,7 +31976,8 @@
 	(building-type-count-total castle >= 1))
 	(current-age == imperial-age)
 	(or (military-population >= 20)
-	(building-type-count-total castle >= 1))
+	(and (building-type-count-total castle >= 1)
+	(unit-type-count-total trebuchet-set >= 2)))
 =>
 	(set-goal strategy-goal sg-fastcastle-gu)
 	(chat-to-player my-player-number "Fast-Imp goals are completed, switching to standard strategy")
@@ -39363,8 +39768,8 @@
 	(goal gl-fastimp-unit fi-eaglespam)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 22)
-	(set-strategic-number sn-food-gatherer-percentage 28)
-	(set-strategic-number sn-gold-gatherer-percentage 50)
+	(set-strategic-number sn-food-gatherer-percentage 36)
+	(set-strategic-number sn-gold-gatherer-percentage 42)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 	(chat-to-player my-player-number "Setting up economy for eaglespam")
 	(disable-self)
