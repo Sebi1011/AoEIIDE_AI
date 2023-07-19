@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.3
-;last update: 18th July 2023
+;last update: 19th July 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -3481,9 +3481,10 @@
 ;region Lumberjack DUC =========================================
 
 (defrule
-	(building-type-count lumber-camp == 1)
+	(building-type-count lumber-camp >= 1)
 	(current-age == dark-age)
-	(up-compare-goal gl-camp-x == -1)
+	;(up-research-status c: feudal-age < research-pending)
+	;(up-compare-goal gl-camp-x == -1)
 	;(civilian-population < 13)
 =>
 	(up-full-reset-search)
@@ -3497,9 +3498,11 @@
 )
 
 (defrule
-	(building-type-count lumber-camp == 1)
+	(building-type-count lumber-camp >= 1)
 	(current-age == dark-age)
+	;(up-research-status c: feudal-age < research-pending)
 	(up-compare-goal gl-camp-x != -1)
+	(up-compare-goal gl-local-total >= 1)
 	;(civilian-population < 13)
 =>
 	(up-set-target-point gl-camp-x)
@@ -3512,15 +3515,16 @@
 )
 
 (defrule
-	(building-type-count lumber-camp == 1)
+	(building-type-count lumber-camp >= 1)
 	(current-age == dark-age)
+	;(up-research-status c: feudal-age < research-pending)
 	(up-compare-goal gl-camp-x != -1)
 	(up-set-target-object search-remote c: 0)
 	;(civilian-population < 13)
 =>
 	(up-reset-search 1 1 0 0)
 	(up-set-target-point gl-starting-tc-x)
-	(up-filter-distance c: -1 c: 9)
+	(up-filter-distance c: -1 c: 7)
 	(up-find-local c: 218 c: 5)
 	(up-find-local c: 123 c: 5)
 	(up-get-search-state gl-local-total)
@@ -3528,8 +3532,9 @@
 )
 
 (defrule
-	(building-type-count lumber-camp == 1)
+	(building-type-count lumber-camp >= 1)
 	(current-age == dark-age)
+	;(up-research-status c: feudal-age < research-pending)
 	(up-compare-goal gl-camp-x != -1)
 	(up-set-target-object search-remote c: 0)
 	(up-set-target-object search-local c: 0)
@@ -10986,7 +10991,7 @@
 	(not (research-completed ri-elite-skirmisher))
 	(research-available ri-elite-skirmisher)
 	(not (unit-available genitour-line))
-	(unit-type-count skirmisher-line <= 4)
+	(unit-type-count skirmisher-line <= 5)
 	(or (not (goal strategy-goal sg-boom-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
@@ -19715,7 +19720,7 @@
 =>
 	(up-get-point position-object gl-unit-x)
 	(up-set-target-point gl-unit-x)
-	(up-filter-distance c: -1 c: 5)
+	(up-filter-distance c: -1 c: 4)
 	(up-find-remote c: spearman-line c: 5)
 	;(up-remove-objects search-remote object-data-hitpoints < 7)
 	(up-get-search-state gl-local-total)
@@ -19728,11 +19733,12 @@
 	(up-compare-goal gl-remote-total >= 1)
 	(up-set-target-object search-local g: gl-scout-index)
 	(up-set-target-object search-remote c: 0)
+	(up-object-data object-data-hitpoints > 5)
 =>
 	(set-goal retreating-goal YES)
 	(up-set-target-object search-local g: gl-scout-index)
 	(up-remove-objects search-local object-data-index g:!= gl-scout-index)
-	(enable-timer retreating-timer 4)
+	(enable-timer retreating-timer 5)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
 	(chat-local-to-self "retreat with scout")
 )
@@ -22752,7 +22758,7 @@
 	;(up-remove-objects search-local object-data-group-flag == 2) ;no villagers from group 2 
 	(up-remove-objects search-local object-data-group-flag == 3) ;or 3
 	(up-remove-objects search-local object-data-action == actionid-attack) ;prevent selecting boar hunting villagers
-	(up-remove-objects search-local -1 > 2) ;find two villagers
+	(up-remove-objects search-local -1 > 3) ;find 4 villagers
 	(up-create-group 0 0 c: 4) ;deer-hunting ctrl-group
 	(up-modify-group-flag 1 c: 4)
 	;(up-chat-data-to-player my-player-number "Number of deer hunters a: %d" g: gl-local-total) 
@@ -22778,7 +22784,7 @@
 	;(up-remove-objects search-local object-data-group-flag == 2) ;no villagers from group 2 
 	(up-remove-objects search-local object-data-group-flag == 3) ;or 3
 	(up-remove-objects search-local object-data-action == actionid-attack) ;prevent selecting boar hunting villagers
-	(up-remove-objects search-local -1 > 2) ;find two villagers
+	(up-remove-objects search-local -1 > 3) ;find 4 villagers
 	(up-reset-group c: 4)
 	(up-create-group 0 0 c: 4) ;deer-hunting ctrl-group
 	(up-modify-group-flag 1 c: 4)
@@ -25938,7 +25944,8 @@
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
-	(can-research ri-wheel-barrow)
+	(current-age >= feudal-age)
+	(can-research-with-escrow ri-wheel-barrow)
 	(unit-type-count-total villager >= 33)
 	(not (can-research-with-escrow castle-age))
 =>
@@ -28408,7 +28415,7 @@
 
 (defrule
 	(can-research-with-escrow ri-crossbow)
-	(unit-type-count-total archer-line >= 3)
+	(unit-type-count-total archer-line >= 5)
 	(goal gl-food-saving 9)
 	(goal gl-gold-saving 9)
 =>
@@ -28423,7 +28430,7 @@
 
 (defrule
 	(can-research-with-escrow ri-crossbow)
-	(unit-type-count-total archer-line >= 6)
+	(unit-type-count-total archer-line >= 5)
 =>
 	(up-modify-escrow food c:- 175)
 	(up-modify-escrow gold c:- 125)
@@ -28432,7 +28439,7 @@
 
 (defrule
 	(can-research-with-escrow ri-elite-skirmisher)
-	(unit-type-count-total skirmisher-line >= 3)
+	(unit-type-count-total skirmisher-line >= 5)
 	(goal gl-wood-saving 40)
 	(goal gl-gold-saving 40)
 =>
@@ -28447,7 +28454,7 @@
 
 (defrule
 	(can-research ri-elite-skirmisher)
-	(unit-type-count-total skirmisher-line >= 3)
+	(unit-type-count-total skirmisher-line >= 5)
 =>
 	(research ri-elite-skirmisher)
 )
@@ -29129,7 +29136,7 @@
 	(not (goal strategy-goal sg-boom-imp))
 	(current-age == castle-age)
 	(can-train archer-line)
-	(unit-type-count-total archer-line < 3)
+	(unit-type-count-total archer-line < 5)
 	(or (goal strategy-goal sg-archerrush)
 	(goal ca-strategy gl-castleage-rangeunit))
 	(wood-amount > 75)
