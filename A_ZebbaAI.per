@@ -2377,13 +2377,15 @@
 ; Finding Enemy Towers x/y position
 
 (defrule
-	(players-building-type-count any-enemy watch-tower-line > 0)
+	(or (players-building-type-count any-enemy watch-tower-line > 0)
+	(players-building-type-count any-enemy donjon > 0))
 	(timer-triggered t-3-sec)
 =>	
 	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 	(up-full-reset-search)
 	(up-filter-status c: status-ready c: list-active)
-	(up-find-status-remote c: tower-type c: 1)
+	(up-find-status-remote c: watch-tower c: 1)
+	(up-find-status-remote c: donjon c: 1)
 	(up-set-target-object search-remote c: 0)
 	(up-get-point position-object enemy-tower-point-x)
 	;(up-send-flare enemy-point-x)
@@ -2392,11 +2394,13 @@
 (defrule
 	(up-set-target-object search-remote c: 0)
 	(game-time > 5)
-	(players-building-type-count any-enemy watch-tower-line > 0)
+	(or (players-building-type-count any-enemy watch-tower-line > 0)
+	(players-building-type-count any-enemy donjon > 0))
 =>
 	(up-full-reset-search)
 	(up-filter-status c: status-ready c: list-active)
-	(up-find-status-remote c: tower-type c: 1)
+	(up-find-status-remote c: watch-tower c: 1)
+	(up-find-status-remote c: donjon c: 1)
 	(up-set-target-object search-remote c: 0)
 	(up-get-point position-object enemy-tower-point-x)
 	(up-send-flare enemy-tower-point-x)
@@ -2536,12 +2540,14 @@
 ;region Finding Enemy Tower x/y position
 
 (defrule
-	(players-building-type-count any-enemy watch-tower-line > 0)
+	(or (players-building-type-count any-enemy watch-tower-line > 0)
+	(players-building-type-count any-enemy donjon > 0))
 	(timer-triggered t-3-sec)
 =>	
 	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 	(up-full-reset-search)
 	(up-find-remote c: watch-tower c: 1)
+	(up-find-remote c: donjon c: 1)
 	(up-set-target-object search-remote c: 0)
 	(up-get-point position-object enemy-tower-point-x)
 	;(up-send-flare enemy-point-x)
@@ -2549,10 +2555,12 @@
 
 (defrule
 	(game-time > 5)
-	(players-building-type-count any-enemy watch-tower-line > 0)
+	(or (players-building-type-count any-enemy watch-tower-line > 0)
+	(players-building-type-count any-enemy donjon > 0))
 =>
 	(up-full-reset-search)
 	(up-find-remote c: watch-tower c: 1)
+	(up-find-remote c: donjon c: 1)
 	(up-set-target-object search-remote c: 0)
 	(up-get-point position-object enemy-tower-point-x)
 	(up-send-flare enemy-tower-point-x)
@@ -3136,7 +3144,7 @@
 	(goal gl-curr-point 8))
 	(up-compare-goal scout-base-two-x > 0)
 	;(up-point-explored scout-base-one-x != explored-no)
-	(up-point-explored scout-base-one-x != explored-active)
+	(up-point-explored scout-base-two-x != explored-active)
 =>
 	(up-set-group search-local c: 1)
 	;(up-set-target-point scout-base-two-x)
@@ -3168,7 +3176,7 @@
 	(goal gl-curr-point 9))
 	(up-compare-goal scout-base-three-x > 0)
 	;(up-point-explored scout-base-two-x != explored-no)
-	(up-point-explored scout-base-two-x != explored-active)
+	(up-point-explored scout-base-three-x != explored-active)
 =>
 	(up-set-group search-local c: 1)
 	;(up-set-target-point scout-base-three-x)
@@ -3200,7 +3208,7 @@
 	(goal gl-curr-point 10))
 	(up-compare-goal scout-base-four-x > 0)
 	;(up-point-explored scout-base-three-x != explored-no)
-	(up-point-explored scout-base-three-x != explored-active)
+	(up-point-explored scout-base-four-x != explored-active)
 =>
 	(up-set-group search-local c: 1)
 	;(up-set-target-point scout-base-one-x)
@@ -3232,7 +3240,7 @@
 	(goal gl-curr-point 11))
 	(up-compare-goal scout-base-four-x > 0)
 	;(up-point-explored scout-base-four-x != explored-no)
-	(up-point-explored scout-base-four-x != explored-active)
+	(up-point-explored scout-base-one-x != explored-active)
 =>
 	(up-set-group search-local c: 1)
 	;(up-set-target-point scout-base-one-x)
@@ -3491,108 +3499,111 @@
 
 ;region Lumberjack DUC =========================================
 
+; ; (defrule
+	; ; (building-type-count lumber-camp >= 1)
+	; ; (current-age == dark-age)
+	; ; ;(up-research-status c: feudal-age < research-pending)
+	; ; ;(up-compare-goal gl-camp-x == -1)
+	; ; ;(civilian-population < 13)
+; ; =>
+	; ; (up-full-reset-search)
+	; ; (up-find-local c: lumber-camp c: 2)
+	; ; (up-get-search-state gl-local-total)
+	; ; ;(up-chat-data-to-self "LCs found: %d" g: gl-local-total)
+	; ; (up-set-target-object search-local c: 0)
+	; ; (up-get-point position-object gl-camp-x)
+	; ; ;(up-send-flare gl-camp-x)
+	; ; ;(chat-to-all "Test")
+; ; )
+
 ; (defrule
 	; (building-type-count lumber-camp >= 1)
+	; (unit-type-count villager-wood < 6)
 	; (current-age == dark-age)
-	; ;(up-research-status c: feudal-age < research-pending)
-	; ;(up-compare-goal gl-camp-x == -1)
-	; ;(civilian-population < 13)
 ; =>
 	; (up-full-reset-search)
 	; (up-find-local c: lumber-camp c: 2)
 	; (up-get-search-state gl-local-total)
 	; ;(up-chat-data-to-self "LCs found: %d" g: gl-local-total)
+; )
+
+; (defrule
+	; (building-type-count lumber-camp >= 1)
+	; (current-age == dark-age)
+	; (unit-type-count villager-wood < 6)
+	; (up-compare-goal gl-local-total >= 1)	
+	; (up-set-target-object search-local c: 0)
+; =>
 	; (up-set-target-object search-local c: 0)
 	; (up-get-point position-object gl-camp-x)
 	; ;(up-send-flare gl-camp-x)
 	; ;(chat-to-all "Test")
 ; )
 
-(defrule
-	(building-type-count lumber-camp >= 1)
-	(current-age == dark-age)
-=>
-	(up-full-reset-search)
-	(up-find-local c: lumber-camp c: 2)
-	(up-get-search-state gl-local-total)
-	;(up-chat-data-to-self "LCs found: %d" g: gl-local-total)
-)
+; ; (defrule
+	; ; (building-type-count lumber-camp == 2)
+	; ; (current-age == dark-age)
+	; ; (unit-type-count villager-wood >= 7)
+	; ; (up-compare-goal gl-local-total >= 1)	
+	; ; (up-set-target-object search-local c: 1)
+; ; =>
+	; ; (up-set-target-object search-local c: 1)
+	; ; (up-get-point position-object gl-camp-x)
+	; ; ;(up-send-flare gl-camp-x)
+	; ; ;(chat-to-all "Test")
+; ; )
 
-(defrule
-	(building-type-count lumber-camp >= 1)
-	(current-age == dark-age)
-	(or (building-type-count lumber-camp == 1)
-	(unit-type-count villager-wood < 7))
-	(up-compare-goal gl-local-total >= 1)	
-	(up-set-target-object search-local c: 0)
-=>
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object gl-camp-x)
-	;(up-send-flare gl-camp-x)
-	;(chat-to-all "Test")
-)
+; (defrule
+	; (building-type-count lumber-camp >= 1)
+	; (unit-type-count villager-wood < 6)
+	; (current-age == dark-age)
+	; ;(up-research-status c: feudal-age < research-pending)
+	; (up-compare-goal gl-camp-x != -1)
+	; (up-compare-goal gl-local-total >= 1)
+	; ;(civilian-population < 13)
+; =>
+	; (up-set-target-point gl-camp-x)
+	; (up-filter-distance c: -1 c: 2)
+	; (up-filter-status c: status-ready c: list-active)
+	; (up-find-resource c: tree-class c: 40)
+	; (up-clean-search search-remote object-data-distance search-order-desc)
+	; (up-get-search-state gl-local-total)
+	; ;(up-chat-data-to-self "Trees found: %d" g: gl-remote-total)
+; )
 
-(defrule
-	(building-type-count lumber-camp == 2)
-	(current-age == dark-age)
-	(unit-type-count villager-wood >= 7)
-	(up-compare-goal gl-local-total >= 1)	
-	(up-set-target-object search-local c: 1)
-=>
-	(up-set-target-object search-local c: 1)
-	(up-get-point position-object gl-camp-x)
-	;(up-send-flare gl-camp-x)
-	;(chat-to-all "Test")
-)
+; (defrule
+	; (building-type-count lumber-camp >= 1)
+	; (unit-type-count villager-wood < 6)
+	; (current-age == dark-age)
+	; ;(up-research-status c: feudal-age < research-pending)
+	; (up-compare-goal gl-camp-x != -1)
+	; (up-set-target-object search-remote c: 0)
+	; ;(civilian-population < 13)
+; =>
+	; (up-reset-search 1 1 0 0)
+	; (up-set-target-point gl-starting-tc-x)
+	; (up-filter-distance c: -1 c: 7)
+	; (up-find-local c: 218 c: 5) ;lumberjack (male & female)
+	; (up-find-local c: 123 c: 5)
+	; (up-get-search-state gl-local-total)
+	; ;(up-chat-data-to-self "Villager found: %d" g: gl-local-total)
+; )
 
-(defrule
-	(building-type-count lumber-camp >= 1)
-	(current-age == dark-age)
-	;(up-research-status c: feudal-age < research-pending)
-	(up-compare-goal gl-camp-x != -1)
-	(up-compare-goal gl-local-total >= 1)
-	;(civilian-population < 13)
-=>
-	(up-set-target-point gl-camp-x)
-	(up-filter-distance c: -1 c: 3)
-	(up-filter-status c: status-ready c: list-active)
-	(up-find-resource c: tree-class c: 40)
-	(up-clean-search search-remote object-data-distance search-order-desc)
-	(up-get-search-state gl-local-total)
-	;(up-chat-data-to-self "Trees found: %d" g: gl-remote-total)
-)
-
-(defrule
-	(building-type-count lumber-camp >= 1)
-	(current-age == dark-age)
-	;(up-research-status c: feudal-age < research-pending)
-	(up-compare-goal gl-camp-x != -1)
-	(up-set-target-object search-remote c: 0)
-	;(civilian-population < 13)
-=>
-	(up-reset-search 1 1 0 0)
-	(up-set-target-point gl-starting-tc-x)
-	(up-filter-distance c: -1 c: 7)
-	(up-find-local c: 218 c: 5) ;lumberjack (male & female)
-	(up-find-local c: 123 c: 5)
-	(up-get-search-state gl-local-total)
-	;(up-chat-data-to-self "Villager found: %d" g: gl-local-total)
-)
-
-(defrule
-	(building-type-count lumber-camp >= 1)
-	(current-age == dark-age)
-	;(up-research-status c: feudal-age < research-pending)
-	(up-compare-goal gl-camp-x != -1)
-	(up-set-target-object search-remote c: 0)
-	(up-set-target-object search-local c: 0)
-	(not (town-under-attack))
-	;(civilian-population < 13)
-=>
-	(up-target-objects 0 action-default -1 -1)
-	;(chat-local-to-self "Sending lumberjacks to lumbercamp")
-	;(disable-self)
-)
+; (defrule
+	; (building-type-count lumber-camp >= 1)
+	; (unit-type-count villager-wood < 6)
+	; (current-age == dark-age)
+	; ;(up-research-status c: feudal-age < research-pending)
+	; (up-compare-goal gl-camp-x != -1)
+	; (up-set-target-object search-remote c: 0)
+	; (up-set-target-object search-local c: 0)
+	; (not (town-under-attack))
+	; ;(civilian-population < 13)
+; =>
+	; (up-target-objects 0 action-default -1 -1)
+	; (chat-local-to-self "Sending lumberjacks to lumbercamp")
+	; ;(disable-self)
+; )
 
 ;endregion
 
@@ -19495,7 +19506,8 @@
 =>	
 	(up-full-reset-search)
 	(up-filter-status c: status-pending c: list-active) ;don't retreat if enemy is building a tower
-    (up-find-status-remote c: tower-type c: 1)
+	(up-find-status-remote c: watch-tower c: 1)
+	(up-find-status-remote c: donjon c: 1)
 	(up-get-search-state gl-local-total)
 )
 
@@ -19505,6 +19517,7 @@
 	(up-compare-goal gl-remote-total > 0)
 	(up-set-target-object search-remote c: 0)
 =>
+	;(chat-to-all "Test 1")
 	(up-jump-rule 11)
 )
 
@@ -19516,7 +19529,8 @@
 =>
 	(up-full-reset-search)
 	(up-filter-status c: status-ready c: list-active)
-	(up-find-status-remote c: tower-type c: 10)
+	(up-find-status-remote c: watch-tower c: 10)
+	(up-find-status-remote c: donjon c: 10)
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-enemy-towers g:= gl-remote-total)
 	;(up-chat-data-to-self "nr towers: %d" g: gl-enemy-towers)
@@ -19545,6 +19559,7 @@
 	(or (up-object-data object-data-garrison-count < 2)
 	(up-object-data object-data-hitpoints <= 170))
 =>
+	;(chat-to-all "Test 2")
 	(up-jump-rule 3)
 )	
 
@@ -19620,6 +19635,7 @@
 	(up-set-target-object search-remote g: gl-tower-loop-counter)
 	(up-object-data object-data-garrison-count >= 2)
 =>
+	;(chat-to-all "Test 3")
 	(up-jump-rule 3)
 )	
 
@@ -19702,7 +19718,8 @@
 (defrule
 	(or (players-building-type-count focus-player watch-tower >= 1)
 	(players-building-type-count focus-player donjon >= 1))
-	(up-point-contains enemy-tower-point-x c: tower-type)
+	(or (up-point-contains enemy-tower-point-x c: watch-tower)
+	(up-point-contains enemy-tower-point-x c: donjon))
 	(up-compare-goal gl-tower-loop-counter g:< gl-enemy-towers)
 =>
 	(up-modify-goal gl-tower-loop-counter c:+ 1) ;go to next list-entry
