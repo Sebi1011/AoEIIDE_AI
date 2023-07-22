@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 1.2.3
-;last update: 20th July 2023
+;Version: 1.2.4
+;last update: 23rd July 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -9,7 +9,7 @@
 (defrule
 	(game-time > 10)
 =>
-	(chat-to-all "ZebbaAI: Version 1.2.3 by Zebba")
+	(chat-to-all "ZebbaAI: Version 1.2.4 by Zebba")
 	(disable-self)
 )
 
@@ -513,6 +513,8 @@
 (defconst gl-amnt-food-sources 166)
 (defconst gl-dead-sheeps 167)
 (defconst gl-number-sheeps-last 168)
+(defconst gl-dead-boars 169)
+(defconst gl-number-boars-last 170)
 (defconst watch-tower-point-x 178)
 (defconst watch-tower-point-y 179)
 (defconst sn-nomad-style-start 180)
@@ -1723,6 +1725,8 @@
 	(set-goal gl-number-sheeps 0)
 	(set-goal gl-number-sheeps-last 0)
 	(set-goal gl-dead-sheeps 0)
+	(set-goal gl-number-boars-last 0)
+	(set-goal gl-dead-boars 0)
 	(enable-timer gl-curr-deer-timer 1)
 	(disable-self)
 )
@@ -3269,10 +3273,10 @@
 	(current-age == dark-age)
 	(up-compare-goal scout-base-four-x > 0)
 	(or ;we found our food, deer to push & have 8 villagers 
-		(and(or (and(up-compare-goal gl-amnt-food-sources >= 8)
+		(and(or (and(up-compare-goal gl-amnt-food-sources >= 9)
 				    (up-compare-goal gl-number-boars >= 2))
-				(and(up-compare-goal gl-amnt-food-sources >= 9)
-					(up-compare-goal gl-number-boars >= 1)))	 
+				(and(up-compare-goal gl-amnt-food-sources >= 10)
+					(up-compare-goal gl-number-boars >= 1)))	  
 		(and (civilian-population >= 8)
 			 (up-gaia-type-count c: deer-class > 0))
 		)
@@ -3321,7 +3325,7 @@
 
 (defrule ;find visible sheep
 	(current-age == dark-age) 
-	(up-compare-goal gl-amnt-food-sources < 9)
+	(up-compare-goal gl-amnt-food-sources < 10)
 =>
 	(up-full-reset-search) 
 	(up-find-local c: livestock-class c: 10) 
@@ -3334,7 +3338,7 @@
 (defrule ;count first sheep
 	(current-age == dark-age)
 	(up-compare-goal gl-local-total g:> gl-number-sheeps-last)
-	(up-compare-goal gl-amnt-food-sources < 9)
+	(up-compare-goal gl-amnt-food-sources < 10)
 =>
 	(up-modify-goal gl-number-sheeps-last g:= gl-local-total)
 	(up-modify-goal gl-number-sheeps-last g:+ gl-dead-sheeps)
@@ -3344,7 +3348,7 @@
 (defrule ;calc dead sheep 1
 	(current-age == dark-age)
 	(up-compare-goal gl-number-sheeps g:< gl-number-sheeps-last)
-	(up-compare-goal gl-amnt-food-sources < 9)
+	(up-compare-goal gl-amnt-food-sources < 10)
 =>
 	;(up-modify-goal gl-number-sheeps-last g:+ gl-dead-sheeps)
 	(up-modify-goal gl-dead-sheeps g:= gl-number-sheeps-last)
@@ -3355,7 +3359,7 @@
 (defrule ;calc dead sheep 2
 	(current-age == dark-age)
 	(up-compare-goal gl-number-sheeps g:>= gl-number-sheeps-last)
-	(up-compare-goal gl-amnt-food-sources < 9)
+	(up-compare-goal gl-amnt-food-sources < 10)
 =>
 	(up-modify-goal gl-dead-sheeps g:= gl-number-sheeps)
 	(up-modify-goal gl-dead-sheeps g:- gl-local-total)
@@ -3370,7 +3374,7 @@
 (defrule
 	(current-age == dark-age)
 	(up-compare-goal gl-number-boars < 3)
-	(up-compare-goal gl-amnt-food-sources < 9)
+	(up-compare-goal gl-amnt-food-sources < 10)
 =>
 	(up-full-reset-search)
 	(up-modify-sn sn-focus-player-number c:= 0)
@@ -3378,25 +3382,49 @@
 	(up-get-search-state gl-local-total) 
 	;(up-chat-data-to-player my-player-number "Visible boar: %d" g: gl-remote-total)
 	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
-)
-
-(defrule
-	(current-age == dark-age)
-	(up-compare-goal gl-number-boars < 3)
-	(up-compare-goal gl-remote-total > 0)
-	(up-compare-goal gl-amnt-food-sources < 9)
-=>
 	(up-modify-goal gl-number-boars g:= gl-remote-total)
+	(up-modify-goal gl-number-boars g:+ gl-dead-boars)
 )
 
-(defrule ;add total number sheeps to gl-amnt-food-sources
+(defrule ;count first boar
+	(current-age == dark-age)
+	(up-compare-goal gl-remote-total g:> gl-number-boars-last)
+	(up-compare-goal gl-amnt-food-sources < 10)
+=>
+	(up-modify-goal gl-number-boars-last g:= gl-remote-total)
+	(up-modify-goal gl-number-boars-last g:+ gl-dead-boars)
+;	(up-chat-data-to-player my-player-number "Nr boars found: %d" g: gl-number-boars-last)
+)	
+
+(defrule ;calc dead boar 1
+	(current-age == dark-age)
+	(up-compare-goal gl-number-boars g:< gl-number-boars-last)
+	(up-compare-goal gl-amnt-food-sources < 10)
+=>
+	(up-modify-goal gl-dead-boars g:= gl-number-boars-last)
+	(up-modify-goal gl-dead-boars g:- gl-remote-total)
+	;(up-chat-data-to-player my-player-number "dead boars 1: %d" g: gl-dead-boars)
+)
+
+(defrule ;calc dead boar 2
+	(current-age == dark-age)
+	(up-compare-goal gl-number-boars g:>= gl-number-boars-last)
+	(up-compare-goal gl-amnt-food-sources < 10)
+=>
+	(up-modify-goal gl-dead-boars g:= gl-number-boars)
+	(up-modify-goal gl-dead-boars g:- gl-remote-total)
+	(up-modify-goal gl-number-boars-last g:= gl-number-boars)
+	;(up-chat-data-to-player my-player-number "dead boars 2: %d" g: gl-dead-boars)
+)
+
+(defrule ;add total number sheeps & boars to gl-amnt-food-sources
 	(current-age == dark-age)
 	(up-compare-goal gl-number-sheeps-last > 0)
-	(up-compare-goal gl-amnt-food-sources < 9)
+	(up-compare-goal gl-amnt-food-sources < 10)
 =>
 	(up-modify-goal gl-amnt-food-sources g:= gl-number-sheeps-last)
-	(up-modify-goal gl-amnt-food-sources g:+ gl-number-boars)
-	;(up-chat-data-to-player my-player-number "Nr food sources: %d" g: gl-amnt-food-sources)
+	(up-modify-goal gl-amnt-food-sources g:+ gl-number-boars-last)
+;	(up-chat-data-to-player my-player-number "Nr food sources: %d" g: gl-amnt-food-sources)
 )
 
 
@@ -3696,6 +3724,7 @@
 	; (up-set-target-point gl-self-x)
 	(up-find-local c: 354 c: 240) ;female forager
 	(up-find-local c: 120 c: 240) ;male forager
+	(up-clean-search search-local object-data-hitpoints search-order-desc)
 	(up-remove-objects search-local object-data-index > 3)
 	(up-get-search-state gl-local-total)
 	;(up-chat-data-to-player my-player-number "Amount of foragers: %d" g: gl-local-total)
@@ -10987,7 +11016,7 @@
 	(players-unit-type-count focus-player spearman-line >= 4))
 	(can-train-with-escrow skirmisher-line)
 	(food-amount < 600)
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 	(or 
 		(not (goal gl-food-saving 22))
 		(and (goal gl-food-saving 22)
@@ -11092,7 +11121,7 @@
 	(can-train-with-escrow scout-cavalry-line)
 	(up-research-status c: castle-age != research-pending)
 	(food-amount < 600)
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 	(or 
 		(not (goal gl-food-saving 22))
 		(and (goal gl-food-saving 22)
@@ -11109,7 +11138,7 @@
 	(players-unit-type-count focus-player skirmisher-line >= 3)
 	(can-train-with-escrow eagle-warrior-line)
 	(food-amount < 600)	
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 	(or 
 		(not (goal gl-food-saving 22))
 		(and (goal gl-food-saving 22)
@@ -11127,7 +11156,7 @@
 	(players-unit-type-count focus-player militiaman-line > 0)
 	(unit-type-count-total archer-line < 8)
 	(can-train-with-escrow archer-line)
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 	(or 
 		(not (goal gl-food-saving 22))
 		(and (goal gl-food-saving 22)
@@ -24258,7 +24287,9 @@
 	(up-compare-goal gl-military-advantage >= -14)
 =>
 	(up-full-reset-search)
-	(up-find-local c: villager-class c: 10)
+	(up-find-local c: villager-class c: 40)
+	(up-clean-search search-local object-data-hitpoints search-order-desc)
+	(up-remove-objects search-local object-data-index > 9)
 	(up-set-target-point gl-starting-tc-x)
 	(up-filter-distance c: -1 c: 30)
 	(up-find-remote c: watch-tower c: 1)
@@ -24276,7 +24307,9 @@
 	(up-compare-goal gl-military-advantage >= -14)
 =>
 	(up-full-reset-search)
-	(up-find-local c: villager-class c: 6)
+	(up-find-local c: villager-class c: 40)
+	(up-clean-search search-local object-data-hitpoints search-order-desc)
+	(up-remove-objects search-local object-data-index > 5)
 	(up-set-target-point gl-starting-tc-x)
 	(up-filter-distance c: -1 c: 30)
 	(up-find-remote c: watch-tower c: 1)
@@ -24374,6 +24407,8 @@
 	(or (unit-type-count-total villager g:< f-villager-goal)
 	(up-research-status c: castle-age == research-pending))
 	(unit-type-count-total villager < 55)
+	(or (up-compare-goal gl-military-advantage >= -12)
+	(food-amount >= 125))
 =>
 	(up-modify-escrow food c:- 50)
 	(train villager)
@@ -24381,7 +24416,7 @@
 	;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
 )
 
-(defrule
+(defrule ;scoutrush before wheelbarrow
 	(current-age == feudal-age)
 	(goal strategy-goal sg-scoutrush)
 	(can-train-with-escrow villager)
@@ -24389,6 +24424,8 @@
 	(up-research-status c: castle-age == research-pending))
 	(unit-type-count-total villager < 34)
 	(up-research-status c: ri-wheel-barrow < research-pending)
+	(or (up-compare-goal gl-military-advantage >= -12)
+	(food-amount >= 125))
 =>
 	(up-modify-escrow food c:- 50)
 	(train villager)
@@ -24396,7 +24433,7 @@
 	;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
 )
 
-(defrule
+(defrule ;scoutrush after wheelbarrow
 	(current-age == feudal-age)
 	(goal strategy-goal sg-scoutrush)
 	(can-train-with-escrow villager)
@@ -24406,6 +24443,8 @@
 	(or (up-research-status c: ri-wheel-barrow >= research-pending)
 	(or (food-amount < 175)
 	(food-amount >= 225)))
+	(or (up-compare-goal gl-military-advantage >= -12)
+	(food-amount >= 125))
 =>
 	(up-modify-escrow food c:- 50)
 	(train villager)
@@ -24413,7 +24452,7 @@
 	;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
 )
 
-(defrule
+(defrule ;when being cumans, having 2TC and research castle-age
 	(current-age == feudal-age)
 	(civ-selected cumans)
 	(building-type-count town-center == 2)
@@ -24893,15 +24932,18 @@
 	(goal ca-strategy gl-castleage-rangeunit)
 	(building-type-count-total town-center >= 1)
 	(building-type-count-total archery-range < 3)
+	(building-type-count-total archery-range == 2)
 	(can-build-with-escrow archery-range)
+	(civilian-population >= 40)
 	(or 
 		(and (players-building-type-count focus-player archery-range >= 3)
 			(military-population > 6))
-		(and (up-compare-goal gl-military-advantage >= -5)
-			(and (up-compare-goal gl-military-advantage < 5)
-			(civilian-population >= 46))
-		)
-	)
+	(or	(and (up-compare-goal gl-military-advantage >= -5)
+		(and (up-compare-goal gl-military-advantage < 5)
+			(civilian-population >= 46)))
+		(and (up-compare-goal gl-military-advantage <= -8)
+		(players-unit-type-count focus-player militiaman-line >= 8))
+	))
 =>
 	(up-modify-escrow wood c:- 175)
 	(build archery-range)
@@ -25027,7 +25069,7 @@
 	(or (players-unit-type-count focus-player archer-line < 10)
 	(unit-type-count skirmisher-line >= 5))
 	(game-time < 1000)
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 =>
 	(up-modify-escrow food c:- 80)
 	(train scout-cavalry-line)	
@@ -25050,7 +25092,7 @@
 	(players-unit-type-count focus-player infantry-class < 6)
 	(or (players-unit-type-count focus-player archer-line < 10)
 	(unit-type-count skirmisher-line >= 5))
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 =>
 	(train scout-cavalry-line)
 )
@@ -25071,7 +25113,7 @@
 	(or (players-unit-type-count focus-player archer-line < 10)
 	(unit-type-count skirmisher-line >= 5))
 	(unit-type-count-total villager < 32)
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 =>
 	(up-modify-escrow food c:- 80)
 	(train scout-cavalry-line)	
@@ -25095,7 +25137,7 @@
 	(or (players-unit-type-count focus-player archer-line < 10)
 	(unit-type-count skirmisher-line >= 5))
 	(unit-type-count-total villager < 32)
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 =>
 	(train scout-cavalry-line)
 )
@@ -25195,7 +25237,7 @@
 	(game-time < 1000)
 	(or (players-unit-type-count focus-player scout-cavalry-line < 3) 
 		(unit-type-count-total spearman-line >= 1))
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 =>
 	(up-modify-escrow food c:- 25)
 	(up-modify-escrow gold c:- 50)
@@ -25213,7 +25255,7 @@
 	(game-time >= 1000))
 	(or (players-unit-type-count focus-player scout-cavalry-line < 3) 
 		(unit-type-count-total spearman-line >= 1))
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 =>
 	(train eagle-warrior-line)
 )
@@ -25230,7 +25272,7 @@
 	(unit-type-count-total scout-cavalry-line >= 2))
 	(unit-type-count-total archer-line < 8)
 	(game-time < 1000)
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 =>
 	(up-modify-escrow wood c:- 25)
 	(up-modify-escrow gold c:- 45)
@@ -25250,7 +25292,7 @@
 	(wood-amount > 65)
 	(or (unit-type-count-total archer-line >= 8)
 	(game-time >= 1000))
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 =>
 	(train archer-line)
 )
@@ -25266,7 +25308,7 @@
 	(unit-type-count-total scout-cavalry-line < 2)
 	;(unit-type-count-total skirmisher-line < 10)
 	(players-current-age focus-player == feudal-age)
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 =>
 	(train skirmisher-line)
 )
@@ -25279,7 +25321,7 @@
 	(can-train skirmisher-line)
 	(wood-amount > 85)
 	(unit-type-count-total skirmisher-line < 8)
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 =>
 	(train skirmisher-line)
 )
@@ -25292,7 +25334,7 @@
 	(can-train archer-line)
 	(wood-amount > 75)
 	(unit-type-count-total skirmisher-line >= 2)
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 =>
 	(train archer-line)
 )
@@ -25332,7 +25374,7 @@
 		(unit-type-count-total skirmisher-line >= 4))
 	)
 	(players-current-age focus-player == feudal-age)
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 =>
 	(train archer-line)
 )
@@ -25347,7 +25389,7 @@
 	(can-train spearman-line)
 	(wood-amount > 75)
 	(unit-type-count-total spearman-line < 2)
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 =>
 	(train spearman-line)
 )
@@ -25361,7 +25403,7 @@
 	(wood-amount > 75)
 	(food-amount > 85)
 	(unit-type-count-total spearman-line < 6)
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 =>
 	(train spearman-line)
 )
@@ -25378,7 +25420,7 @@
 	(unit-type-count-total archer-line >= 4)
 	(wood-amount > 50)	
 	(food-amount > 70)
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 =>
 	(train spearman-line)
 )
@@ -26722,6 +26764,7 @@
 	(up-research-status c: imperial-age == research-pending))
 	(unit-type-count-total villager < 130)
 	(food-amount < 300)
+	(up-compare-goal gl-military-advantage >= -15)
 =>
 	(train villager)
 	(up-get-fact civilian-population 0 civilian-pop) 
@@ -34604,7 +34647,7 @@
 	(current-age == feudal-age)
 	(up-research-status c: castle-age >= research-pending)
 	(can-train eagle-warrior-line)
-	(up-compare-goal gl-military-advantage < 25)
+	(up-compare-goal gl-military-advantage < 20)
 =>
 	(train eagle-warrior-line)
 )
