@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.4
-;last update: 23rd July 2023
+;last update: 24th July 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -2815,7 +2815,7 @@
 	;(up-send-flare scout-base-two-x)
 	;(up-send-flare scout-base-three-x)
 	;(up-send-flare scout-base-four-x)
-	;(chat-to-player my-player-number "Initializing scouting points")
+	(chat-to-player my-player-number "Initializing scouting points")
 	(disable-timer scout-base-point-timer)
 	(up-set-timer c: scout-base-point-timer g: 35)
 	(disable-self)
@@ -2866,7 +2866,7 @@
 	;(up-send-flare scout-base-two-x)
 	;(up-send-flare scout-base-three-x)
 	;(up-send-flare scout-base-four-x)
-	;(chat-to-player my-player-number "Initializing 2nd layer scouting points")
+	(chat-to-player my-player-number "Initializing 2nd layer scouting points")
 	(set-goal gl-curr-layer-timer 37)
 	(disable-timer scout-base-point-timer)
 	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
@@ -3136,7 +3136,7 @@
 	(up-modify-goal gl-curr-point c:+ 1)
 	(disable-timer scout-base-point-timer)
 	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
-	;(chat-to-player my-player-number "Send scout to 2nd point")
+	(chat-to-player my-player-number "Send scout to 2nd point")
 )
 	
 (defrule
@@ -3168,7 +3168,7 @@
 	(up-modify-goal gl-curr-point c:+ 1)
 	(disable-timer scout-base-point-timer)
 	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
-	;(chat-to-player my-player-number "Send scout to 3rd point")
+	(chat-to-player my-player-number "Send scout to 3rd point")
 )
 
 (defrule
@@ -3200,7 +3200,7 @@
 	(up-modify-goal gl-curr-point c:+ 1)
 	(disable-timer scout-base-point-timer)
 	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
-	;(chat-to-player my-player-number "Send scout to 4th point")
+	(chat-to-player my-player-number "Send scout to 4th point")
 )
 
 (defrule
@@ -3232,7 +3232,7 @@
 	(up-modify-goal gl-curr-point c:+ 1)
 	(disable-timer scout-base-point-timer)
 	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
-	;(chat-to-player my-player-number "Send scout back to 1st point")
+	(chat-to-player my-player-number "Send scout back to 1st point")
 )
 
 (defrule
@@ -3265,7 +3265,7 @@
 	(up-modify-goal gl-curr-point c:+ 1)
 	(disable-timer scout-base-point-timer)
 	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
-	;(chat-to-player my-player-number "Current layer scouting finished")
+	(chat-to-player my-player-number "Current layer scouting finished")
 )
 
 (defrule
@@ -3651,17 +3651,17 @@
 		(and (unit-type-count villager == 15)
 		(unit-type-count villager-forager < 3))
 		(and (unit-type-count villager >= 16)
-		(unit-type-count villager-forager < 4)))))	
+		(unit-type-count villager-forager < 4)))))
 	(building-type-count mill > 0)
 	(up-gaia-type-count c: forage-class > 0)
 =>
 	(up-full-reset-search)
 	(up-find-local c: 590 c: 240) ;female shepherd
-	(up-find-local c: 240 c: 240) ;male shepherd
+	(up-find-local c: 592 c: 240) ;male shepherd
 	;(up-remove-objects search-local object-data-class != villager-shepherd)
 	(up-remove-objects search-local -1 > 0) ;find one shepherd
 	(up-get-search-state gl-local-total)
-	;(up-chat-data-to-player my-player-number "Amount of shepherds: %d" g: gl-local-total)
+	(up-chat-data-to-player my-player-number "Amount of shepherds: %d" g: gl-local-total)
 )
 
 (defrule
@@ -3681,10 +3681,14 @@
 	(building-type-count mill > 0)
 	(up-gaia-type-count c: forage-class > 0)
 =>
+	(up-set-target-point gl-starting-tc-x)
 	(up-filter-distance c: -1 c: 20)
-	(up-find-remote c: forage-class c: 1) ;find a nearby berry bush
+	(up-modify-sn sn-focus-player-number c:= 0)
+	(up-find-remote c: forage-class c: 40) ;find a nearby berry bush
+	(up-remove-objects search-remote -1 > 0)
 	(up-get-search-state gl-local-total)
-	;(up-chat-data-to-player my-player-number "Amount of berry-bushes: %d" g: gl-remote-total)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	(up-chat-data-to-player my-player-number "Amount of berry-bushes: %d" g: gl-remote-total)
 )
 
 (defrule
@@ -3706,7 +3710,7 @@
 =>
 	(up-filter-distance c: -1 c: 20)
 	(up-find-remote c: forage-class c: 1)
-	(up-get-search-state gl-local-total)
+	;(up-get-search-state gl-local-total)
 	(up-target-objects 0 action-default -1 -1)
 	(chat-local-to-self "Sending villager to berries")
 )
@@ -20094,6 +20098,7 @@
 	(up-filter-status c: status-ready c: list-active)
 	(up-modify-sn sn-focus-player-number c:= 0)
 	(up-find-remote c: livestock-class c: 1)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 )
 
 (defrule
@@ -20261,6 +20266,7 @@
 	(up-filter-status c: status-ready c: list-active)
 	(up-find-resource c: wood c: 200)
 	(up-get-search-state gl-local-total)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 	(up-chat-data-to-player my-player-number "nr of trees: %d" g: gl-remote-total)
 )
 
@@ -22481,6 +22487,7 @@
 	(up-find-remote c: boar-class c: 1)
 	(up-set-target-object search-remote c: 0)
 	(up-get-object-data object-data-carry boar-food-amount)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 	;(up-chat-data-to-self "Boars on this map have %d food" g: boar-food-amount) 
 	(disable-self)
 )
@@ -22514,6 +22521,7 @@
 	(up-remove-objects search-remote -1 > 0) ;remove all other boars in the list
 	(up-set-target-object search-remote c: 0)
 	(up-get-object-data object-data-id g-boar-id) ;Store the boars ID in a goal
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 	;(chat-to-player my-player-number "Found a boar")
 	;(up-chat-data-to-self "Boar id is: %d" g: g-boar-id) 
 )
@@ -22751,6 +22759,7 @@
 	(up-set-target-by-id g: g-boar-id)
 	(up-find-local c: town-center c: 1) 
 	(up-target-objects 1 action-default -1 -1)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 	;(chat-to-player my-player-number "Shooting Boar")
 )
 
@@ -22833,6 +22842,7 @@
 	(up-remove-objects search-remote object-data-carry < 1)
 	(up-clean-search search-remote object-data-distance search-order-asc)
 	(up-get-search-state gl-local-total)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 	;(up-chat-data-to-player my-player-number "Amount of deer: %d" g: gl-remote-total)
 )
 
@@ -22948,6 +22958,7 @@
 	(up-find-remote c: deer-class c: 1)
 	(up-set-target-object search-remote c: 0)
 	(up-get-search-state gl-local-total)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 	;(up-chat-data-to-player my-player-number "deers nearby: %d" g: gl-remote-total)
 )
 
@@ -23020,6 +23031,7 @@
 	(up-find-remote c: deer-class c: 1)
 	(up-set-target-object search-remote c: 0)
 	(up-get-search-state gl-local-total)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 	;(up-chat-data-to-player my-player-number "deers nearby: %d" g: gl-remote-total)
 )
 
@@ -23076,7 +23088,7 @@
 	;(enable-timer 19 5)
 	(up-send-scout group-type-land-explore scout-flank)
 	(set-goal gl-scout-map YES)
-	;(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
+	(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
 	(disable-self)
 )
 
@@ -23104,7 +23116,7 @@
 	;(enable-timer 19 5)
 	(set-goal gl-scout-map YES)
 	(up-send-scout group-type-land-explore scout-enemy)
-	;(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
+	(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
 	(disable-self)
 )
 
@@ -23155,7 +23167,7 @@
 	;(enable-timer 19 5)
 	(set-goal gl-scout-map YES)
 	(up-send-scout group-type-land-explore scout-flank)
-	;(chat-to-player my-player-number "Scouting opponent")
+	(chat-to-player my-player-number "Scouting opponent")
 	(disable-self)
 )
 
@@ -23170,7 +23182,7 @@
 	;(enable-timer 19 5)
 	(set-goal gl-scout-map YES)
 	(up-send-scout group-type-land-explore scout-enemy)
-	;(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
+	(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
 	(disable-self)
 )
 #end-if
@@ -23289,7 +23301,7 @@
 )
 
 (defrule
-	(goal gl-scout-map YES)
+	(goal gl-scout-map NO)
 	(goal gl-push-deer YES)
 	(or (up-compare-goal g-deer-id == -1) 
 	(or (and (unit-type-count militiaman-line g:>= gl-drush-militia-count)
@@ -23310,6 +23322,7 @@
 	(unit-type-count militiaman-line g:< gl-drush-militia-count)
 	(building-type-count barracks < 1)	;we're not drushing
     (up-gaia-type-count c: deer-class > 0)
+	(dropsite-min-distance deer-hunting < 40)
 	(up-compare-goal g-deer-id != -1)
 =>
 	(set-goal gl-push-deer YES)
@@ -24408,7 +24421,8 @@
 	(up-research-status c: castle-age == research-pending))
 	(unit-type-count-total villager < 55)
 	(or (up-compare-goal gl-military-advantage >= -12)
-	(food-amount >= 125))
+	(or (civilian-population < 26)
+	(food-amount >= 125)))
 =>
 	(up-modify-escrow food c:- 50)
 	(train villager)
@@ -24425,7 +24439,8 @@
 	(unit-type-count-total villager < 34)
 	(up-research-status c: ri-wheel-barrow < research-pending)
 	(or (up-compare-goal gl-military-advantage >= -12)
-	(food-amount >= 125))
+	(or (civilian-population < 26)
+	(food-amount >= 125)))
 =>
 	(up-modify-escrow food c:- 50)
 	(train villager)
@@ -24444,7 +24459,8 @@
 	(or (food-amount < 175)
 	(food-amount >= 225)))
 	(or (up-compare-goal gl-military-advantage >= -12)
-	(food-amount >= 125))
+	(or (civilian-population < 26)
+	(food-amount >= 125)))
 =>
 	(up-modify-escrow food c:- 50)
 	(train villager)
@@ -25270,6 +25286,7 @@
 	(can-train-with-escrow archer-line)
 	(or (players-unit-type-count focus-player skirmisher-line < 5) 
 	(unit-type-count-total scout-cavalry-line >= 2))
+	(players-unit-type-count focus-player skirmisher-line < 10) 
 	(unit-type-count-total archer-line < 8)
 	(game-time < 1000)
 	(up-compare-goal gl-military-advantage < 20)
@@ -25289,6 +25306,7 @@
 	(can-train archer-line)
 	(or (players-unit-type-count focus-player skirmisher-line < 5) 
 	(unit-type-count-total scout-cavalry-line >= 2))
+	(players-unit-type-count focus-player skirmisher-line < 10) 
 	(wood-amount > 65)
 	(or (unit-type-count-total archer-line >= 8)
 	(game-time >= 1000))
@@ -26834,11 +26852,9 @@
 )
 
 (defrule
-	(or (and (goal gl-fastimp-unit fi-bbc-hc)
-		(goal strategy-goal sg-boom-imp))
-		(and (not (goal strategy-goal sg-boom-imp))
-		(unit-type-count-total villager >= 40)))
-	(current-age == castle-age)
+	(goal gl-fastimp-unit fi-bbc-hc)
+	(goal strategy-goal sg-boom-imp)
+	(current-age >= castle-age)
 	(can-build university)
 	(building-type-count-total university == 0)
 =>
@@ -26996,7 +27012,7 @@
 =>
 	(release-escrow stone)
 	(up-copy-point gl-castle-drop-x enemy-point-x)
-	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 16)
+	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 9)
 	(up-bound-point gl-castle-drop-x gl-castle-drop-x)
 	(up-set-target-point gl-castle-drop-x)	
 	(set-strategic-number sn-placement-zone-size 5)
@@ -28093,7 +28109,7 @@
 	(up-modify-escrow stone c:- 650)
 	(set-escrow-percentage stone 0)
 	(up-copy-point gl-castle-drop-x enemy-point-x)
-	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 16)
+	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 9)
 	(up-bound-point gl-castle-drop-x gl-castle-drop-x)
 	(up-set-target-point gl-castle-drop-x)	
 	(set-strategic-number sn-placement-zone-size 5)
@@ -28130,7 +28146,7 @@
 =>
 	(up-modify-escrow stone c:- 650)
 	(up-copy-point gl-castle-drop-x enemy-point-x)
-	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 16)
+	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 9)
 	(up-bound-point gl-castle-drop-x gl-castle-drop-x)
 	(up-set-target-point gl-castle-drop-x)	
 	(set-strategic-number sn-placement-zone-size 5)
@@ -28196,7 +28212,7 @@
 	(release-escrow stone)
 	(set-escrow-percentage stone 0)
 	(up-copy-point gl-castle-drop-x enemy-point-x)
-	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 16)
+	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 9)
 	(up-bound-point gl-castle-drop-x gl-castle-drop-x)
 	(up-set-target-point gl-castle-drop-x)	
 	(set-strategic-number sn-placement-zone-size 5)
@@ -28274,7 +28290,7 @@
 	(set-escrow-percentage stone 0)
 	(set-escrow-percentage wood 0)
 	(up-copy-point gl-castle-drop-x enemy-point-x)
-	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 16)
+	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 9)
 	(up-bound-point gl-castle-drop-x gl-castle-drop-x)
 	(up-set-target-point gl-castle-drop-x)	
 	(set-strategic-number sn-placement-zone-size 5)
@@ -28370,7 +28386,7 @@
 	(building-type-count-total castle < 1)
 =>
 	(up-copy-point gl-castle-drop-x enemy-point-x)
-	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 16)
+	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 9)
 	(up-bound-point gl-castle-drop-x gl-castle-drop-x)
 	(up-set-target-point gl-castle-drop-x)	
 	(set-strategic-number sn-placement-zone-size 5)
@@ -28407,7 +28423,7 @@
 =>
 	(up-modify-escrow stone c:- 650)
 	(up-copy-point gl-castle-drop-x enemy-point-x)
-	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 16)
+	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 9)
 	(up-bound-point gl-castle-drop-x gl-castle-drop-x)
 	(up-set-target-point gl-castle-drop-x)	
 	(set-strategic-number sn-placement-zone-size 5)
