@@ -3284,9 +3284,8 @@
 		(and (up-point-explored scout-base-two-x != explored-no)
 		(and (up-point-explored scout-base-three-x != explored-no)
 		(and (up-point-explored scout-base-four-x != explored-no)
-		(civilian-population >= 12)))))
-	(or	(goal gl-curr-point 12) ;current layer scouting is completely finished
-		(goal gl-scout-map YES))) ;for debugging reasons, stop scouting base when we need to scout the map
+		(goal gl-curr-point 12)))))
+		(goal gl-scout-map YES)) ;for debugging reasons, stop scouting base when we need to scout the map
 	)
 =>
 	(set-goal gl-scout-base NO)
@@ -3661,7 +3660,7 @@
 	;(up-remove-objects search-local object-data-class != villager-shepherd)
 	(up-remove-objects search-local -1 > 0) ;find one shepherd
 	(up-get-search-state gl-local-total)
-	(up-chat-data-to-player my-player-number "Amount of shepherds: %d" g: gl-local-total)
+;	(up-chat-data-to-player my-player-number "Amount of shepherds: %d" g: gl-local-total)
 )
 
 (defrule
@@ -3688,7 +3687,7 @@
 	(up-remove-objects search-remote -1 > 0)
 	(up-get-search-state gl-local-total)
 	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
-	(up-chat-data-to-player my-player-number "Amount of berry-bushes: %d" g: gl-remote-total)
+	;(up-chat-data-to-player my-player-number "Amount of berry-bushes: %d" g: gl-remote-total)
 )
 
 (defrule
@@ -11892,6 +11891,24 @@
 	(players-unit-type-count focus-player rattan-archer-line >= 6))))))
 	(can-train scorpion-line)
 	(unit-type-count scorpion-line < 4)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
+=>
+	(train scorpion-line)
+	;(chat-to-player my-player-number "Produziere Skorpione gegen Schuetzeneinheiten")
+)
+
+(defrule
+	(current-age == castle-age)
+	(players-unit-type-count focus-player militiaman-line > 10)
+	(or (players-unit-type-count focus-player mangonel-line < 2)
+	(unit-type-count-total knight-line >= 4))
+	(or (players-unit-type-count focus-player knight-line < 5)
+	(or (unit-type-count-total spearman-line >= 5)
+	(or (unit-type-count-total camel-line >= 5)
+	(unit-type-count-total monk >= 2))))
+	(can-train scorpion-line)
 	(or (not (goal strategy-goal sg-boom-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
@@ -23772,7 +23789,7 @@
 (defrule
 	(building-type-count-total barracks > 0)
 	(goal strategy-goal sg-drush)
-	(random-number <= 55)
+	(random-number <= 80)
 	(goal gl-house 0)
 =>
 	(set-goal strategy-goal sg-archerrush)
@@ -23790,7 +23807,7 @@
 (defrule
 	(building-type-count-total barracks > 0)
 	(goal strategy-goal sg-drush)
-	(random-number > 55)
+	(random-number > 100)
 	(random-number <= 80)
 	(goal gl-house 0)
 =>
@@ -24457,7 +24474,8 @@
 	(unit-type-count-total villager < 55)
 	(or (up-research-status c: ri-wheel-barrow >= research-pending)
 	(or (food-amount < 175)
-	(food-amount >= 225)))
+	(and (food-amount >= 225)
+	(wood-amount < 50))))
 	(or (up-compare-goal gl-military-advantage >= -12)
 	(or (civilian-population < 26)
 	(food-amount >= 125)))
@@ -24679,6 +24697,10 @@
 	(up-research-status c: ri-horse-collar >= research-pending)
 	(idle-farm-count < 1)
 	(can-build farm)
+	(or (building-type-count-total mining-camp >= 1)
+	(civilian-population < 27))
+	(or (building-type-count-total archery-range >= 1)
+	(civilian-population < 30))
 	(up-compare-goal gl-water-on-map != 1)
 	(or (and (food-amount < 800)
 		(and (gold-amount < 200)
@@ -25063,7 +25085,7 @@
 	(unit-type-count-total scout-cavalry-line >= 4)
 	(up-research-status c: castle-age != research-pending)
 	(can-build-with-escrow archery-range)
-	(up-compare-goal gl-military-advantage >= -6)
+	;(up-compare-goal gl-military-advantage >= -6)
 =>
 	(up-modify-escrow wood c:- 175)
 	(up-set-placement-data my-player-number -1 c: 14)
@@ -25916,6 +25938,7 @@
 	(current-age >= feudal-age)
 	(building-type-count-total blacksmith == 0)
 	(building-type-count-total stable >= 1)
+	(building-type-count-total archery-range >= 1)
 	(or (civilian-population >= 26)
 	(unit-type-count-total scout-cavalry-line >= 4))
 	(can-build blacksmith)
@@ -26244,7 +26267,7 @@
 	(goal strategy-goal sg-scoutrush)
 	(current-age == feudal-age)
 	(can-build mining-camp)
-	(unit-type-count villager >= 28)
+	(unit-type-count villager >= 27)
 	(building-type-count-total mining-camp == 0)
 	(resource-found gold)
 	(dropsite-min-distance gold < 255)
@@ -39656,7 +39679,7 @@
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 43)
 	(set-strategic-number sn-food-gatherer-percentage 57)
-	(set-strategic-number sn-gold-gatherer-percentage 0)
+	(set-strategic-number sn-gold-gatherer-percentage 0) 
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -39669,7 +39692,7 @@
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 42)
 	(set-strategic-number sn-food-gatherer-percentage 58)
-	(set-strategic-number sn-gold-gatherer-percentage 0)
+	(set-strategic-number sn-gold-gatherer-percentage 0) 
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -39732,7 +39755,7 @@
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 44)
 	(set-strategic-number sn-food-gatherer-percentage 56)
-	(set-strategic-number sn-gold-gatherer-percentage 0)
+	(set-strategic-number sn-gold-gatherer-percentage 0) 
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -39741,9 +39764,9 @@
 	(civilian-population == 26)
 	(current-age == feudal-age)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 38)
-	(set-strategic-number sn-food-gatherer-percentage 58)
-	(set-strategic-number sn-gold-gatherer-percentage 4)
+	(set-strategic-number sn-wood-gatherer-percentage 35)
+	(set-strategic-number sn-food-gatherer-percentage 61)
+	(set-strategic-number sn-gold-gatherer-percentage 4) ;1 on gold
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -39758,9 +39781,9 @@
 	(civilian-population == 27)
 	(current-age == feudal-age)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 33)
-	(set-strategic-number sn-food-gatherer-percentage 63)
-	(set-strategic-number sn-gold-gatherer-percentage 4)
+	(set-strategic-number sn-wood-gatherer-percentage 37)
+	(set-strategic-number sn-food-gatherer-percentage 56)
+	(set-strategic-number sn-gold-gatherer-percentage 7) ;2 
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -39769,9 +39792,9 @@
 	(civilian-population == 28)
 	(current-age == feudal-age)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 32)
-	(set-strategic-number sn-food-gatherer-percentage 64)
-	(set-strategic-number sn-gold-gatherer-percentage 4)
+	(set-strategic-number sn-wood-gatherer-percentage 39)
+	(set-strategic-number sn-food-gatherer-percentage 54)
+	(set-strategic-number sn-gold-gatherer-percentage 7)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -39780,9 +39803,9 @@
 	(civilian-population == 29)
 	(current-age == feudal-age)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 31)
-	(set-strategic-number sn-food-gatherer-percentage 66)
-	(set-strategic-number sn-gold-gatherer-percentage 3)
+	(set-strategic-number sn-wood-gatherer-percentage 38)
+	(set-strategic-number sn-food-gatherer-percentage 55)
+	(set-strategic-number sn-gold-gatherer-percentage 7)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -39791,9 +39814,9 @@
 	(civilian-population == 30)
 	(current-age == feudal-age)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 30)
-	(set-strategic-number sn-food-gatherer-percentage 67)
-	(set-strategic-number sn-gold-gatherer-percentage 3)
+	(set-strategic-number sn-wood-gatherer-percentage 37)
+	(set-strategic-number sn-food-gatherer-percentage 56)
+	(set-strategic-number sn-gold-gatherer-percentage 7)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
@@ -39802,8 +39825,8 @@
 	(civilian-population == 31)
 	(current-age == feudal-age)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 33)
-	(set-strategic-number sn-food-gatherer-percentage 60)
+	(set-strategic-number sn-wood-gatherer-percentage 35)
+	(set-strategic-number sn-food-gatherer-percentage 58)
 	(set-strategic-number sn-gold-gatherer-percentage 7)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
