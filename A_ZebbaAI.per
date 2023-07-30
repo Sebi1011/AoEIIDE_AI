@@ -5640,6 +5640,36 @@
 	(disable-self)
 )
 
+(defrule
+	(goal sg-fastcastle-boom YES)
+	(game-time > 60)
+	(civ-selected cumans)
+	(current-age == dark-age)
+	(up-compare-goal d-villager-goal != 18)
+=>
+	(set-goal d-villager-goal 18)
+	(set-goal f-villager-goal 50)
+	(set-goal gl-wood-saving 8)
+	(set-goal gl-stone-saving 8)
+	(set-goal gl-food-saving 0)
+	(release-escrow food)
+	(set-escrow-percentage wood 10)
+	(enable-timer 9 1)
+	(chat-local-to-self "I will boom in Feudal-Age with 2 TCs")
+)
+
+(defrule
+	(goal sg-fastcastle-boom YES)
+	(game-time > 60)
+	(civ-selected cumans)
+	(current-age == dark-age)
+	(can-research ri-loom)
+	(up-compare-goal d-villager-goal == 18)
+	(civilian-population == 18)
+=>
+	(research ri-loom)
+)
+
 #load-if-not-defined UP-ALLY-IN-GAME
 
 (defrule
@@ -10581,7 +10611,7 @@
 	(can-build barracks)
 	(or (not (goal strategy-goal sg-boom-imp))
 	(up-research-status c: imperial-age >= research-pending))
-	(or (not (goal sg-fastcastle-boom YES)
+	(or (not (goal sg-fastcastle-boom YES))
 		(building-type-count-total town-center >= 4))
 =>
 	(up-set-placement-data my-player-number -1 c: 13)
@@ -11280,7 +11310,7 @@
 (defrule
 	(current-age == castle-age)
 	(unit-type-count-total skirmisher-line < 60)
-	(players-unit-type-count focus-player hand-cannoneer <= 5)
+	(players-unit-type-count focus-player hand-cannoneer >= 5)
 	(can-train skirmisher-line)
 	(not (research-completed ri-elite-skirmisher))
 	(research-available ri-elite-skirmisher)
@@ -23325,6 +23355,43 @@
 )
 #end-if
 #end-if
+
+#load-if-defined ARENA-MAP
+
+(defrule 
+	(civilian-population >= 18)
+	(or (players-building-count any-enemy < 1)
+	(players-building-type-count any-enemy wall-class < 25))
+	(up-compare-goal g-deer-id == -1)
+	(goal gl-push-deer NO)
+=>
+	;(enable-timer 19 5)
+	(set-goal gl-scout-map YES)
+	(up-send-scout group-type-land-explore scout-flank)
+	(chat-to-player my-player-number "Scouting opponent")
+	(disable-self)
+)
+
+#end-if
+
+#load-if-defined FORTRESS-MAP
+
+(defrule 
+	(civilian-population >= 18)
+	(or (players-building-count any-enemy < 1)
+	(players-building-type-count any-enemy wall-class < 25))
+	(up-compare-goal g-deer-id == -1)
+	(goal gl-push-deer NO)
+=>
+	;(enable-timer 19 5)
+	(set-goal gl-scout-map YES)
+	(up-send-scout group-type-land-explore scout-flank)
+	(chat-to-player my-player-number "Scouting opponent")
+	(disable-self)
+)
+
+
+#end-if
 #end-if
 
 #load-if-not-defined UP-2-PLAYER-GAME
@@ -23439,6 +23506,20 @@
 	(chat-to-player my-player-number "Opponent scouted")
 	(disable-self)
 )
+
+#load-if-defined ARENA-MAP
+
+(defrule 
+	(players-building-type-count any-enemy wall-class >= 25)
+	(goal gl-scout-map YES)
+	(game-time > 5)
+=>
+	(set-goal gl-scout-map NO)
+	(chat-to-player my-player-number "Opponent scouted")
+	(disable-self)
+)
+
+#end-if
 
 (defrule
 	(goal gl-scout-map YES) 
@@ -26889,7 +26970,7 @@
 	(disable-self)
 )
 
-(defrule
+(defrule ;release escrow for vil production while wheelbarrow is not researched yet
 	(current-age == castle-age)
 	(can-train-with-escrow villager)
 	(or (unit-type-count-total villager g:< c-villager-goal)
@@ -26907,7 +26988,7 @@
 	;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
 )
 
-(defrule
+(defrule ;release escrow for vil production after wheelbarrow is researched
 	(current-age == castle-age)
 	(can-train-with-escrow villager)
 	(or (unit-type-count-total villager g:< c-villager-goal)
@@ -26925,7 +27006,7 @@
 	;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
 )
 
-(defrule
+(defrule ;normal vil training rules when not behind in military
 	(current-age == castle-age)
 	(can-train villager)
 	(or (unit-type-count-total villager g:< c-villager-goal)
@@ -27688,6 +27769,8 @@
 #end-if
 
 #load-if-not-defined UP-POCKET-POSITION
+#load-if-not-defined ARENA-MAP
+#load-if-not-defined FORTRESS-MAP
 
 (defrule
 	(civ-selected cumans)
@@ -27738,6 +27821,61 @@
 	(set-goal gl-wood-saving 0)
 	(set-goal gl-stone-saving 0)
 )
+#end-if
+#end-if
+
+#load-if-defined ARENA-MAP
+
+(defrule
+	(civ-selected cumans)
+	(current-age == feudal-age)
+	(goal gl-wood-saving 8)
+	(goal gl-stone-saving 8)
+	(can-build-with-escrow town-center)
+	(building-type-count-total town-center < 2)
+	(random-number > 50)
+=>
+	(release-escrow wood)
+	(release-escrow stone)
+	(set-escrow-percentage wood 0)
+	(set-escrow-percentage stone 0)
+	(set-strategic-number sn-allow-adjacent-dropsites 1)
+	(set-strategic-number sn-town-center-placement lumber-camp)
+	(up-assign-builders c: town-center-foundation c: 8)
+	(up-assign-builders c: town-center c: 8)
+	(build town-center)
+	(set-goal gl-wood-saving 0)
+	(set-goal gl-stone-saving 0)
+)
+
+#end-if
+
+#load-if-defined FORTRESS-MAP
+
+(defrule
+	(civ-selected cumans)
+	(current-age == feudal-age)
+	(goal gl-wood-saving 8)
+	(goal gl-stone-saving 8)
+	(can-build-with-escrow town-center)
+	(building-type-count-total town-center < 2)
+	(random-number > 50)
+=>
+	(release-escrow wood)
+	(release-escrow stone)
+	(set-escrow-percentage wood 0)
+	(set-escrow-percentage stone 0)
+	(set-strategic-number sn-allow-adjacent-dropsites 1)
+	(set-strategic-number sn-town-center-placement lumber-camp)
+	(up-assign-builders c: town-center-foundation c: 8)
+	(up-assign-builders c: town-center c: 8)
+	(build town-center)
+	(set-goal gl-wood-saving 0)
+	(set-goal gl-stone-saving 0)
+)
+
+#end-if
+
 #end-if
 
 (defrule
@@ -29302,6 +29440,22 @@
 	(set-goal gl-wood-saving 0)
 	(set-goal gl-food-saving 0)
 )
+
+(defrule
+	(current-age >= castle-age)	
+	(can-research-with-escrow ri-bow-saw)
+	(up-compare-goal gl-military-advantage >= -5)
+	(or (and (goal sg-fastcastle-boom YES)
+		(building-type-count-total town-center >= 3))
+	(or (and (goal sg-fastcastle-boom NO)
+		(building-type-count-total town-center >= 2))
+		(and (goal sg-fastcastle-boom -1)
+		(building-type-count-total town-center >= 1))))
+=>
+	(up-modify-escrow food c:- 150)
+	(up-modify-escrow wood c:- 100)
+	(research ri-bow-saw)
+)	
 
 (defrule
 	(not(goal strategy-goal sg-boom-imp))
@@ -32541,6 +32695,9 @@
 	(can-train villager)
 	(unit-type-count-total villager < 140)
 	(population-headroom > 20)
+	(or (and (up-compare-goal gl-military-advantage >= -20)
+		(food-amount > 400))
+	(civilian-population < 70))
 	(or (not (goal strategy-goal sg-boom-imp))
 	(and (goal strategy-goal sg-boom-imp)
 	(unit-type-count-total villager < 40)))
@@ -41090,7 +41247,7 @@
 
 (defrule
 	(goal sg-fastcastle-boom YES)
-	(stone-amount < 100)
+	(stone-amount < 90)
 	(wood-amount >= 275)
     (current-age == castle-age)
     (building-type-count market >= 1)
