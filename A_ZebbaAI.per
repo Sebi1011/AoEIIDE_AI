@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.4
-;last update: 30th July 2023
+;last update: 9th August 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -424,7 +424,6 @@
 (defconst civilian-pop 47)
 (defconst enemy-military-pop 48)
 (defconst enemy-warship-pop 49)
-(defconst enemy-infantry-goal 50)
 (defconst our-military-pop 51)
 (defconst strategy-goal 52)
 (defconst sg-archerrush 53)
@@ -443,6 +442,12 @@
 (defconst enemy-team-military-pop 69)
 (defconst retreating-goal 70)
 (defconst object-data-group-flag 73)
+(defconst enemy-infantry-goal 74)
+(defconst enemy-heavy-infantry-goal 75)
+(defconst enemy-cavalry-goal 76)
+(defconst enemy-archery-goal 77)
+(defconst enemy-cavarcher-goal 78)
+(defconst enemy-siege-goal 79)
 (defconst gl-drush-militia-count 80)
 (defconst preferred-target-player 86)
 (defconst temp-focus-player 87)
@@ -942,6 +947,7 @@
 )
 
 (defrule
+	(current-age < imperial-age)
 	(town-under-attack)
 	(up-compare-sn sn-disable-defend-groups != 0)
 =>
@@ -949,7 +955,15 @@
 )
 
 (defrule
+	(current-age < imperial-age)
 	(not (town-under-attack))
+	(up-compare-sn sn-disable-defend-groups != 1)
+=>
+	(set-strategic-number sn-disable-defend-groups 1)
+)
+
+(defrule
+	(current-age == imperial-age)
 	(up-compare-sn sn-disable-defend-groups != 1)
 =>
 	(set-strategic-number sn-disable-defend-groups 1)
@@ -1274,11 +1288,11 @@
 	(up-set-offense-priority c: blacksmith c: 1)
 	(up-set-offense-priority c: market c: 2)
 	(up-set-offense-priority c: university c: 1)
-	(up-set-offense-priority c: castle c: 5)
-	(up-set-offense-priority c: krepost c: 5)
-	(up-set-offense-priority c: watch-tower c: 5)
-	(up-set-offense-priority c: donjon c: 5)
-	(up-set-offense-priority c: bombard-tower c: 5)
+	(up-set-offense-priority c: castle c: 3)
+	(up-set-offense-priority c: krepost c: 3)
+	(up-set-offense-priority c: watch-tower c: 3)
+	(up-set-offense-priority c: donjon c: 3)
+	(up-set-offense-priority c: bombard-tower c: 3)
 	(up-set-offense-priority c: caravanserai c: 1)
 	(up-set-offense-priority c: feitoria c: 2)
 	(up-set-offense-priority c: dock c: 3)
@@ -1348,11 +1362,11 @@
 	(up-set-offense-priority c: blacksmith c: 1)
 	(up-set-offense-priority c: market c: 2)
 	(up-set-offense-priority c: university c: 1)
-	(up-set-offense-priority c: castle c: 5)
-	(up-set-offense-priority c: krepost c: 5)
-	(up-set-offense-priority c: watch-tower c: 5)
-	(up-set-offense-priority c: donjon c: 5)
-	(up-set-offense-priority c: bombard-tower c: 5)
+	(up-set-offense-priority c: castle c: 3)
+	(up-set-offense-priority c: krepost c: 3)
+	(up-set-offense-priority c: watch-tower c: 3)
+	(up-set-offense-priority c: donjon c: 3)
+	(up-set-offense-priority c: bombard-tower c: 3)
 	(up-set-offense-priority c: caravanserai c: 1)
 	(up-set-offense-priority c: feitoria c: 2)
 	(up-set-offense-priority c: dock c: 3)
@@ -1422,11 +1436,11 @@
 	(up-set-offense-priority c: blacksmith c: 1)
 	(up-set-offense-priority c: market c: 2)
 	(up-set-offense-priority c: university c: 1)
-	(up-set-offense-priority c: castle c: 5)
-	(up-set-offense-priority c: krepost c: 5)
-	(up-set-offense-priority c: watch-tower c: 5)
-	(up-set-offense-priority c: donjon c: 5)
-	(up-set-offense-priority c: bombard-tower c: 5)
+	(up-set-offense-priority c: castle c: 3)
+	(up-set-offense-priority c: krepost c: 3)
+	(up-set-offense-priority c: watch-tower c: 3)
+	(up-set-offense-priority c: donjon c: 3)
+	(up-set-offense-priority c: bombard-tower c: 3)
 	(up-set-offense-priority c: caravanserai c: 1)
 	(up-set-offense-priority c: feitoria c: 2)
 	(up-set-offense-priority c: dock c: 3)
@@ -1732,6 +1746,17 @@
 	(disable-self)
 )
 
+(defrule
+	(true)
+=>
+	(set-goal enemy-infantry-goal 0)
+	(set-goal enemy-heavy-infantry-goal 0)
+	(set-goal enemy-cavalry-goal 0)
+	(set-goal enemy-archery-goal 0)
+	(set-goal enemy-cavarcher-goal 0)
+	(set-goal enemy-siege-goal 0)
+	(disable-self)
+)
 
 (defrule
 	(true)
@@ -2233,6 +2258,493 @@
 
 ;endregion
 
+;region Checking Enemy Unit Classes
+
+;infantry
+
+
+(defrule
+	(or (current-age > castle-age)
+	(goal enemy-infantry-goal 1))
+=>
+	(up-jump-rule 1)
+)
+
+(defrule
+	; (current-age <= castle-age)
+	; (goal enemy-infantry-goal 0)
+	(or (players-unit-type-count focus-player militiaman-line >= 6)
+	(or (players-unit-type-count focus-player condottiero >= 6)
+	(or (players-unit-type-count focus-player spearman-line >= 6)
+	(or (players-unit-type-count focus-player jaguar-man-line >= 6)
+	(or (players-unit-type-count focus-player woad-raider-line >= 6)
+	(or (players-unit-type-count focus-player urumi-swordsman-line >= 6)
+	(or (players-unit-type-count focus-player shotel-line >= 6)
+	(or (players-unit-type-count focus-player throwing-axeman-line >= 6)
+	(or (players-unit-type-count focus-player kamayuk-line >= 6)
+	(or (players-unit-type-count focus-player samurai-line >= 6)
+	(or (players-unit-type-count focus-player karambit-warrior-line >= 6)
+	(or (players-unit-type-count focus-player gbeto-line >= 6)
+	(or (players-unit-type-count focus-player obuch-line >= 6)
+	(or (players-unit-type-count focus-player serjeant-line >= 6)
+	(or (players-unit-type-count focus-player teutonic-knight-line >= 6)
+	(players-unit-type-count focus-player berserk-line >= 6))))))))))))))))
+=>
+	(set-goal enemy-infantry-goal 1)
+)	
+
+(defrule
+	(or (current-age > castle-age)
+	(goal enemy-infantry-goal 0))
+=>
+	(up-jump-rule 1)
+)
+
+(defrule
+	; (current-age <= castle-age)
+	; (goal enemy-infantry-goal 1)
+	(players-unit-type-count focus-player militiaman-line < 6)
+	(players-unit-type-count focus-player condottiero < 6)
+	(players-unit-type-count focus-player spearman-line < 6)
+	(players-unit-type-count focus-player jaguar-man-line < 6)
+	(players-unit-type-count focus-player woad-raider-line < 6)
+	(players-unit-type-count focus-player urumi-swordsman-line < 6)
+	(players-unit-type-count focus-player shotel-line < 6)
+	(players-unit-type-count focus-player throwing-axeman-line < 6)
+	(players-unit-type-count focus-player kamayuk-line < 6)
+	(players-unit-type-count focus-player samurai-line < 6)
+	(players-unit-type-count focus-player karambit-warrior-line < 6)
+	(players-unit-type-count focus-player gbeto-line < 6)
+	(players-unit-type-count focus-player obuch-line < 6)
+	(players-unit-type-count focus-player serjeant-line < 6)
+	(players-unit-type-count focus-player teutonic-knight-line < 6)
+	(players-unit-type-count focus-player berserk-line < 6)
+=>
+	(set-goal enemy-infantry-goal 0)
+)	
+
+(defrule
+	(or (current-age < imperial-age)
+	(goal enemy-infantry-goal 1))
+=>
+	(up-jump-rule 1)
+)
+
+(defrule
+	; (current-age == imperial-age)
+	; (goal enemy-infantry-goal 0)
+	(or (players-unit-type-count focus-player militiaman-line >= 10)
+	(or (players-unit-type-count focus-player condottiero >= 10)
+	(or (players-unit-type-count focus-player spearman-line >= 10)
+	(or (players-unit-type-count focus-player jaguar-man-line >= 10)
+	(or (players-unit-type-count focus-player woad-raider-line >= 10)
+	(or (players-unit-type-count focus-player urumi-swordsman-line >= 10)
+	(or (players-unit-type-count focus-player shotel-line >= 10)
+	(or (players-unit-type-count focus-player throwing-axeman-line >= 10)
+	(or (players-unit-type-count focus-player kamayuk-line >= 10)
+	(or (players-unit-type-count focus-player samurai-line >= 10)
+	(or (players-unit-type-count focus-player karambit-warrior-line >= 10)
+	(or (players-unit-type-count focus-player gbeto-line >= 10)
+	(or (players-unit-type-count focus-player obuch-line >= 10)
+	(or (players-unit-type-count focus-player serjeant-line >= 10)
+	(or (players-unit-type-count focus-player teutonic-knight-line >= 10)
+	(players-unit-type-count focus-player berserk-line >= 10))))))))))))))))
+=>
+	(set-goal enemy-infantry-goal 1)
+)	
+
+(defrule
+	(or (current-age < imperial-age)
+	(goal enemy-infantry-goal 0))
+=>
+	(up-jump-rule 1)
+)
+
+(defrule
+	; (current-age == imperial-age)
+	; (goal enemy-infantry-goal 1)
+	(players-unit-type-count focus-player militiaman-line < 10)
+	(players-unit-type-count focus-player condottiero < 10)
+	(players-unit-type-count focus-player spearman-line < 10)
+	(players-unit-type-count focus-player jaguar-man-line < 10)
+	(players-unit-type-count focus-player woad-raider-line < 10)
+	(players-unit-type-count focus-player urumi-swordsman-line < 10)
+	(players-unit-type-count focus-player shotel-line < 10)
+	(players-unit-type-count focus-player throwing-axeman-line < 10)
+	(players-unit-type-count focus-player kamayuk-line < 10)
+	(players-unit-type-count focus-player samurai-line < 10)
+	(players-unit-type-count focus-player karambit-warrior-line < 10)
+	(players-unit-type-count focus-player gbeto-line < 10)
+	(players-unit-type-count focus-player obuch-line < 10)
+	(players-unit-type-count focus-player serjeant-line < 10)
+	(players-unit-type-count focus-player teutonic-knight-line < 10)
+	(players-unit-type-count focus-player berserk-line < 10)
+=>
+	(set-goal enemy-infantry-goal 0)
+)	
+
+
+;heavy infantry
+(defrule
+	(current-age <= castle-age)
+	(goal enemy-heavy-infantry-goal 0)
+	(or (players-unit-type-count focus-player huskarl-line >= 6)
+	(or (players-unit-type-count focus-player ghulam-line >= 6)
+	(players-unit-type-count focus-player eagle-warrior-line >= 6)))
+=>
+	(set-goal enemy-heavy-infantry-goal 1)
+)	
+
+(defrule
+	(current-age <= castle-age)
+	(goal enemy-heavy-infantry-goal 1)
+	(players-unit-type-count focus-player huskarl-line < 6)
+	(players-unit-type-count focus-player ghulam-line < 6)
+	(players-unit-type-count focus-player eagle-warrior-line < 6)
+=>
+	(set-goal enemy-heavy-infantry-goal 0)
+)	
+
+(defrule
+	(current-age == imperial-age)
+	(goal enemy-heavy-infantry-goal 0)
+	(or (players-unit-type-count focus-player huskarl-line >= 10)
+	(or (players-unit-type-count focus-player ghulam-line >= 10)
+	(players-unit-type-count focus-player eagle-warrior-line >= 10)))
+=>
+	(set-goal enemy-heavy-infantry-goal 1)
+)	
+
+(defrule
+	(current-age == imperial-age)
+	(goal enemy-heavy-infantry-goal 1)
+	(players-unit-type-count focus-player huskarl-line < 10)
+	(players-unit-type-count focus-player ghulam-line < 10)
+	(players-unit-type-count focus-player eagle-warrior-line < 10)
+=>
+	(set-goal enemy-heavy-infantry-goal 0)
+)	
+
+(defrule
+	(or (current-age > castle-age)
+	(goal enemy-cavalry-goal 1))
+=>
+	(up-jump-rule 1)
+)
+
+;cavalry
+(defrule
+	; (current-age <= castle-age)
+	; (goal enemy-cavalry-goal 0)
+	(or (players-unit-type-count focus-player scout-cavalry-line >= 6)
+	(or (players-unit-type-count focus-player shrivamsha-rider-line >= 6)
+	(or (players-unit-type-count focus-player camel-line >= 6)
+	(or (players-unit-type-count focus-player steppe-lancer-line >= 6)
+	(or (players-unit-type-count focus-player battle-elephant-line >= 6)
+	(or (players-unit-type-count focus-player konnik-line >= 6)
+	(or (players-unit-type-count focus-player krepost-konnik-line >= 6)
+	(or (players-unit-type-count focus-player coustillier-line >= 6)
+	(or (players-unit-type-count focus-player tarkan-line >= 6)
+	(or (players-unit-type-count focus-player leitis-line >= 6)
+	(or (players-unit-type-count focus-player magyar-huszar-line >= 6)
+	(or (players-unit-type-count focus-player centurion-line >= 6)
+	(or (players-unit-type-count focus-player mameluke-line >= 6)
+	(or (players-unit-type-count focus-player boyar-line >= 6)
+	(or (players-unit-type-count focus-player keshik-line >= 6)
+	(players-unit-type-count focus-player knight-line >= 6))))))))))))))))
+=>
+	(set-goal enemy-cavalry-goal 1)
+)	
+
+(defrule
+	(or (current-age > castle-age)
+	(goal enemy-cavalry-goal 0))
+=>
+	(up-jump-rule 1)
+)
+
+(defrule
+	; (current-age <= castle-age)
+	; (goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player scout-cavalry-line < 6)
+	(players-unit-type-count focus-player shrivamsha-rider-line < 6)
+	(players-unit-type-count focus-player camel-line < 6)
+	(players-unit-type-count focus-player steppe-lancer-line < 6)
+	(players-unit-type-count focus-player battle-elephant-line < 6)
+	(players-unit-type-count focus-player konnik-line < 6)
+	(players-unit-type-count focus-player krepost-konnik-line < 6)
+	(players-unit-type-count focus-player coustillier-line < 6)
+	(players-unit-type-count focus-player tarkan-line < 6)
+	(players-unit-type-count focus-player leitis-line < 6)
+	(players-unit-type-count focus-player magyar-huszar-line < 6)
+	(players-unit-type-count focus-player centurion-line < 6)
+	(players-unit-type-count focus-player mameluke-line < 6)
+	(players-unit-type-count focus-player boyar-line < 6)
+	(players-unit-type-count focus-player keshik-line < 6)
+	(players-unit-type-count focus-player knight-line < 6)
+=>
+	(set-goal enemy-cavalry-goal 0)
+)	
+
+(defrule
+	(or (current-age < imperial-age)
+	(goal enemy-cavalry-goal 1))
+=>
+	(up-jump-rule 1)
+)
+
+(defrule
+	; (current-age == imperial-age)
+	; (goal enemy-cavalry-goal 0)
+	(or (players-unit-type-count focus-player scout-cavalry-line >= 10)
+	(or (players-unit-type-count focus-player shrivamsha-rider-line >= 10)
+	(or (players-unit-type-count focus-player camel-line >= 10)
+	(or (players-unit-type-count focus-player steppe-lancer-line >= 10)
+	(or (players-unit-type-count focus-player battle-elephant-line >= 10)
+	(or (players-unit-type-count focus-player konnik-line >= 10)
+	(or (players-unit-type-count focus-player krepost-konnik-line >= 10)
+	(or (players-unit-type-count focus-player coustillier-line >= 10)
+	(or (players-unit-type-count focus-player tarkan-line >= 10)
+	(or (players-unit-type-count focus-player leitis-line >= 10)
+	(or (players-unit-type-count focus-player magyar-huszar-line >= 10)
+	(or (players-unit-type-count focus-player centurion-line >= 10)
+	(or (players-unit-type-count focus-player mameluke-line >= 10)
+	(or (players-unit-type-count focus-player boyar-line >= 10)
+	(or (players-unit-type-count focus-player keshik-line >= 10)
+	(players-unit-type-count focus-player knight-line >= 10))))))))))))))))
+=>
+	(set-goal enemy-cavalry-goal 1)
+)	
+
+(defrule
+	(or (current-age < imperial-age)
+	(goal enemy-cavalry-goal 0))
+=>
+	(up-jump-rule 1)
+)
+
+(defrule
+	; (current-age == imperial-age)
+	; (goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player scout-cavalry-line < 10)
+	(players-unit-type-count focus-player shrivamsha-rider-line < 10)
+	(players-unit-type-count focus-player camel-line < 10)
+	(players-unit-type-count focus-player steppe-lancer-line < 10)
+	(players-unit-type-count focus-player battle-elephant-line < 10)
+	(players-unit-type-count focus-player konnik-line < 10)
+	(players-unit-type-count focus-player krepost-konnik-line < 10)
+	(players-unit-type-count focus-player coustillier-line < 10)
+	(players-unit-type-count focus-player tarkan-line < 10)
+	(players-unit-type-count focus-player leitis-line < 10)
+	(players-unit-type-count focus-player magyar-huszar-line < 10)
+	(players-unit-type-count focus-player centurion-line < 10)
+	(players-unit-type-count focus-player mameluke-line < 10)
+	(players-unit-type-count focus-player boyar-line < 10)
+	(players-unit-type-count focus-player keshik-line < 10)
+	(players-unit-type-count focus-player knight-line < 10)
+=>
+	(set-goal enemy-cavalry-goal 0)
+)
+
+;archery-class
+(defrule
+	(current-age <= castle-age)
+	(goal enemy-archery-goal 0)
+	(or (players-unit-type-count focus-player archer-line >= 6)
+	(or (players-unit-type-count focus-player slinger >= 6)
+	(or (players-unit-type-count focus-player hand-cannoneer >= 6)
+	(or (players-unit-type-count focus-player longbowman-line >= 6)
+	(or (players-unit-type-count focus-player chu-ko-nu-line >= 6)
+	(or (players-unit-type-count focus-player longbowman-line >= 6)
+	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 6)
+	(or (players-unit-type-count focus-player plumed-archer-line >= 6)
+	(or (players-unit-type-count focus-player janissary-line >= 6)
+	(players-unit-type-count focus-player rattan-archer-line >= 6))))))))))
+=>
+	(set-goal enemy-archery-goal 1)
+)	
+
+(defrule
+	(current-age <= castle-age)
+	(goal enemy-archery-goal 1)
+	(players-unit-type-count focus-player archer-line < 6)
+	(players-unit-type-count focus-player slinger < 6)
+	(players-unit-type-count focus-player hand-cannoneer < 6)
+	(players-unit-type-count focus-player longbowman-line < 6)
+	(players-unit-type-count focus-player chu-ko-nu-line < 6)
+	(players-unit-type-count focus-player longbowman-line < 6)
+	(players-unit-type-count focus-player genoese-crossbowman-line < 6)
+	(players-unit-type-count focus-player plumed-archer-line < 6)
+	(players-unit-type-count focus-player janissary-line < 6)
+	(players-unit-type-count focus-player rattan-archer-line < 6)
+=>
+	(set-goal enemy-archery-goal 0)
+)	
+
+(defrule
+	(current-age == imperial-age)
+	(goal enemy-archery-goal 0)
+	(or (players-unit-type-count focus-player archer-line >= 10)
+	(or (players-unit-type-count focus-player slinger >= 10)
+	(or (players-unit-type-count focus-player hand-cannoneer >= 10)
+	(or (players-unit-type-count focus-player longbowman-line >= 10)
+	(or (players-unit-type-count focus-player chu-ko-nu-line >= 10)
+	(or (players-unit-type-count focus-player longbowman-line >= 10)
+	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 10)
+	(or (players-unit-type-count focus-player plumed-archer-line >= 10)
+	(or (players-unit-type-count focus-player janissary-line >= 10)
+	(players-unit-type-count focus-player rattan-archer-line >= 10))))))))))
+=>
+	(set-goal enemy-archery-goal 1)
+)	
+
+(defrule
+	(current-age == imperial-age)
+	(goal enemy-archery-goal 1)
+	(players-unit-type-count focus-player archer-line < 10)
+	(players-unit-type-count focus-player slinger < 10)
+	(players-unit-type-count focus-player hand-cannoneer < 10)
+	(players-unit-type-count focus-player longbowman-line < 10)
+	(players-unit-type-count focus-player chu-ko-nu-line < 10)
+	(players-unit-type-count focus-player longbowman-line < 10)
+	(players-unit-type-count focus-player genoese-crossbowman-line < 10)
+	(players-unit-type-count focus-player plumed-archer-line < 10)
+	(players-unit-type-count focus-player janissary-line < 10)
+	(players-unit-type-count focus-player rattan-archer-line < 10)
+=>
+	(set-goal enemy-archery-goal 0)
+)
+
+;cavalry-archer-class
+(defrule
+	(current-age <= castle-age)
+	(goal enemy-cavarcher-goal 0)
+	(or (players-unit-type-count focus-player ratha-ranged-line >= 6)
+	(or (players-unit-type-count focus-player ratha-melee-line >= 6)
+	(or (players-unit-type-count focus-player cavalry-archer-line >= 6)
+	(or (players-unit-type-count focus-player elephant-archer-line >= 6)
+	(or (players-unit-type-count focus-player camel-archer-line >= 6)
+	(or (players-unit-type-count focus-player arambai-line >= 6)
+	(or (players-unit-type-count focus-player kipchak-line >= 6)
+	(or (players-unit-type-count focus-player war-wagon-line >= 6)
+	(or (players-unit-type-count focus-player mangudai-line >= 6)
+	(players-unit-type-count focus-player conquistador-line >= 6))))))))))
+=>
+	(set-goal enemy-cavarcher-goal 1)
+)	
+
+(defrule
+	(current-age <= castle-age)
+	(goal enemy-cavarcher-goal 1)
+	(players-unit-type-count focus-player ratha-ranged-line < 6)
+	(players-unit-type-count focus-player ratha-melee-line < 6)
+	(players-unit-type-count focus-player cavalry-archer-line < 6)
+	(players-unit-type-count focus-player elephant-archer-line < 6)
+	(players-unit-type-count focus-player camel-archer-line < 6)
+	(players-unit-type-count focus-player arambai-line < 6)
+	(players-unit-type-count focus-player kipchak-line < 6)
+	(players-unit-type-count focus-player war-wagon-line < 6)
+	(players-unit-type-count focus-player mangudai-line < 6)
+	(players-unit-type-count focus-player conquistador-line < 6)
+=>
+	(set-goal enemy-cavarcher-goal 0)
+)	
+
+(defrule
+	(current-age == imperial-age)
+	(goal enemy-cavarcher-goal 0)
+	(or (players-unit-type-count focus-player ratha-ranged-line >= 10)
+	(or (players-unit-type-count focus-player ratha-melee-line >= 10)
+	(or (players-unit-type-count focus-player cavalry-archer-line >= 10)
+	(or (players-unit-type-count focus-player elephant-archer-line >= 10)
+	(or (players-unit-type-count focus-player camel-archer-line >= 10)
+	(or (players-unit-type-count focus-player arambai-line >= 10)
+	(or (players-unit-type-count focus-player kipchak-line >= 10)
+	(or (players-unit-type-count focus-player war-wagon-line >= 10)
+	(or (players-unit-type-count focus-player mangudai-line >= 10)
+	(players-unit-type-count focus-player conquistador-line >= 10))))))))))
+=>
+	(set-goal enemy-cavarcher-goal 1)
+)	
+
+(defrule
+	(current-age == imperial-age)
+	(goal enemy-cavarcher-goal 1)
+	(players-unit-type-count focus-player ratha-ranged-line < 10)
+	(players-unit-type-count focus-player ratha-melee-line < 10)
+	(players-unit-type-count focus-player cavalry-archer-line < 10)
+	(players-unit-type-count focus-player elephant-archer-line < 10)
+	(players-unit-type-count focus-player camel-archer-line < 10)
+	(players-unit-type-count focus-player arambai-line < 10)
+	(players-unit-type-count focus-player kipchak-line < 10)
+	(players-unit-type-count focus-player war-wagon-line < 10)
+	(players-unit-type-count focus-player mangudai-line < 10)
+	(players-unit-type-count focus-player conquistador-line < 10)
+=>
+	(set-goal enemy-cavarcher-goal 0)
+)
+
+
+;siege-class
+(defrule
+	(current-age <= castle-age)
+	(goal enemy-siege-goal 0)
+	(or (players-unit-type-count focus-player battering-ram-line >= 2)
+	(or (players-unit-type-count focus-player mangonel-line >= 2)
+	(or (players-unit-type-count focus-player scorpion-line >= 2)
+	(or (players-unit-type-count focus-player bombard-cannon-line >= 2)
+	(or (players-unit-type-count focus-player hussite-wagon-line >= 2)
+	(or (players-unit-type-count focus-player trebuchet-set >= 2)
+	(players-unit-type-count focus-player organ-gun-line >= 2)))))))
+=>
+	(set-goal enemy-siege-goal 1)
+)	
+
+(defrule
+	(current-age <= castle-age)
+	(goal enemy-siege-goal 1)
+	(players-unit-type-count focus-player battering-ram-line < 2)
+	(players-unit-type-count focus-player mangonel-line < 2)
+	(players-unit-type-count focus-player scorpion-line < 2)
+	(players-unit-type-count focus-player bombard-cannon-line < 2)
+	(players-unit-type-count focus-player hussite-wagon-line < 2)
+	(players-unit-type-count focus-player organ-gun-line < 2)
+	(players-unit-type-count focus-player trebuchet-set < 2)
+=>
+	(set-goal enemy-siege-goal 0)
+)	
+
+(defrule
+	(current-age == imperial-age)
+	(goal enemy-siege-goal 0)
+	(or (players-unit-type-count focus-player battering-ram-line >= 4)
+	(or (players-unit-type-count focus-player mangonel-line >= 4)
+	(or (players-unit-type-count focus-player scorpion-line >= 4)
+	(or (players-unit-type-count focus-player bombard-cannon-line >= 4)
+	(or (players-unit-type-count focus-player hussite-wagon-line >= 4)
+	(or (players-unit-type-count focus-player trebuchet-set >= 3)
+	(players-unit-type-count focus-player organ-gun-line >= 4)))))))
+=>
+	(set-goal enemy-siege-goal 1)
+)	
+
+(defrule
+	(current-age == imperial-age)
+	(goal enemy-siege-goal 1)
+	(players-unit-type-count focus-player battering-ram-line < 4)
+	(players-unit-type-count focus-player mangonel-line < 4)
+	(players-unit-type-count focus-player scorpion-line < 4)
+	(players-unit-type-count focus-player bombard-cannon-line < 4)
+	(players-unit-type-count focus-player hussite-wagon-line < 4)
+	(players-unit-type-count focus-player trebuchet-set < 3)
+	(players-unit-type-count focus-player organ-gun-line < 4)
+=>
+	(set-goal enemy-siege-goal 0)
+)
+
+
+;endregion
+
 ;region Find Fortification positions ===============================
 
 ;saving center-point of the map
@@ -2352,7 +2864,7 @@
 ; Finding Enemy Castle x/y position
 
 (defrule
-	(players-building-type-count any-enemy castle > 0)
+	(players-building-type-count focus-player castle > 0)
 	(timer-triggered t-3-sec)
 =>	
 	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
@@ -2367,7 +2879,7 @@
 (defrule
 	(up-set-target-object search-remote c: 0)
 	(game-time > 5)
-	(players-building-type-count any-enemy castle > 0)
+	(players-building-type-count focus-player castle > 0)
 =>
 	(up-full-reset-search)
 	(up-filter-status c: status-ready c: list-active)
@@ -2382,8 +2894,8 @@
 ; Finding Enemy Towers x/y position
 
 (defrule
-	(or (players-building-type-count any-enemy watch-tower-line > 0)
-	(players-building-type-count any-enemy donjon > 0))
+	(or (players-building-type-count focus-player watch-tower-line > 0)
+	(players-building-type-count focus-player donjon > 0))
 	(timer-triggered t-3-sec)
 =>	
 	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
@@ -2399,8 +2911,8 @@
 (defrule
 	(up-set-target-object search-remote c: 0)
 	(game-time > 5)
-	(or (players-building-type-count any-enemy watch-tower-line > 0)
-	(players-building-type-count any-enemy donjon > 0))
+	(or (players-building-type-count focus-player watch-tower-line > 0)
+	(players-building-type-count focus-player donjon > 0))
 =>
 	(up-full-reset-search)
 	(up-filter-status c: status-ready c: list-active)
@@ -2516,7 +3028,7 @@
 ;region Finding Enemy Castle x/y position
 
 (defrule
-	(players-building-type-count any-enemy castle > 0)
+	(players-building-type-count focus-player castle > 0)
 	(timer-triggered t-3-sec)
 =>	
 	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
@@ -2529,7 +3041,7 @@
 
 (defrule
 	(game-time > 5)
-	(players-building-type-count any-enemy castle > 0)
+	(players-building-type-count focus-player castle > 0)
 =>
 	(up-full-reset-search)
 	(up-find-remote c: castle c: 1)
@@ -2545,8 +3057,8 @@
 ;region Finding Enemy Tower x/y position
 
 (defrule
-	(or (players-building-type-count any-enemy watch-tower-line > 0)
-	(players-building-type-count any-enemy donjon > 0))
+	(or (players-building-type-count focus-player watch-tower-line > 0)
+	(players-building-type-count focus-player donjon > 0))
 	(timer-triggered t-3-sec)
 =>	
 	;(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
@@ -2560,8 +3072,8 @@
 
 (defrule
 	(game-time > 5)
-	(or (players-building-type-count any-enemy watch-tower-line > 0)
-	(players-building-type-count any-enemy donjon > 0))
+	(or (players-building-type-count focus-player watch-tower-line > 0)
+	(players-building-type-count focus-player donjon > 0))
 =>
 	(up-full-reset-search)
 	(up-find-remote c: watch-tower c: 1)
@@ -4982,28 +5494,6 @@
 	(set-goal ca-strategy gl-castleage-rangeunit)
 	(disable-self)
 )
-
-(defrule
-	(goal gl-nomad-map NO)
-	(current-age == castle-age)
-	(goal ca-strategy gl-castleage-eagles)
-	(or (players-unit-type-count focus-player militiaman-line >= 10)
-	(players-unit-type-count focus-player hand-cannoneer >= 10))
-=>
-	(set-goal ca-strategy gl-castleage-rangeunit)
-	(chat-local-to-self "Switching to rangedunit")
-)
-
-; (defrule
-	; (goal gl-nomad-map NO)
-	; (current-age == castle-age)
-	; (goal ca-strategy gl-castleage-ranged-unit)
-	; (players-unit-type-count focus-player skirmisher-line >= 20)
-	; (goal meso-civ YES)
-; =>
-	; (set-goal ca-strategy gl-castleage-eagles)
-	; (chat-local-to-self "Switching to Eagles")
-; )
 		
 #end-if
 
@@ -5605,6 +6095,50 @@
 )
 #end-if
 
+(defrule ;against longswords/hc: eagles -> crossbow
+	(current-age == castle-age)
+	(goal ca-strategy gl-castleage-eagles)
+	(or (players-unit-type-count focus-player militiaman-line >= 10)
+	(players-unit-type-count focus-player hand-cannoneer >= 10))
+=>
+	(set-goal ca-strategy gl-castleage-rangeunit)
+	(chat-local-to-self "Switching to rangedunit")
+)
+
+(defrule ;against mass maa: -> archers
+	(current-age == feudal-age)
+	(up-compare-goal strategy-goal != sg-archerrush)
+	(up-research-status c: castle-age < research-pending)
+	(players-unit-type-count focus-player militiaman-line >= 8)
+=>
+	(set-goal strategy-goal sg-archerrush)
+	(chat-local-to-self "Enemy is going mass infantry, switching to archers")
+)
+
+(defrule ;against mass longsword: -> knights
+	(goal meso-civ NO)
+	(up-research-status c: castle-age >= research-pending)
+	(not (civ-selected bengalis))
+	(not (civ-selected dravidians))
+	(not (civ-selected gurjaras))
+	(not (civ-selected hindustanis))
+	(up-compare-goal ca-strategy != gl-castleage-stableunit)
+	(players-unit-type-count focus-player militiaman-line >= 12)
+=>
+	(set-goal ca-strategy gl-castleage-stableunit)
+	(chat-local-to-self "Enemy is going mass infantry, switching to knights")
+)
+
+(defrule ;fc-uu -> boom
+	(current-age == castle-age)
+	(goal strategy-goal sg-fastcastle-uu)
+	(building-type-count-total castle >= 2)
+=>
+	(set-goal strategy-goal sg-fastcastle-gu)
+	(set-goal sg-fastcastle-boom YES)
+	(chat-local-to-self "I have two castles, proceeding to boom")
+)
+
 
 #load-if-defined ARENA-MAP
 
@@ -5621,7 +6155,7 @@
 	(goal strategy-goal sg-fastcastle-gu)
 	(game-time > 60)
 	(goal sg-fastcastle-boom -1)
-	(random-number <= 100)
+	(random-number < 0)
 =>	
 	(set-goal sg-fastcastle-boom YES)
 	(chat-local-to-self "I will go for a boom")
@@ -5632,7 +6166,7 @@
 	(goal strategy-goal sg-fastcastle-gu)
 	(game-time > 60)
 	(goal sg-fastcastle-boom -1)
-	(random-number > 150)
+	(random-number >= 0)
 =>	
 	(set-goal sg-fastcastle-boom NO)
 	(up-set-offense-priority c: monk-with-relic-class c: 11)
@@ -5673,8 +6207,8 @@
 #load-if-not-defined UP-ALLY-IN-GAME
 
 (defrule
-	(goal strategy-goal sg-fastcastle-gu)
 	(current-age >= castle-age)
+	(goal strategy-goal sg-fastcastle-gu)
 	(goal sg-fastcastle-boom YES)
 	(up-compare-goal gl-military-advantage < -15)
 =>
@@ -5687,6 +6221,7 @@
 	(current-age >= castle-age)
 	(goal sg-fastcastle-boom NO)
 	(up-gaia-type-count c: relic-class < 1)
+	(game-time > 1500)
 =>
 	(set-goal sg-fastcastle-boom YES)
 	(up-set-offense-priority c: monk-with-relic-class c: 11)
@@ -5909,6 +6444,7 @@
 	(current-age == imperial-age)
 	(can-train-with-escrow trebuchet)
 	(goal strategy-goal sg-boom-imp)
+	(up-compare-goal gl-number-trebs < 1)
 =>
 	(up-modify-escrow wood c:- 200)
 	(up-modify-escrow gold c:- 200)
@@ -5920,6 +6456,8 @@
 	(can-train-with-escrow trebuchet)
 	(up-compare-goal gl-number-trebs < 2)
 	(up-compare-goal gl-military-advantage >= -4)
+	(not (goal gl-gold-saving 33))
+	(not (goal gl-gold-saving 34))
 =>
 	(up-modify-escrow wood c:- 200)
 	(up-modify-escrow gold c:- 200)
@@ -6220,7 +6758,7 @@
 	(can-research my-unique-research) ;royal heirs
 	(or (unit-type-count-total shotel-line >= 5)
 	(unit-type-count-total camel-line >= 3))
-	(players-unit-type-count focus-player cavalry-class >= 5)
+	(goal enemy-cavalry-goal 1)
 	(or (not (goal strategy-goal sg-boom-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
@@ -6873,8 +7411,8 @@
 (defrule
 	(current-age == castle-age)
 	(can-train jaguar-man-line)
-	(or (players-unit-type-count focus-player infantry-class >= 6)
-	(players-unit-type-count focus-player militiaman-line >= 6))
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-heavy-infantry-goal 1))
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 =>
@@ -6885,8 +7423,8 @@
 	(current-age == imperial-age)
 	(can-research-with-escrow ri-elite-jaguar-man)
 	(unit-type-count jaguar-man-line > 2)
-	(or (players-unit-type-count focus-player infantry-class >= 10)
-	(players-unit-type-count focus-player militiaman-line >= 10))
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-heavy-infantry-goal 1))
 	(goal gl-food-saving 34)
 	(goal gl-gold-saving 34)
 =>
@@ -6903,8 +7441,8 @@
 	(current-age == imperial-age)
 	(can-train jaguar-man-line)
 	(unit-type-count jaguar-man-line < 5)
-	(or (players-unit-type-count focus-player infantry-class >= 10)
-	(players-unit-type-count focus-player militiaman-line >= 10))
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-heavy-infantry-goal 1))
 	(not (research-completed ri-elite-jaguar-man))
 =>
 	(train jaguar-man-line)
@@ -6914,8 +7452,8 @@
 	(current-age == imperial-age)
 	(can-train jaguar-man-line)
 	(research-completed ri-elite-jaguar-man)
-	(or (players-unit-type-count focus-player infantry-class >= 10)
-	(players-unit-type-count focus-player militiaman-line >= 10))
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-heavy-infantry-goal 1))
 =>
 	(train jaguar-man-line)
 )
@@ -6969,7 +7507,8 @@
 (defrule
 	(current-age >= castle-age)
 	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 5)
-	(players-unit-type-count focus-player infantry-class >= 5))
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-heavy-infantry-goal 1)))
 	(can-train ratha-train)
 	(building-type-count-total castle > 0)
 =>
@@ -7024,12 +7563,8 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player cavalry-archer-line >= 5)
-	(or (players-unit-type-count focus-player mangudai-line >= 5)
-	(or (players-unit-type-count focus-player war-wagon-line >= 5)
-	(or (players-unit-type-count focus-player kipchak-set >= 5)
-	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 5)
-	(players-unit-type-count focus-player infantry-class >= 5))))))
+	(or (goal enemy-cavarcher-goal 1)
+    (goal enemy-infantry-goal 1))
 	(can-train camel-archer-line)
 	(building-type-count-total castle > 0)
 =>
@@ -7084,13 +7619,8 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player archer-line >= 5)
 	(or (players-unit-type-count focus-player skirmisher-line >= 5)
-	(or (players-unit-type-count focus-player longbowman-line >= 5)
-	(or (players-unit-type-count focus-player chu-ko-nu-line >= 5)
-	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 5)
-	(or (players-unit-type-count focus-player plumed-archer-line >= 5)
-	(players-unit-type-count focus-player rattan-archer-line >= 5)))))))
+	(goal enemy-archery-goal 1))
 	(can-train hussite-wagon-line)
 	(building-type-count-total castle > 0)
 	; (or (civilian-population g:< f-villager-goal)
@@ -7150,7 +7680,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(players-unit-type-count focus-player infantry-class >= 5)
+	(goal enemy-infantry-goal 1)
 	(can-train longbowman-line)
 	(building-type-count-total castle > 0)
 =>
@@ -7419,7 +7949,8 @@
 
 (defrule
 	(current-age >= castle-age)
-	(players-unit-type-count focus-player infantry-class >= 5)
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-heavy-infantry-goal 1))
 	(can-train cataphract-line)
 	(building-type-count-total castle > 0)
 =>
@@ -7477,7 +8008,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(players-unit-type-count focus-player infantry-class >= 5)
+	(goal enemy-infantry-goal 1)
 	(can-train chu-ko-nu-line)
 	(building-type-count-total castle > 0)
 =>
@@ -7527,9 +8058,8 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player eagle-warrior-line >= 6)
-	(or (players-unit-type-count focus-player huskarl-line >= 6)
-	(players-unit-type-count focus-player siege-weapon-class >= 4)))
+	(or (goal enemy-heavy-infantry-goal 1)
+	(goal enemy-siege-goal 1))
 	(can-train shotel-line)
 	(building-type-count-total castle > 0)
 =>
@@ -7584,9 +8114,8 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player eagle-warrior-line >= 6)
-	(or (players-unit-type-count focus-player huskarl-line >= 6)
-	(players-unit-type-count focus-player siege-weapon-class >= 4)))
+	(or (goal enemy-heavy-infantry-goal 1)
+	(goal enemy-siege-goal 1))
 	(can-train woad-raider-line)
 	(building-type-count-total castle > 0)
 =>
@@ -7696,8 +8225,9 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player infantry-class >= 6)
-	(players-unit-type-count focus-player siege-weapon-class >= 4))
+	(or (goal enemy-heavy-infantry-goal 1)
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-siege-goal 1)))
 	(can-train urumi-swordsman-line)
 	(building-type-count-total castle > 0)
 =>
@@ -7706,8 +8236,9 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player infantry-class >= 6)
-	(players-unit-type-count focus-player siege-weapon-class >= 4))
+	(or (goal enemy-heavy-infantry-goal 1)
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-siege-goal 1)))
 	(can-train throwing-axeman-line)
 	(building-type-count-total castle > 0)
 =>
@@ -7718,7 +8249,9 @@
 (defrule
 	(current-age == castle-age)
 	(can-train throwing-axeman-line)
-	(players-unit-type-count focus-player infantry-class >= 6)
+	(or (goal enemy-heavy-infantry-goal 1)
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-siege-goal 1)))
 =>
 	(train throwing-axeman-line)
 )
@@ -7726,7 +8259,9 @@
 (defrule
 	(current-age == imperial-age)
 	(can-research ri-elite-throwing-axeman)
-	(players-unit-type-count focus-player infantry-class >= 6)
+	(or (goal enemy-heavy-infantry-goal 1)
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-siege-goal 1)))
 	(unit-type-count-total throwing-axeman-line >= 3)
 =>
 	(research ri-elite-throwing-axeman)
@@ -7736,7 +8271,9 @@
 	(current-age == imperial-age)
 	(can-train throwing-axeman-line)
 	(not(research-completed ri-elite-throwing-axeman))
-	(players-unit-type-count focus-player infantry-class >= 6)
+	(or (goal enemy-heavy-infantry-goal 1)
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-siege-goal 1)))
 	(unit-type-count-total throwing-axeman-line < 5)
 =>
 	(train throwing-axeman-line)
@@ -7746,7 +8283,9 @@
 	(current-age == imperial-age)
 	(can-train throwing-axeman-line)
 	(research-completed ri-elite-throwing-axeman)
-	(players-unit-type-count focus-player infantry-class >= 6)
+	(or (goal enemy-heavy-infantry-goal 1)
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-siege-goal 1)))
 =>
 	(train throwing-axeman-line)
 )
@@ -7800,26 +8339,8 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player archer-line >= 5)
-	(or (players-unit-type-count focus-player skirmisher-line >= 5)
-	(or (players-unit-type-count focus-player longbowman-line >= 5)
-	(or (players-unit-type-count focus-player chu-ko-nu-line >= 5)
-	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 5)
-	(or (players-unit-type-count focus-player plumed-archer-line >= 5)
-	(players-unit-type-count focus-player rattan-archer-line >= 5)))))))
-	(can-train huskarl-line)
-	(building-type-count-total castle > 0)
-=>
-	(train huskarl-line)
-)
-
-(defrule
-	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player cavalry-archer-line >= 5)
-	(or (players-unit-type-count focus-player mangudai-line >= 5)
-	(or (players-unit-type-count focus-player war-wagon-line >= 5)
-	(or (players-unit-type-count focus-player kipchak-set >= 5)
-	(players-unit-type-count focus-player camel-archer-line >= 5)))))
+	(or (goal enemy-archery-goal 1)
+	(goal enemy-cavarcher-goal 1))
 	(can-train huskarl-line)
 	(building-type-count-total castle > 0)
 =>
@@ -7874,8 +8395,8 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player infantry-class >= 6)
-	(players-unit-type-count focus-player battering-ram-line >= 2))
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-siege-goal 1))
 	(can-train chakram-thrower-line)
 	(building-type-count-total castle > 0)
 =>
@@ -7930,26 +8451,8 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player archer-line >= 5)
-	(or (players-unit-type-count focus-player skirmisher-line >= 5)
-	(or (players-unit-type-count focus-player longbowman-line >= 5)
-	(or (players-unit-type-count focus-player chu-ko-nu-line >= 5)
-	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 5)
-	(or (players-unit-type-count focus-player plumed-archer-line >= 5)
-	(players-unit-type-count focus-player rattan-archer-line >= 5)))))))
-	(can-train tarkan-line)
-	(building-type-count-total castle > 0)
-=>
-	(train tarkan-line)
-)
-
-(defrule
-	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player cavalry-archer-line >= 5)
-	(or (players-unit-type-count focus-player mangudai-line >= 5)
-	(or (players-unit-type-count focus-player war-wagon-line >= 5)
-	(or (players-unit-type-count focus-player kipchak-set >= 5)
-	(players-unit-type-count focus-player camel-archer-line >= 5)))))
+	(or (goal enemy-archery-goal 1)
+	(goal enemy-cavarcher-goal 1))
 	(can-train tarkan-line)
 	(building-type-count-total castle > 0)
 =>
@@ -8007,27 +8510,9 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player archer-line >= 5)
-	(or (players-unit-type-count focus-player skirmisher-line >= 5)
-	(or (players-unit-type-count focus-player longbowman-line >= 5)
-	(or (players-unit-type-count focus-player chu-ko-nu-line >= 5)
-	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 5)
-	(or (players-unit-type-count focus-player plumed-archer-line >= 5)
-	(players-unit-type-count focus-player rattan-archer-line >= 5)))))))
+	(or (goal enemy-archery-goal 1)
+	(goal enemy-cavarcher-goal 1))
 	(can-train ghulam-line)
-	(building-type-count-total castle > 0)
-=>
-	(train ghulam-line)
-)
-
-(defrule
-	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player cavalry-archer-line >= 5)
-	(or (players-unit-type-count focus-player mangudai-line >= 5)
-	(or (players-unit-type-count focus-player war-wagon-line >= 5)
-	(or (players-unit-type-count focus-player kipchak-set >= 5)
-	(players-unit-type-count focus-player camel-archer-line >= 5)))))
-	(can-train huskarl-line)
 	(building-type-count-total castle > 0)
 =>
 	(train ghulam-line)
@@ -8073,7 +8558,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(players-unit-type-count focus-player cavalry-class >= 5)
+	(goal enemy-cavalry-goal 1)
 	(can-train kamayuk-line)
 	(building-type-count-total castle > 0)
 =>
@@ -8131,7 +8616,9 @@
 
 (defrule
 	(current-age >= castle-age)
-	(players-unit-type-count focus-player cavalry-class >= 5)
+	(or (goal enemy-cavalry-goal 1)
+	(or (goal enemy-infantry-goal 1)
+	(players-unit-type-count focus-player cataphract-line >= 6)))
 	(can-train genoese-crossbowman-line)
 	(building-type-count-total castle > 0)
 =>
@@ -8186,17 +8673,8 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player jaguar-man-line >= 5)
-	(or (players-unit-type-count focus-player hussite-wagon-line >= 5)
-	(or (players-unit-type-count focus-player woad-raider-line >= 5)
-	(or (players-unit-type-count focus-player shotel-line >= 5)
-	(or (players-unit-type-count focus-player huskarl-line >= 5)
-	(or (players-unit-type-count focus-player ghulam-line >= 5)
-	(or (players-unit-type-count focus-player kamayuk-line >= 5)
-	(or (players-unit-type-count focus-player karambit-warrior-line >= 5)
-	(or (players-unit-type-count focus-player obuch-line >= 5)
-	(or (players-unit-type-count focus-player serjeant-line >= 5)
-	(players-unit-type-count focus-player berserk-line >= 5)))))))))))
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-heavy-infantry-goal 1))
 	(can-train samurai-line)
 	(building-type-count-total castle > 0)
 =>
@@ -8309,14 +8787,8 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player archer-line >= 5)
-	(or (players-unit-type-count focus-player skirmisher-line >= 5)
-	(or (players-unit-type-count focus-player longbowman-line >= 5)
-	(or (players-unit-type-count focus-player chu-ko-nu-line >= 5)
-	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 5)
-	(or (players-unit-type-count focus-player plumed-archer-line >= 5)
-	(or (players-unit-type-count focus-player rattan-archer-line >= 5)
-	(players-unit-type-count focus-player militiaman-line >= 5))))))))
+	(or (goal enemy-archery-goal 1)
+	(players-unit-type-count focus-player militiaman-line >= 5))
 	(can-train ballista-elephant-line)
 	(building-type-count-total castle > 0)
 	; (or (civilian-population g:< f-villager-goal)
@@ -8377,7 +8849,7 @@
 (defrule
 	(current-age >= castle-age)
 	(or (players-unit-type-count focus-player knight-line >= 5)
-	(players-unit-type-count focus-player siege-weapon-class >= 5))
+	(goal enemy-siege-goal 1))
 	(can-train leitis-line)
 	(building-type-count-total castle > 0)
 =>
@@ -8438,7 +8910,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(players-unit-type-count focus-player siege-weapon-class >= 5)
+	(goal enemy-siege-goal 1)
 	(can-train magyar-huszar-line)
 	(building-type-count-total castle > 0)
 =>
@@ -8545,8 +9017,9 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player infantry-class >= 5)
-	(players-unit-type-count focus-player siege-weapon-class >= 5))
+	(or (goal enemy-infantry-goal 1)
+	(or (goal enemy-heavy-infantry-goal 1)
+	(goal enemy-siege-goal 1)))
 	(can-train gbeto-line)
 	(building-type-count-total castle > 0)
 =>
@@ -8606,8 +9079,9 @@
 	(current-age >= castle-age)
 	(or (players-unit-type-count focus-player militiaman-line >= 5)
 	(or (players-unit-type-count focus-player spearman-line >= 5)
-	(or (players-unit-type-count focus-player archery-cannon-class >= 5)
-	(players-unit-type-count focus-player camel-line >= 5))))
+	(or (players-unit-type-count focus-player hand-cannoneer >= 5)
+	(or (players-unit-type-count focus-player janissary-line >= 5)
+	(players-unit-type-count focus-player camel-line >= 5)))))
 	(can-train plumed-archer-line)
 	(building-type-count-total castle > 0)
 =>
@@ -8666,8 +9140,9 @@
 (defrule
 	(current-age >= castle-age)
 	(or (players-unit-type-count focus-player militiaman-line >= 5)
-	(or (players-unit-type-count focus-player siege-weapon-class >= 5)
-	(players-unit-type-count focus-player archery-cannon-class >= 5)))
+	(or (goal enemy-siege-goal 1)
+	(or (players-unit-type-count focus-player hand-cannoneer >= 5)
+	(players-unit-type-count focus-player janissary-line >= 5))))
 	(can-train mangudai-line)
 	(building-type-count-total castle > 0)
 =>
@@ -8771,8 +9246,9 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player infantry-class >= 5)
-	(players-unit-type-count focus-player siege-weapon-class >= 5))
+	(or (goal enemy-infantry-goal 1)
+	(or (goal enemy-heavy-infantry-goal 1)
+	(goal enemy-siege-goal 1)))
 	(can-train obuch-line)
 	(building-type-count-total castle > 0)
 =>
@@ -8876,7 +9352,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(players-unit-type-count focus-player infantry-class >= 5)
+	(goal enemy-heavy-infantry-goal 1)
 	(can-train centurion-line)
 	(building-type-count-total castle > 0)
 =>
@@ -8895,8 +9371,8 @@
 (defrule
 	(current-age == imperial-age)
 	(can-research ri-elite-mameluke)
-	(or (players-unit-type-count focus-player cavalry-class >= 6)
-	(players-unit-type-count focus-player cavalry-archer-class >= 6))
+	(or (goal enemy-cavalry-goal 1)
+	(goal enemy-cavarcher-goal 1))
 	(unit-type-count-total mameluke-line >= 3)
 =>
 	(research ri-elite-mameluke)
@@ -8906,8 +9382,8 @@
 	(current-age == imperial-age)
 	(can-train mameluke-line)
 	(not(research-completed ri-elite-mameluke))
-	(or (players-unit-type-count focus-player cavalry-class >= 6)
-	(players-unit-type-count focus-player cavalry-archer-class >= 6))
+	(or (goal enemy-cavalry-goal 1)
+	(goal enemy-cavarcher-goal 1))
 	(unit-type-count-total mameluke-line < 5)
 =>
 	(train mameluke-line)
@@ -8917,8 +9393,8 @@
 	(current-age == imperial-age)
 	(can-train mameluke-line)
 	(research-completed ri-elite-mameluke)
-	(or (players-unit-type-count focus-player cavalry-class >= 6)
-	(players-unit-type-count focus-player cavalry-archer-class >= 6))
+	(or (goal enemy-cavalry-goal 1)
+	(goal enemy-cavarcher-goal 1))
 =>
 	(train mameluke-line)
 )
@@ -9020,7 +9496,8 @@
 
 (defrule
 	(current-age >= castle-age)
-	(players-unit-type-count focus-player infantry-class >= 5)
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-heavy-infantry-goal 1))
 	(can-train boyar-line)
 	(building-type-count-total castle > 0)
 =>
@@ -9100,7 +9577,8 @@
 
 (defrule
 	(current-age >= castle-age)
-	(players-unit-type-count focus-player infantry-class >= 5)
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-heavy-infantry-goal 1))
 	(can-train conquistador-line)
 	(building-type-count-total castle > 0)
 =>
@@ -9250,7 +9728,8 @@
 
 (defrule
 	(current-age >= castle-age)
-	(players-unit-type-count focus-player infantry-class >= 5)
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-heavy-infantry-goal 1))
 	(can-train janissary-line)
 	(building-type-count-total castle > 0)
 =>
@@ -9382,7 +9861,8 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player cavalry-class >= 5)
+	(or (and (goal enemy-cavalry-goal 1)
+		(players-unit-type-count focus-player cataphract-line < 1))
 	(or (players-unit-type-count focus-player spearman-line >= 5)
 	(players-unit-type-count focus-player eagle-warrior-line >= 5)))
 	(can-train berserk-line)
@@ -10813,7 +11293,6 @@
 	(build archery-range)
 	;(chat-to-player my-player-number "Baue Schiessanlage, um Bogenschuetzen zu kontern")
 )
-#end-if
 
 (defrule
 	(current-age == feudal-age)
@@ -10872,11 +11351,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player cavalry-archer-line >= 4)
-	(or (players-unit-type-count focus-player mangudai-line >= 4)
-	(or (players-unit-type-count focus-player war-wagon-line >= 4)
-	(or (players-unit-type-count focus-player kipchak-set >= 4)
-	(players-unit-type-count focus-player camel-archer-line >= 4)))))
+	(goal enemy-cavarcher-goal 1)
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range == 0)
 	(or (not (goal strategy-goal sg-boom-imp))
@@ -10887,6 +11362,8 @@
 	(build archery-range)
 	;(chat-to-player my-player-number "Baue Schiessanlage, um feindliche Ber. Bogenschuetzen zu kontern")
 )
+
+#end-if
 
 (defrule
 	(current-age == feudal-age)
@@ -11083,7 +11560,7 @@
 	(players-unit-type-count focus-player spearman-line >= 4))
 	(can-train-with-escrow skirmisher-line)
 	(food-amount < 600)
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 	(or 
 		(not (goal gl-food-saving 22))
 		(and (goal gl-food-saving 22)
@@ -11188,7 +11665,7 @@
 	(can-train-with-escrow scout-cavalry-line)
 	(up-research-status c: castle-age != research-pending)
 	(food-amount < 600)
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 	(or 
 		(not (goal gl-food-saving 22))
 		(and (goal gl-food-saving 22)
@@ -11205,7 +11682,7 @@
 	(players-unit-type-count focus-player skirmisher-line >= 3)
 	(can-train-with-escrow eagle-warrior-line)
 	(food-amount < 600)	
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 	(or 
 		(not (goal gl-food-saving 22))
 		(and (goal gl-food-saving 22)
@@ -11223,7 +11700,7 @@
 	(players-unit-type-count focus-player militiaman-line > 0)
 	(unit-type-count-total archer-line < 8)
 	(can-train-with-escrow archer-line)
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 	(or 
 		(not (goal gl-food-saving 22))
 		(and (goal gl-food-saving 22)
@@ -11396,13 +11873,9 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (players-unit-type-count focus-player camel-line >= 4)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 4)
-	(or (players-unit-type-count focus-player war-elephant-line >= 4)
-	(or (players-unit-type-count focus-player konnik-line >= 4)
-	(or (players-unit-type-count focus-player leitis-line >= 4)
-	(or (players-unit-type-count focus-player boyar-line >= 4)
-	(players-unit-type-count focus-player knight-line >= 4)))))))
+	(or (goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player war-elephant-line >= 3))
+	(players-unit-type-count focus-player cataphract-line < 1)
 	(building-type-count-total barracks < 3)
 	(building-type-count-total town-center >= 2)
 	(can-build-with-escrow barracks)
@@ -11418,13 +11891,9 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (players-unit-type-count focus-player camel-line >= 4)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 4)
-	(or (players-unit-type-count focus-player war-elephant-line >= 4)
-	(or (players-unit-type-count focus-player konnik-line >= 4)
-	(or (players-unit-type-count focus-player leitis-line >= 4)
-	(or (players-unit-type-count focus-player boyar-line >= 4)
-	(players-unit-type-count focus-player knight-line >= 4)))))))
+	(or (goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player war-elephant-line >= 3))
+	(players-unit-type-count focus-player cataphract-line < 1)
 	(building-type-count-total town-center >= 2)
 	(can-train spearman-line)
 	(not (research-completed ri-pikeman))
@@ -11440,13 +11909,9 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (players-unit-type-count focus-player camel-line >= 4)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 4)
-	(or (players-unit-type-count focus-player war-elephant-line >= 4)
-	(or (players-unit-type-count focus-player konnik-line >= 4)
-	(or (players-unit-type-count focus-player leitis-line >= 4)
-	(or (players-unit-type-count focus-player boyar-line >= 4)
-	(players-unit-type-count focus-player knight-line >= 4)))))))
+	(or (goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player war-elephant-line >= 3))
+	(players-unit-type-count focus-player cataphract-line < 1)
 	(building-type-count-total town-center >= 2)
 	(can-research ri-pikeman)
 	(not (research-completed ri-pikeman))
@@ -11460,13 +11925,9 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (players-unit-type-count focus-player camel-line >= 4)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 4)
-	(or (players-unit-type-count focus-player war-elephant-line >= 4)
-	(or (players-unit-type-count focus-player konnik-line >= 4)
-	(or (players-unit-type-count focus-player leitis-line >= 4)
-	(or (players-unit-type-count focus-player boyar-line >= 4)
-	(players-unit-type-count focus-player knight-line >= 4)))))))
+	(or (goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player war-elephant-line >= 3))
+	(players-unit-type-count focus-player cataphract-line < 1)
 	(can-train-with-escrow spearman-line)
 	(building-type-count-total town-center >= 2)
 	(research-completed ri-pikeman)
@@ -11483,12 +11944,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player cavalry-archer-line >= 8)
-	(or (players-unit-type-count focus-player mangudai-line >= 8)
-	(or (players-unit-type-count focus-player war-wagon-line >= 8)
-	(or (players-unit-type-count focus-player kipchak-set >= 8)
-	(or (players-unit-type-count focus-player elephant-archer-line >= 6)
-	(players-unit-type-count focus-player camel-archer-line >= 8))))))
+	(goal enemy-cavarcher-goal 1)
 	(can-research-with-escrow ri-elite-skirmisher)
 	(not (research-completed ri-elite-skirmisher))
 	(unit-type-count skirmisher-line > 3)
@@ -11506,12 +11962,7 @@
 	(current-age == castle-age)
 	(unit-type-count-total skirmisher-line < 60)
 	(unit-type-count-total eagle-warrior-line <= 5)
-	(or (players-unit-type-count focus-player cavalry-archer-line >= 8)
-	(or (players-unit-type-count focus-player mangudai-line >= 8)
-	(or (players-unit-type-count focus-player war-wagon-line >= 8)
-	(or (players-unit-type-count focus-player kipchak-set >= 8)
-	(or (players-unit-type-count focus-player elephant-archer-line >= 6)
-	(players-unit-type-count focus-player camel-archer-line >= 8))))))
+	(goal enemy-cavarcher-goal 1)
 	(can-train-with-escrow skirmisher-line)
 	(research-completed ri-elite-skirmisher)
 	(not (goal gl-food-saving 23))
@@ -11528,12 +11979,7 @@
 (defrule
 	(current-age >= castle-age)
 	(unit-type-count-total skirmisher-line < 10)
-	(or (players-unit-type-count focus-player cavalry-archer-line >= 8)
-	(or (players-unit-type-count focus-player mangudai-line >= 8)
-	(or (players-unit-type-count focus-player war-wagon-line >= 8)
-	(or (players-unit-type-count focus-player kipchak-set >= 8)
-	(or (players-unit-type-count focus-player elephant-archer-line >= 6)
-	(players-unit-type-count focus-player camel-archer-line >= 8))))))
+	(goal enemy-cavarcher-goal 1)
 	(can-train-with-escrow skirmisher-line)
 	(not (research-completed ri-elite-skirmisher))
 	(not (goal gl-food-saving 23))
@@ -11550,12 +11996,7 @@
 (defrule
 	(current-age == imperial-age)
 	(unit-type-count-total skirmisher-line < 60)
-	(or (players-unit-type-count focus-player cavalry-archer-line >= 8)
-	(or (players-unit-type-count focus-player mangudai-line >= 8)
-	(or (players-unit-type-count focus-player war-wagon-line >= 8)
-	(or (players-unit-type-count focus-player kipchak-set >= 8)
-	(or (players-unit-type-count focus-player elephant-archer-line >= 6)
-	(players-unit-type-count focus-player camel-archer-line >= 8))))))
+	(goal enemy-cavarcher-goal 1)
 	(can-train skirmisher-line)
 	(research-completed ri-elite-skirmisher)
 	(not (goal gl-food-saving 23))
@@ -11570,12 +12011,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player cavalry-archer-line >= 6)
-	(or (players-unit-type-count focus-player mangudai-line >= 6)
-	(or (players-unit-type-count focus-player war-wagon-line >= 6)
-	(or (players-unit-type-count focus-player kipchak-set >= 6)
-	(or (players-unit-type-count focus-player elephant-archer-line >= 5)
-	(players-unit-type-count focus-player camel-archer-line >= 6))))))
+	(goal enemy-cavarcher-goal 1)
 	(can-research ri-elite-genitour)
 =>
 	(research ri-elite-genitour)
@@ -11584,12 +12020,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player cavalry-archer-line >= 6)
-	(or (players-unit-type-count focus-player mangudai-line >= 6)
-	(or (players-unit-type-count focus-player war-wagon-line >= 6)
-	(or (players-unit-type-count focus-player kipchak-set >= 6)
-	(or (players-unit-type-count focus-player elephant-archer-line >= 5)
-	(players-unit-type-count focus-player camel-archer-line >= 6))))))
+	(goal enemy-cavarcher-goal 1)
 	(can-train genitour-line)
 	(research-completed ri-elite-genitour)
 =>
@@ -11597,22 +12028,10 @@
 	;(chat-to-player my-player-number "Produziere Ginete gegen Ber. Bogenschuetzen")
 )
 
-
-(defrule
-	(current-age >= castle-age)
-	(players-unit-type-count focus-player cavalry-class >= 6)
-	(building-type-count-total town-center >= 2)
-	(can-build-with-escrow barracks)
-	(building-type-count-total barracks < 3)
-=>
-	(up-modify-escrow wood c:- 175)
-	(build barracks)
-	;(chat-to-player my-player-number "Baue Kasernen gegen Kavallerie")
-)
-
 (defrule
 	(current-age == castle-age)
-	(players-unit-type-count focus-player cavalry-class >= 4)
+	(goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player cataphract-line < 1)
 	(or (not (goal strategy-goal sg-boom-imp))
 	(up-research-status c: imperial-age >= research-pending))
 	(can-train spearman-line)
@@ -11628,7 +12047,8 @@
 
 (defrule
 	(current-age == castle-age)
-	(players-unit-type-count focus-player cavalry-class >= 4)
+	(goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player cataphract-line < 1)
 	(building-type-count-total town-center >= 2)
 	(can-research ri-pikeman)
 	(not (research-completed ri-pikeman))
@@ -11642,7 +12062,8 @@
 
 (defrule
 	(current-age == castle-age)
-	(players-unit-type-count focus-player cavalry-class >= 4)
+	(goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player cataphract-line < 1)
 	(can-train-with-escrow spearman-line)
 	(building-type-count-total town-center >= 2)
 	(research-completed ri-pikeman)
@@ -11757,14 +12178,8 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (players-unit-type-count focus-player archery-cannon-class >= 5)
-	(or (players-unit-type-count focus-player archer-line >= 5)
-	(or (players-unit-type-count focus-player skirmisher-line >= 5)
-	(or (players-unit-type-count focus-player longbowman-line >= 5)
-	(or (players-unit-type-count focus-player chu-ko-nu-line >= 5)
-	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 5)
-	(or (players-unit-type-count focus-player plumed-archer-line >= 5)
-	(players-unit-type-count focus-player rattan-archer-line >= 5))))))))
+	(or (goal enemy-archery-goal 1)
+	(goal enemy-cavarcher-goal 1))
 	(can-train shrivamsha-rider-line)
 	; (or (civilian-population g:< c-villager-goal)
 	; (up-research-status c: castle-age == research-pending))
@@ -11782,7 +12197,9 @@
 	(building-type-count-total siege-workshop < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build siege-workshop)
+	(up-assign-builders c: siege-workshop c: 2) 
+	(up-set-placement-data my-player-number -1 c: 8)
+    (up-build place-control 0 c: siege-workshop)
 	;(chat-to-player my-player-number "Produziere Rammboecke gegen feindliche Türme")
 )
 
@@ -11801,7 +12218,7 @@
 (defrule
 	(current-age >= castle-age)
 	(or (players-unit-type-count focus-player archer-line >= 6)
-	(or (players-unit-type-count focus-player siege-weapon-class >= 1)
+	(or (goal enemy-siege-goal 1)
 	(or (players-building-type-count focus-player castle >= 1)
 	(players-building-type-count focus-player krepost >= 1))))
 	(building-type-count-total siege-workshop == 0)
@@ -11834,7 +12251,9 @@
 	(building-type-count-total siege-workshop < 1)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build siege-workshop)
+	(up-assign-builders c: siege-workshop c: 2) 
+	(up-set-placement-data my-player-number -1 c: 8)
+    (up-build place-control 0 c: siege-workshop)
 	;(chat-to-player my-player-number "Produziere Rammboecke gegen feindliche Türme")
 )
 
@@ -11967,12 +12386,11 @@
 (defrule
 	(current-age >= castle-age)
 	(or (players-unit-type-count focus-player cavalry-archer-line >= 6)
-	(or (players-unit-type-count focus-player mangudai-line >= 6)
 	(or (players-unit-type-count focus-player war-wagon-line >= 6)
 	(or (players-unit-type-count focus-player kipchak-set >= 6)
 	(or (players-unit-type-count focus-player skirmisher-line >= 6)
 	(or (players-unit-type-count focus-player archer-line >= 6)
-	(players-unit-type-count focus-player camel-archer-line >= 6)))))))
+	(players-unit-type-count focus-player camel-archer-line >= 6))))))
 	(can-build-with-escrow siege-workshop)
 	(building-type-count-total siege-workshop == 0)
 =>
@@ -11984,10 +12402,9 @@
 (defrule
 	(current-age >= castle-age)
 	(or (players-unit-type-count focus-player cavalry-archer-line >= 6)
-	(or (players-unit-type-count focus-player mangudai-line >= 6)
 	(or (players-unit-type-count focus-player war-wagon-line >= 6)
 	(or (players-unit-type-count focus-player kipchak-set >= 6)
-	(players-unit-type-count focus-player camel-archer-line >= 6)))))
+	(players-unit-type-count focus-player camel-archer-line >= 6))))
 	(can-train scorpion-line)
 	(unit-type-count scorpion-line < 4)
 	(or (not (goal strategy-goal sg-boom-imp))
@@ -12000,12 +12417,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (players-unit-type-count focus-player archer-line >= 6)
-	(or (players-unit-type-count focus-player longbowman-line >= 6)
-	(or (players-unit-type-count focus-player chu-ko-nu-line >= 6)
-	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 6)
-	(or (players-unit-type-count focus-player plumed-archer-line >= 6)
-	(players-unit-type-count focus-player rattan-archer-line >= 6))))))
+	(goal enemy-archery-goal 1)
 	(can-train scorpion-line)
 	(unit-type-count scorpion-line < 4)
 	(or (not (goal strategy-goal sg-boom-imp))
@@ -12061,14 +12473,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player archery-cannon-class >= 5)
-	(or (players-unit-type-count focus-player archer-line >= 5)
-	(or (players-unit-type-count focus-player skirmisher-line >= 5)
-	(or (players-unit-type-count focus-player longbowman-line >= 5)
-	(or (players-unit-type-count focus-player chu-ko-nu-line >= 5)
-	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 5)
-	(or (players-unit-type-count focus-player plumed-archer-line >= 5)
-	(players-unit-type-count focus-player rattan-archer-line >= 5))))))))
+	(goal enemy-archery-goal 1)
 	(can-train shrivamsha-rider-line)
 	(research-available ri-elite-shrivamsha-rider)
 	(unit-type-count shrivamsha-rider-line <= 5)
@@ -12079,14 +12484,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player archery-cannon-class >= 5)
-	(or (players-unit-type-count focus-player archer-line >= 5)
-	(or (players-unit-type-count focus-player skirmisher-line >= 5)
-	(or (players-unit-type-count focus-player longbowman-line >= 5)
-	(or (players-unit-type-count focus-player chu-ko-nu-line >= 5)
-	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 5)
-	(or (players-unit-type-count focus-player plumed-archer-line >= 5)
-	(players-unit-type-count focus-player rattan-archer-line >= 5))))))))
+	(goal enemy-archery-goal 1)
 	(can-train shrivamsha-rider-line)
 	(research-completed ri-elite-shrivamsha-rider)
 =>
@@ -12096,14 +12494,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(or (players-unit-type-count focus-player archery-cannon-class >= 5)
-	(or (players-unit-type-count focus-player archer-line >= 5)
-	(or (players-unit-type-count focus-player skirmisher-line >= 5)
-	(or (players-unit-type-count focus-player longbowman-line >= 5)
-	(or (players-unit-type-count focus-player chu-ko-nu-line >= 5)
-	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 5)
-	(or (players-unit-type-count focus-player plumed-archer-line >= 5)
-	(players-unit-type-count focus-player rattan-archer-line >= 5))))))))
+	(goal enemy-archery-goal 1)
 	(can-research ri-elite-shrivamsha-rider)
 =>
 	(research ri-elite-shrivamsha-rider)
@@ -12171,6 +12562,8 @@
 	(research-completed ri-capped-ram)
 	(unit-type-count trebuchet-set < 6)
 	(building-type-count castle >= 1)
+	(not (goal gl-gold-saving 33))
+	(not (goal gl-gold-saving 34))
 =>
 	(up-modify-escrow wood c:- 200)
 	(up-modify-escrow gold c:- 200)
@@ -12218,7 +12611,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player siege-weapon-class >= 3)
+	(or (goal enemy-siege-goal 1)
 	(players-unit-type-count focus-player archer-line >= 6))
 	(can-train bombard-cannon-line)
 	(unit-type-count-total bombard-cannon-line < 8)
@@ -12230,7 +12623,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player siege-weapon-class >= 3)
+	(or (goal enemy-siege-goal 1)
 	(players-unit-type-count focus-player archer-line >= 6))
 	(can-research ri-houfnice)
 	(research-available ri-houfnice)
@@ -12241,7 +12634,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player siege-weapon-class >= 3)
+	(or (goal enemy-siege-goal 1)
 	(players-unit-type-count focus-player archer-line >= 6))
 	(can-train bombard-cannon-line)
 	(unit-type-count-total bombard-cannon-line < 2)
@@ -12253,7 +12646,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player siege-weapon-class >= 3)
+	(or (goal enemy-siege-goal 1)
 	(players-unit-type-count focus-player archer-line >= 6))
 	(can-train bombard-cannon-line)
 	(unit-type-count-total bombard-cannon-line < 12)
@@ -12265,7 +12658,8 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(players-unit-type-count focus-player cavalry-class >= 4)
+	(or (goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player war-elephant-line >= 4))
 	(can-research ri-pikeman)
 	(not (research-completed ri-pikeman))
 	(unit-type-count-total camel-line <= 3)
@@ -12276,7 +12670,8 @@
 
 (defrule
 	(current-age == imperial-age)
-	(players-unit-type-count focus-player cavalry-class >= 6)
+	(or (goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player war-elephant-line >= 4))
 	(can-train spearman-line)
 	(research-completed ri-pikeman)
 	(not (research-available ri-halberdier))
@@ -12289,7 +12684,8 @@
 
 (defrule
 	(current-age == imperial-age)
-	(players-unit-type-count focus-player cavalry-class >= 6)
+	(or (goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player war-elephant-line >= 4))
 	(can-train spearman-line)
 	(research-completed ri-pikeman)
 	(research-available ri-halberdier)
@@ -12302,7 +12698,8 @@
 
 (defrule
 	(current-age == imperial-age)
-	(players-unit-type-count focus-player cavalry-class >= 6)
+	(or (goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player war-elephant-line >= 4))
 	(can-research ri-halberdier)
 	(not (research-completed ri-halberdier))
 	(unit-type-count-total camel-line <= 5)
@@ -12313,7 +12710,8 @@
 
 (defrule
 	(current-age == imperial-age)
-	(players-unit-type-count focus-player cavalry-class >= 6)
+	(or (goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player war-elephant-line >= 4))
 	(can-train spearman-line)
 	(research-completed ri-halberdier)
 	(unit-type-count-total camel-line <= 5)
@@ -12324,14 +12722,8 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(or (players-unit-type-count focus-player camel-line >= 6)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 6)
-	(or (players-unit-type-count focus-player elephant-archer-line >= 6)
-	(or (players-unit-type-count focus-player war-elephant-line >= 6)
-	(or (players-unit-type-count focus-player konnik-line >= 6)
-	(or (players-unit-type-count focus-player leitis-line >= 6)
-	(or (players-unit-type-count focus-player boyar-line >= 6)
-	(players-unit-type-count focus-player knight-line >= 6))))))))
+	(or (goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player war-elephant-line >= 4))
 	(can-research ri-pikeman)
 	(not (research-completed ri-pikeman))
 	(unit-type-count-total camel-line <= 3)
@@ -12342,14 +12734,9 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player camel-line >= 6)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 6)
-	(or (players-unit-type-count focus-player elephant-archer-line >= 6)
-	(or (players-unit-type-count focus-player war-elephant-line >= 6)
-	(or (players-unit-type-count focus-player konnik-line >= 6)
-	(or (players-unit-type-count focus-player leitis-line >= 6)
-	(or (players-unit-type-count focus-player boyar-line >= 6)
-	(players-unit-type-count focus-player knight-line >= 6))))))))
+	(or (goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player war-elephant-line >= 4))
+	(players-unit-type-count focus-player cataphract-line < 5)
 	(building-type-count-total barracks < 4)
 	(building-type-count-total town-center >= 3)
 	(can-build barracks)
@@ -12361,14 +12748,9 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player camel-line >= 6)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 6)
-	(or (players-unit-type-count focus-player elephant-archer-line >= 6)
-	(or (players-unit-type-count focus-player war-elephant-line >= 6)
-	(or (players-unit-type-count focus-player konnik-line >= 6)
-	(or (players-unit-type-count focus-player leitis-line >= 6)
-	(or (players-unit-type-count focus-player boyar-line >= 6)
-	(players-unit-type-count focus-player knight-line >= 6))))))))
+	(or (goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player war-elephant-line >= 4))
+	(players-unit-type-count focus-player cataphract-line < 5)
 	(can-train spearman-line)
 	(research-completed ri-pikeman)
 	(not (research-available ri-halberdier))
@@ -12381,14 +12763,9 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player camel-line >= 6)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 6)
-	(or (players-unit-type-count focus-player elephant-archer-line >= 6)
-	(or (players-unit-type-count focus-player war-elephant-line >= 6)
-	(or (players-unit-type-count focus-player konnik-line >= 6)
-	(or (players-unit-type-count focus-player leitis-line >= 6)
-	(or (players-unit-type-count focus-player boyar-line >= 6)
-	(players-unit-type-count focus-player knight-line >= 6))))))))
+	(or (goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player war-elephant-line >= 4))
+	(players-unit-type-count focus-player cataphract-line < 5)
 	(can-train spearman-line)
 	(research-completed ri-pikeman)
 	(research-available ri-halberdier)
@@ -12401,14 +12778,9 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player camel-line >= 6)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 6)
-	(or (players-unit-type-count focus-player elephant-archer-line >= 6)
-	(or (players-unit-type-count focus-player war-elephant-line >= 6)
-	(or (players-unit-type-count focus-player konnik-line >= 6)
-	(or (players-unit-type-count focus-player leitis-line >= 6)
-	(or (players-unit-type-count focus-player boyar-line >= 6)
-	(players-unit-type-count focus-player knight-line >= 6))))))))
+	(or (goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player war-elephant-line >= 4))
+	(players-unit-type-count focus-player cataphract-line < 5)
 	(can-research ri-halberdier)
 	(not (research-completed ri-halberdier))
 	(unit-type-count-total camel-line <= 5)
@@ -12419,13 +12791,9 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player camel-line >= 6)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 6)
-	(or (players-unit-type-count focus-player war-elephant-line >= 6)
-	(or (players-unit-type-count focus-player konnik-line >= 6)
-	(or (players-unit-type-count focus-player leitis-line >= 6)
-	(or (players-unit-type-count focus-player boyar-line >= 6)
-	(players-unit-type-count focus-player knight-line >= 6)))))))
+	(or (goal enemy-cavalry-goal 1)
+	(players-unit-type-count focus-player war-elephant-line >= 4))
+	(players-unit-type-count focus-player cataphract-line < 5)
 	(can-train spearman-line)
 	(research-completed ri-halberdier)
 	(unit-type-count-total camel-line <= 5)
@@ -12436,14 +12804,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 4)
-	(or (players-unit-type-count focus-player war-elephant-line >= 4)
-	(or (players-unit-type-count focus-player konnik-line >= 4)
-	(or (players-unit-type-count focus-player cataphract-line >= 4)
-	(or (players-unit-type-count focus-player war-wagon-line >= 4)
-	(or (players-unit-type-count focus-player leitis-line >= 4)
-	(or (players-unit-type-count focus-player boyar-line >= 4)
-	(players-unit-type-count focus-player knight-line >= 6))))))))
+	(goal enemy-cavalry-goal 1)
 	(building-type-count-total stable < 2)
 	(unit-available camel-line)
 	(can-build-with-escrow stable)
@@ -12455,14 +12816,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 4)
-	(or (players-unit-type-count focus-player war-elephant-line >= 4)
-	(or (players-unit-type-count focus-player konnik-line >= 4)
-	(or (players-unit-type-count focus-player cataphract-line >= 4)
-	(or (players-unit-type-count focus-player war-wagon-line >= 4)
-	(or (players-unit-type-count focus-player leitis-line >= 4)
-	(or (players-unit-type-count focus-player boyar-line >= 4)
-	(players-unit-type-count focus-player knight-line >= 6))))))))
+	(goal enemy-cavalry-goal 1)
 	(can-train-with-escrow camel-line)
 	(unit-type-count-total spearman-line <= 3)
 	; (or (civilian-population g:< c-villager-goal)
@@ -12476,14 +12830,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 6)
-	(or (players-unit-type-count focus-player war-elephant-line >= 6)
-	(or (players-unit-type-count focus-player konnik-line >= 6)
-	(or (players-unit-type-count focus-player cataphract-line >= 6)
-	(or (players-unit-type-count focus-player war-wagon-line >= 6)
-	(or (players-unit-type-count focus-player leitis-line >= 6)
-	(or (players-unit-type-count focus-player boyar-line >= 6)
-	(players-unit-type-count focus-player knight-line >= 6))))))))
+	(goal enemy-cavalry-goal 1)
 	(building-type-count-total stable < 4)
 	(unit-type-count-total spearman-line <= 5)
 	(can-build stable)
@@ -12495,14 +12842,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 6)
-	(or (players-unit-type-count focus-player war-elephant-line >= 6)
-	(or (players-unit-type-count focus-player konnik-line >= 6)
-	(or (players-unit-type-count focus-player cataphract-line >= 6)
-	(or (players-unit-type-count focus-player war-wagon-line >= 6)
-	(or (players-unit-type-count focus-player leitis-line >= 6)
-	(or (players-unit-type-count focus-player boyar-line >= 6)
-	(players-unit-type-count focus-player knight-line >= 6))))))))
+	(goal enemy-cavalry-goal 1)
 	(can-train camel-line)
 	(research-available ri-heavy-camel)
 	(not (research-completed ri-heavy-camel))
@@ -12515,14 +12855,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 6)
-	(or (players-unit-type-count focus-player war-elephant-line >= 6)
-	(or (players-unit-type-count focus-player konnik-line >= 6)
-	(or (players-unit-type-count focus-player cataphract-line >= 6)
-	(or (players-unit-type-count focus-player war-wagon-line >= 6)
-	(or (players-unit-type-count focus-player leitis-line >= 6)
-	(or (players-unit-type-count focus-player boyar-line >= 6)
-	(players-unit-type-count focus-player knight-line >= 6))))))))
+	(goal enemy-cavalry-goal 1)
 	(can-research ri-heavy-camel)
 	(not (research-completed ri-heavy-camel))
 	(unit-type-count-total spearman-line <= 5)
@@ -12533,14 +12866,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 6)
-	(or (players-unit-type-count focus-player war-elephant-line >= 6)
-	(or (players-unit-type-count focus-player konnik-line >= 6)
-	(or (players-unit-type-count focus-player cataphract-line >= 6)
-	(or (players-unit-type-count focus-player war-wagon-line >= 6)
-	(or (players-unit-type-count focus-player leitis-line >= 6)
-	(or (players-unit-type-count focus-player boyar-line >= 6)
-	(players-unit-type-count focus-player knight-line >= 6))))))))
+	(goal enemy-cavalry-goal 1)
 	(can-train camel-line)
 	(research-completed ri-heavy-camel)
 	(not (research-available ri-imperial-camel-rider))
@@ -12552,14 +12878,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 6)
-	(or (players-unit-type-count focus-player war-elephant-line >= 6)
-	(or (players-unit-type-count focus-player konnik-line >= 6)
-	(or (players-unit-type-count focus-player cataphract-line >= 6)
-	(or (players-unit-type-count focus-player war-wagon-line >= 6)
-	(or (players-unit-type-count focus-player leitis-line >= 6)
-	(or (players-unit-type-count focus-player boyar-line >= 6)
-	(players-unit-type-count focus-player knight-line >= 6))))))))
+	(goal enemy-cavalry-goal 1)
 	(can-train camel-line)
 	(research-completed ri-heavy-camel)
 	(research-available ri-imperial-camel-rider)
@@ -12572,14 +12891,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 6)
-	(or (players-unit-type-count focus-player war-elephant-line >= 6)
-	(or (players-unit-type-count focus-player konnik-line >= 6)
-	(or (players-unit-type-count focus-player cataphract-line >= 6)
-	(or (players-unit-type-count focus-player war-wagon-line >= 6)
-	(or (players-unit-type-count focus-player leitis-line >= 6)
-	(or (players-unit-type-count focus-player boyar-line >= 6)
-	(players-unit-type-count focus-player knight-line >= 6))))))))
+	(goal enemy-cavalry-goal 1)
 	(can-train camel-line)
 	(research-completed ri-imperial-camel-rider)
 	(unit-type-count-total spearman-line <= 5)
@@ -12590,15 +12902,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player camel-line >= 5)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 5)
-	(or (players-unit-type-count focus-player war-elephant-line >= 5)
-	(or (players-unit-type-count focus-player konnik-line >= 5)
-	(or (players-unit-type-count focus-player cataphract-line >= 5)
-	(or (players-unit-type-count focus-player war-wagon-line >= 5)
-	(or (players-unit-type-count focus-player leitis-line >= 5)
-	(or (players-unit-type-count focus-player boyar-line >= 5)
-	(players-unit-type-count focus-player knight-line >= 5)))))))))
+	(goal enemy-cavalry-goal 1)
 	(building-type-count-total monastery == 0)
 	(can-build-with-escrow monastery)
 =>
@@ -12609,15 +12913,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player camel-line >= 12)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 12)
-	(or (players-unit-type-count focus-player war-elephant-line >= 12)
-	(or (players-unit-type-count focus-player konnik-line >= 12)
-	(or (players-unit-type-count focus-player cataphract-line >= 12)
-	(or (players-unit-type-count focus-player war-wagon-line >= 12)
-	(or (players-unit-type-count focus-player leitis-line >= 12)
-	(or (players-unit-type-count focus-player boyar-line >= 12)
-	(players-unit-type-count focus-player knight-line >= 12)))))))))
+	(goal enemy-cavalry-goal 1)
 	(building-type-count-total monastery < 2)
 	(can-build-with-escrow monastery)
 =>
@@ -12628,15 +12924,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player camel-line >= 5)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 5)
-	(or (players-unit-type-count focus-player war-elephant-line >= 5)
-	(or (players-unit-type-count focus-player konnik-line >= 5)
-	(or (players-unit-type-count focus-player cataphract-line >= 5)
-	(or (players-unit-type-count focus-player war-wagon-line >= 5)
-	(or (players-unit-type-count focus-player leitis-line >= 5)
-	(or (players-unit-type-count focus-player boyar-line >= 5)
-	(players-unit-type-count focus-player knight-line >= 5)))))))))
+	(goal enemy-cavalry-goal 1)
 	(can-train monk)
 	(or (not (goal strategy-goal sg-boom-imp))
 	(up-research-status c: imperial-age >= research-pending))
@@ -12731,12 +13019,8 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player archer-line >= 8)
-	(or (players-unit-type-count focus-player longbowman-line >= 8)
-	(or (players-unit-type-count focus-player chu-ko-nu-line >= 8)
-	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 8)
-	(or (players-unit-type-count focus-player plumed-archer-line >= 8)
-	(players-unit-type-count focus-player rattan-archer-line >= 8))))))
+	(or (goal enemy-archery-goal 1)
+	(goal enemy-cavarcher-goal 1))
 	(can-train skirmisher-line)
 	(research-completed ri-elite-skirmisher)
 	(or (not (goal strategy-goal sg-boom-imp))
@@ -12780,58 +13064,6 @@
 =>
 	(train eagle-warrior-line)
 	;(chat-to-player my-player-number "Produziere Adlerkrieger gegen Bogenschuetzen")
-)
-
-(defrule
-	(or (players-unit-type-count focus-player militiaman-line >= 6)
-	(or (players-unit-type-count focus-player archery-cannon-class >= 6)
-	(or (players-unit-type-count focus-player jaguar-man-line >= 6)
-	(or (players-unit-type-count focus-player cataphract-line >= 6)
-	(or (players-unit-type-count focus-player woad-raider-line >= 6)
-	(or (players-unit-type-count focus-player shotel-line >= 6)
-	(players-unit-type-count focus-player kamayuk-line >= 6)
-	))))))
-=>
-	(set-goal enemy-infantry-goal 1)
-)	
-
-(defrule	
-	(or (players-unit-type-count focus-player samurai-line >= 6)
-	(or (players-unit-type-count focus-player karambit-warrior-line >= 6)
-	(or (players-unit-type-count focus-player gbeto-line >= 6)
-	(or (players-unit-type-count focus-player obuch-line >= 6)
-	(or (players-unit-type-count focus-player serjeant-line >= 6)
-	(or (players-unit-type-count focus-player teutonic-knight-line >= 6)
-	(players-unit-type-count focus-player berserk-line >= 6)
-	))))))
-=>
-	(set-goal enemy-infantry-goal 1)
-)
-
-(defrule
-	(or (players-unit-type-count focus-player militiaman-line < 6)
-	(or (players-unit-type-count focus-player archery-cannon-class < 6)
-	(or (players-unit-type-count focus-player jaguar-man-line < 6)
-	(or (players-unit-type-count focus-player cataphract-line < 6)
-	(or (players-unit-type-count focus-player woad-raider-line < 6)
-	(or (players-unit-type-count focus-player shotel-line < 6)
-	(players-unit-type-count focus-player kamayuk-line < 6)
-	))))))
-=>
-	(set-goal enemy-infantry-goal 0)
-)	
-
-(defrule	
-	(or (players-unit-type-count focus-player samurai-line < 6)
-	(or (players-unit-type-count focus-player karambit-warrior-line < 6)
-	(or (players-unit-type-count focus-player gbeto-line < 6)
-	(or (players-unit-type-count focus-player obuch-line < 6)
-	(or (players-unit-type-count focus-player serjeant-line < 6)
-	(or (players-unit-type-count focus-player teutonic-knight-line < 6)
-	(players-unit-type-count focus-player berserk-line < 6)
-	))))))
-=>
-	(set-goal enemy-infantry-goal 0)
 )
 
 (defrule
@@ -12907,7 +13139,8 @@
 
 (defrule
 	(current-age >= castle-age)
-	(players-unit-type-count focus-player infantry-class >= 8)
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-heavy-infantry-goal 1))
 	(can-train hand-cannoneer)
 	(unit-type-count-total janissary-line == 0)
 =>
@@ -12920,7 +13153,8 @@
 	(building-type-count university > 0)
 	(research-available ri-chemistry)
 	(can-train-with-escrow ri-chemistry)
-	(players-unit-type-count focus-player infantry-class >= 8)
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-heavy-infantry-goal 1))
 =>
 	(up-modify-escrow food c:- 300)
 	(up-modify-escrow gold c:- 200)
@@ -12933,12 +13167,7 @@
 	(or (civ-selected turkish)
 	(or (civ-selected hindustanis)
 	(civ-selected gurjaras)))
-	(or (players-unit-type-count focus-player cavalry-archer-line >= 6)
-	(or (players-unit-type-count focus-player mangudai-line >= 6)
-	(or (players-unit-type-count focus-player war-wagon-line >= 6)
-	(or (players-unit-type-count focus-player kipchak-set >= 6)
-	(or (players-unit-type-count focus-player elephant-archer-line >= 5)
-	(players-unit-type-count focus-player camel-archer-line >= 6))))))
+	(goal enemy-cavarcher-goal 1)
 	(can-train-with-escrow camel-line)
 	; (or (civilian-population g:< c-villager-goal)
 	; (up-research-status c: imperial-age == research-pending))
@@ -12954,12 +13183,7 @@
 	(or (civ-selected turkish)
 	(or (civ-selected hindustanis)
 	(civ-selected gurjaras)))
-	(or (players-unit-type-count focus-player cavalry-archer-line >= 6)
-	(or (players-unit-type-count focus-player mangudai-line >= 6)
-	(or (players-unit-type-count focus-player war-wagon-line >= 6)
-	(or (players-unit-type-count focus-player kipchak-set >= 6)
-	(or (players-unit-type-count focus-player elephant-archer-line >= 5)
-	(players-unit-type-count focus-player camel-archer-line >= 6))))))
+	(goal enemy-cavarcher-goal 1)
 	(can-train camel-line)
 	(research-completed ri-heavy-camel)
 =>
@@ -12970,7 +13194,8 @@
 (defrule
 	(current-age == castle-age)
 	(can-train slinger)
-	(players-unit-type-count focus-player infantry-class >= 4)
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-heavy-infantry-goal 1))
 	; (or (civilian-population g:< c-villager-goal)
 	; (up-research-status c: imperial-age == research-pending))
 =>
@@ -12981,7 +13206,8 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train slinger)
-	(players-unit-type-count focus-player infantry-class >= 6)
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-heavy-infantry-goal 1))
 =>
 	(train slinger)
 	;(chat-to-player my-player-number "Produziere Schleuderer gegen Infanterie")
@@ -12989,8 +13215,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (players-unit-type-count focus-player eagle-warrior-line >= 6)
-	(players-unit-type-count focus-player huskarl-line >= 6))
+	(goal enemy-heavy-infantry-goal 1)
 	(can-train knight-line)
 =>
 	(train knight-line)
@@ -12999,8 +13224,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player eagle-warrior-line >= 8)
-	(players-unit-type-count focus-player huskarl-line >= 8))
+	(goal enemy-heavy-infantry-goal 1)
 	(research-completed ri-cavalier)
 	(can-train knight-line)
 =>
@@ -13010,7 +13234,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(players-unit-type-count focus-player siege-weapon-class >= 4)
+	(goal enemy-siege-goal 1)
 	(can-train knight-line)
 =>
 	(train knight-line)
@@ -13019,7 +13243,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(players-unit-type-count focus-player siege-weapon-class >= 4)
+	(goal enemy-siege-goal 1)
 	(research-completed ri-cavalier)
 	(can-train knight-line)
 =>
@@ -13029,8 +13253,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player eagle-warrior-line >= 6)
-	(players-unit-type-count focus-player huskarl-line >= 6))
+	(goal enemy-heavy-infantry-goal 1)
 	(can-build-with-escrow barracks)
 	(building-type-count-total barracks < 3)
 =>
@@ -13042,8 +13265,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player eagle-warrior-line >= 6)
-	(players-unit-type-count focus-player huskarl-line >= 6))
+	(goal enemy-heavy-infantry-goal 1)
 	(can-research ri-man-at-arms)
 =>
 	(research ri-man-at-arms)
@@ -13052,8 +13274,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player eagle-warrior-line >= 6)
-	(players-unit-type-count focus-player huskarl-line >= 6))
+	(goal enemy-heavy-infantry-goal 1)
 	(can-research ri-long-swordsman)
 =>
 	(research ri-long-swordsman)
@@ -13062,8 +13283,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player eagle-warrior-line >= 6)
-	(players-unit-type-count focus-player huskarl-line >= 6))
+	(goal enemy-heavy-infantry-goal 1)
 	(can-research ri-two-handed-swordsman)
 =>
 	(research ri-two-handed-swordsman)
@@ -13072,8 +13292,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player eagle-warrior-line >= 6)
-	(players-unit-type-count focus-player huskarl-line >= 6))
+	(goal enemy-heavy-infantry-goal 1)
 	(can-research-with-escrow ri-champion)
 =>
 	(up-modify-escrow food c:- 750)
@@ -13084,8 +13303,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (players-unit-type-count focus-player eagle-warrior-line >= 6)
-	(players-unit-type-count focus-player huskarl-line >= 6))
+	(goal enemy-heavy-infantry-goal 1)
 	(can-research ri-supplies)
 =>
 	(research ri-supplies)
@@ -13094,8 +13312,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (players-unit-type-count focus-player eagle-warrior-line >= 6)
-	(players-unit-type-count focus-player huskarl-line >= 6))
+	(goal enemy-heavy-infantry-goal 1)
 	(research-completed ri-long-swordsman)
 	(can-train militiaman-line)
 =>
@@ -13105,8 +13322,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player eagle-warrior-line >= 6)
-	(players-unit-type-count focus-player huskarl-line >= 6))
+	(goal enemy-heavy-infantry-goal 1)
 	(research-available ri-two-handed-swordsman)
 	(can-train militiaman-line)
 	(unit-type-count militiaman-line < 5)
@@ -13117,8 +13333,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player eagle-warrior-line >= 6)
-	(players-unit-type-count focus-player huskarl-line >= 6))
+	(goal enemy-heavy-infantry-goal 1)
 	(not (research-available ri-champion))
 	(research-completed ri-two-handed-swordsman)
 	(can-train militiaman-line)
@@ -13129,8 +13344,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player eagle-warrior-line >= 6)
-	(players-unit-type-count focus-player huskarl-line >= 6))
+	(goal enemy-heavy-infantry-goal 1)
 	(research-available ri-champion)
 	(research-completed ri-two-handed-swordsman)
 	(can-train militiaman-line)
@@ -13142,8 +13356,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player eagle-warrior-line >= 6)
-	(players-unit-type-count focus-player huskarl-line >= 6))
+	(goal enemy-heavy-infantry-goal 1)
 	(research-completed ri-champion)
 	(can-train militiaman-line)
 =>
@@ -13463,6 +13676,129 @@
 	(train skirmisher-line)
 )
 
+;kataphrakts
+
+
+(defrule
+	(current-age >= castle-age)
+	(players-unit-type-count focus-player cataphract-line >= 6)
+	(can-build monastery)
+	(building-type-count-total monastery < 2)
+=>
+	(build monastery)
+)
+
+(defrule
+	(current-age >= castle-age)
+	(players-unit-type-count focus-player cataphract-line >= 6)
+	(can-train monk)
+	(building-type-count-total monastery > 0)
+	(or (not (goal strategy-goal sg-boom-imp))
+	(up-research-status c: imperial-age >= research-pending))
+=>
+	(train monk)
+)
+
+(defrule
+	(current-age >= castle-age)
+	(players-unit-type-count focus-player cataphract-line >= 6)
+	(research-available ri-crossbow)
+	(can-build-with-escrow archery-range)
+	(building-type-count-total archery-range < 2)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
+=>
+	(up-modify-escrow wood c:- 175)
+	(build archery-range)
+)
+
+(defrule
+	(current-age >= castle-age)
+	(players-unit-type-count focus-player cataphract-line >= 6)
+	(can-research ri-crossbow)
+=>
+	(research ri-crossbow)
+)
+
+(defrule
+	(current-age == castle-age)
+	(players-unit-type-count focus-player cataphract-line >= 6)
+	(can-train archer-line)
+	(research-completed ri-crossbow)
+	(research-completed ri-bodkin-arrow)
+	(building-type-count-total archery-range > 0)
+=>
+	(train archer-line)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(players-unit-type-count focus-player cataphract-line >= 8)
+	(research-available ri-arbalest)
+	(can-research ri-arbalest)
+	(building-type-count-total archery-range > 0)
+=>
+	(research ri-arbalest)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(players-unit-type-count focus-player cataphract-line >= 8)
+	(can-research ri-bracer)
+=>
+	(research ri-bracer)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(players-unit-type-count focus-player cataphract-line >= 8)
+	(research-completed ri-arbalest)
+	(research-completed ri-bracer)
+	(can-train archer-line)
+=>
+	(train archer-line)
+)
+
+(defrule
+	(current-age >= castle-age)
+	(players-unit-type-count focus-player cataphract-line >= 6)
+	(building-available stable)
+	(can-build-with-escrow stable)
+	(building-type-count-total stable < 2)
+=>
+	(up-modify-escrow wood c:- 175)
+	(build stable)
+)
+
+(defrule
+	(current-age == castle-age)
+	(players-unit-type-count focus-player cataphract-line >= 6)
+	(can-train camel-line)
+	(building-type-count-total stable > 0)
+=>
+	(train camel-line)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(players-unit-type-count focus-player cataphract-line >= 8)
+	(research-available ri-heavy-camel)
+	(can-research ri-heavy-camel)
+	(building-type-count-total stable > 0)
+=>
+	(research ri-heavy-camel)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(players-unit-type-count focus-player cataphract-line >= 8)
+	(can-train camel-line)
+	(research-completed ri-heavy-camel)
+=>
+	(train camel-line)
+)
+
 ;ghulam
 
 (defrule
@@ -13579,6 +13915,99 @@
 	(train hand-cannoneer)
 )
 
+
+;chakram-thrower
+
+(defrule
+	(current-age >= castle-age)
+	(players-unit-type-count focus-player chakram-thrower-line >= 6)
+	(building-available stable)
+	(can-build-with-escrow stable)
+	(building-type-count-total stable < 2)
+=>
+	(up-modify-escrow wood c:- 175)
+	(build stable)
+)
+
+(defrule
+	(current-age == castle-age)
+	(players-unit-type-count focus-player chakram-thrower-line >= 6)
+	(can-train knight-line)
+	(building-type-count-total stable > 0)
+=>
+	(train knight-line)
+)
+
+(defrule
+	(current-age == castle-age)
+	(players-unit-type-count focus-player chakram-thrower-line >= 6)
+	(not (unit-available knight-line))
+	(can-train camel-line)
+	(building-type-count-total stable > 0)
+=>
+	(train camel-line)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(players-unit-type-count focus-player chakram-thrower-line >= 8)
+	(not (research-available ri-cavalier))
+	(research-available ri-heavy-camel)
+	(can-research ri-heavy-camel)
+	(building-type-count-total stable > 0)
+=>
+	(research ri-heavy-camel)
+)
+
+(defrule
+	(current-age >= castle-age)
+	(players-unit-type-count focus-player chakram-thrower-line >= 6)
+	(research-available ri-cavalier)
+	(can-research ri-cavalier)
+	(building-type-count-total stable > 0)
+=>
+	(research ri-cavalier)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(players-unit-type-count focus-player chakram-thrower-line >= 8)
+	(can-train camel-line)
+	(research-completed ri-heavy-camel)
+=>
+	(train camel-line)
+)
+
+(defrule
+	(current-age >= imperial-age)
+	(players-unit-type-count focus-player chakram-thrower-line >= 8)
+	(can-train knight-line)
+	(research-completed ri-cavalier)
+=>
+	(train knight-line)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(players-unit-type-count focus-player chakram-thrower-line >= 6)
+	(can-build-with-escrow archery-range)
+	(building-type-count-total archery-range < 2)
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
+=>
+	(up-modify-escrow wood c:- 175)
+	(build archery-range)
+)
+
+(defrule
+	(current-age >= castle-age)
+	(players-unit-type-count focus-player chakram-thrower-line >= 6)
+	(can-train hand-cannoneer)
+=>
+	(train hand-cannoneer)
+)
+
 ;ballista-elephant
 
 (defrule
@@ -13588,7 +14017,9 @@
 	(building-type-count-total siege-workshop < 2)
 =>
 	(up-modify-escrow wood c:- 200)
-	(build siege-workshop)
+	(up-assign-builders c: siege-workshop c: 2) 
+	(up-set-placement-data my-player-number -1 c: 8)
+    (up-build place-control 0 c: siege-workshop)
 )
 
 (defrule
@@ -13677,8 +14108,10 @@
 	(can-build-with-escrow siege-workshop)
 	(building-type-count-total siege-workshop < 1)
 =>
-	(up-modify-escrow wood c:- 175)
-	(build siege-workshop)
+	(up-modify-escrow wood c:- 200)
+	(up-assign-builders c: siege-workshop c: 2) 
+	(up-set-placement-data my-player-number -1 c: 8)
+    (up-build place-control 0 c: siege-workshop)
 )
 
 (defrule
@@ -15787,7 +16220,12 @@
 	(up-get-fact escrow-amount stone amnt-escrow-stone)
 	(up-chat-data-to-self "Escrow stone: %d" g: amnt-escrow-stone)
 	(up-chat-data-to-self "Town Size: %d" s: sn-maximum-town-size)
-	(up-chat-data-to-self "Military Advantage: %d" g: gl-military-advantage)
+	(up-chat-data-to-self "Infantry Threat: %d" g: enemy-infantry-goal)
+	(up-chat-data-to-self "Heavy Infantry Threat: %d" g: enemy-heavy-infantry-goal)
+	(up-chat-data-to-self "Cavalry Threat: %d" g: enemy-cavalry-goal)
+	(up-chat-data-to-self "Archery Threat: %d" g: enemy-archery-goal)
+	(up-chat-data-to-self "Cav-Archer Threat: %d" g: enemy-cavarcher-goal)
+	(up-chat-data-to-self "Siege Threat: %d" g: enemy-siege-goal)
 	(enable-timer 7 45)
 )
 
@@ -19766,7 +20204,7 @@
 	(up-cross-tiles object-point-x enemy-tower-point-x c: 9)
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
-	(enable-timer retreating-timer 3)
+	(enable-timer retreating-timer 1)
 	(set-goal split-rule-goal 7)
 )
 
@@ -19794,7 +20232,7 @@
 	;(up-target-point enemy-tower-point-x action-move -1 stance-stand-ground) ;run units under the tower
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
-	(enable-timer split-stance-timer 3)
+	(enable-timer split-stance-timer 1)
 )
 
 (defrule ; skip if tower is garrisoned
@@ -19823,7 +20261,7 @@
 	(up-filter-exclude -1 -1 -1 cavalry-class)
 	(up-filter-exclude -1 -1 -1 scout-cavalry-class)
 	(up-filter-exclude -1 -1 -1 infantry-class)
-	(up-find-local c: -1 c: 1)
+	(up-find-local c: -1 c: 40)
 	(up-remove-objects search-local object-data-class == scout-cavalry-class)
 	(up-remove-objects search-local object-data-class == cavalry-class)
 	(up-remove-objects search-local object-data-class == siege-weapon-class)
@@ -19842,7 +20280,7 @@
 	(up-cross-tiles object-point-x enemy-tower-point-x c: 9)
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
-	(enable-timer retreating-timer 3)
+	(enable-timer retreating-timer 1)
 	(set-goal split-rule-goal 9)
 )
 
@@ -19870,7 +20308,7 @@
 	;(up-target-point enemy-tower-point-x action-move -1 stance-stand-ground) ; run units under the tower
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
-	(enable-timer split-stance-timer 3)
+	(enable-timer split-stance-timer 1)
 )
 
 (defrule
@@ -21448,9 +21886,8 @@
 
 (defrule
 	(game-time > 3000)
-	(unit-type-count villager > 120)
-	(population >= 180)
-	(population-headroom <= 20)
+	(unit-type-count villager > 100)
+	(population >= 195)
 	(current-age >= imperial-age)
 =>
 	(delete-unit villager)
@@ -23189,7 +23626,7 @@
 	(up-full-reset-search)
 	(up-modify-sn sn-focus-player-number c:= 0)
 	(up-set-target-point gl-starting-tc-x)
-	(up-filter-distance c: -1 c: 3)
+	(up-filter-distance c: -1 c: 4)
 	(up-find-remote c: deer-class c: 1)
 	(up-set-target-object search-remote c: 0)
 	(up-get-search-state gl-local-total)
@@ -23242,7 +23679,8 @@
 #load-if-defined UP-2-PLAYER-GAME
 (defrule 
 	(or (goal strategy-goal sg-drush)
-	(goal strategy-goal sg-towerrush))
+	(or (unit-type-count-total militiaman-line >= 1)
+	(goal strategy-goal sg-towerrush)))
 	(civilian-population >= 14)
 	(players-building-count any-enemy < 1)
 	(up-compare-goal g-deer-id == -1)
@@ -23270,7 +23708,8 @@
 
 (defrule 
 	(or (goal strategy-goal sg-drush)
-	(goal strategy-goal sg-towerrush))
+	(or (unit-type-count-total militiaman-line >= 1)
+	(goal strategy-goal sg-towerrush)))
 	(current-age == dark-age)
 	(civilian-population >= 14)
 	(players-building-count any-enemy >= 1)
@@ -23290,7 +23729,8 @@
 
 (defrule 
 	(or (goal strategy-goal sg-drush)
-	(goal strategy-goal sg-towerrush))
+	(or (unit-type-count-total militiaman-line >= 1)
+	(goal strategy-goal sg-towerrush)))
 	(civilian-population >= 14)
 	(players-building-count any-enemy < 1)
 	(up-compare-goal g-deer-id == -1)
@@ -23305,7 +23745,8 @@
 
 (defrule 
 	(or (goal strategy-goal sg-drush)
-	(goal strategy-goal sg-towerrush))
+	(or (unit-type-count-total militiaman-line >= 1)
+	(goal strategy-goal sg-towerrush)))
 	(current-age == dark-age)
 	(civilian-population >= 14)
 	(players-building-count focus-player >= 1)
@@ -23340,7 +23781,8 @@
 
 (defrule 
 	(or (goal strategy-goal sg-drush)
-	(goal strategy-goal sg-towerrush))
+	(or (unit-type-count-total militiaman-line >= 1)
+	(goal strategy-goal sg-towerrush)))
 	(current-age == dark-age)
 	(civilian-population >= 18)
 	(players-building-count any-enemy >= 1)
@@ -23522,15 +23964,16 @@
 #end-if
 
 (defrule
-	(goal gl-scout-map YES) 
+	(goal gl-scout-map NO) 
 	(goal gl-push-deer YES)
-	(or (up-compare-goal g-deer-id == -1) 
-	(or (and (unit-type-count militiaman-line g:>= gl-drush-militia-count)
+	(or (dropsite-min-distance deer-hunting >= 40)
+	(or (dropsite-min-distance deer-hunting == -1) ;no deer found
+	(or (and (unit-type-count-total militiaman-line >= 1)
 		(building-type-count barracks >= 1));we're drushing
-	(civilian-population g:>= d-villager-goal))) 
+	(civilian-population g:>= d-villager-goal))))
 =>
 	(set-goal gl-push-deer NO)
-	;(set-goal gl-scout-map YES) ;??
+	(set-goal g-deer-id -1)
 	(chat-to-player my-player-number "Start scouting opponent, finish deer pushing")
 )
 
@@ -24618,7 +25061,8 @@
 
 (defrule
 	(current-age == imperial-age)
-	(players-unit-type-count focus-player warship-class > 10)
+	(or (players-unit-type-count focus-player galley-line > 8)
+	(players-unit-type-count focus-player fire-ship-line > 8))
 	(or (building-type-count-total watch-tower-line >= 1)
 	(building-type-count-total castle >= 1))
 	(can-research ri-heated-shot)
@@ -25278,7 +25722,8 @@
 	(game-time > 1260)
 	(up-research-status c: castle-age != research-pending)
 	(can-build-with-escrow stable)
-	(up-compare-goal gl-military-advantage >= -8)
+	(up-compare-goal gl-military-advantage < 5)
+	(players-military-population focus-player >= 12)
 =>
 	(up-modify-escrow wood c:- 175)
 	(up-assign-builders c: stable c: 1)
@@ -25311,11 +25756,12 @@
 	(can-train scout-cavalry-line)
 	(unit-type-count-total scout-cavalry-line < 4)
 	(civilian-population g:< f-villager-goal)
-	(players-unit-type-count focus-player infantry-class < 6)
+	(or (players-unit-type-count focus-player spearman-line < 5)
+	(players-unit-type-count focus-player militia-line < 6))
 	(or (players-unit-type-count focus-player archer-line < 10)
 	(unit-type-count skirmisher-line >= 5))
 	(game-time < 1000)
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 =>
 	(up-modify-escrow food c:- 80)
 	(train scout-cavalry-line)	
@@ -25331,14 +25777,15 @@
 		(and (not (research-available ri-bloodlines))
 		(up-research-status c: ri-scale-barding >= research-pending)))
 	(civilian-population g:< f-villager-goal)
-	(or (unit-type-count-total scout-cavalry-line < 20)
+	(or (unit-type-count-total scout-cavalry-line < 16)
 	(up-compare-goal gl-military-advantage < 10))
 	(or (unit-type-count-total scout-cavalry-line >= 4)
 	(game-time >= 1000))
-	(players-unit-type-count focus-player infantry-class < 6)
+	(or (players-unit-type-count focus-player spearman-line < 5)
+	(players-unit-type-count focus-player militia-line < 6))
 	(or (players-unit-type-count focus-player archer-line < 10)
 	(unit-type-count skirmisher-line >= 5))
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 =>
 	(train scout-cavalry-line)
 )
@@ -25355,11 +25802,12 @@
 	(can-train scout-cavalry-line)
 	(civilian-population g:< f-villager-goal)
 	(unit-type-count-total scout-cavalry-line < 4)
-	(players-unit-type-count focus-player infantry-class < 6)
+	(or (players-unit-type-count focus-player spearman-line < 5)
+	(players-unit-type-count focus-player militia-line < 6))
 	(or (players-unit-type-count focus-player archer-line < 10)
 	(unit-type-count skirmisher-line >= 5))
 	(unit-type-count-total villager < 32)
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 =>
 	(up-modify-escrow food c:- 80)
 	(train scout-cavalry-line)	
@@ -25375,15 +25823,16 @@
 		(and (not (research-available ri-bloodlines))
 		(up-research-status c: ri-scale-barding >= research-pending)))
 	(civilian-population g:< f-villager-goal)
-	(or (unit-type-count-total scout-cavalry-line < 20)
+	(or (unit-type-count-total scout-cavalry-line < 16)
 	(up-compare-goal gl-military-advantage < 10))
 	(or (unit-type-count-total scout-cavalry-line >= 4)
 	(game-time >= 1000))
-	(players-unit-type-count focus-player infantry-class < 6)
+	(or (players-unit-type-count focus-player spearman-line < 5)
+	(players-unit-type-count focus-player militia-line < 6))
 	(or (players-unit-type-count focus-player archer-line < 10)
 	(unit-type-count skirmisher-line >= 5))
 	(unit-type-count-total villager < 32)
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 =>
 	(train scout-cavalry-line)
 )
@@ -25483,7 +25932,7 @@
 	(game-time < 1000)
 	(or (players-unit-type-count focus-player scout-cavalry-line < 3) 
 		(unit-type-count-total spearman-line >= 1))
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 =>
 	(up-modify-escrow food c:- 25)
 	(up-modify-escrow gold c:- 50)
@@ -25501,7 +25950,7 @@
 	(game-time >= 1000))
 	(or (players-unit-type-count focus-player scout-cavalry-line < 3) 
 		(unit-type-count-total spearman-line >= 1))
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 =>
 	(train eagle-warrior-line)
 )
@@ -25519,7 +25968,7 @@
 	(players-unit-type-count focus-player skirmisher-line < 10) 
 	(unit-type-count-total archer-line < 8)
 	(game-time < 1000)
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 =>
 	(up-modify-escrow wood c:- 25)
 	(up-modify-escrow gold c:- 45)
@@ -25540,7 +25989,7 @@
 	(wood-amount > 65)
 	(or (unit-type-count-total archer-line >= 8)
 	(game-time >= 1000))
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 =>
 	(train archer-line)
 )
@@ -25556,7 +26005,7 @@
 	(unit-type-count-total scout-cavalry-line < 2)
 	;(unit-type-count-total skirmisher-line < 10)
 	(players-current-age focus-player == feudal-age)
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 =>
 	(train skirmisher-line)
 )
@@ -25569,7 +26018,7 @@
 	(can-train skirmisher-line)
 	(wood-amount > 85)
 	(unit-type-count-total skirmisher-line < 8)
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 =>
 	(train skirmisher-line)
 )
@@ -25582,7 +26031,7 @@
 	(can-train archer-line)
 	(wood-amount > 75)
 	(unit-type-count-total skirmisher-line >= 2)
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 =>
 	(train archer-line)
 )
@@ -25622,7 +26071,7 @@
 		(unit-type-count-total skirmisher-line >= 4))
 	)
 	(players-current-age focus-player == feudal-age)
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 =>
 	(train archer-line)
 )
@@ -25637,7 +26086,7 @@
 	(can-train spearman-line)
 	(wood-amount > 75)
 	(unit-type-count-total spearman-line < 2)
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 =>
 	(train spearman-line)
 )
@@ -25651,7 +26100,7 @@
 	(wood-amount > 75)
 	(food-amount > 85)
 	(unit-type-count-total spearman-line < 6)
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 =>
 	(train spearman-line)
 )
@@ -25668,7 +26117,7 @@
 	(unit-type-count-total archer-line >= 4)
 	(wood-amount > 50)	
 	(food-amount > 70)
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 =>
 	(train spearman-line)
 )
@@ -25697,7 +26146,7 @@
 		(up-compare-goal gl-military-advantage < -1))
 		(and (up-research-status c: castle-age == research-pending)
 		(and (players-current-age focus-player >= castle-age)
-		(up-compare-goal gl-military-advantage < 20))))
+		(up-compare-goal gl-military-advantage < 16))))
 	(goal attack-now-goal 1)
 	(goal retreat-now-goal 0)
 =>
@@ -25851,10 +26300,10 @@
 	(goal meso-civ NO)
 	(current-age == feudal-age)
 	(not (town-under-attack))
-	(players-building-count focus-player > 0)
+	(players-building-count focus-player > 0);!
 	(not (up-research-status c: castle-age >= research-pending))
 	(military-population >= 3)
-	(up-compare-goal gl-military-advantage >= -2)
+	(up-compare-goal gl-military-advantage >= -2);!
 =>
 	;(set-goal attack-now-goal 1)
 	(set-strategic-number sn-number-explore-groups 0)
@@ -26023,13 +26472,19 @@
 	(or (current-age > dark-age)
 	(goal gl-push-deer NO))
 	(goal support-ally-attack 0)
-	(goal retreat-now-goal 1) ;we're not already attacking
+	(or (goal retreat-now-goal 1) ;we're not already attacking
+	(and (military-population >= 3)
+	(up-compare-goal gl-military-advantage < -2))) ;in case flank is selected as focus-player
 =>
 	(set-goal support-ally-attack 1)
 	(up-gather-inside c: barracks c: 0)
 	(up-gather-inside c: archery-range c: 0)
 	(up-gather-inside c: stable c: 0)
 	(up-gather-inside c: siege-workshop c: 0)
+	(up-ungarrison c: barracks)
+	(up-ungarrison c: archery-range)
+	(up-ungarrison c: stable)
+	(up-ungarrison c: siege-workshop)
 	(chat-to-allies "I will support your attack with my army")
 	(up-chat-data-to-self "I'm targeting %s" c: 7031232)
 	(up-modify-sn sn-focus-player-number g:= temporary-goal)
@@ -26045,7 +26500,9 @@
 		(taunt-detected focus-player 31))
 	(military-population > 0)
 	(goal support-ally-attack -1)
-	(goal retreat-now-goal 1) ;we're not already attacking
+	(or (goal retreat-now-goal 1) ;we're not already attacking
+	(and (military-population >= 3)
+	(up-compare-goal gl-military-advantage < -2))) ;in case flank is selected as focus-player
 =>
 	(acknowledge-taunt gl-my-flank 31)
 	(set-goal support-ally-attack 0)
@@ -29197,7 +29654,11 @@
 
 (defrule
 	(current-age == imperial-age)
-	(players-unit-type-count focus-player siege-weapon-class >= 3)
+	(players-unit-type-count focus-player battering-ram-line > 1)
+	(or (building-type-count-total watch-tower-line >= 1)
+	(or (building-type-count-total donjon >= 1)
+	(or (building-type-count-total krepost >= 1)
+	(building-type-count-total castle >= 1))))
 	(can-research ri-murder-holes)
 =>
 	(research ri-murder-holes)
@@ -29205,7 +29666,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(players-unit-type-count focus-player siege-weapon-class >= 3)
+	(players-unit-type-count focus-player battering-ram-line >= 3)
 	(can-research ri-sappers)
 =>
 	(research ri-sappers)
@@ -29314,7 +29775,7 @@
 (defrule
 	(current-age >= imperial-age)
 	(can-research-with-escrow ri-theocracy)
-	(unit-type-count-total monk >= 5)
+	(unit-type-count-total monk >= 8)
 	(up-compare-goal gl-military-advantage < 35)
 	(or (not (goal strategy-goal sg-boom-imp))
 	(goal gl-fastimp-unit fi-monks))
@@ -29360,7 +29821,7 @@
 (defrule
 	(current-age >= castle-age)
 	(can-research ri-heresy)
-	(players-unit-type-count focus-player monk >= 6)
+	(players-unit-type-count focus-player monk >= 8)
 	(up-compare-goal gl-military-advantage < 35)
 	(or (not (goal strategy-goal sg-boom-imp))
 	(goal gl-fastimp-unit fi-monks))
@@ -29389,7 +29850,7 @@
 (defrule
 	(current-age >= castle-age)
 	(can-research ri-redemption)
-	(players-unit-type-count focus-player siege-weapon-class > 0)
+	(goal enemy-siege-goal 1)
 	(unit-type-count-total monk >= 3)
 =>
 	(research ri-redemption)
@@ -32652,7 +33113,7 @@
 	(can-research-with-escrow imperial-age)
 	(or (unit-type-count-total villager g:>= c-villager-goal)
 	(or (unit-type-count-total villager >= 130)
-	(population-headroom < 5)))
+	(population >= 195)))
 	(goal gl-food-saving 23)
 	(goal gl-gold-saving 23)
 =>
@@ -32670,7 +33131,7 @@
 	(can-research-with-escrow imperial-age)
 	(or (unit-type-count-total villager g:>= c-villager-goal)
 	(or (unit-type-count-total villager >= 130)
-	(population-headroom < 5)))
+	(population >= 195)))
 =>
 	(up-modify-escrow food c:- 1000)
 	(up-modify-escrow gold c:- 800)
@@ -32694,7 +33155,7 @@
 	(current-age == imperial-age)
 	(can-train villager)
 	(unit-type-count-total villager < 140)
-	(population-headroom > 20)
+	(population < 195)
 	(or (and (up-compare-goal gl-military-advantage >= -20)
 		(food-amount > 400))
 	(civilian-population < 70))
@@ -32702,6 +33163,18 @@
 	(and (goal strategy-goal sg-boom-imp)
 	(unit-type-count-total villager < 40)))
 =>
+	(train villager)
+	(up-get-fact civilian-population 0 civilian-pop) 
+	;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
+)
+
+(defrule
+	(current-age == imperial-age)
+	(can-train-with-escrow villager)
+	(civilian-population < 75)
+	(not (goal strategy-goal sg-boom-imp))
+=>
+	(up-modify-escrow food c:- 50)
 	(train villager)
 	(up-get-fact civilian-population 0 civilian-pop) 
 	;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
@@ -33160,6 +33633,11 @@
 	(or (players-unit-type-count focus-player camel-line > 5)
 	(or (players-unit-type-count focus-player scout-cavalry-line > 5)
 	(players-unit-type-count focus-player eagle-warrior-line > 5)))))	
+	(players-unit-type-count focus-player cataphract-line < 5)
+	(players-unit-type-count focus-player archer-line < 15)
+	(players-unit-type-count focus-player knight-line < 15)
+	(players-unit-type-count focus-player battle-elephant-line < 5)
+	(goal enemy-cavarcher-goal 0)
 =>
 	(train condottiero)
 )
@@ -34975,7 +35453,7 @@
 	(current-age == feudal-age)
 	(up-research-status c: castle-age >= research-pending)
 	(can-train eagle-warrior-line)
-	(up-compare-goal gl-military-advantage < 20)
+	(up-compare-goal gl-military-advantage < 16)
 =>
 	(train eagle-warrior-line)
 )
@@ -34991,7 +35469,8 @@
 		(nor (players-unit-type-count focus-player knight-line >= 6) 
 		(or (players-unit-type-count focus-player battle-elephant-line >= 6) 
 		(or (players-unit-type-count focus-player militiaman-line >= 6) 
-		(players-unit-type-count focus-player archery-cannon-class >= 3))))
+		(or (players-unit-type-count focus-player janissary-line >= 3) 
+		(players-unit-type-count focus-player hand-cannoneer >= 3)))))
 		(or (unit-type-count-total spearman-line >= 3)
 		(or (unit-type-count-total archer-line >= 3)
 		(unit-type-count-total monk >= 2)))
@@ -35012,7 +35491,8 @@
 		(nor (players-unit-type-count focus-player knight-line >= 6) 
 		(or (players-unit-type-count focus-player battle-elephant-line >= 6) 
 		(or (players-unit-type-count focus-player militiaman-line >= 6) 
-		(players-unit-type-count focus-player archery-cannon-class >= 3))))
+		(or (players-unit-type-count focus-player janissary-line >= 3) 
+		(players-unit-type-count focus-player hand-cannoneer >= 3)))))
 		(or (unit-type-count-total infantry-class >= 3)
 		(or (unit-type-count-total archer-line >= 3)
 		(unit-type-count-total monk >= 2)))
@@ -37905,7 +38385,7 @@
 	(timer-triggered 11)
 	(town-under-attack)
 	(up-enemy-units-in-town >= 8)
-	(military-population < 5)
+	(up-compare-goal gl-military-advantage <= -6)
 =>
 	(up-full-reset-search)
 	(up-set-target-point gl-starting-tc-x)
@@ -37919,10 +38399,11 @@
 	(timer-triggered 11)
 	(town-under-attack)
 	(up-enemy-units-in-town >= 8)
-	(military-population < 5)
+	(up-compare-goal gl-military-advantage <= -6)
 	(up-set-target-object search-remote c: 0)
 =>
 	(disable-timer 11)
+	(up-set-target-object search-remote c: 0)
 	(up-get-point position-object enemy-units-point-x)
 	(up-send-flare enemy-units-point-x)
 	(chat-to-allies "48")
@@ -37934,7 +38415,7 @@
 	(timer-triggered 11)
 	(town-under-attack)
 	(up-enemy-units-in-town >= 12)
-	(military-population < 7)
+	(up-compare-goal gl-military-advantage <= -12)
 =>
 	(up-full-reset-search)
 	(up-set-target-point gl-starting-tc-x)
@@ -37947,10 +38428,11 @@
 	(timer-triggered 11)
 	(town-under-attack)
 	(up-enemy-units-in-town >= 12)
-	(military-population < 7)
+	(up-compare-goal gl-military-advantage <= -12)
 	(up-set-target-object search-remote c: 0)
 =>
 	(disable-timer 11)
+	(up-set-target-object search-remote c: 0)
 	(up-get-point position-object enemy-units-point-x)
 	(up-send-flare enemy-units-point-x)
 	(chat-to-allies "48")
@@ -38088,6 +38570,10 @@
 	(up-remove-objects search-remote object-data-class == building-class)
 	(up-remove-objects search-remote object-data-class == wall-class)
 	(up-remove-objects search-remote object-data-class == gate-class)
+	(up-remove-objects search-local object-data-type == feudal-battering-ram)
+	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
+	(up-remove-objects search-local object-data-upgrade-type == siege-ram)
 	(up-remove-objects search-remote object-data-player == 0) ;gaia objects, like boars
     (up-get-search-state gl-local-total)    ;count how many were found
     (up-modify-goal gl-set-tc-garrison g:= gl-remote-total)    ;save the number in a goal
@@ -40592,7 +41078,7 @@
 (defrule
 	(goal strategy-goal sg-boom-imp)
 =>
-	(up-jump-rule 33)
+	(up-jump-rule 27)
 )
 
 (defrule
@@ -40627,7 +41113,7 @@
 	(timer-triggered t-eco-timer)
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
-	(wood-amount > 500)
+	(wood-amount > 400)
 	(food-amount < 50)
 	(goal gl-wood-saving 0)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 20)
@@ -40640,7 +41126,7 @@
 	(timer-triggered t-eco-timer)
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
-	(wood-amount > 500)
+	(wood-amount > 400)
 	(gold-amount < 50)
 	(goal gl-wood-saving 0)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 20)
@@ -40719,7 +41205,7 @@
 (defrule
 	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
-	(food-amount > 1000)
+	(food-amount > 800)
 	(wood-amount < 200)
 	(goal gl-food-saving 0)
 	(up-compare-sn sn-food-gatherer-percentage c:> 25)
@@ -40731,7 +41217,7 @@
 (defrule
 	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
-	(food-amount > 1000)
+	(food-amount > 800)
 	(gold-amount < 200)
 	(goal gl-food-saving 0)
 	(up-compare-sn sn-food-gatherer-percentage c:> 25)
@@ -40743,7 +41229,7 @@
 (defrule
 	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
-	(wood-amount > 1000)
+	(wood-amount > 800)
 	(food-amount < 200)
 	(goal gl-wood-saving 0)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 25)
@@ -40755,79 +41241,7 @@
 (defrule
 	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
-	(wood-amount > 1000)
-	(gold-amount < 200)
-	(goal gl-wood-saving 0)
-	(up-compare-sn sn-wood-gatherer-percentage c:> 25)
-=>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
-	(up-modify-sn sn-gold-gatherer-percentage c:+ 5)
-	;(chat-to-player my-player-number "Balancing eco from wood to gold")
-)
-
-(defrule
-	(timer-triggered t-eco-timer)
-	(current-age == imperial-age)
-	(gold-amount > 1000)
-	(food-amount < 200)
-	(goal gl-gold-saving 0)
-	(up-compare-sn sn-gold-gatherer-percentage c:> 15)
-=>	(up-modify-sn sn-gold-gatherer-percentage c:- 5)
-	(up-modify-sn sn-food-gatherer-percentage c:+ 5)
-	;(chat-to-player my-player-number "Balancing eco from gold to food")
-)
-
-(defrule
-	(timer-triggered t-eco-timer)
-	(current-age >= imperial-age)
-	(gold-amount > 1000)
-	(wood-amount < 200)
-	(goal gl-gold-saving 0)
-	(up-compare-sn sn-gold-gatherer-percentage c:> 15)
-=>	(up-modify-sn sn-gold-gatherer-percentage c:- 5)
-	(up-modify-sn sn-wood-gatherer-percentage c:+ 5)
-	;(chat-to-player my-player-number "Balancing eco from gold to wood")
-)
-
-(defrule
-	(timer-triggered t-eco-timer)
-	(current-age == imperial-age)
-	(food-amount > 1000)
-	(wood-amount < 200)
-	(goal gl-food-saving 0)
-	(up-compare-sn sn-food-gatherer-percentage c:> 25)
-=>	(up-modify-sn sn-food-gatherer-percentage c:- 5)
-	(up-modify-sn sn-wood-gatherer-percentage c:+ 5)
-	;(chat-to-player my-player-number "Balancing eco from food to wood")
-)
-
-(defrule
-	(timer-triggered t-eco-timer)
-	(current-age == imperial-age)
-	(food-amount > 1000)
-	(gold-amount < 200)
-	(goal gl-food-saving 0)
-	(up-compare-sn sn-food-gatherer-percentage c:> 25)
-=>	(up-modify-sn sn-food-gatherer-percentage c:- 5)
-	(up-modify-sn sn-gold-gatherer-percentage c:+ 5)
-	;(chat-to-player my-player-number "Balancing eco from food to gold")
-)
-
-(defrule
-	(timer-triggered t-eco-timer)
-	(current-age == imperial-age)
-	(wood-amount > 1000)
-	(food-amount < 200)
-	(goal gl-wood-saving 0)
-	(up-compare-sn sn-wood-gatherer-percentage c:> 25)
-=>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
-	(up-modify-sn sn-food-gatherer-percentage c:+ 5)	
-	;(chat-to-player my-player-number "Balancing eco from wood to food")
-)
-
-(defrule
-	(timer-triggered t-eco-timer)
-	(current-age == imperial-age)
-	(wood-amount > 1000)
+	(wood-amount > 800)
 	(gold-amount < 200)
 	(goal gl-wood-saving 0)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 25)
@@ -41346,7 +41760,7 @@
 	(can-buy-commodity stone)
     (current-age == castle-age)
     (building-type-count market >= 1)
-	(building-type-count castle < 0)
+	(building-type-count castle < 1)
 	(goal strategy-goal sg-fastcastle-uu)
 	(up-research-status c: imperial-age != research-pending)
 =>
