@@ -6132,7 +6132,7 @@
 (defrule ;fc-uu -> boom
 	(current-age == castle-age)
 	(goal strategy-goal sg-fastcastle-uu)
-	(building-type-count-total castle >= 2)
+	(building-type-count castle >= 2)
 =>
 	(set-goal strategy-goal sg-fastcastle-gu)
 	(set-goal sg-fastcastle-boom YES)
@@ -12261,7 +12261,10 @@
 	(current-age == castle-age)
 	(players-building-type-count focus-player watch-tower-line >= 1)
 	(can-train-with-escrow battering-ram-line)
-	(unit-type-count-total battering-ram-line < 2)
+	(unit-type-count-total battering-ram-line < 1)
+	(or (up-compare-goal gl-military-advantage >= 2)
+	(or (enemy-buildings-in-town)
+	(military-population >= 6)))
 =>
 	(up-modify-escrow wood c:- 160)
 	(up-modify-escrow gold c:- 75)
@@ -16220,11 +16223,11 @@
 	(up-get-fact escrow-amount stone amnt-escrow-stone)
 	(up-chat-data-to-self "Escrow stone: %d" g: amnt-escrow-stone)
 	(up-chat-data-to-self "Town Size: %d" s: sn-maximum-town-size)
-	(up-chat-data-to-self "Infantry Threat: %d" g: enemy-infantry-goal)
-	(up-chat-data-to-self "Heavy Infantry Threat: %d" g: enemy-heavy-infantry-goal)
-	(up-chat-data-to-self "Cavalry Threat: %d" g: enemy-cavalry-goal)
-	(up-chat-data-to-self "Archery Threat: %d" g: enemy-archery-goal)
-	(up-chat-data-to-self "Cav-Archer Threat: %d" g: enemy-cavarcher-goal)
+	(up-chat-data-to-self "Inf Threat: %d" g: enemy-infantry-goal)
+	(up-chat-data-to-self "H-Inf Threat: %d" g: enemy-heavy-infantry-goal)
+	(up-chat-data-to-self "Cav Threat: %d" g: enemy-cavalry-goal)
+	(up-chat-data-to-self "Arch Threat: %d" g: enemy-archery-goal)
+	(up-chat-data-to-self "CA Threat: %d" g: enemy-cavarcher-goal)
 	(up-chat-data-to-self "Siege Threat: %d" g: enemy-siege-goal)
 	(enable-timer 7 45)
 )
@@ -17425,8 +17428,10 @@
 
 (defrule
 	(building-type-count-total university >= 1)
+	(or (unit-type-count-total archery-class >= 5)
+	(or (unit-type-count-total cavalry-archer-class >= 5)
 	(or (up-compare-goal gl-archery-class-units >= 5)
-	(up-compare-goal gl-cavalry-archer-units >= 5))
+	(up-compare-goal gl-cavalry-archer-units >= 5))))
 	(research-available ri-ballistics)
 	(goal gl-wood-saving 0)
 	(goal gl-gold-saving 0)
@@ -17442,8 +17447,10 @@
 (defrule
 	(current-age >= castle-age)
 	(or (building-type-count-total university < 1)
-		(or (and (up-compare-goal gl-archery-class-units < 5)
-			(up-compare-goal gl-cavalry-archer-units < 5))
+		(or (and (unit-type-count-total archery-class < 5)
+			(and (unit-type-count-total cavalry-archer-class < 5)
+			(and (up-compare-goal gl-archery-class-units < 5)
+			(up-compare-goal gl-cavalry-archer-units < 5))))
 	(up-research-status c: ri-ballistics >= research-pending)))
 	(goal gl-wood-saving 10)
 	(goal gl-gold-saving 10)
@@ -20357,12 +20364,27 @@
 	(current-age < castle-age)
 	(unit-type-count militiaman-line >= 1)
 	(up-set-target-object search-local g: gl-loop-militias)
+	(not (research-completed ri-man-at-arms))
 =>
 	(up-get-point position-object gl-militia-x)
 	(up-set-target-point gl-militia-x)
 	(up-filter-distance c: -1 c: 3)
 	(up-find-remote c: villager-class c: 5)
 	(up-find-remote c: militiaman-line c: 5)
+	;(up-remove-objects search-remote object-data-hitpoints < 7)
+	(up-get-search-state gl-local-total)
+)
+
+(defrule
+	(current-age < castle-age)
+	(unit-type-count militiaman-line >= 1)
+	(up-set-target-object search-local g: gl-loop-militias)
+	(research-completed ri-man-at-arms)
+=>
+	(up-get-point position-object gl-militia-x)
+	(up-set-target-point gl-militia-x)
+	(up-filter-distance c: -1 c: 3)
+	(up-find-remote c: villager-class c: 5)
 	;(up-remove-objects search-remote object-data-hitpoints < 7)
 	(up-get-search-state gl-local-total)
 )
@@ -23403,6 +23425,7 @@
 
 (defrule
 	(goal gl-scout-base NO)
+	(goal gl-push-deer YES)
 	(goal gl-scout-map NO)
 	(up-compare-goal g-deer-id == -1) ;find new deer
 	(current-age == dark-age)
@@ -23421,6 +23444,7 @@
 
 (defrule
 	(goal gl-scout-base NO)
+	(goal gl-push-deer YES)
 	(goal gl-scout-map NO)
 	(up-compare-goal g-deer-id == -1) 
 	(up-set-target-object search-remote c: 0)
@@ -23428,7 +23452,6 @@
 	(current-age == dark-age)
 	;(not (timer-triggered gl-curr-deer-timer))
 =>
-	(set-goal gl-push-deer YES)
 	(up-set-target-object search-remote c: 0)
 	(up-get-object-data object-data-id g-deer-id)
 	(up-get-point position-object deer-x)
@@ -23966,11 +23989,10 @@
 (defrule
 	(goal gl-scout-map NO) 
 	(goal gl-push-deer YES)
-	(or (dropsite-min-distance deer-hunting >= 40)
-	(or (dropsite-min-distance deer-hunting == -1) ;no deer found
+	(or (up-gaia-type-count c: deer-class < 1) ;no deer found ;not a good solution in team-games
 	(or (and (unit-type-count-total militiaman-line >= 1)
 		(building-type-count barracks >= 1));we're drushing
-	(civilian-population g:>= d-villager-goal))))
+	(civilian-population g:>= d-villager-goal)))
 =>
 	(set-goal gl-push-deer NO)
 	(set-goal g-deer-id -1)
@@ -24048,6 +24070,7 @@
 	(or (unit-type-count camel-scout > 0)
 	(unit-type-count spearman-line > 0))))
 	(up-compare-goal attack-now-goal != 1)
+	(unit-type-count militiaman-line < 1)
 =>
 	(set-strategic-number sn-number-explore-groups 1)
 	(set-strategic-number sn-total-number-explorers 1)
@@ -24057,10 +24080,10 @@
 	(current-age == feudal-age)
 	(up-compare-sn sn-number-explore-groups == 1)
 	(up-compare-sn sn-total-number-explorers == 1)
-	(nor (unit-type-count scout-cavalry-line > 0)
-	(or (unit-type-count eagle-warrior-line > 0)
-	(or (unit-type-count camel-scout > 0)
-	(unit-type-count spearman-line > 0))))
+	(unit-type-count scout-cavalry-line < 1)
+	(unit-type-count eagle-warrior-line < 1)
+	(unit-type-count camel-scout < 1)
+	(unit-type-count spearman-line < 1)
 =>
 	(set-strategic-number sn-number-explore-groups 0)
 	(set-strategic-number sn-total-number-explorers 0)
@@ -30147,9 +30170,7 @@
 	(train scout-cavalry-line)
 )
 
-
-
-(defrule
+(defrule ;before crossbow research
 	(not (goal strategy-goal sg-boom-imp))
 	(current-age == castle-age)
 	(can-train archer-line)
@@ -30174,39 +30195,19 @@
 =>
 	(train archer-line)
 )
-
-(defrule
+;going for crossbows in castle-age
+(defrule ;after crossbow, before ballistics
 	(not (goal strategy-goal sg-boom-imp))
 	(current-age == castle-age)
 	(can-train archer-line)
-	(or (goal strategy-goal sg-archerrush)
-	(goal ca-strategy gl-castleage-rangeunit))
-	(wood-amount > 75)
-	(up-research-status c: ri-crossbow >= research-pending)
-	(or (civilian-population g:< c-villager-goal)
-	(up-research-status c: imperial-age == research-pending))
-	(unit-type-count-total cavalry-archer-class < 5)
-	(or
-		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
-		(or (players-unit-type-count focus-player scorpion-line >= 3)
-		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
-		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
-		(or (unit-type-count-total cavalry-class < 3)
-		(unit-type-count-total siege-weapon-class < 3))
-	)
-=>
-	(train archer-line)
-)
-(defrule
-	(not (goal strategy-goal sg-boom-imp))
 	(goal ca-strategy gl-castleage-rangeunit)
-	(current-age == castle-age)
-	(can-train archer-line)
-	(wood-amount > 75)
+	;(wood-amount > 75)
 	(up-research-status c: ri-crossbow >= research-pending)
+	(building-type-count-total university >= 1)
+	(up-research-status c: ri-ballistics < research-pending)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
-	(unit-type-count-total archer-line < 16)
+	(unit-type-count-total archer-line < 12)
 	(unit-type-count-total cavalry-archer-class < 5)
 	(or
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
@@ -30219,6 +30220,54 @@
 =>
 	(train archer-line)
 )
+
+(defrule ;after crossbow & ballistics 
+	(not (goal strategy-goal sg-boom-imp))
+	(current-age == castle-age)
+	(can-train archer-line)
+	(goal ca-strategy gl-castleage-rangeunit)
+	(wood-amount > 75)
+	(up-research-status c: ri-crossbow >= research-pending)
+	(or (building-type-count-total university < 1)
+	(up-research-status c: ri-ballistics >= research-pending))
+	(or (civilian-population g:< c-villager-goal)
+	(up-research-status c: imperial-age == research-pending))
+	(unit-type-count-total cavalry-archer-class < 5)
+	(or
+		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
+		(or (players-unit-type-count focus-player scorpion-line >= 3)
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (unit-type-count-total cavalry-class < 3)
+		(unit-type-count-total siege-weapon-class < 3))
+	)
+=>
+	(train archer-line)
+)
+;not going for crossbows in castle-age
+(defrule ;after crossbow
+	(not (goal strategy-goal sg-boom-imp))
+	(current-age == castle-age)
+	(can-train archer-line)
+	(goal strategy-goal sg-archerrush)
+	(not (goal ca-strategy gl-castleage-rangeunit))
+	(wood-amount > 75)
+	(unit-type-count-total archer-line < 16)
+	(up-research-status c: ri-crossbow >= research-pending)
+	(or (civilian-population g:< c-villager-goal)
+	(up-research-status c: imperial-age == research-pending))
+	(or
+		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
+		(or (players-unit-type-count focus-player scorpion-line >= 3)
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (unit-type-count-total cavalry-class < 3)
+		(unit-type-count-total siege-weapon-class < 3))
+	)
+=>
+	(train archer-line)
+)
+
 
 ; (defrule
 	; (not (goal strategy-goal sg-boom-imp))
@@ -33389,6 +33438,9 @@
 (defrule
 	(current-age == imperial-age)
 	(can-research ri-siege-ram)
+	(or (up-compare-goal gl-military-advantage >= 2)
+	(or (goal enemy-archery-goal 1)
+	(players-unit-type-count focus-player skirmisher-line >= 10)))
 =>
 	(research ri-siege-ram)
 )
@@ -38628,7 +38680,7 @@
 
 
 ;UNGARRISON
-
+;method 1: deactivated
 ; (defrule
     ; (up-compare-goal gl-garrison-tc != -1)
     ; (up-compare-goal gl-set-tc-garrison < 1)    ;search at the beginning didn't find anything
@@ -38638,6 +38690,29 @@
     ; (set-goal gl-garrison-tc -1)    ;reset for next time
 ; )
 
+;method 2: deactivated
+; (defrule
+    ; (up-compare-goal gl-garrison-tc != -1)
+    ; (up-compare-goal gl-set-tc-garrison < 1)    ;search at the beginning didn't find anything
+; =>
+	; (up-full-reset-search)
+	; (up-set-target-point gl-self-point-x)
+	; (up-filter-distance c: -1 c: 2)
+	; (up-find-local c: town-center c: 1)
+; )
+
+; (defrule
+	; (up-compare-goal gl-garrison-tc != -1)
+    ; (up-compare-goal gl-set-tc-garrison < 1) 	
+	; (up-set-target-object search-local c: 0)
+	; ;(up-object-data object-data-garrison-count > 0)
+; =>
+	; (up-target-point gl-self-point-x action-unload -1 -1)
+	; ;(chat-to-all "Threat is over, release vills")
+	; (set-goal gl-garrison-tc -1)
+; )
+
+;method 3
 (defrule
     (up-compare-goal gl-garrison-tc != -1)
     (up-compare-goal gl-set-tc-garrison < 1)    ;search at the beginning didn't find anything
@@ -38654,11 +38729,11 @@
 	(up-set-target-object search-local c: 0)
 	;(up-object-data object-data-garrison-count > 0)
 =>
-	(up-target-point gl-self-point-x action-unload -1 -1)
+	(up-target-point gl-self-point-x action-work -1 -1)
 	;(chat-to-all "Threat is over, release vills")
 	(set-goal gl-garrison-tc -1)
 )
-
+;--
 (defrule
 	(up-compare-goal gl-garrison-tc != -1)
     (up-compare-goal gl-set-tc-garrison < 1) 	
