@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.4
-;last update: 10th August 2023
+;last update: 12th August 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -1940,7 +1940,7 @@
 	(civ-selected aztec)
 	(research-completed my-second-unique-research)
 =>
-	(up-modify-goal gl-ca-firing-range c:+ 1)
+	(up-modify-goal gl-skirm-firing-range c:+ 1)
 	(disable-self)
 )
 
@@ -11739,7 +11739,7 @@
 
 #end-if
 
-#load-if-defined UP-2-PLAYER-GAME
+#load-if-not-defined UP-POCKET-POSITION
 
 (defrule
 	(current-age >= castle-age)
@@ -13242,6 +13242,7 @@
 
 (defrule
 	(current-age == castle-age)
+	(unit-type-count-total militiaman-line < 6)
 	(or (goal enemy-heavy-infantry-goal 1)
 	(goal enemy-siege-goal 1))
 	(can-train knight-line)
@@ -13252,6 +13253,7 @@
 
 (defrule
 	(current-age == imperial-age)
+	(unit-type-count-total militiaman-line < 6)
 	(or (goal enemy-heavy-infantry-goal 1)
 	(goal enemy-siege-goal 1))
 	(up-research-status c: ri-cavalier >= research-pending)
@@ -13264,6 +13266,7 @@
 (defrule
 	(current-age >= castle-age)
 	(goal enemy-heavy-infantry-goal 1)
+	(unit-type-count-total knight-line < 6)
 	(can-build-with-escrow barracks)
 	(building-type-count-total barracks < 3)
 =>
@@ -13276,6 +13279,7 @@
 (defrule
 	(current-age >= castle-age)
 	(goal enemy-heavy-infantry-goal 1)
+	(unit-type-count-total knight-line < 6)
 	(can-research ri-man-at-arms)
 =>
 	(research ri-man-at-arms)
@@ -13285,6 +13289,7 @@
 (defrule
 	(current-age >= castle-age)
 	(goal enemy-heavy-infantry-goal 1)
+	(unit-type-count-total knight-line < 6)
 	(can-research ri-long-swordsman)
 =>
 	(research ri-long-swordsman)
@@ -13294,6 +13299,7 @@
 (defrule
 	(current-age >= castle-age)
 	(goal enemy-heavy-infantry-goal 1)
+	(unit-type-count-total knight-line < 6)
 	(can-research ri-two-handed-swordsman)
 =>
 	(research ri-two-handed-swordsman)
@@ -13303,6 +13309,7 @@
 (defrule
 	(current-age >= castle-age)
 	(goal enemy-heavy-infantry-goal 1)
+	(unit-type-count-total knight-line < 6)
 	(can-research-with-escrow ri-champion)
 =>
 	(up-modify-escrow food c:- 750)
@@ -13314,6 +13321,7 @@
 (defrule
 	(current-age >= castle-age)
 	(goal enemy-heavy-infantry-goal 1)
+	(unit-type-count-total knight-line < 6)
 	(can-research ri-supplies)
 =>
 	(research ri-supplies)
@@ -13323,6 +13331,7 @@
 (defrule
 	(current-age == castle-age)
 	(goal enemy-heavy-infantry-goal 1)
+	(unit-type-count-total knight-line < 6)
 	(up-research-status c: ri-long-swordsman >= research-pending)
 	(can-train militiaman-line)
 =>
@@ -13333,6 +13342,7 @@
 (defrule
 	(current-age == imperial-age)
 	(goal enemy-heavy-infantry-goal 1)
+	(unit-type-count-total knight-line < 6)
 	(research-available ri-two-handed-swordsman)
 	(can-train militiaman-line)
 	(unit-type-count militiaman-line < 5)
@@ -13344,6 +13354,7 @@
 (defrule
 	(current-age == imperial-age)
 	(goal enemy-heavy-infantry-goal 1)
+	(unit-type-count-total knight-line < 6)
 	(not (research-available ri-champion))
 	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-train militiaman-line)
@@ -13355,6 +13366,7 @@
 (defrule
 	(current-age == imperial-age)
 	(goal enemy-heavy-infantry-goal 1)
+	(unit-type-count-total knight-line < 6)
 	(research-available ri-champion)
 	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(can-train militiaman-line)
@@ -13367,6 +13379,7 @@
 (defrule
 	(current-age == imperial-age)
 	(goal enemy-heavy-infantry-goal 1)
+	(unit-type-count-total knight-line < 6)
 	(up-research-status c: ri-champion >= research-pending)
 	(can-train militiaman-line)
 =>
@@ -13809,121 +13822,121 @@
 	(train camel-line)
 )
 
-;ghulam
+; ;ghulam
 
-(defrule
-	(current-age >= castle-age)
-	(players-unit-type-count focus-player ghulam-line >= 6)
-	(building-available stable)
-	(can-build-with-escrow stable)
-	(building-type-count-total stable < 2)
-=>
-	(up-modify-escrow wood c:- 175)
-	(build stable)
-)
+; (defrule
+	; (current-age >= castle-age)
+	; (players-unit-type-count focus-player ghulam-line >= 6)
+	; (building-available stable)
+	; (can-build-with-escrow stable)
+	; (building-type-count-total stable < 2)
+; =>
+	; (up-modify-escrow wood c:- 175)
+	; (build stable)
+; )
 
-(defrule
-	(current-age == castle-age)
-	(players-unit-type-count focus-player ghulam-line >= 6)
-	(can-train knight-line)
-	(building-type-count-total stable > 0)
-=>
-	(train knight-line)
-)
+; (defrule
+	; (current-age == castle-age)
+	; (players-unit-type-count focus-player ghulam-line >= 6)
+	; (can-train knight-line)
+	; (building-type-count-total stable > 0)
+; =>
+	; (train knight-line)
+; )
 
-(defrule
-	(current-age == castle-age)
-	(players-unit-type-count focus-player ghulam-line >= 6)
-	(not (unit-available knight-line))
-	(can-train camel-line)
-	(building-type-count-total stable > 0)
-=>
-	(train camel-line)
-)
+; (defrule
+	; (current-age == castle-age)
+	; (players-unit-type-count focus-player ghulam-line >= 6)
+	; (not (unit-available knight-line))
+	; (can-train camel-line)
+	; (building-type-count-total stable > 0)
+; =>
+	; (train camel-line)
+; )
 
-(defrule
-	(current-age >= imperial-age)
-	(players-unit-type-count focus-player ghulam-line >= 8)
-	(not (research-available ri-cavalier))
-	(research-available ri-heavy-camel)
-	(can-research ri-heavy-camel)
-	(building-type-count-total stable > 0)
-=>
-	(research ri-heavy-camel)
-)
+; (defrule
+	; (current-age >= imperial-age)
+	; (players-unit-type-count focus-player ghulam-line >= 8)
+	; (not (research-available ri-cavalier))
+	; (research-available ri-heavy-camel)
+	; (can-research ri-heavy-camel)
+	; (building-type-count-total stable > 0)
+; =>
+	; (research ri-heavy-camel)
+; )
 
-(defrule
-	(current-age >= castle-age)
-	(players-unit-type-count focus-player ghulam-line >= 6)
-	(research-available ri-cavalier)
-	(can-research ri-cavalier)
-	(building-type-count-total stable > 0)
-=>
-	(research ri-cavalier)
-)
+; (defrule
+	; (current-age >= castle-age)
+	; (players-unit-type-count focus-player ghulam-line >= 6)
+	; (research-available ri-cavalier)
+	; (can-research ri-cavalier)
+	; (building-type-count-total stable > 0)
+; =>
+	; (research ri-cavalier)
+; )
 
-(defrule
-	(current-age >= imperial-age)
-	(players-unit-type-count focus-player ghulam-line >= 8)
-	(can-train camel-line)
-	(up-research-status c: ri-heavy-camel >= research-pending)
-=>
-	(train camel-line)
-)
+; (defrule
+	; (current-age >= imperial-age)
+	; (players-unit-type-count focus-player ghulam-line >= 8)
+	; (can-train camel-line)
+	; (up-research-status c: ri-heavy-camel >= research-pending)
+; =>
+	; (train camel-line)
+; )
 
-(defrule
-	(current-age >= imperial-age)
-	(players-unit-type-count focus-player ghulam-line >= 8)
-	(can-train knight-line)
-	(up-research-status c: ri-cavalier >= research-pending)
-=>
-	(train knight-line)
-)
+; (defrule
+	; (current-age >= imperial-age)
+	; (players-unit-type-count focus-player ghulam-line >= 8)
+	; (can-train knight-line)
+	; (up-research-status c: ri-cavalier >= research-pending)
+; =>
+	; (train knight-line)
+; )
 
-(defrule
-	(current-age >= castle-age)
-	(civ-selected bohemians)
-	(players-unit-type-count focus-player ghulam-line >= 6)
-	(can-build-with-escrow university)
-	(building-type-count-total university < 1)
-=>
-	(up-modify-escrow wood c:- 200)
-	(up-set-placement-data my-player-number lumber-camp c: -2)
-    (up-build place-control 0 c: university)
-)
+; (defrule
+	; (current-age >= castle-age)
+	; (civ-selected bohemians)
+	; (players-unit-type-count focus-player ghulam-line >= 6)
+	; (can-build-with-escrow university)
+	; (building-type-count-total university < 1)
+; =>
+	; (up-modify-escrow wood c:- 200)
+	; (up-set-placement-data my-player-number lumber-camp c: -2)
+    ; (up-build place-control 0 c: university)
+; )
 
-(defrule
-	(current-age >= castle-age)
-	(civ-selected bohemians)
-	(players-unit-type-count focus-player ghulam-line >= 6)
-	(can-research-with-escrow ri-chemistry)
-=>
-	(up-modify-escrow food c:- 300)
-	(up-modify-escrow gold c:- 200)
-	(research ri-chemistry)
-)
+; (defrule
+	; (current-age >= castle-age)
+	; (civ-selected bohemians)
+	; (players-unit-type-count focus-player ghulam-line >= 6)
+	; (can-research-with-escrow ri-chemistry)
+; =>
+	; (up-modify-escrow food c:- 300)
+	; (up-modify-escrow gold c:- 200)
+	; (research ri-chemistry)
+; )
 
-(defrule
-	(current-age >= castle-age)
-	(civ-selected bohemians)
-	(players-unit-type-count focus-player ghulam-line >= 6)
-	(can-build-with-escrow archery-range)
-	(building-type-count-total archery-range < 2)
-	(or (not (goal strategy-goal sg-boom-imp))
-		(and (up-research-status c: imperial-age >= research-pending)
-		(military-population >= 20)))
-=>
-	(up-modify-escrow wood c:- 175)
-	(build archery-range)
-)
+; (defrule
+	; (current-age >= castle-age)
+	; (civ-selected bohemians)
+	; (players-unit-type-count focus-player ghulam-line >= 6)
+	; (can-build-with-escrow archery-range)
+	; (building-type-count-total archery-range < 2)
+	; (or (not (goal strategy-goal sg-boom-imp))
+		; (and (up-research-status c: imperial-age >= research-pending)
+		; (military-population >= 20)))
+; =>
+	; (up-modify-escrow wood c:- 175)
+	; (build archery-range)
+; )
 
-(defrule
-	(current-age >= castle-age)
-	(players-unit-type-count focus-player ghulam-line >= 6)
-	(can-train hand-cannoneer)
-=>
-	(train hand-cannoneer)
-)
+; (defrule
+	; (current-age >= castle-age)
+	; (players-unit-type-count focus-player ghulam-line >= 6)
+	; (can-train hand-cannoneer)
+; =>
+	; (train hand-cannoneer)
+; )
 
 
 ;chakram-thrower
@@ -16228,6 +16241,7 @@
 	(up-get-fact escrow-amount gold amnt-escrow-gold)
 	(up-chat-data-to-self "Escrow gold: %d" g: amnt-escrow-gold)
 	(up-get-fact escrow-amount stone amnt-escrow-stone)
+	(up-chat-data-to-self "Military Advantage: %d" g: gl-military-advantage)
 	(up-chat-data-to-self "Escrow stone: %d" g: amnt-escrow-stone)
 	(up-chat-data-to-self "Town Size: %d" s: sn-maximum-town-size)
 	(up-chat-data-to-self "Inf Threat: %d" g: enemy-infantry-goal)
@@ -16243,11 +16257,11 @@
 	(timer-triggered 9)
 =>
 	(disable-timer 9)
-	;(up-chat-data-to-self "Saving food for: %d" g: gl-food-saving)
-	;(up-chat-data-to-self "Saving wood for: %d" g: gl-wood-saving)
-	;(up-chat-data-to-self "Saving gold for: %d" g: gl-gold-saving)
-	;(up-chat-data-to-self "Saving stone for: %d" g: gl-stone-saving)
-	;(enable-timer 9 180)
+	(up-chat-data-to-self "Saving food for: %d" g: gl-food-saving)
+	(up-chat-data-to-self "Saving wood for: %d" g: gl-wood-saving)
+	(up-chat-data-to-self "Saving gold for: %d" g: gl-gold-saving)
+	(up-chat-data-to-self "Saving stone for: %d" g: gl-stone-saving)
+	(enable-timer 9 180)
 )
 
 (defrule
@@ -24984,6 +24998,15 @@
 	;(chat-to-player my-player-number "Building Donjon against enemy towerrush")
 )
 
+(defrule ;dont attack forward towers by teutons with villagers if too many towers
+	(or (players-building-type-count focus-player watch-tower >= 4)
+	(players-building-type-count focus-player donjon >= 4))
+	(players-civ focus-player teutonic)
+	(current-age < castle-age)
+=>
+	(up-jump-rule 3)
+)
+
 (defrule
 	;(enemy-buildings-in-town)
 	(or (players-building-type-count focus-player watch-tower >= 1)
@@ -24997,6 +25020,7 @@
 	(up-find-local c: villager-class c: 40)
 	(up-clean-search search-local object-data-hitpoints search-order-desc)
 	(up-remove-objects search-local object-data-index > 9)
+	(up-find-local c: battering-ram-line c: 40)
 	(up-set-target-point gl-starting-tc-x)
 	(up-filter-distance c: -1 c: 30)
 	(up-find-remote c: watch-tower c: 1)
@@ -25017,6 +25041,25 @@
 	(up-find-local c: villager-class c: 40)
 	(up-clean-search search-local object-data-hitpoints search-order-desc)
 	(up-remove-objects search-local object-data-index > 5)
+	(up-find-local c: battering-ram-line c: 40)
+	(up-set-target-point gl-starting-tc-x)
+	(up-filter-distance c: -1 c: 30)
+	(up-find-remote c: watch-tower c: 1)
+	(up-find-remote c: donjon c: 1)
+	(up-find-remote c: villager-builder c: 1)
+)
+
+(defrule
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
+	(or (unit-type-count battering-ram-line >= 1)
+	(unit-type-count armored-elephant-line >= 1))	
+	(current-age == castle-age)
+	(up-compare-goal gl-military-advantage >= -14)
+=>
+	(up-full-reset-search)
+	(up-find-local c: battering-ram-line c: 40)
+	(up-find-local c: armored-elephant-line c: 40)
 	(up-set-target-point gl-starting-tc-x)
 	(up-filter-distance c: -1 c: 30)
 	(up-find-remote c: watch-tower c: 1)
@@ -25028,7 +25071,7 @@
 	;(enemy-buildings-in-town)
 	(or (players-building-type-count focus-player watch-tower >= 1)
 	(players-building-type-count focus-player donjon >= 1))
-	(current-age < castle-age)
+	(current-age <= castle-age)
 	(up-set-target-object search-remote c: 0)
 	(up-compare-goal gl-military-advantage >= -14)
 =>
@@ -30201,7 +30244,7 @@
 	(not (goal strategy-goal sg-boom-imp))
 	(current-age == castle-age)
 	(can-train archer-line)
-	(unit-type-count-total archer-line < 5)
+	(unit-type-count-total archer-line < 6)
 	(or (goal strategy-goal sg-archerrush)
 	(goal ca-strategy gl-castleage-rangeunit))
 	(wood-amount > 75)
@@ -30279,7 +30322,7 @@
 	(goal strategy-goal sg-archerrush)
 	(not (goal ca-strategy gl-castleage-rangeunit))
 	(wood-amount > 75)
-	(unit-type-count-total archer-line < 16)
+	(unit-type-count-total archer-line < 12)
 	(up-research-status c: ri-crossbow >= research-pending)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
