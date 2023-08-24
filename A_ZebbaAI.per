@@ -520,6 +520,10 @@
 (defconst gl-number-sheeps-last 168)
 (defconst gl-dead-boars 169)
 (defconst gl-number-boars-last 170)
+(defconst gl-rule-jump-id 171)
+(defconst gl-curr-local-unit 172)
+(defconst gl-curr-unit-id 173)
+(defconst gl-total-number-units 174)
 (defconst watch-tower-point-x 178)
 (defconst watch-tower-point-y 179)
 (defconst sn-nomad-style-start 180)
@@ -3638,16 +3642,17 @@
 	;(chat-to-player my-player-number "Adjusting y4")
 )
 
-; (defrule
-	; (goal gl-scout-base YES)
-	; (or (timer-triggered scout-base-point-timer)
-	; (or (up-point-explored scout-base-one-x == explored-active)
-	; (or (up-point-explored scout-base-two-x == explored-active)
-	; (or (up-point-explored scout-base-three-x == explored-active)
-	; (up-point-explored scout-base-four-x == explored-active)))))
-; =>
-	; (up-chat-data-to-self "curr point: %d" g: gl-curr-point)
-; )
+(defrule
+	(current-age == dark-age)
+	(goal gl-scout-base YES)
+	(or (timer-triggered scout-base-point-timer)
+	(or (up-point-explored scout-base-one-x == explored-active)
+	(or (up-point-explored scout-base-two-x == explored-active)
+	(or (up-point-explored scout-base-three-x == explored-active)
+	(up-point-explored scout-base-four-x == explored-active)))))
+=>
+	(up-chat-data-to-self "curr point: %d" g: gl-curr-point)
+)
 
 (defrule
 	(goal gl-scout-base YES)
@@ -3663,7 +3668,7 @@
 	(up-set-group search-local c: 1)
 	;(up-set-target-point scout-base-one-x)
 	(up-target-point scout-base-one-x action-move -1 -1)
-	;(chat-to-player my-player-number "Sending scout to 1st point")
+	(chat-to-player my-player-number "Sending scout to 1st point")
 )
 
 (defrule
@@ -3695,7 +3700,7 @@
 	(up-set-group search-local c: 1)
 	;(up-set-target-point scout-base-two-x)
 	(up-target-point scout-base-two-x action-move -1 -1)
-	;(chat-to-player my-player-number "Sending scout to 2nd point")
+	(chat-to-player my-player-number "Sending scout to 2nd point")
 )
 
 (defrule
@@ -3727,7 +3732,7 @@
 	(up-set-group search-local c: 1)
 	;(up-set-target-point scout-base-three-x)
 	(up-target-point scout-base-three-x action-move -1 -1)
-	;(chat-to-player my-player-number "Sending scout to 3rd point")
+	(chat-to-player my-player-number "Sending scout to 3rd point")
 )
 
 (defrule
@@ -3759,7 +3764,7 @@
 	(up-set-group search-local c: 1)
 	;(up-set-target-point scout-base-one-x)
 	(up-target-point scout-base-four-x action-move -1 -1)
-	;(chat-to-player my-player-number "Sending scout to 4th point")
+	(chat-to-player my-player-number "Sending scout to 4th point")
 )
 
 (defrule
@@ -3791,7 +3796,7 @@
 	(up-set-group search-local c: 1)
 	;(up-set-target-point scout-base-one-x)
 	(up-target-point scout-base-one-x action-move -1 -1)
-	;(chat-to-player my-player-number "Sending scout back to 1st point")
+	(chat-to-player my-player-number "Sending scout back to 1st point")
 )
 
 (defrule
@@ -3800,7 +3805,7 @@
 	(up-group-size c: 1 >= 1)
 	(or (goal gl-curr-point 5)
 	(goal gl-curr-point 11))
-	(up-point-explored scout-base-four-x != explored-no)
+	;(up-point-explored scout-base-four-x != explored-no)
 	(or (timer-triggered scout-base-point-timer)
 	(up-point-contains scout-base-one-x c: scout-type))
 =>
@@ -19653,7 +19658,7 @@
 	(or (current-age >= castle-age)
 	(unit-type-count-total militiaman-line >= 20))
 =>
-	(up-jump-rule 8)
+	(up-jump-rule 12)
 )
 
 (defrule ;if tc is garrisoned, jump next code section
@@ -19662,7 +19667,7 @@
 	(or (up-object-data object-data-garrison-count >= 3)
 	(up-object-data object-data-hitpoints <= 450))
 =>
-	(up-jump-rule 3)
+	(up-jump-rule 5) 
 )	
 	
 (defrule ;tc ungarrisoned
@@ -19677,14 +19682,29 @@
 	(up-filter-exclude -1 -1 -1 siege-weapon-class)
 	(up-filter-exclude -1 -1 -1 armored-elephant-line)
 	(up-find-local c: -1 c: 40)
+	(up-remove-objects search-local object-data-type == feudal-battering-ram)
+	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-get-search-state gl-local-total)
+	(up-modify-goal gl-total-number-units g:= gl-local-total)
+	(set-goal gl-curr-local-unit 0)
+	;(up-chat-data-to-player my-player-number "number of units: %d" g: gl-total-number-units)
 	(set-goal split-rule-goal 47)
+)
+
+(defrule
+	(up-set-target-object search-local c: 0)
+	(goal split-rule-goal 47)
+=>
+	(up-get-rule-id gl-rule-jump-id)
 )
 
 (defrule	
 	(goal split-rule-goal 47)
-	(up-set-target-object search-local c: 0)
+	(up-set-target-object search-local g: gl-curr-local-unit)
 =>
-	(up-set-target-object search-local c: 0)
+	;(up-set-target-object search-local c: 0)
+	(up-set-target-object search-local g: gl-curr-local-unit)
+	(up-get-object-data object-data-id gl-curr-unit-id)
 	(up-get-point position-object object-point-x)
 	(up-lerp-tiles object-point-x enemy-point-x c: -5) 
 	(up-cross-tiles object-point-x enemy-point-x c: 9)
@@ -19697,24 +19717,35 @@
 (defrule
 	(goal split-rule-goal 48)
 =>	
-	(up-full-reset-search)	
-	(up-set-target-point enemy-point-x)
-	(up-filter-distance c: -1 c: 9)
-	(up-filter-include cmdid-military -1 -1 -1)	
-	(up-filter-exclude -1 -1 -1 siege-weapon-class)
-	(up-filter-exclude -1 -1 -1 armored-elephant-line)
-	(up-find-local c: -1 c: 40)	;how many units should retreat?
-	(up-remove-objects search-local object-data-type == feudal-battering-ram)
-	(up-remove-objects search-local object-data-type == battering-ram)
-	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
-	(up-remove-objects search-local object-data-upgrade-type == siege-ram)
-	(up-remove-objects search-local object-data-type == armored-elephant)
-	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
-	;(set-strategic-number sn-disable-attack-groups 1)
+	(up-add-object-by-id search-local g: gl-curr-unit-id) 
 	(up-target-point object-point-x action-move -1 stance-no-attack)
+	(enable-timer split-stance-timer 1)
+	;(up-full-reset-search)	
+	;(up-set-target-point enemy-point-x)
+	; (up-filter-distance c: -1 c: 9)
+	; (up-filter-include cmdid-military -1 -1 -1)	
+	; (up-filter-exclude -1 -1 -1 siege-weapon-class)
+	; (up-filter-exclude -1 -1 -1 armored-elephant-line)
+	;(up-find-local c: -1 c: 40)	;how many units should retreat?
+	; (up-remove-objects search-local object-data-type == feudal-battering-ram)
+	; (up-remove-objects search-local object-data-type == battering-ram)
+	; (up-remove-objects search-local object-data-upgrade-type == capped-ram)
+	; (up-remove-objects search-local object-data-upgrade-type == siege-ram)
+	; (up-remove-objects search-local object-data-type == armored-elephant)
+	; (up-remove-objects search-local object-data-upgrade-type == siege-elephant)
+	;(set-strategic-number sn-disable-attack-groups 1)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
-	(enable-timer split-stance-timer 1)
+)
+
+(defrule
+	(up-compare-goal gl-curr-local-unit < gl-total-number-units)
+	(up-compare-goal gl-rule-jump-id != -1)
+	(goal split-rule-goal 48)
+=>
+	(set-goal split-rule-goal 47)
+	(up-modify-goal gl-curr-local-unit c:+ 1)
+	(up-jump-direct g: gl-rule-jump-id)
 )
 
 (defrule ; if tc is garrisoned
@@ -19723,7 +19754,7 @@
 	(or (up-object-data object-data-garrison-count < 3)
 	(up-object-data object-data-hitpoints <= 450))
 =>
-	(up-jump-rule 3)
+	(up-jump-rule 5)
 )	
 	
 (defrule
@@ -19738,14 +19769,27 @@
 	(up-filter-exclude -1 -1 -1 siege-weapon-class)
 	(up-filter-exclude -1 -1 -1 armored-elephant-line)
 	(up-find-local c: -1 c: 40)
+	(up-remove-objects search-local object-data-type == feudal-battering-ram)
+	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-get-search-state gl-local-total)
+	(up-modify-goal gl-total-number-units g:= gl-local-total)
+	(set-goal gl-curr-local-unit 0)
+	;(up-chat-data-to-player my-player-number "number of units: %d" g: gl-total-number-units)
 	(set-goal split-rule-goal 49)
+)
+
+(defrule
+	(up-set-target-object search-local c: 0)
+	(goal split-rule-goal 49)
+=>
+	(up-get-rule-id gl-rule-jump-id)
 )
 
 (defrule	
 	(goal split-rule-goal 49)
-	(up-set-target-object search-local c: 0)
+	(up-set-target-object search-local g: gl-curr-local-unit)
 =>
-	(up-set-target-object search-local c: 0)
+	(up-set-target-object search-local g: gl-curr-local-unit)
 	(up-get-point position-object object-point-x)
 	(up-lerp-tiles object-point-x enemy-point-x c: -5)
 	(up-cross-tiles object-point-x enemy-point-x c: 9)
@@ -19758,24 +19802,35 @@
 (defrule
 	(goal split-rule-goal 50)
 =>	
-	(up-full-reset-search)	
-	(up-set-target-point enemy-point-x)
-	(up-filter-distance c: -1 c: 10)
-	(up-filter-include cmdid-military -1 -1 -1)	
-	(up-filter-exclude -1 -1 -1 siege-weapon-class)
-	(up-filter-exclude -1 -1 -1 armored-elephant-line)
-	(up-find-local c: -1 c: 40)	
-	(up-remove-objects search-local object-data-type == feudal-battering-ram)
-	(up-remove-objects search-local object-data-type == battering-ram)
-	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
-	(up-remove-objects search-local object-data-upgrade-type == siege-ram)
-	(up-remove-objects search-local object-data-type == armored-elephant)
-	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
-	;(set-strategic-number sn-disable-attack-groups 1)
+	(up-add-object-by-id search-local g: gl-curr-unit-id) 
 	(up-target-point object-point-x action-move -1 stance-no-attack)
+	(enable-timer split-stance-timer 1)
+	;(up-full-reset-search)	
+	; (up-set-target-point enemy-point-x)
+	; (up-filter-distance c: -1 c: 10)
+	; (up-filter-include cmdid-military -1 -1 -1)	
+	; (up-filter-exclude -1 -1 -1 siege-weapon-class)
+	; (up-filter-exclude -1 -1 -1 armored-elephant-line)
+	; (up-find-local c: -1 c: 40)	
+	; (up-remove-objects search-local object-data-type == feudal-battering-ram)
+	; (up-remove-objects search-local object-data-type == battering-ram)
+	; (up-remove-objects search-local object-data-upgrade-type == capped-ram)
+	; (up-remove-objects search-local object-data-upgrade-type == siege-ram)
+	; (up-remove-objects search-local object-data-type == armored-elephant)
+	; (up-remove-objects search-local object-data-upgrade-type == siege-elephant)
+	;(set-strategic-number sn-disable-attack-groups 1)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
-	(enable-timer split-stance-timer 1)
+)
+
+(defrule
+	(up-compare-goal gl-curr-local-unit < gl-total-number-units)
+	(up-compare-goal gl-rule-jump-id != -1)
+	(goal split-rule-goal 50)
+=>
+	(set-goal split-rule-goal 49)
+	(up-modify-goal gl-curr-local-unit c:+ 1)
+	(up-jump-direct g: gl-rule-jump-id)
 )
 
 (defrule ;castle-age rules
@@ -20126,38 +20181,26 @@
 
 ; Retreating from Enemy Towers
 
-; (defrule															
-	; (or	(military-population > 34)					
-	; (or (unit-type-count battering-ram-line > 0)
-	; (or (unit-type-count armored-elephant-line > 0)		
-	; (or (unit-type-count trebuchet > 0)
-	; (or (unit-type-count bombard-cannon > 0)
-	; (or (unit-type-count cavalry-class >= 4)
-	; (unit-type-count infantry-class >= 6)))))))
+; (defrule
+	; (or (players-building-type-count focus-player watch-tower >= 1)
+	; (players-building-type-count focus-player donjon >= 1))
 ; =>	
-	; (up-jump-rule 13)
-; )	
+	; (up-full-reset-search)
+	; (up-filter-status c: status-pending c: list-active) ;don't retreat if enemy is building a tower
+	; (up-find-status-remote c: watch-tower c: 1)
+	; (up-find-status-remote c: donjon c: 1)
+	; (up-get-search-state gl-local-total)
+; )
 
-(defrule
-	(or (players-building-type-count focus-player watch-tower >= 1)
-	(players-building-type-count focus-player donjon >= 1))
-=>	
-	(up-full-reset-search)
-	(up-filter-status c: status-pending c: list-active) ;don't retreat if enemy is building a tower
-	(up-find-status-remote c: watch-tower c: 1)
-	(up-find-status-remote c: donjon c: 1)
-	(up-get-search-state gl-local-total)
-)
-
-(defrule
-	(or (players-building-type-count focus-player watch-tower >= 1)
-	(players-building-type-count focus-player donjon >= 1))
-	(up-compare-goal gl-remote-total > 0)
-	(up-set-target-object search-remote c: 0)
-=>
-	;(chat-to-all "Test 1")
-	(up-jump-rule 11)
-)
+; (defrule
+	; (or (players-building-type-count focus-player watch-tower >= 1)
+	; (players-building-type-count focus-player donjon >= 1))
+	; (up-compare-goal gl-remote-total > 0)
+	; (up-set-target-object search-remote c: 0)
+; =>
+	; ;(chat-to-all "Test 1")
+	; (up-jump-rule 11)
+; )
 
 ;loop through enemy towers
 
@@ -20217,20 +20260,31 @@
 	(up-filter-exclude -1 -1 -1 cavalry-class)
 	(up-filter-exclude -1 -1 -1 scout-cavalry-class)
 	(up-filter-exclude -1 -1 -1 infantry-class)
-	(up-find-local c: -1 c: 1)
+	(up-find-local c: -1 c: 40)
 	(up-remove-objects search-local object-data-class == scout-cavalry-class)
 	(up-remove-objects search-local object-data-class == cavalry-class)
 	(up-remove-objects search-local object-data-class == siege-weapon-class)
 	(up-remove-objects search-local object-data-type == militiaman)
 	(up-remove-objects search-local object-data-type == armored-elephant)
+	(up-get-search-state gl-local-total)
+	(up-modify-goal gl-total-number-units g:= gl-local-total)
+	(set-goal gl-curr-local-unit 0)
 	(set-goal split-rule-goal 6)
+)
+
+(defrule
+	(up-set-target-object search-local c: 0)
+	(goal split-rule-goal 6)
+=>
+	(up-get-rule-id gl-rule-jump-id)
 )
 
 (defrule	
 	(goal split-rule-goal 6)
-	(up-set-target-object search-local c: 0)
+	(up-set-target-object search-local g: gl-curr-local-unit)
 =>
-	(up-set-target-object search-local c: 0)
+	(up-set-target-object search-local g: gl-curr-local-unit)
+	(up-get-object-data object-data-id gl-curr-unit-id)
 	(up-get-point position-object object-point-x)
 	(up-lerp-tiles object-point-x enemy-tower-point-x c: -5)
 	(up-cross-tiles object-point-x enemy-tower-point-x c: 9)
@@ -20243,28 +20297,39 @@
 (defrule
 	(goal split-rule-goal 7)
 =>	
-	(up-full-reset-search)	
-	(up-set-target-point enemy-tower-point-x)
-	(up-filter-distance c: 1 c: 10)
-	(up-filter-include cmdid-military -1 -1 -1)	
-	(up-filter-exclude -1 -1 -1 siege-weapon-class)
-	(up-filter-exclude -1 -1 -1 armored-elephant-line)
-	(up-filter-exclude -1 -1 -1 cavalry-class)
-	(up-filter-exclude -1 -1 -1 scout-cavalry-class)
-	(up-filter-exclude -1 -1 -1 infantry-class)
-	(up-find-local c: -1 c: 40)	
-	(up-remove-objects search-local object-data-class == scout-cavalry-class)
-	(up-remove-objects search-local object-data-class == cavalry-class)
-	(up-remove-objects search-local object-data-type == militiaman)
-	(up-remove-objects search-local object-data-class == siege-weapon-class)
-	(up-remove-objects search-local object-data-type == armored-elephant)
-	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
-	;(set-strategic-number sn-disable-attack-groups 1)
+	;(up-full-reset-search)	
+	(up-add-object-by-id search-local g: gl-curr-unit-id) 
 	(up-target-point object-point-x action-move -1 stance-no-attack)
+	(enable-timer split-stance-timer 1)
+	; (up-set-target-point enemy-tower-point-x)
+	; (up-filter-distance c: 1 c: 10)
+	; (up-filter-include cmdid-military -1 -1 -1)	
+	; (up-filter-exclude -1 -1 -1 siege-weapon-class)
+	; (up-filter-exclude -1 -1 -1 armored-elephant-line)
+	; (up-filter-exclude -1 -1 -1 cavalry-class)
+	; (up-filter-exclude -1 -1 -1 scout-cavalry-class)
+	; (up-filter-exclude -1 -1 -1 infantry-class)
+	; (up-find-local c: -1 c: 40)	
+	; (up-remove-objects search-local object-data-class == scout-cavalry-class)
+	; (up-remove-objects search-local object-data-class == cavalry-class)
+	; (up-remove-objects search-local object-data-type == militiaman)
+	; (up-remove-objects search-local object-data-class == siege-weapon-class)
+	; (up-remove-objects search-local object-data-type == armored-elephant)
+	; (up-remove-objects search-local object-data-upgrade-type == siege-elephant)
+	; ;(set-strategic-number sn-disable-attack-groups 1)
 	;(up-target-point enemy-tower-point-x action-move -1 stance-stand-ground) ;run units under the tower
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
-	(enable-timer split-stance-timer 1)
+)
+
+(defrule
+	(up-compare-goal gl-curr-local-unit < gl-total-number-units)
+	(up-compare-goal gl-rule-jump-id != -1)
+	(goal split-rule-goal 7)
+=>
+	(set-goal split-rule-goal 6)
+	(up-modify-goal gl-curr-local-unit c:+ 1)
+	(up-jump-direct g: gl-rule-jump-id)
 )
 
 (defrule ; skip if tower is garrisoned
@@ -20299,14 +20364,24 @@
 	(up-remove-objects search-local object-data-class == siege-weapon-class)
 	(up-remove-objects search-local object-data-type == militiaman)
 	(up-remove-objects search-local object-data-type == armored-elephant)
+	(up-get-search-state gl-local-total)
+	(up-modify-goal gl-total-number-units g:= gl-local-total)
+	(set-goal gl-curr-local-unit 0)
 	(set-goal split-rule-goal 8)
+)
+
+(defrule
+	(up-set-target-object search-local c: 0)
+	(goal split-rule-goal 8)
+=>
+	(up-get-rule-id gl-rule-jump-id)
 )
 
 (defrule	
 	(goal split-rule-goal 8)
-	(up-set-target-object search-local c: 0)
+	(up-set-target-object search-local g: gl-curr-local-unit)
 =>
-	(up-set-target-object search-local c: 0)
+	(up-set-target-object search-local g: gl-curr-local-unit)
 	(up-get-point position-object object-point-x)
 	(up-lerp-tiles object-point-x enemy-tower-point-x c: -5)
 	(up-cross-tiles object-point-x enemy-tower-point-x c: 9)
@@ -20319,28 +20394,39 @@
 (defrule
 	(goal split-rule-goal 9)
 =>	
-	(up-full-reset-search)	
-	(up-set-target-point enemy-tower-point-x)
-	(up-filter-distance c: 1 c: 10)
-	(up-filter-include cmdid-military -1 -1 -1)	
-	(up-filter-exclude -1 -1 -1 siege-weapon-class)
-	(up-filter-exclude -1 -1 -1 armored-elephant-line)
-	(up-filter-exclude -1 -1 -1 cavalry-class)
-	(up-filter-exclude -1 -1 -1 scout-cavalry-class)
-	(up-filter-exclude -1 -1 -1 infantry-class)
-	(up-find-local c: -1 c: 40)	
-	(up-remove-objects search-local object-data-class == scout-cavalry-class)
-	(up-remove-objects search-local object-data-class == cavalry-class)
-	(up-remove-objects search-local object-data-type == militiaman)
-	(up-remove-objects search-local object-data-class == siege-weapon-class)
-	(up-remove-objects search-local object-data-type == armored-elephant)
-	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
-	;(set-strategic-number sn-disable-attack-groups 1)
+	(up-add-object-by-id search-local g: gl-curr-unit-id) 
 	(up-target-point object-point-x action-move -1 stance-no-attack)
+	(enable-timer split-stance-timer 1)
+	; (up-full-reset-search)	
+	; (up-set-target-point enemy-tower-point-x)
+	; (up-filter-distance c: 1 c: 10)
+	; (up-filter-include cmdid-military -1 -1 -1)	
+	; (up-filter-exclude -1 -1 -1 siege-weapon-class)
+	; (up-filter-exclude -1 -1 -1 armored-elephant-line)
+	; (up-filter-exclude -1 -1 -1 cavalry-class)
+	; (up-filter-exclude -1 -1 -1 scout-cavalry-class)
+	; (up-filter-exclude -1 -1 -1 infantry-class)
+	; (up-find-local c: -1 c: 40)	
+	; (up-remove-objects search-local object-data-class == scout-cavalry-class)
+	; (up-remove-objects search-local object-data-class == cavalry-class)
+	; (up-remove-objects search-local object-data-type == militiaman)
+	; (up-remove-objects search-local object-data-class == siege-weapon-class)
+	; (up-remove-objects search-local object-data-type == armored-elephant)
+	; (up-remove-objects search-local object-data-upgrade-type == siege-elephant)
+	;(set-strategic-number sn-disable-attack-groups 1)
 	;(up-target-point enemy-tower-point-x action-move -1 stance-stand-ground) ; run units under the tower
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
-	(enable-timer split-stance-timer 1)
+)
+
+(defrule
+	(up-compare-goal gl-curr-local-unit < gl-total-number-units)
+	(up-compare-goal gl-rule-jump-id != -1)
+	(goal split-rule-goal 9)
+=>
+	(set-goal split-rule-goal 8)
+	(up-modify-goal gl-curr-local-unit c:+ 1)
+	(up-jump-direct g: gl-rule-jump-id)
 )
 
 (defrule
@@ -20365,13 +20451,6 @@
 
 ;region Militia Retreat Rules
 
-; (defrule
-	; (current-age == dark-age)
-	; (goal retreating-goal YES)
-; =>
-	; (up-jump-rule 12)
-; )
-
 ;retreat with militia from enemy villagers
 
 (defrule
@@ -20380,9 +20459,19 @@
 	(unit-type-count militiaman-line >= 1)
 =>
 	(up-full-reset-search)
-	(up-find-local c: militiaman-line c: 4)
+	(up-find-local c: militiaman-line c: 10)
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-militias g:= gl-local-total)
+	(set-goal gl-loop-militias 0)
+)
+
+(defrule
+	(up-set-target-object search-local c: 0)
+	(current-age < castle-age)
+	(not (enemy-buildings-in-town))
+	(unit-type-count militiaman-line >= 1)
+=>
+	(up-get-rule-id gl-rule-jump-id)
 )
 
 (defrule
@@ -20391,6 +20480,8 @@
 	(up-set-target-object search-local g: gl-loop-militias)
 	(not (research-completed ri-man-at-arms))
 =>
+	(up-set-target-object search-local g: gl-loop-militias)
+	(up-get-object-data object-data-id gl-curr-unit-id)
 	(up-get-point position-object gl-militia-x)
 	(up-set-target-point gl-militia-x)
 	(up-filter-distance c: -1 c: 3)
@@ -20406,6 +20497,8 @@
 	(up-set-target-object search-local g: gl-loop-militias)
 	(research-completed ri-man-at-arms)
 =>
+	(up-set-target-object search-local g: gl-loop-militias)
+	(up-get-object-data object-data-id gl-curr-unit-id)
 	(up-get-point position-object gl-militia-x)
 	(up-set-target-point gl-militia-x)
 	(up-filter-distance c: -1 c: 3)
@@ -20419,14 +20512,15 @@
 	;(not (timer-triggered retreating-timer))
 	(unit-type-count militiaman-line >= 1)
 	(up-compare-goal gl-remote-total >= 1)
+	(up-set-target-object search-local g: gl-loop-militias)
 	(up-object-data object-data-tasks-count > 0)
 	(up-set-target-object search-remote c: 0)
 	(up-object-data object-data-hitpoints > 4)
-	(up-set-target-object search-local g: gl-loop-militias)
 =>
 	(set-goal retreating-goal YES)
-	(up-set-target-object search-local g: gl-loop-militias)
-	(up-remove-objects search-local object-data-index g:!= gl-loop-militias)
+	(up-add-object-by-id search-local g: gl-curr-unit-id) 
+	; (up-set-target-object search-local g: gl-loop-militias)
+	; (up-remove-objects search-local object-data-index g:!= gl-loop-militias)
 	(up-lerp-tiles gl-militia-x enemy-point-x c: -5) 
 	(up-cross-tiles gl-militia-x enemy-point-x c: 6)
 	(up-bound-point gl-militia-x gl-militia-x)	
@@ -20436,32 +20530,33 @@
 )
 
 (defrule
-	(current-age < castle-age)
-	(unit-type-count militiaman-line >= 1)
-	(up-compare-goal gl-loop-militias g:>= gl-militias)
-=>
-	(set-goal gl-loop-militias 0)
-	(up-jump-rule 1)
-)
-
-(defrule
-	(current-age < castle-age)
-	(unit-type-count militiaman-line >= 1)
-	(up-compare-goal gl-loop-militias g:< gl-militias)
+	(up-compare-goal gl-loop-militias < gl-militias)
+	(up-compare-goal gl-rule-jump-id != -1)
 =>
 	(up-modify-goal gl-loop-militias c:+ 1)
+	(up-jump-direct g: gl-rule-jump-id)
 )
+
+; (defrule
+	; (current-age < castle-age)
+	; (unit-type-count militiaman-line >= 1)
+	; (up-compare-goal gl-loop-militias g:>= gl-militias)
+; =>
+	; (set-goal gl-loop-militias 0)
+	; (up-jump-rule 1)
+; )
+
+; (defrule
+	; (current-age < castle-age)
+	; (unit-type-count militiaman-line >= 1)
+	; (up-compare-goal gl-loop-militias g:< gl-militias)
+; =>
+	; (up-modify-goal gl-loop-militias c:+ 1)
+; )
 ;endregion
 
 
-;region Scout temporary Retreat Rules (works for up to 6 scouts)
-
-; (defrule
-	; (current-age == dark-age)
-	; (goal retreating-goal YES)
-; =>
-	; (up-jump-rule 12)
-; )
+;region Scout Retreat Rules (works for up to 10 scouts)
 
 ;retreat with scouts from enemy threats
 (defrule
@@ -20472,11 +20567,23 @@
 	(unit-type-count camel-scout >= 1)))
 =>
 	(up-full-reset-search)
-	(up-find-local c: scout-cavalry-line c: 6)
-	(up-find-local c: eagle-warrior-line c: 6)
-	(up-find-local c: camel-scout c: 6)
+	(up-find-local c: scout-cavalry-line c: 10)
+	(up-find-local c: eagle-warrior-line c: 10)
+	(up-find-local c: camel-scout c: 10)
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-number-scouts g:= gl-local-total)
+	(set-goal gl-scout-index 0)
+)
+
+(defrule
+	(up-set-target-object search-local c: 0)
+	(current-age < castle-age)
+	(not (enemy-buildings-in-town))
+	(or (unit-type-count scout-cavalry-line >= 1)
+	(or (unit-type-count eagle-warrior-line >= 1)
+	(unit-type-count camel-scout >= 1)))
+=>
+	(up-get-rule-id gl-rule-jump-id)
 )
 
 (defrule
@@ -20486,6 +20593,8 @@
 	(unit-type-count camel-scout >= 1)))
 	(up-set-target-object search-local g: gl-scout-index)
 =>
+	(up-set-target-object search-local g: gl-scout-index)
+	(up-get-object-data object-data-id gl-curr-unit-id)
 	(up-get-point position-object gl-unit-x)
 	(up-set-target-point gl-unit-x)
 	(up-filter-distance c: -1 c: 4)
@@ -20509,25 +20618,27 @@
 	(up-object-data object-data-hitpoints > 5)
 =>
 	(set-goal retreating-goal YES)
-	(up-set-target-object search-local g: gl-scout-index)
-	(up-remove-objects search-local object-data-index g:!= gl-scout-index)
+	(up-add-object-by-id search-local g: gl-curr-unit-id) 
+	;(up-set-target-object search-local g: gl-scout-index)
+	;(up-remove-objects search-local object-data-index g:!= gl-scout-index)
 	(enable-timer scout-retreat-timer 4)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
 	;(chat-local-to-self "retreat with scout")
 )
+
 ;special attention for spearmen 
-(defrule
-	(current-age < castle-age)
-	(not (enemy-buildings-in-town))
-	(or (unit-type-count scout-cavalry-line >= 1)
-	(unit-type-count camel-scout >= 1))
-=>
-	(up-full-reset-search)
-	(up-find-local c: scout-cavalry-line c: 6)
-	(up-find-local c: camel-scout c: 6)
-	(up-get-search-state gl-local-total)
-	(up-modify-goal gl-number-scouts g:= gl-local-total)
-)
+; (defrule
+	; (current-age < castle-age)
+	; (not (enemy-buildings-in-town))
+	; (or (unit-type-count scout-cavalry-line >= 1)
+	; (unit-type-count camel-scout >= 1))
+; =>
+	; (up-full-reset-search)
+	; (up-find-local c: scout-cavalry-line c: 6)
+	; (up-find-local c: camel-scout c: 6)
+	; (up-get-search-state gl-local-total)
+	; (up-modify-goal gl-number-scouts g:= gl-local-total)
+; )
 
 (defrule
 	(current-age < castle-age)
@@ -20554,35 +20665,44 @@
 	(up-object-data object-data-hitpoints > 5)
 =>
 	(set-goal retreating-goal YES)
-	(up-set-target-object search-local g: gl-scout-index)
-	(up-remove-objects search-local object-data-index g:!= gl-scout-index)
+	(up-add-object-by-id search-local g: gl-curr-unit-id) 
+	;(up-set-target-object search-local g: gl-scout-index)
+	;(up-remove-objects search-local object-data-index g:!= gl-scout-index)
 	(enable-timer scout-retreat-timer 5)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
 	;(chat-local-to-self "retreat with scout")
 )
 
 (defrule
-	(current-age < castle-age)
-	(or (unit-type-count scout-cavalry-line >= 1)
-	(or (unit-type-count eagle-warrior-line >= 1)
-	(unit-type-count camel-scout >= 1)))
-	(up-compare-goal gl-scout-index g:>= gl-number-scouts) ;reached end of list, reset
+	(up-compare-goal gl-scout-index < gl-number-scouts)
+	(up-compare-goal gl-rule-jump-id != -1)
 =>
-	(set-goal gl-scout-index 0)
-	;(up-chat-data-to-player my-player-number "Scout: %d" g: gl-scout-index)
-	(up-jump-rule 1)
+	(up-modify-goal gl-scout-index c:+ 1)
+	(up-jump-direct g: gl-rule-jump-id)
 )
 
-(defrule
-	(current-age < castle-age)
-	(or (unit-type-count scout-cavalry-line >= 1)
-	(or (unit-type-count eagle-warrior-line >= 1)
-	(unit-type-count camel-scout >= 1)))
-	(up-compare-goal gl-scout-index g:< gl-number-scouts)
-=>
-	(up-modify-goal gl-scout-index c:+ 1) ;go to next list-entry
-	;(up-chat-data-to-player my-player-number "Scout: %d" g: gl-scout-index)
-)
+; (defrule
+	; (current-age < castle-age)
+	; (or (unit-type-count scout-cavalry-line >= 1)
+	; (or (unit-type-count eagle-warrior-line >= 1)
+	; (unit-type-count camel-scout >= 1)))
+	; (up-compare-goal gl-scout-index g:>= gl-number-scouts) ;reached end of list, reset
+; =>
+	; (set-goal gl-scout-index 0)
+	; ;(up-chat-data-to-player my-player-number "Scout: %d" g: gl-scout-index)
+	; (up-jump-rule 1)
+; )
+
+; (defrule
+	; (current-age < castle-age)
+	; (or (unit-type-count scout-cavalry-line >= 1)
+	; (or (unit-type-count eagle-warrior-line >= 1)
+	; (unit-type-count camel-scout >= 1)))
+	; (up-compare-goal gl-scout-index g:< gl-number-scouts)
+; =>
+	; (up-modify-goal gl-scout-index c:+ 1) ;go to next list-entry
+	; ;(up-chat-data-to-player my-player-number "Scout: %d" g: gl-scout-index)
+; )
 
 ;endregion
 
@@ -23092,7 +23212,7 @@
 (defrule
 	(up-research-status c: feudal-age >= research-pending)
 =>
-	(up-jump-rule 16) ;16 
+	(up-jump-rule 14) ;16 
 )
 
 (defrule
@@ -23229,7 +23349,7 @@
 	(up-remove-objects search-local object-data-action == actionid-build)
 	(up-set-target-by-id g: g-boar-id)
 	(up-target-objects 1 action-default -1 -1)
-	(chat-to-player my-player-number "enable boar-luring") 
+	;(chat-to-player my-player-number "enable boar-luring") 
 	;(chat-to-all "enable boar-luring") 
 )
 
@@ -23258,7 +23378,7 @@
 	(up-remove-objects search-local object-data-action == actionid-build)
 	(up-set-target-by-id g: g-boar-id)
 	(up-target-objects 1 action-default -1 -1)
-	(chat-to-player my-player-number "enable boar-luring")
+	;(chat-to-player my-player-number "enable boar-luring")
 	;(chat-to-all "enable boar-luring")
 )
 
@@ -23274,25 +23394,10 @@
 	(up-find-remote c: boar-class c: 20) ;boar is not being found consistently
 	(up-get-search-state gl-local-total)
 	;(up-chat-data-to-all "Nr. Boars: %d" g: gl-remote-total)
-	(chat-to-player my-player-number "Boar Test")
+	;(chat-to-player my-player-number "Boar Test")
 	;(chat-to-all "Boar Test")
 	(set-goal boar-hunting 2)
 )
-
-; (defrule
-	; (goal boar-hunting 2)
-	; (up-set-target-object search-remote c: 0)
-; =>
-	; (chat-to-all "Test 1")
-; )
-
-; (defrule
-	; (goal boar-hunting 2)
-	; (up-set-target-object search-remote c: 0)
-	; (up-object-data object-data-hitpoints > 25)
-; =>
-	; (chat-to-all "Test 2")
-; )
 
 (defrule ;find villagers close to tc
 	(up-set-target-object search-remote c: 0)
@@ -23310,7 +23415,7 @@
 	(up-create-group 0 0 c: 2) ;boar-hunter ctrl-group
 	(up-modify-group-flag 1 c: 2)
 	(up-get-search-state gl-local-total)
-	(chat-to-player my-player-number "Villagers Test")
+	;(chat-to-player my-player-number "Villagers Test")
 	;(chat-to-all "Villagers Test")
 )
 
@@ -23326,7 +23431,7 @@
 	(up-find-remote c: town-center c: 1)
 	(up-target-objects 0 action-garrison -1 -1)
 	(up-gather-inside c: town-center c: -1)
-	(chat-to-player my-player-number "Garrison Test")
+	;(chat-to-player my-player-number "Garrison Test")
 	;(chat-to-all "Garrison Test")
 	(set-goal gl-garrison-tc-two 1)
 	(enable-timer 6 8)
@@ -23369,7 +23474,7 @@
 	(up-find-local c: town-center c: 1) 
 	(up-target-objects 1 action-default -1 -1)
 	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
-	(chat-to-player my-player-number "Shooting Boar")
+	;(chat-to-player my-player-number "Shooting Boar")
 	;(chat-to-all "Shooting Boar")
 )
 
@@ -23384,7 +23489,7 @@
 	(up-gather-inside c: town-center c: 0)
     (up-ungarrison c: town-center)
 	(set-goal gl-garrison-tc-two 0)
-	(chat-to-player my-player-number "ungarrison")
+	;(chat-to-player my-player-number "ungarrison")
 	;(chat-to-all "ungarrison")
 )
 
@@ -23398,7 +23503,7 @@
 	(up-set-group search-local c: 2)
 	(up-set-target-by-id g: g-boar-id)
 	(up-target-objects 1 action-default -1 -1)
-	(chat-to-player my-player-number "finish the boar")
+	;(chat-to-player my-player-number "finish the boar")
 	;(chat-to-all "finish the boar")
 )
 
@@ -23410,7 +23515,7 @@
 =>
 	(set-strategic-number sn-disable-villager-garrison 0)
 	(set-goal gl-garrison-tc-two 0)
-	(chat-to-player my-player-number "villager garrisoning allowed")
+	;(chat-to-player my-player-number "villager garrisoning allowed")
 	;(chat-to-all "villager garrisoning allowed")
 )
 
