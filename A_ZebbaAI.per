@@ -14,6 +14,7 @@
 )
 
 #end-if
+
 ;endregion
 
 ;region Introduction, content & To-Do ==============================
@@ -6423,7 +6424,6 @@
 
 ;region Evacuate Base
 
-
 (defrule	
 	(gold-amount < 200)
 	(wood-amount > 400)
@@ -6477,7 +6477,6 @@
 )
 
 #load-if-defined UP-ALLY-IN-GAME
-
 #load-if-not-defined UP-4-PLAYER-TEAM
 
 (defrule
@@ -6493,7 +6492,6 @@
 	(up-modify-sn sn-focus-player-number g:= temporary-goal)
 )
 #end-if
-
 #load-if-defined UP-4-PLAYER-TEAM
 (defrule
 	(current-age >= feudal-age)
@@ -6618,7 +6616,6 @@
 =>
 	(research my-second-unique-research)
 )
-
 
 (defrule
 	(can-research my-unique-research) ;garland wars
@@ -20943,8 +20940,7 @@
 	(current-age < castle-age)
 	(not (enemy-buildings-in-town))
 	(or (unit-type-count scout-cavalry-line >= 1)
-	(or (unit-type-count eagle-warrior-line >= 1)
-	(unit-type-count camel-scout >= 1)))
+	(unit-type-count camel-scout >= 1))
 	(up-compare-goal gl-scout-index g:< gl-number-scouts)
 	(up-compare-goal gl-rule-jump-id != -1)
 	(up-group-size c: 0 > 0)
@@ -24290,8 +24286,8 @@
 #load-if-not-defined ARENA-MAP
 #load-if-not-defined FORTRESS-MAP
 (defrule 
-	(civilian-population >= 20)
-	(players-building-count focus-player < 1)
+	(civilian-population g:>= d-villager-goal)
+;	(players-building-count focus-player < 1)
 =>
 	;(enable-timer 19 5)
 	(up-send-scout group-type-land-explore scout-mirror)
@@ -24302,8 +24298,8 @@
 
 (defrule 
 	(current-age == dark-age)
-	(civilian-population >= 20)
-	(players-building-count focus-player >= 1)
+	(civilian-population g:>= d-villager-goal)
+;	(players-building-count focus-player >= 1)
 =>
 	;(enable-timer 19 5)
 	(up-send-scout group-type-land-explore scout-enemy)
@@ -24313,10 +24309,11 @@
 )
 #end-if
 #end-if
+
+#load-if-defined ARENA-MAP
 (defrule 
 	(current-age == dark-age)
 	(civilian-population g:>= d-villager-goal)
-	(players-building-count focus-player < 1)
 =>
 	;(enable-timer 19 5)
 	(up-send-scout group-type-land-explore scout-mirror)
@@ -24324,7 +24321,19 @@
 	(chat-to-player my-player-number "Scouting opponent base")
 	(disable-self)
 )
-
+#end-if
+#load-if-defined FORTRESS-MAP
+(defrule 
+	(current-age == dark-age)
+	(civilian-population g:>= d-villager-goal)
+=>
+	;(enable-timer 19 5)
+	(up-send-scout group-type-land-explore scout-mirror)
+	(set-goal gl-scout-map YES)
+	(chat-to-player my-player-number "Scouting opponent base")
+	(disable-self)
+)
+#end-if
 #end-if
 #end-if
 #load-if-defined EMPIRE-WARS
@@ -25368,12 +25377,13 @@
 )
 
 (defrule ;dont attack forward towers by teutons with villagers if too many towers
-	(or (players-building-type-count focus-player watch-tower >= 4)
-	(players-building-type-count focus-player donjon >= 4))
-	(players-civ focus-player teutonic)
+	(or (civilian-population < 18)
+		(and (or (players-building-type-count focus-player watch-tower >= 4)
+			(players-building-type-count focus-player donjon >= 4))
+		(players-civ focus-player teutonic)))
 	(current-age < castle-age)
 =>
-	(up-jump-rule 3)
+	(up-jump-rule 4)
 )
 
 (defrule
@@ -38390,6 +38400,7 @@
 
 ;region Attacking rams with villagers ==============================
 
+
 (defrule
 	(true)
 =>
@@ -42568,7 +42579,7 @@
 #load-if-defined UP-PLAYER-5
 (defrule
 	(true)
-=>	(up-change-name "|ZebbaAI| The Rusher")
+=>	(up-change-name "|ZebbaAI| Sudden Death")
 	(disable-self))
 #end-if
 #load-if-defined UP-PLAYER-6
