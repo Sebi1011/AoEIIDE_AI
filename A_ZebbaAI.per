@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.4
-;last update: 31th August 2023
+;last update: 7th September 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -5853,7 +5853,7 @@
 
 (defrule
 	(up-compare-goal strategy-goal == -1)
-	(random-number >= 1000) ;only go fc-gu if pocket is going scoutrush
+	(random-number >= 1000) 
 =>
 	(set-goal strategy-goal sg-fastcastle-gu)	
 	(set-goal d-villager-goal 26)
@@ -22623,7 +22623,7 @@
 
 (defrule
 	(current-age >= dark-age)
-	(civilian-population >= 18)
+	(civilian-population >= 16)
 	(not(resource-found food))
 	(building-type-count-total mill == 0)
 	(can-build mill)
@@ -22703,7 +22703,9 @@
 	(resource-found food)
 	(can-build mill)
 	(building-type-count-total town-center > 0)
-	(up-gaia-type-count c: forage-class > 0)
+	(or (up-gaia-type-count c: forage-class > 0)
+	(or (up-gaia-type-count c: deer-class > 0)
+	(up-gaia-type-count c: shore-fish-class > 0)))
 	(or
 		(building-type-count-total house > 0)
 		(civ-selected hun)
@@ -27426,9 +27428,11 @@
 	(or (civilian-population >= 40)
 	(up-research-status c: castle-age >= research-pending))
 	(building-type-count-total farm >= 4)
-	(can-research ri-horse-collar)
+	(can-research-with-escrow ri-horse-collar)
 	(up-research-status c: ri-double-bit-axe >= research-pending)
 =>
+	(up-modify-escrow wood c:- 75)
+	(up-modify-escrow food c:- 75)
 	(research ri-horse-collar)
 )
 
@@ -42179,7 +42183,7 @@
 )
 
 (defrule
-    (food-amount > 900)
+    (food-amount >= 900)
     (gold-amount < 200)
     (current-age == feudal-age)
 	(up-research-status c: castle-age != research-pending)
@@ -42195,7 +42199,7 @@
     (or(and(food-amount > 800)
     (gold-amount < 200))
     (and(food-amount < 800)
-    (wood-amount > 300)))
+    (wood-amount >= 300)))
     (current-age == feudal-age)
 	(up-research-status c: castle-age != research-pending)
 	(up-research-status c: ri-wheel-barrow != research-pending)
@@ -42231,7 +42235,7 @@
 )
 
 (defrule
-    (food-amount > 1100)
+    (food-amount >= 1100)
     (gold-amount < 800)
     (current-age == castle-age)
 	(up-research-status c: imperial-age != research-pending)
