@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.4
-;last update: 7th September 2023
+;last update: 10th September 2023
 
 ;region Chats at match-start =======================================
 #load-if-defined UP-2-PLAYER-GAME
@@ -508,6 +508,8 @@
 (defconst watch-tower-point-y 179)
 (defconst sn-nomad-style-start 180)
 (defconst gl-water-on-map 181)
+(defconst gl-min-amnt-food-sources 182)
+(defconst gl-min-amnt-boars 183)
 (defconst gl-number-trebs 188)
 (defconst gl-number-scouts 189)
 (defconst gl-scout-index 190)
@@ -1510,6 +1512,7 @@
 (defrule
 	(game-time > 5)
 	(goal strategy-goal sg-towerrush)
+	(current-age == feudal-age)
 =>
     (set-strategic-number sn-food-dropsite-distance 16)
     (set-strategic-number sn-wood-dropsite-distance 9)
@@ -1522,6 +1525,7 @@
 (defrule
 	(game-time > 5)
 	(not (goal strategy-goal sg-towerrush))
+	(current-age == feudal-age)
 	(up-compare-sn sn-percent-building-cancellation < 1)
 =>
 	(set-strategic-number sn-percent-building-cancellation 35)
@@ -1820,6 +1824,46 @@
 )
 
 ;endregion 
+
+;region
+
+(defrule
+	(true)
+=>
+	(set-goal gl-min-amnt-boars 2)
+	(set-goal gl-min-amnt-food-sources 10)
+	(disable-self)
+)
+
+#load-if-defined YUCATAN-MAP
+
+(defrule
+	(true)
+=>
+	(set-goal gl-min-amnt-boars 3)
+	(set-goal gl-min-amnt-food-sources 18)
+	(chat-to-player my-player-number "Playing on Yucatan")
+	(disable-self)
+)
+
+#end-if
+
+#load-if-defined LAND-MADNESS-MAP
+
+(defrule
+	(true)
+=>
+	(set-goal gl-min-amnt-boars 1)
+	(set-goal gl-min-amnt-food-sources 9)
+	(chat-to-player my-player-number "Playing on Land Madness")
+	(disable-self)
+)
+
+#end-if
+
+
+;endregion
+
 
 ;region Identify if opponent has researched fletching/bodkin/bracer
 
@@ -3868,8 +3912,8 @@
 	(up-compare-goal scout-base-four-x > 0)
 	(or ;we found our food & deer or base has been scouted
 		(and
-			(and(up-compare-goal gl-amnt-food-sources >= 10)
-				(up-compare-goal gl-number-boars >= 2))
+			(and(up-compare-goal gl-amnt-food-sources g:>= gl-min-amnt-food-sources)
+				(up-compare-goal gl-number-boars g:>= gl-min-amnt-boars))
 			(up-gaia-type-count c: deer-class > 0)
 		)
 	(or	
@@ -3916,7 +3960,7 @@
 
 (defrule ;find visible sheep
 	(current-age == dark-age) 
-	(up-compare-goal gl-amnt-food-sources < 10)
+	(up-compare-goal gl-amnt-food-sources < 20)
 =>
 	(up-full-reset-search) 
 	(up-find-local c: livestock-class c: 10) 
@@ -3929,7 +3973,7 @@
 (defrule ;check if livestock is cow or sheep/pig/goose/etc.
 	(current-age == dark-age)
 	(up-compare-goal gl-local-total g:> gl-number-sheeps-last)
-	(up-compare-goal gl-amnt-food-sources < 10)
+	(up-compare-goal gl-amnt-food-sources < 20)
 	(up-set-target-object search-local c: 0)
 =>
 	(up-get-object-data object-data-carry sheep-food-amount)
@@ -3940,7 +3984,7 @@
 (defrule ;count first sheep
 	(current-age == dark-age)
 	(up-compare-goal gl-local-total g:> gl-number-sheeps-last)
-	(up-compare-goal gl-amnt-food-sources < 10)
+	(up-compare-goal gl-amnt-food-sources < 20)
 =>
 	(up-modify-goal gl-number-sheeps-last g:= gl-local-total)
 	(up-modify-goal gl-number-sheeps-last g:+ gl-dead-sheeps)
@@ -3950,7 +3994,7 @@
 (defrule ;calc dead sheep 1
 	(current-age == dark-age)
 	(up-compare-goal gl-number-sheeps g:< gl-number-sheeps-last)
-	(up-compare-goal gl-amnt-food-sources < 10)
+	(up-compare-goal gl-amnt-food-sources < 20)
 =>
 	;(up-modify-goal gl-number-sheeps-last g:+ gl-dead-sheeps)
 	(up-modify-goal gl-dead-sheeps g:= gl-number-sheeps-last)
@@ -3961,7 +4005,7 @@
 (defrule ;calc dead sheep 2
 	(current-age == dark-age)
 	(up-compare-goal gl-number-sheeps g:>= gl-number-sheeps-last)
-	(up-compare-goal gl-amnt-food-sources < 10)
+	(up-compare-goal gl-amnt-food-sources < 20)
 =>
 	(up-modify-goal gl-dead-sheeps g:= gl-number-sheeps)
 	(up-modify-goal gl-dead-sheeps g:- gl-local-total)
@@ -3976,7 +4020,7 @@
 (defrule
 	(current-age == dark-age)
 	(up-compare-goal gl-number-boars < 3)
-	(up-compare-goal gl-amnt-food-sources < 10)
+	(up-compare-goal gl-amnt-food-sources < 20)
 =>
 	(up-full-reset-search)
 	(up-modify-sn sn-focus-player-number c:= 0)
@@ -3991,7 +4035,7 @@
 (defrule ;count first boar
 	(current-age == dark-age)
 	(up-compare-goal gl-remote-total g:> gl-number-boars-last)
-	(up-compare-goal gl-amnt-food-sources < 10)
+	(up-compare-goal gl-amnt-food-sources < 20)
 =>
 	(up-modify-goal gl-number-boars-last g:= gl-remote-total)
 	(up-modify-goal gl-number-boars-last g:+ gl-dead-boars)
@@ -4001,7 +4045,7 @@
 (defrule ;calc dead boar 1
 	(current-age == dark-age)
 	(up-compare-goal gl-number-boars g:< gl-number-boars-last)
-	(up-compare-goal gl-amnt-food-sources < 10)
+	(up-compare-goal gl-amnt-food-sources < 20)
 =>
 	(up-modify-goal gl-dead-boars g:= gl-number-boars-last)
 	(up-modify-goal gl-dead-boars g:- gl-remote-total)
@@ -4011,7 +4055,7 @@
 (defrule ;calc dead boar 2
 	(current-age == dark-age)
 	(up-compare-goal gl-number-boars g:>= gl-number-boars-last)
-	(up-compare-goal gl-amnt-food-sources < 10)
+	(up-compare-goal gl-amnt-food-sources < 20)
 =>
 	(up-modify-goal gl-dead-boars g:= gl-number-boars)
 	(up-modify-goal gl-dead-boars g:- gl-remote-total)
@@ -4022,7 +4066,7 @@
 (defrule ;add total number sheeps & boars to gl-amnt-food-sources
 	(current-age == dark-age)
 	(up-compare-goal gl-number-sheeps-last > 0)
-	(up-compare-goal gl-amnt-food-sources < 10)
+	(up-compare-goal gl-amnt-food-sources < 20)
 =>
 	(up-modify-goal gl-amnt-food-sources g:= gl-number-sheeps-last)
 	(up-modify-goal gl-amnt-food-sources g:+ gl-number-boars-last)
@@ -4130,111 +4174,111 @@
 
 ;region Lumberjack DUC =========================================
 
-; ; (defrule
-	; ; (building-type-count lumber-camp >= 1)
-	; ; (current-age == dark-age)
-	; ; ;(up-research-status c: feudal-age < research-pending)
-	; ; ;(up-compare-goal gl-camp-x == -1)
-	; ; ;(civilian-population < 13)
-; ; =>
-	; ; (up-full-reset-search)
-	; ; (up-find-local c: lumber-camp c: 2)
-	; ; (up-get-search-state gl-local-total)
-	; ; ;(up-chat-data-to-self "LCs found: %d" g: gl-local-total)
-	; ; (up-set-target-object search-local c: 0)
-	; ; (up-get-point position-object gl-camp-x)
-	; ; ;(up-send-flare gl-camp-x)
-	; ; ;(chat-to-all "Test")
-; ; )
-
 ; (defrule
 	; (building-type-count lumber-camp >= 1)
-	; (unit-type-count villager-wood < 6)
 	; (current-age == dark-age)
+	; ;(up-research-status c: feudal-age < research-pending)
+	; ;(up-compare-goal gl-camp-x == -1)
+	; ;(civilian-population < 13)
 ; =>
 	; (up-full-reset-search)
 	; (up-find-local c: lumber-camp c: 2)
 	; (up-get-search-state gl-local-total)
 	; ;(up-chat-data-to-self "LCs found: %d" g: gl-local-total)
-; )
-
-; (defrule
-	; (building-type-count lumber-camp >= 1)
-	; (current-age == dark-age)
-	; (unit-type-count villager-wood < 6)
-	; (up-compare-goal gl-local-total >= 1)	
-	; (up-set-target-object search-local c: 0)
-; =>
 	; (up-set-target-object search-local c: 0)
 	; (up-get-point position-object gl-camp-x)
 	; ;(up-send-flare gl-camp-x)
 	; ;(chat-to-all "Test")
 ; )
 
-; ; (defrule
-	; ; (building-type-count lumber-camp == 2)
-	; ; (current-age == dark-age)
-	; ; (unit-type-count villager-wood >= 7)
-	; ; (up-compare-goal gl-local-total >= 1)	
-	; ; (up-set-target-object search-local c: 1)
-; ; =>
-	; ; (up-set-target-object search-local c: 1)
-	; ; (up-get-point position-object gl-camp-x)
-	; ; ;(up-send-flare gl-camp-x)
-	; ; ;(chat-to-all "Test")
-; ; )
+(defrule
+	(building-type-count lumber-camp == 1)
+	(unit-type-count villager-wood < 6)
+	(current-age == dark-age)
+=>
+	(up-full-reset-search)
+	(up-find-local c: lumber-camp c: 1)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-self "LCs found: %d" g: gl-local-total)
+)
+
+(defrule
+	(building-type-count lumber-camp == 1)
+	(current-age == dark-age)
+	(unit-type-count villager-wood < 6)
+	(up-compare-goal gl-local-total >= 1)	
+	(up-set-target-object search-local c: 0)
+=>
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object gl-camp-x)
+	;(up-send-flare gl-camp-x)
+	;(chat-to-all "Test")
+)
 
 ; (defrule
-	; (building-type-count lumber-camp >= 1)
-	; (unit-type-count villager-wood < 6)
+	; (building-type-count lumber-camp == 2)
 	; (current-age == dark-age)
-	; ;(up-research-status c: feudal-age < research-pending)
-	; (up-compare-goal gl-camp-x != -1)
-	; (up-compare-goal gl-local-total >= 1)
-	; ;(civilian-population < 13)
+	; (unit-type-count villager-wood >= 7)
+	; (up-compare-goal gl-local-total >= 1)	
+	; (up-set-target-object search-local c: 1)
 ; =>
-	; (up-set-target-point gl-camp-x)
-	; (up-filter-distance c: -1 c: 2)
-	; (up-filter-status c: status-ready c: list-active)
-	; (up-find-resource c: tree-class c: 40)
-	; (up-clean-search search-remote object-data-distance search-order-desc)
-	; (up-get-search-state gl-local-total)
-	; ;(up-chat-data-to-self "Trees found: %d" g: gl-remote-total)
+	; (up-set-target-object search-local c: 1)
+	; (up-get-point position-object gl-camp-x)
+	; ;(up-send-flare gl-camp-x)
+	; ;(chat-to-all "Test")
 ; )
 
-; (defrule
-	; (building-type-count lumber-camp >= 1)
-	; (unit-type-count villager-wood < 6)
-	; (current-age == dark-age)
-	; ;(up-research-status c: feudal-age < research-pending)
-	; (up-compare-goal gl-camp-x != -1)
-	; (up-set-target-object search-remote c: 0)
-	; ;(civilian-population < 13)
-; =>
-	; (up-reset-search 1 1 0 0)
-	; (up-set-target-point gl-starting-tc-x)
-	; (up-filter-distance c: -1 c: 7)
-	; (up-find-local c: 218 c: 5) ;lumberjack (male & female)
-	; (up-find-local c: 123 c: 5)
-	; (up-get-search-state gl-local-total)
-	; ;(up-chat-data-to-self "Villager found: %d" g: gl-local-total)
-; )
+(defrule
+	(building-type-count lumber-camp == 1)
+	(unit-type-count villager-wood < 6)
+	(current-age == dark-age)
+	;(up-research-status c: feudal-age < research-pending)
+	(up-compare-goal gl-camp-x != -1)
+	(up-compare-goal gl-local-total >= 1)
+	;(civilian-population < 13)
+=>
+	(up-set-target-point gl-camp-x)
+	(up-filter-distance c: -1 c: 3)
+	(up-filter-status c: status-ready c: list-active)
+	(up-find-resource c: tree-class c: 40)
+	(up-clean-search search-remote object-data-distance search-order-desc)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-self "Trees found: %d" g: gl-remote-total)
+)
 
-; (defrule
-	; (building-type-count lumber-camp >= 1)
-	; (unit-type-count villager-wood < 6)
-	; (current-age == dark-age)
-	; ;(up-research-status c: feudal-age < research-pending)
-	; (up-compare-goal gl-camp-x != -1)
-	; (up-set-target-object search-remote c: 0)
-	; (up-set-target-object search-local c: 0)
-	; (not (town-under-attack))
-	; ;(civilian-population < 13)
-; =>
-	; (up-target-objects 0 action-default -1 -1)
-	; (chat-local-to-self "Sending lumberjacks to lumbercamp")
-	; ;(disable-self)
-; )
+(defrule
+	(building-type-count lumber-camp == 1)
+	(unit-type-count villager-wood < 6)
+	(current-age == dark-age)
+	;(up-research-status c: feudal-age < research-pending)
+	(up-compare-goal gl-camp-x != -1)
+	(up-set-target-object search-remote c: 0)
+	;(civilian-population < 13)
+=>
+	(up-reset-search 1 1 0 0)
+	(up-set-target-point gl-starting-tc-x)
+	(up-filter-distance c: -1 c: 7)
+	(up-find-local c: 218 c: 5) ;lumberjack (male & female)
+	(up-find-local c: 123 c: 5)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-self "Villager found: %d" g: gl-local-total)
+)
+
+(defrule
+	(building-type-count lumber-camp == 1)
+	(unit-type-count villager-wood < 6)
+	(current-age == dark-age)
+	;(up-research-status c: feudal-age < research-pending)
+	(up-compare-goal gl-camp-x != -1)
+	(up-set-target-object search-remote c: 0)
+	(up-set-target-object search-local c: 0)
+	(not (town-under-attack))
+	;(civilian-population < 13)
+=>
+	(up-target-objects 0 action-default -1 -1)
+	(chat-local-to-self "Sending lumberjacks to lumbercamp")
+	;(disable-self)
+)
 
 ;endregion
 
@@ -5604,7 +5648,7 @@
 
 (defrule
 	(up-compare-goal strategy-goal == -1)
-	(random-number > 0)
+	(random-number > 110)
 	(random-number <= 40)
 =>
 	(set-goal strategy-goal sg-drush)	
@@ -5619,7 +5663,7 @@
 
 (defrule
 	(up-compare-goal strategy-goal == -1)
-	(random-number > 40)
+	(random-number > 140)
 	(random-number <= 80)
 =>
 	(set-goal strategy-goal sg-archerrush)	
@@ -5633,7 +5677,7 @@
 
 (defrule
 	(up-compare-goal strategy-goal == -1)
-	(random-number > 80)
+	(random-number > 180)
 	(random-number <= 100)
 =>
 	(set-goal strategy-goal sg-scoutrush)	
@@ -5647,8 +5691,8 @@
 
 (defrule
 	(up-compare-goal strategy-goal == -1)
-	(random-number > 100)
-	(random-number <= 94)
+	(random-number > 0)
+	(random-number <= 100)
 =>
 	(set-goal strategy-goal sg-towerrush)	
 	(set-goal d-villager-goal 18)
@@ -14825,7 +14869,11 @@
 
 (defrule
 	(current-age == feudal-age)
-	(unit-type-count villager-class < 18)
+	(or (unit-type-count villager-class < 16)
+	(and (up-compare-goal gl-military-advantage <= -6)
+		(and (building-type-count-total watch-tower < 2)
+		(building-type-count-total donjon < 2))
+	))
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)
 	(set-goal gl-wall-tower 0)
@@ -22833,7 +22881,7 @@
 	(build mining-camp)
 )
 
-(defrule
+(defrule ;mining camp is sometimes built on gold
 	(goal strategy-goal sg-towerrush)
 	(current-age < castle-age)
 	(civilian-population >= 18)
@@ -22844,8 +22892,9 @@
 	(can-build mining-camp)
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
-    (set-strategic-number sn-gold-dropsite-distance 200)
+    (set-strategic-number sn-gold-dropsite-distance 255)
     (set-strategic-number sn-stone-dropsite-distance 6)
+	(chat-to-player my-player-number "Build mining-camp on stone")
 	(build mining-camp)
 )
 
@@ -23390,6 +23439,7 @@
 	(set-strategic-number sn-minimum-number-hunters 1)
 	(set-strategic-number sn-maximum-food-drop-distance 15); 16
 	(set-strategic-number sn-maximum-hunt-drop-distance 32)
+	(set-strategic-number sn-disable-villager-garrison 0)
 	(chat-local-to-self "Hunting a boar.")
 )
 
@@ -27413,6 +27463,7 @@
 	(current-age == feudal-age)
 	(can-build mining-camp)
 	(building-type-count-total mining-camp < 2)
+	(building-type-count-total archery-range >= 1)
 	(unit-type-count villager >= 22)
 	(resource-found gold)
 	(dropsite-min-distance gold < 255)
@@ -28595,9 +28646,10 @@
 	
 #end-if
 
+#load-if-defined ARENA-MAP
 (defrule
 	(goal strategy-goal sg-fastcastle-uu)
-	(building-type-count castle == 0)
+	(building-type-count-total castle == 0)
 	(current-age == castle-age)
 	(game-time > 1680) ;28min
 =>
@@ -28605,7 +28657,7 @@
 	(set-goal sg-fastcastle-boom YES)
 	(chat-to-player my-player-number "Castle drop didn't work out, proceeding with boom")
 )
-
+#end-if
 
 (defrule
 	(current-age == castle-age)
@@ -33680,7 +33732,7 @@
 	(current-age == imperial-age)
 	(can-train villager)
 	(unit-type-count-total villager < 140)
-	(population < 195)
+	(population < 190)
 	(or (and (up-compare-goal gl-military-advantage >= -20)
 		(food-amount > 400))
 	(civilian-population < 70))
@@ -39834,10 +39886,10 @@
 	(unit-type-count militiaman-line < 1)
 	(goal strategy-goal sg-towerrush)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 28)
+	(set-strategic-number sn-wood-gatherer-percentage 50)
 	(set-strategic-number sn-food-gatherer-percentage 50)
 	(set-strategic-number sn-gold-gatherer-percentage 0)
-	(set-strategic-number sn-stone-gatherer-percentage 22)
+	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
 (defrule
@@ -39848,10 +39900,10 @@
 	(goal strategy-goal sg-towerrush)
 	(unit-type-count militiaman-line >= 1)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 17)
+	(set-strategic-number sn-wood-gatherer-percentage 39)
 	(set-strategic-number sn-food-gatherer-percentage 44)
 	(set-strategic-number sn-gold-gatherer-percentage 17)
-	(set-strategic-number sn-stone-gatherer-percentage 22)
+	(set-strategic-number sn-stone-gatherer-percentage 0)
 )
 
 (defrule
@@ -40252,7 +40304,7 @@
 (defrule
 	(goal strategy-goal sg-towerrush)
 	(current-age == feudal-age)
-	(civilian-population == 19)
+	(civilian-population <= 19)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 31)
 	(set-strategic-number sn-food-gatherer-percentage 53)
