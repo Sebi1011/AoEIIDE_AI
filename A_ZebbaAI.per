@@ -1,10 +1,10 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.4
-;last update: 10th September 2023
+;last update: 11th September 2023
 
 ;region Chats at match-start =======================================
-#load-if-defined UP-2-PLAYER-GAME
+;#load-if-defined UP-2-PLAYER-GAME
 
 (defrule
 	(game-time > 10)
@@ -13,7 +13,7 @@
 	(disable-self)
 )
 
-#end-if
+;#end-if
 
 ;endregion
 
@@ -3424,6 +3424,7 @@
 =>
 	(up-full-reset-search)
 	(up-find-local c: scout-type c: 1)
+	(up-reset-group c: 1)
 	(up-create-group 0 0 c: 1) ;scout ctrl-group
 	(up-modify-group-flag 1 c: 1)	
 	;(chat-to-player my-player-number "Set scout ctrl group")
@@ -3499,10 +3500,10 @@
 	(up-copy-point scout-base-four-x gl-starting-tc-x)
 	(up-modify-goal scout-base-four-x c:+ 24)
 	(up-modify-goal scout-base-four-y c:- 24)
-	;(up-send-flare scout-base-one-x)
-	;(up-send-flare scout-base-two-x)
-	;(up-send-flare scout-base-three-x)
-	;(up-send-flare scout-base-four-x)
+	; (up-send-flare scout-base-one-x)
+	; (up-send-flare scout-base-two-x)
+	; (up-send-flare scout-base-three-x)
+	; (up-send-flare scout-base-four-x)
 	(chat-to-player my-player-number "Initializing 2nd layer scouting points")
 	(set-goal gl-curr-layer-timer 37)
 	(disable-timer scout-base-point-timer)
@@ -3510,11 +3511,22 @@
 	(disable-self)
 )
 
-(defrule
-	(goal gl-collect-sheep YES)
-=>
-	(up-jump-rule 13)
-)
+; (defrule
+	; (goal gl-scout-base YES)
+	; (current-age == dark-age)
+	; (up-group-size c: 1 >= 1)
+	; (goal gl-curr-point 7)
+; =>
+	; (up-chat-data-to-player my-player-number "one-x: %d" g: scout-base-one-x)
+	; (up-chat-data-to-player my-player-number "one-y: %d" g: scout-base-one-y)
+	; (up-chat-data-to-player my-player-number "two-x: %d" g: scout-base-two-x)
+	; (up-chat-data-to-player my-player-number "two-y: %d" g: scout-base-two-y)
+	; (up-chat-data-to-player my-player-number "three-x: %d" g: scout-base-three-x)
+	; (up-chat-data-to-player my-player-number "three-y: %d" g: scout-base-three-y)
+	; (up-chat-data-to-player my-player-number "four-x: %d" g: scout-base-four-x)
+	; (up-chat-data-to-player my-player-number "four-y: %d" g: scout-base-four-y)
+	; (disable-self)
+; )
 
 ;adjusting points if outside of the map
 (defrule 
@@ -3611,7 +3623,7 @@
 	(set-goal scout-base-four-x 1)
 	; (up-lerp-tiles scout-base-four-x gl-starting-tc-x c: -1)
 	; (up-cross-tiles scout-base-four-x gl-starting-tc-x c: 1)
-;	(up-send-flare scout-base-four-x)
+	;(up-send-flare scout-base-four-x)
 	;(chat-to-player my-player-number "Adjusting x4")
 )
 
@@ -3634,7 +3646,7 @@
 	(goal gl-scout-base YES)
 	(current-age == dark-age)
 	(up-group-size c: 1 >= 1)
-	(up-compare-goal scout-base-one-x > FULL-MAP-SIZE)
+	(up-compare-goal scout-base-one-x >= FULL-MAP-SIZE)
 =>
 	(up-modify-goal scout-base-one-x g: FULL-MAP-SIZE)
 	(up-modify-goal scout-base-one-x c:- 1)
@@ -3647,7 +3659,7 @@
 	(goal gl-scout-base YES)
 	(current-age == dark-age)
 	(up-group-size c: 1 >= 1)
-	(up-compare-goal scout-base-one-y > FULL-MAP-SIZE)
+	(up-compare-goal scout-base-one-y >= FULL-MAP-SIZE)
 =>
 	(up-modify-goal scout-base-one-y g: FULL-MAP-SIZE)
 	(up-modify-goal scout-base-one-y c:- 1)
@@ -3659,7 +3671,7 @@
 	(goal gl-scout-base YES)
 	(current-age == dark-age)
 	(up-group-size c: 1 >= 1)
-	(up-compare-goal scout-base-two-x > FULL-MAP-SIZE)
+	(up-compare-goal scout-base-two-x >= FULL-MAP-SIZE)
 	(game-time > 10)
 =>
 	(up-modify-goal scout-base-two-x g: FULL-MAP-SIZE)
@@ -3672,7 +3684,7 @@
 	(goal gl-scout-base YES)
 	(current-age == dark-age)
 	(up-group-size c: 1 >= 1)
-	(up-compare-goal scout-base-two-y > FULL-MAP-SIZE)
+	(up-compare-goal scout-base-two-y >= FULL-MAP-SIZE)
 	(game-time > 10)
 =>
 	(up-modify-goal scout-base-two-y g: FULL-MAP-SIZE)
@@ -3685,7 +3697,7 @@
 	(goal gl-scout-base YES)
 	(current-age == dark-age)
 	(up-group-size c: 1 >= 1)
-	(up-compare-goal scout-base-three-x > FULL-MAP-SIZE)
+	(up-compare-goal scout-base-three-x >= FULL-MAP-SIZE)
 	(game-time > 10)
 =>
 	(up-modify-goal scout-base-three-x g: FULL-MAP-SIZE)
@@ -3698,7 +3710,7 @@
 	(goal gl-scout-base YES)
 	(current-age == dark-age)
 	(up-group-size c: 1 >= 1)
-	(up-compare-goal scout-base-three-y > FULL-MAP-SIZE)
+	(up-compare-goal scout-base-three-y >= FULL-MAP-SIZE)
 	(game-time > 10)
 =>
 	(up-modify-goal scout-base-three-y g: FULL-MAP-SIZE)
@@ -3711,7 +3723,7 @@
 	(goal gl-scout-base YES)
 	(current-age == dark-age)
 	(up-group-size c: 1 >= 1)
-	(up-compare-goal scout-base-four-x > FULL-MAP-SIZE)
+	(up-compare-goal scout-base-four-x >= FULL-MAP-SIZE)
 	(game-time > 10)
 =>
 	(up-modify-goal scout-base-four-x g: FULL-MAP-SIZE)
@@ -3724,13 +3736,21 @@
 	(goal gl-scout-base YES)
 	(current-age == dark-age)
 	(up-group-size c: 1 >= 1)
-	(up-compare-goal scout-base-four-y > FULL-MAP-SIZE)
+	(up-compare-goal scout-base-four-y >= FULL-MAP-SIZE)
 	(game-time > 10)
 =>
 	(up-modify-goal scout-base-four-y g: FULL-MAP-SIZE)
 	(up-modify-goal scout-base-four-y c:- 1)
 	;(up-send-flare scout-base-four-x)
 	;(chat-to-player my-player-number "Adjusting y4")
+)
+
+
+(defrule
+	(goal gl-collect-sheep YES)
+=>
+	(up-jump-rule 9)
+	;(chat-to-all "collecting sheep")
 )
 
 ; (defrule
@@ -22892,7 +22912,7 @@
 	(can-build mining-camp)
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
-    (set-strategic-number sn-gold-dropsite-distance 255)
+    (set-strategic-number sn-gold-dropsite-distance 400)
     (set-strategic-number sn-stone-dropsite-distance 6)
 	(chat-to-player my-player-number "Build mining-camp on stone")
 	(build mining-camp)
