@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
-;Version: 1.2.4
-;last update: 11th September 2023
+;Version: 1.2.5
+;last update: 18th September 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -9,7 +9,7 @@
 (defrule
 	(game-time > 10)
 =>
-	(chat-to-all "ZebbaAI: Version 1.2.4 by Zebba")
+	(chat-to-all "ZebbaAI: Version 1.2.5 by Zebba")
 	(disable-self)
 )
 
@@ -614,7 +614,7 @@
 (defconst fi-bbc-hc 310)
 (defconst fi-eaglespam 311)
 (defconst fi-condottieros 312)
-(defconst fi-uus 313)
+(defconst fi-uus 313);not implemented
 (defconst fi-cavalier 314)
 (defconst fi-monks 315)
 
@@ -782,9 +782,9 @@
 =>
 	(set-strategic-number sn-maximum-fish-boat-drop-distance 30)
 	(set-strategic-number sn-maximum-food-drop-distance 20)
-	(set-strategic-number sn-maximum-gold-drop-distance 20)
+	(set-strategic-number sn-maximum-gold-drop-distance 28)
 	(set-strategic-number sn-maximum-hunt-drop-distance 30)
-	(set-strategic-number sn-maximum-stone-drop-distance 20)
+	(set-strategic-number sn-maximum-stone-drop-distance 28)
 	(set-strategic-number sn-scale-minimum-attack-group-size 0)
 	(set-strategic-number sn-task-ungrouped-soldiers 0)
 	(set-strategic-number sn-disable-villager-garrison 0)
@@ -797,9 +797,6 @@
 	(set-strategic-number sn-number-attack-groups 0)
 	(set-strategic-number sn-minimum-attack-group-size 4)
 	(set-strategic-number sn-maximum-attack-group-size 10)
-	; (set-strategic-number sn-number-attack-groups 0)
-	; (set-strategic-number sn-minimum-attack-group-size 0)
-	; (set-strategic-number sn-maximum-attack-group-size 0)
 	(set-strategic-number sn-attack-group-gather-spacing 7)
 	(set-strategic-number sn-filter-under-attack 1)
 	(set-strategic-number sn-disable-builder-assistance 1)
@@ -817,7 +814,7 @@
 ; (defrule
 	; (true)
 ; =>
-	; (set-strategic-number sn-relic-defend-priority 1
+	; (set-strategic-number sn-relic-defend-priority 1)
 	; (disable-self)
 ; )
 
@@ -4194,6 +4191,7 @@
 
 ;region Lumberjack DUC =========================================
 
+#load-if-not-defined UP-SCENARIO-GAME
 ; (defrule
 	; (building-type-count lumber-camp >= 1)
 	; (current-age == dark-age)
@@ -4215,6 +4213,7 @@
 	(building-type-count lumber-camp == 1)
 	(unit-type-count villager-wood < 6)
 	(current-age == dark-age)
+	(goal gl-nomad-map NO)
 =>
 	(up-full-reset-search)
 	(up-find-local c: lumber-camp c: 1)
@@ -4228,6 +4227,7 @@
 	(unit-type-count villager-wood < 6)
 	(up-compare-goal gl-local-total >= 1)	
 	(up-set-target-object search-local c: 0)
+	(goal gl-nomad-map NO)
 =>
 	(up-set-target-object search-local c: 0)
 	(up-get-point position-object gl-camp-x)
@@ -4256,6 +4256,7 @@
 	(up-compare-goal gl-camp-x != -1)
 	(up-compare-goal gl-local-total >= 1)
 	;(civilian-population < 13)
+	(goal gl-nomad-map NO)
 =>
 	(up-set-target-point gl-camp-x)
 	(up-filter-distance c: -1 c: 3)
@@ -4274,6 +4275,7 @@
 	(up-compare-goal gl-camp-x != -1)
 	(up-set-target-object search-remote c: 0)
 	;(civilian-population < 13)
+	(goal gl-nomad-map NO)
 =>
 	(up-reset-search 1 1 0 0)
 	(up-set-target-point gl-starting-tc-x)
@@ -4294,11 +4296,13 @@
 	(up-set-target-object search-local c: 0)
 	(not (town-under-attack))
 	;(civilian-population < 13)
+	(goal gl-nomad-map NO)
 =>
 	(up-target-objects 0 action-default -1 -1)
 	(chat-local-to-self "Sending lumberjacks to lumbercamp")
 	;(disable-self)
 )
+#end-if
 
 ;endregion
 
@@ -4771,7 +4775,6 @@
 
 #load-if-defined BOHEMIANS-CIV
 
-
 (defrule
 	(true)
 =>
@@ -4788,7 +4791,16 @@
 	(disable-self)
 )
 
+#load-if-not-defined UP-POCKET-POSITION
 
+(defrule
+	(true)
+=>
+	(set-goal gl-fastimp-unit fi-monks)
+	(disable-self)
+)
+
+#end-if
 #end-if
 
 #load-if-defined BRITON-CIV
@@ -4810,11 +4822,9 @@
 	(disable-self)
 )
 
-
 #end-if
 
 #load-if-defined BULGARIANS-CIV
-
 
 (defrule
 	(true)
@@ -4832,11 +4842,9 @@
 	(disable-self)
 )
 
-
 #end-if
 
 #load-if-defined BURGUNDIANS-CIV
-
 
 (defrule
 	(true)
@@ -4853,12 +4861,11 @@
 	(set-goal gl-fastimp-unit fi-cavalier)
 	(disable-self)
 )
-
+;bbc-hc
 
 #end-if
 
 #load-if-defined BURMESE-CIV
-
 
 (defrule
 	(true)
@@ -4876,11 +4883,19 @@
 	(disable-self)
 )
 
+#load-if-not-defined UP-POCKET-POSITION
 
+(defrule
+	(true)
+=>
+	(set-goal gl-fastimp-unit fi-monks)
+	(disable-self)
+)
+
+#end-if
 #end-if
 
 #load-if-defined BYZANTINE-CIV
-
 
 (defrule
 	(true)
@@ -4898,7 +4913,16 @@
 	(disable-self)
 )
 
+#load-if-not-defined UP-POCKET-POSITION
 
+(defrule
+	(true)
+=>
+	(set-goal gl-fastimp-unit fi-monks)
+	(disable-self)
+)
+
+#end-if
 #end-if
 
 #load-if-defined CELTIC-CIV
@@ -5031,6 +5055,8 @@
 	(set-goal gl-fastimp-unit fi-cavalier)
 	(disable-self)
 )
+;bbc-hc
+;champs
 
 #end-if 
 
@@ -5051,7 +5077,7 @@
 	(set-goal gl-fastimp-unit fi-champs)
 	(disable-self)
 )
-
+;bbc-hc
 #end-if
 
 #load-if-defined GURJARAS-CIV
@@ -5151,6 +5177,9 @@
 	(set-goal gl-fastimp-unit fi-condottieros)
 	(disable-self)
 )
+;bbc-hc
+;cavalier
+;monks
 
 #end-if
 
@@ -5171,7 +5200,7 @@
 	(set-goal gl-fastimp-unit fi-champs)
 	(disable-self)
 )
-
+;monks
 #end-if
 
 #load-if-defined KHMER-CIV
@@ -5231,7 +5260,17 @@
 	(set-goal gl-fastimp-unit fi-cavalier)
 	(disable-self)
 )
+#load-if-not-defined UP-POCKET-POSITION
 
+(defrule
+	(true)
+=>
+	(set-goal gl-fastimp-unit fi-monks)
+	(disable-self)
+)
+
+#end-if
+;bbc-hc
 #end-if
 
 #load-if-defined MAGYAR-CIV
@@ -5271,6 +5310,17 @@
 	(set-goal gl-fastimp-unit fi-champs)
 	(disable-self)
 )
+#load-if-not-defined UP-POCKET-POSITION
+
+(defrule
+	(true)
+=>
+	(set-goal gl-fastimp-unit fi-monks)
+	(disable-self)
+)
+
+#end-if
+
 
 #load-if-defined UP-2-PLAYER-GAME
 
@@ -5304,7 +5354,9 @@
 	(set-goal gl-fastimp-unit fi-champs)
 	(disable-self)
 )
-
+;bbc-hc
+;monks
+;cavalier
 #end-if
 
 #load-if-defined MAYAN-CIV
@@ -5364,6 +5416,7 @@
 	(set-goal gl-fastimp-unit fi-cavalier)
 	(disable-self)
 )
+;bbc-hc
 
 #end-if
 
@@ -5404,6 +5457,8 @@
 	(set-goal gl-fastimp-unit fi-bbc-hc)
 	(disable-self)
 )
+;cavalier
+;monks
 
 #end-if
 
@@ -5457,6 +5512,17 @@
 	(disable-self)
 )
 
+#load-if-not-defined UP-POCKET-POSITION
+
+(defrule
+	(true)
+=>
+	(set-goal gl-fastimp-unit fi-monks)
+	(disable-self)
+)
+
+#end-if
+;fi-champs
 #end-if
 
 #load-if-defined SICILIANS-CIV
@@ -5476,7 +5542,7 @@
 	(set-goal gl-fastimp-unit fi-champs)
 	(disable-self)
 )
-
+;cavalier
 #end-if
 
 #load-if-defined SLAVIC-CIV
@@ -5496,7 +5562,17 @@
 	(set-goal gl-fastimp-unit fi-champs)
 	(disable-self)
 )
+#load-if-not-defined UP-POCKET-POSITION
 
+(defrule
+	(true)
+=>
+	(set-goal gl-fastimp-unit fi-monks)
+	(disable-self)
+)
+
+#end-if
+;cavalier
 #load-if-defined UP-2-PLAYER-GAME
 
 (defrule
@@ -5529,7 +5605,19 @@
 	(set-goal gl-fastimp-unit fi-bbc-hc)
 	(disable-self)
 )
+;champs
+;cavalier
 
+#load-if-not-defined UP-POCKET-POSITION
+
+(defrule
+	(true)
+=>
+	(set-goal gl-fastimp-unit fi-monks)
+	(disable-self)
+)
+
+#end-if
 #end-if
 
 #load-if-defined TATARS-CIV
@@ -5570,6 +5658,18 @@
 	(disable-self)
 )
 
+#load-if-not-defined UP-POCKET-POSITION
+
+(defrule
+	(true)
+=>
+	(set-goal gl-fastimp-unit fi-monks)
+	(disable-self)
+)
+
+#end-if
+;cavalier
+;bbc-hc
 #end-if
 
 #load-if-defined TURKISH-CIV
@@ -5668,7 +5768,7 @@
 
 (defrule
 	(up-compare-goal strategy-goal == -1)
-	(random-number > 110)
+	(random-number > 0)
 	(random-number <= 40)
 =>
 	(set-goal strategy-goal sg-drush)	
@@ -5683,7 +5783,7 @@
 
 (defrule
 	(up-compare-goal strategy-goal == -1)
-	(random-number > 140)
+	(random-number > 40)
 	(random-number <= 80)
 =>
 	(set-goal strategy-goal sg-archerrush)	
@@ -5697,7 +5797,7 @@
 
 (defrule
 	(up-compare-goal strategy-goal == -1)
-	(random-number > 180)
+	(random-number > 80)
 	(random-number <= 100)
 =>
 	(set-goal strategy-goal sg-scoutrush)	
@@ -5711,7 +5811,7 @@
 
 (defrule
 	(up-compare-goal strategy-goal == -1)
-	(random-number > 0)
+	(random-number > 1000)
 	(random-number <= 100)
 =>
 	(set-goal strategy-goal sg-towerrush)	
@@ -20378,26 +20478,26 @@
 
 ; Retreating from Enemy Towers
 
-; (defrule
-	; (or (players-building-type-count focus-player watch-tower >= 1)
-	; (players-building-type-count focus-player donjon >= 1))
-; =>	
-	; (up-full-reset-search)
-	; (up-filter-status c: status-pending c: list-active) ;don't retreat if enemy is building a tower
-	; (up-find-status-remote c: watch-tower c: 1)
-	; (up-find-status-remote c: donjon c: 1)
-	; (up-get-search-state gl-local-total)
-; )
+(defrule
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
+=>	
+	(up-full-reset-search)
+	(up-filter-status c: status-pending c: list-active) ;don't retreat if enemy is building a tower
+	(up-find-status-remote c: watch-tower c: 1)
+	(up-find-status-remote c: donjon c: 1)
+	(up-get-search-state gl-local-total)
+)
 
-; (defrule
-	; (or (players-building-type-count focus-player watch-tower >= 1)
-	; (players-building-type-count focus-player donjon >= 1))
-	; (up-compare-goal gl-remote-total > 0)
-	; (up-set-target-object search-remote c: 0)
-; =>
-	; ;(chat-to-all "Test 1")
-	; (up-jump-rule 11)
-; )
+(defrule
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
+	(up-compare-goal gl-remote-total > 0)
+	(up-set-target-object search-remote c: 0)
+=>
+	;(chat-to-all "Test 1")
+	(up-jump-rule 20)
+)
 
 ;loop through enemy towers
 
@@ -20748,6 +20848,7 @@
 	(unit-type-count militiaman-line >= 1)
 	(up-compare-goal gl-remote-total >= 1)
 	(up-set-target-object search-local c: 0)
+	;(up-set-target-by-id g: gl-curr-unit-id) ;idea, instead of target-object search-local
 	(up-object-data object-data-tasks-count > 0)
 	(up-set-target-object search-remote c: 0)
 	(up-object-data object-data-hitpoints > 4)
@@ -20865,6 +20966,7 @@
 	(unit-type-count camel-scout >= 1)))
 	(up-compare-goal gl-remote-total >= 1)
 	(up-set-target-object search-local c: 0)
+	;(up-set-target-by-id g: gl-curr-unit-id) ;idea, instead of target-object search-local
 	(up-object-data object-data-tasks-count > 0)
 	(up-set-target-object search-remote c: 0)
 	(up-object-data object-data-hitpoints > 5)
@@ -27540,7 +27642,8 @@
 #load-if-defined SCENARIO-GAME
 (defrule ;for custom maps starting with more than 55 villagers
 	(can-research castle-age)
-	(unit-type-count-total villager g:>= f-villager-goal)
+	(or (unit-type-count-total villager g:>= f-villager-goal)
+	(civilian-population g:>= f-villager-goal))
 =>
 	(research castle-age)
 	(chat-to-allies "Going to castle-age")
@@ -30567,7 +30670,7 @@
 	(current-age >= castle-age)
 	(not(goal strategy-goal sg-boom-imp))
 	(can-research ri-hand-cart)
-	(unit-type-count-total villager >= 50)
+	(unit-type-count-total villager >= 60)
 =>
 	(research ri-hand-cart)
 )
@@ -33813,6 +33916,12 @@
 
 (defrule
 	(current-age == imperial-age)
+	; (or (civ-selected khmer)
+	; (or (civ-selected poles)
+	; (or (civ-selected romans)
+	; (or (civ-selected sicilians)
+	; (or (civ-selected slavic)
+	; (civ-selected vietnamese)
 	(civilian-population >= 125)
 	(can-research ri-crop-rotation)
 	(up-compare-goal gl-military-advantage >= 20)
@@ -34459,6 +34568,7 @@
 	(current-age >= castle-age)
 	;(not(goal strategy-goal fastcastle))
 	(can-research ri-two-man-saw)
+	(population >= 185)
 =>
 	(research ri-two-man-saw)
 )
@@ -34512,24 +34622,44 @@
 	(current-age >= castle-age)
 	;(not(goal strategy-goal fastcastle))
 	(can-research ri-gold-shaft-mining)
-	(civilian-population >= 60)
+	(civilian-population >= 80)
 	(or (unit-type-count-total villager g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 =>
 	(research ri-gold-shaft-mining)
 )
 
+#load-if-defined MEGARANDOM-MAP
+
 (defrule
 	(current-age >= castle-age)
 	;(not(goal strategy-goal fastcastle))
 	(can-research ri-stone-shaft-mining)
-	(civilian-population >= 70)
+	(civilian-population >= 80)
 	(strategic-number sn-stone-gatherer-percentage >= 6)
 	(or (unit-type-count-total villager g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 =>
 	(research ri-stone-shaft-mining)
 )
+
+#end-if
+
+#load-if-defined UP-SCENARIO-GAME
+
+(defrule
+	(current-age >= castle-age)
+	;(not(goal strategy-goal fastcastle))
+	(can-research ri-stone-shaft-mining)
+	(civilian-population >= 80)
+	(strategic-number sn-stone-gatherer-percentage >= 6)
+	(or (unit-type-count-total villager g:< c-villager-goal)
+	(up-research-status c: imperial-age == research-pending))
+=>
+	(research ri-stone-shaft-mining)
+)
+
+#end-if
 
 (defrule
 	(current-age == imperial-age)
@@ -38607,7 +38737,8 @@
 
 (defrule
 	(can-research ri-guilds)
-	(unit-type-count-total villager >= 120)
+	;(unit-type-count-total villager >= 120)
+	(game-time >= 3000)
 =>
 	(research ri-guilds)
 )
