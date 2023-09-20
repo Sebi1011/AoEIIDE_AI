@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 18th September 2023
+;last update: 20th September 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -4279,7 +4279,7 @@
 =>
 	(up-reset-search 1 1 0 0)
 	(up-set-target-point gl-starting-tc-x)
-	(up-filter-distance c: -1 c: 7)
+	(up-filter-distance c: -1 c: 6)
 	(up-find-local c: 218 c: 5) ;lumberjack (male & female)
 	(up-find-local c: 123 c: 5)
 	(up-get-search-state gl-local-total)
@@ -30152,7 +30152,8 @@
 	(goal attack-now-goal 0)
 	(goal retreat-now-goal 1)
 	(or (military-population >= 18)
-	(up-compare-goal gl-military-advantage >= 0))
+	(or (up-compare-goal gl-military-advantage >= 0)
+	(players-current-age focus-player < castle-age)))
 	(current-age == castle-age)
 =>
 	;(set-strategic-number sn-number-attack-groups 500)
