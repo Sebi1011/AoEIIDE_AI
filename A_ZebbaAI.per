@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 20th September 2023
+;last update: 22nd September 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -566,12 +566,17 @@
 (defconst gl-collect-sheep 243)
 (defconst gl-camp-x 244)
 (defconst gl-camp-y 245)
+(defconst gl-lame-enemy 246)
+(defconst gl-lamed-boar-id 247)
+(defconst gl-quick-wall-id 248)
 (defconst gl-priority-goal 249)
 (defconst ca-strategy 250)
 (defconst gl-castleage-stableunit 251)
 (defconst gl-castleage-rangeunit 252)
 (defconst gl-castleage-eagles 253)
 (defconst gl-castleage-siege-infantry 254)
+(defconst gl-lamed-boar-x 255)
+(defconst gl-lamed-boar-y 256)
 
 (defconst market-point-x 258)
 (defconst market-point-y 259)
@@ -1822,7 +1827,7 @@
 
 ;endregion 
 
-;region
+;region Map Settings ===============================================
 
 (defrule
 	(true)
@@ -1861,68 +1866,67 @@
 
 ;endregion
 
-
-;region Identify if opponent has researched fletching/bodkin/bracer
-
-(defrule
-	(current-age >= feudal-age)
-=>
-	(up-full-reset-search)
-	(up-find-remote c: archer-line c: 1)
-	(up-find-remote c: skirmisher-line c: 1)
-	(up-get-search-state gl-local-total)
-)
+;region Identify if opponent has researched fletching/bodkin/bracer (not working yet)
 
 ; (defrule
 	; (current-age >= feudal-age)
-	; (up-compare-goal gl-remote-total < 1)
 ; =>
 	; (up-full-reset-search)
-	; (up-find-remote c: town-center c: 1)
+	; (up-find-remote c: archer-line c: 1)
+	; (up-find-remote c: skirmisher-line c: 1)
 	; (up-get-search-state gl-local-total)
 ; )
+
+; ; (defrule
+	; ; (current-age >= feudal-age)
+	; ; (up-compare-goal gl-remote-total < 1)
+; ; =>
+	; ; (up-full-reset-search)
+	; ; (up-find-remote c: town-center c: 1)
+	; ; (up-get-search-state gl-local-total)
+; ; )
+
+; ; (defrule
+	; ; (current-age >= feudal-age)
+	; ; (up-compare-goal gl-remote-total < 1)
+; ; =>
+	; ; (up-full-reset-search)
+	; ; (up-find-remote c: donjon c: 1)
+	; ; (up-get-search-state gl-local-total)
+; ; )
 
 ; (defrule
 	; (current-age >= feudal-age)
-	; (up-compare-goal gl-remote-total < 1)
+	; (up-compare-goal gl-remote-total >= 1)
+	; (up-set-target-object search-remote c: 0)
+	; (or (players-unit-type-count focus-player archer-line > 0)
+	; (players-unit-type-count focus-player skirmisher-line > 0))
 ; =>
-	; (up-full-reset-search)
-	; (up-find-remote c: donjon c: 1)
-	; (up-get-search-state gl-local-total)
+	; (up-set-target-object search-remote c: 0)
+	; (up-get-object-data object-data-range gl-enemy-range)
+	; (up-modify-goal gl-enemy-range c:- 4)
 ; )
 
-(defrule
-	(current-age >= feudal-age)
-	(up-compare-goal gl-remote-total >= 1)
-	(up-set-target-object search-remote c: 0)
-	(or (players-unit-type-count focus-player archer-line > 0)
-	(players-unit-type-count focus-player skirmisher-line > 0))
-=>
-	(up-set-target-object search-remote c: 0)
-	(up-get-object-data object-data-range gl-enemy-range)
-	(up-modify-goal gl-enemy-range c:- 4)
-)
+; (defrule
+	; (up-compare-goal gl-enemy-range == 1)
+; =>
+	; (chat-to-player my-player-number "Enemy has researched fletching")
+	; (disable-self)
+; )
 
-(defrule
-	(up-compare-goal gl-enemy-range == 1)
-=>
-	(chat-to-player my-player-number "Enemy has researched fletching")
-	(disable-self)
-)
+; (defrule
+	; (up-compare-goal gl-enemy-range == 2)
+; =>
+	; (chat-to-player my-player-number "Enemy has researched bodkin")
+	; (disable-self)
+; )
 
-(defrule
-	(up-compare-goal gl-enemy-range == 2)
-=>
-	(chat-to-player my-player-number "Enemy has researched bodkin")
-	(disable-self)
-)
-
-(defrule
-	(up-compare-goal gl-enemy-range == 3)
-=>
-	(chat-to-player my-player-number "Enemy has researched bracer")
-	(disable-self)
-)
+; (defrule
+	; (up-compare-goal gl-enemy-range == 3)
+; =>
+	; (chat-to-player my-player-number "Enemy has researched bracer")
+	; (disable-self)
+; )
 
 
 
@@ -3409,7 +3413,6 @@
 
 ;region Scouting the Map in 1v1 ====================================
 
-
 ;scouting own base
 (defrule
 	(goal gl-scout-base YES)
@@ -3973,8 +3976,6 @@
 
 ;region Counting Sheep & Boar ======================================
 
-
-
 (defrule ;find visible sheep
 	(current-age == dark-age) 
 	(up-compare-goal gl-amnt-food-sources < 20)
@@ -4189,7 +4190,7 @@
 
 ;endregion
 
-;region Lumberjack DUC =========================================
+;region Lumberjack DUC =============================================
 
 #load-if-not-defined UP-SCENARIO-GAME
 ; (defrule
@@ -4306,7 +4307,7 @@
 
 ;endregion
 
-;region Forager DUC (Thanks to Bandit for helping here!)========
+;region Forager DUC (Thanks to Bandit for helping here!)============
 
 ;if mill is placed on berries, task villagers to take from them
 
@@ -4479,6 +4480,435 @@
 	; (up-target-objects 0 action-default -1 -1) ; send idle villagers to idle farms
 	; (chat-local-to-self "Microing foragers to boar")
 ; )
+
+;endregion
+
+;region Sending villagers forward in Dark-Age ======================
+
+;To-Do:
+	;improve scouting enemies base in a circle to find relevant targets
+	;research loom upon deciding to lame (Testing)
+	;send villagers forward earlier, as soon as the game starts
+	;prevent to target objects behind enemy tc
+	;add laming opponents deer
+	;situational problems
+		;add check for the tile the villager will be sent on (is the tile reachable?/map edges?)
+		;improved code to make it working when not all 4 palisade walls can be placed
+		;if opponent attacks wall --> immediately use villager to repair the wall
+		;if opponent/wolf attacks villager --> fight back, use scout to defend
+		;if opponent attacks scout --> keep scouting his base, afterwards send home
+
+;look for deer (to kill); forage bushes, goldmines (to wall in)
+;send villager to next target boar or to deer
+
+(defrule ;always active for testing purposes
+	(or (civ-selected gothic)
+	(civ-selected berbers)) ;koreans? ;mongols? 
+	(goal gl-lame-enemy -1)
+=>
+	(set-goal gl-lame-enemy YES)
+	(chat-to-player my-player-number "I will forward my opponent")
+	(disable-self)
+)
+
+; (defrule
+	; (or (civ-selected gothic)
+	; (civ-selected berbers))
+	; (goal gl-lame-enemy -1)
+; =>
+	; (generate-random-number 2)
+; )
+
+; (defrule
+	; (or (civ-selected gothic)
+	; (civ-selected berbers))
+	; (goal gl-lame-enemy -1)
+	; (random-number == 1)
+; =>
+	; (set-goal gl-lame-enemy YES)
+	; (chat-to-player my-player-number "I will forward my opponent")
+; )
+
+; (defrule
+	; (or (civ-selected gothic)
+	; (civ-selected berbers))
+	; (goal gl-lame-enemy -1)
+	; (random-number == 2)
+; =>
+	; (set-goal gl-lame-enemy NO)
+	; (chat-to-player my-player-number "Don't forward opponent, playing standard")
+; )
+
+(defrule 
+	(current-age == dark-age)
+	;(civilian-population == 10) ;for testing purposes
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center < 1)
+	(game-time > 8)
+=>
+	(up-send-scout group-type-land-explore scout-flank)
+	(set-goal gl-scout-map YES)
+	(set-goal gl-scout-base NO)
+	(chat-to-player my-player-number "Scouting opponent to lame") ;not a good scouting method, unlikely to find a boar
+	(disable-self)
+)
+
+(defrule
+	(current-age == dark-age)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(can-research ri-loom)
+=>
+	(research ri-loom)
+)
+
+(defrule
+	(current-age == dark-age)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+=>
+	(up-full-reset-search)
+	(up-set-target-point enemy-point-x)
+	;(up-send-flare enemy-point-x)
+	(up-filter-distance c: -1 c: 32)
+	(set-strategic-number sn-focus-player-number 0)
+	(up-find-remote c: boar-class c: 1)
+	(up-get-search-state gl-local-total)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	;(up-chat-data-to-all "Nr. Boars: %d" g: gl-remote-total)
+	;(up-chat-data-to-all "boar-x: %d" g: gl-lamed-boar-x)
+)
+
+(defrule
+	(current-age == dark-age)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(up-compare-goal gl-remote-total >= 1)
+	(up-compare-goal gl-lamed-boar-x == -1)
+=>
+	(up-set-target-object search-remote c: 0)
+	(up-get-object-data object-data-id gl-lamed-boar-id)
+	(up-get-point position-object gl-lamed-boar-x)
+	(up-send-flare gl-lamed-boar-x)
+	(chat-to-player my-player-number "Getting boar position & id")
+)
+
+(defrule
+	(current-age == dark-age)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(up-compare-goal gl-lamed-boar-x != -1)
+=>
+	(up-lerp-tiles gl-lamed-boar-x enemy-point-x c: 2)
+	(up-cross-tiles gl-lamed-boar-x enemy-point-x c: 2) ;not fail-safe if tile is inaccessible
+	(up-send-flare gl-lamed-boar-x)
+	(chat-to-player my-player-number "Adjust boar-lame spot")
+	(disable-self)
+)
+	
+(defrule
+	(current-age == dark-age)
+	;(civilian-population == 10)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 9 < 1)
+	(players-building-type-count focus-player town-center >= 1)
+	(unit-type-count villager-shepherd > 0)
+	(up-compare-goal gl-lamed-boar-x != -1)
+=>
+	(up-full-reset-search)
+	(up-find-local c: 590 c: 240) ;female shepherd
+	(up-find-local c: 592 c: 240) ;male shepherd
+	(up-clean-search search-local object-data-carry search-order-asc)
+	(up-remove-objects search-local -1 > 0) 
+	(up-reset-group c: 9)
+	(up-create-group 0 1 c: 9)
+	(up-modify-group-flag 1 c: 9)
+	(up-assign-builders c: palisade-wall c: -1)
+	(chat-to-player my-player-number "Selecting lamer")
+)
+
+(defrule
+	(current-age == dark-age)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 9 >= 1)
+	(up-compare-goal gl-lamed-boar-x != -1)
+	(not (up-point-contains gl-lamed-boar-x c: villager-class))
+	(building-type-count-total palisade-wall < 1)
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 9)
+	(up-target-point gl-lamed-boar-x action-move -1 -1)
+	(chat-to-player my-player-number "Sending villager forward to lame")
+)
+
+(defrule ;setup 1st wall
+	(current-age == dark-age)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 9 >= 1)
+	(up-compare-goal gl-lamed-boar-x != -1)
+	(up-point-contains gl-lamed-boar-x c: villager-class)
+	(building-type-count-total palisade-wall < 4)
+	(up-pending-objects c: palisade-wall < 1)
+	;(up-can-build-line 0 gl-lamed-boar-x c: palisade-wall) ;not fail-safe if no wood to build
+=>
+	(up-modify-goal gl-lamed-boar-x c:- 1)
+	(up-build-line gl-lamed-boar-x gl-lamed-boar-x c: palisade-wall)
+	(chat-to-player my-player-number "Villager reached the point, build first wall")
+)
+
+(defrule ;1st wall
+	(current-age == dark-age)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 9 >= 1)
+	(up-compare-goal gl-lamed-boar-x != -1)
+	(building-type-count-total palisade-wall < 4)
+	(up-get-point-contains gl-lamed-boar-x gl-quick-wall-id c: palisade-wall)
+	(up-set-target-by-id g: gl-quick-wall-id)
+	(up-object-data object-data-hitpoints < 2)
+	(up-pending-objects c: palisade-wall == 1)
+	;(up-can-build-line 0 gl-lamed-boar-x c: palisade-wall) ;not fail-safe if no wood to build
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 9)
+	(up-set-target-by-id g: gl-quick-wall-id)
+	(up-target-objects 1 action-default -1 -1)
+	(chat-to-player my-player-number "Build 1st wall")
+)
+
+(defrule ;setup 2nd wall
+	(current-age == dark-age)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 9 >= 1)
+	(up-compare-goal gl-lamed-boar-x != -1)
+	(building-type-count-total palisade-wall < 4)
+	(up-pending-objects c: palisade-wall == 1)
+	(up-get-point-contains gl-lamed-boar-x gl-quick-wall-id c: palisade-wall)
+	(up-set-target-by-id g: gl-quick-wall-id)
+	(up-object-data object-data-hitpoints >= 2)
+	;(up-can-build-line 0 gl-lamed-boar-x c: palisade-wall) ;not fail-safe if no wood to build
+=>
+	(up-modify-goal gl-lamed-boar-x c:+ 1)
+	(up-modify-goal gl-lamed-boar-y c:+ 1)
+	(up-build-line gl-lamed-boar-x gl-lamed-boar-x c: palisade-wall)
+	(chat-to-player my-player-number "Setup 2nd wall")
+)
+
+(defrule ;2nd wall
+	(current-age == dark-age)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 9 >= 1)
+	(up-compare-goal gl-lamed-boar-x != -1)
+	(up-get-point-contains gl-lamed-boar-x gl-quick-wall-id c: palisade-wall)
+	(up-set-target-by-id g: gl-quick-wall-id)
+	(up-object-data object-data-hitpoints < 2)
+	(building-type-count-total palisade-wall < 4)
+	(up-pending-objects c: palisade-wall == 2)
+	;(up-can-build-line 0 gl-lamed-boar-x c: palisade-wall) ;not fail-safe if no wood to build
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 9)
+	(up-set-target-by-id g: gl-quick-wall-id)
+	(up-target-objects 1 action-default -1 -1)
+	(chat-to-player my-player-number "Build 2nd wall")
+)
+
+(defrule ;setup 3rd wall
+	(current-age == dark-age)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 9 >= 1)
+	(up-compare-goal gl-lamed-boar-x != -1)
+	(building-type-count-total palisade-wall < 4)
+	(up-pending-objects c: palisade-wall == 2)
+	(up-get-point-contains gl-lamed-boar-x gl-quick-wall-id c: palisade-wall)
+	(up-set-target-by-id g: gl-quick-wall-id)
+	(up-object-data object-data-hitpoints >= 2)
+	;(up-can-build-line 0 gl-lamed-boar-x c: palisade-wall) ;not fail-safe if no wood to build
+=>
+	(up-modify-goal gl-lamed-boar-x c:+ 1)
+	(up-modify-goal gl-lamed-boar-y c:- 1)
+	(up-build-line gl-lamed-boar-x gl-lamed-boar-x c: palisade-wall)
+	(chat-to-player my-player-number "Setup 3rd wall")
+)
+
+(defrule ;3rd wall
+	(current-age == dark-age)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 9 >= 1)
+	(up-compare-goal gl-lamed-boar-x != -1)
+	(up-get-point-contains gl-lamed-boar-x gl-quick-wall-id c: palisade-wall)
+	(up-set-target-by-id g: gl-quick-wall-id)
+	(up-object-data object-data-hitpoints < 2)
+	(building-type-count-total palisade-wall < 4)
+	(up-pending-objects c: palisade-wall == 3)
+	;(up-can-build-line 0 gl-lamed-boar-x c: palisade-wall) ;not fail-safe if no wood to build
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 9)
+	(up-set-target-by-id g: gl-quick-wall-id)
+	(up-target-objects 1 action-default -1 -1)
+	(chat-to-player my-player-number "Build 3rd wall")
+)
+
+(defrule ;setup 4th wall
+	(current-age == dark-age)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 9 >= 1)
+	(up-compare-goal gl-lamed-boar-x != -1)
+	(building-type-count-total palisade-wall <= 4)
+	(up-pending-objects c: palisade-wall == 3)
+	(up-get-point-contains gl-lamed-boar-x gl-quick-wall-id c: palisade-wall)
+	(up-set-target-by-id g: gl-quick-wall-id)
+	(up-object-data object-data-hitpoints >= 2)
+	;(up-can-build-line 0 gl-lamed-boar-x c: palisade-wall) ;not fail-safe if no wood to build
+=>
+	(up-modify-goal gl-lamed-boar-x c:- 1)
+	(up-modify-goal gl-lamed-boar-y c:- 1)
+	(up-build-line gl-lamed-boar-x gl-lamed-boar-x c: palisade-wall)
+	(chat-to-player my-player-number "Setup 4th wall")
+)
+
+(defrule ;4th wall
+	(current-age == dark-age)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 9 >= 1)
+	(up-compare-goal gl-lamed-boar-x != -1)
+	(up-get-point-contains gl-lamed-boar-x gl-quick-wall-id c: palisade-wall)
+	(up-set-target-by-id g: gl-quick-wall-id)
+	(up-object-data object-data-hitpoints < 2)
+	(building-type-count-total palisade-wall <= 4)
+	(up-pending-objects c: palisade-wall == 4)
+	;(up-can-build-line 0 gl-lamed-boar-x c: palisade-wall) ;not fail-safe if no wood to build
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 9)
+	(up-set-target-by-id g: gl-quick-wall-id)
+	(up-target-objects 1 action-default -1 -1)
+	(chat-to-player my-player-number "Build 4th wall")
+)
+
+(defrule ;lame the boar
+	(current-age == dark-age)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 9 >= 1)
+	(up-get-point-contains gl-lamed-boar-x gl-quick-wall-id c: palisade-wall)
+	(up-set-target-by-id g: gl-quick-wall-id)
+	(up-object-data object-data-hitpoints >= 2)
+	(building-type-count-total palisade-wall >= 4) ;what if we can't build 4 palisade-walls?
+	(up-set-target-by-id g: gl-lamed-boar-id)
+	(up-object-data object-data-hitpoints > 3)
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 9)
+	(up-set-target-by-id g: gl-lamed-boar-id)
+	(up-target-objects 1 action-default -1 -1)
+	(chat-to-player my-player-number "Lame the boar!") ;not optimized, villager keeps attempting to retreat
+	;(disable-self)
+)
+
+(defrule ;lame the boar
+	(current-age == dark-age)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 9 >= 1)
+	(up-set-target-by-id g: gl-lamed-boar-id)
+	(up-object-data object-data-hitpoints <= 3)
+	(up-object-data object-data-hitpoints > 0)
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 9)
+	(up-set-target-by-id g: gl-quick-wall-id)
+	(up-target-objects 1 action-default -1 -1)
+	(chat-to-player my-player-number "Stop laming the boar!")
+	(up-full-reset-search)
+	(up-set-group search-local c: 1)
+	(up-set-target-by-id g: gl-lamed-boar-id)
+	(up-target-objects 1 action-default -1 -1)
+	(chat-to-player my-player-number "Kill boar with scout!")
+	;(disable-self)
+)
+
+(defrule  ;delete all pending walls after boar kill
+	(current-age == dark-age)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 9 >= 1)
+	(building-type-count-total palisade-wall >= 1)
+	(up-set-target-by-id g: gl-lamed-boar-id)
+	(up-object-data object-data-hitpoints < 1)
+=>
+	(up-full-reset-search)
+	(up-filter-status c: status-pending c: list-active)
+	(up-find-status-local c: palisade-wall c: 240)
+	(up-find-status-local c: gate c: 240)
+	(chat-to-player my-player-number "Boar down, delete walls")
+)
+
+(defrule
+	(current-age == dark-age)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 9 >= 1)
+	(building-type-count-total palisade-wall >= 1)
+	(up-set-target-object search-local c: 0)
+	(up-set-target-by-id g: gl-lamed-boar-id)
+	(up-object-data object-data-hitpoints < 1)
+=>
+	(up-set-target-object search-local c: 0)
+	(up-target-objects 1 action-delete -1 -1)
+	(chat-to-player my-player-number "Delete walls")
+)
+
+(defrule ;send villager home
+	(current-age == dark-age)
+	(or (civ-selected gothic)
+	(civ-selected berbers))
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 9 >= 1)
+	(up-set-target-by-id g: gl-lamed-boar-id)
+	(up-object-data object-data-hitpoints < 1)
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 9)
+	(up-target-point gl-starting-tc-x action-move -1 -1)
+	(chat-to-player my-player-number "Send villager home, finish the lame")
+	(set-goal gl-lame-enemy YES)
+	(disable-self)
+)
+
 
 ;endregion
 
@@ -23455,6 +23885,7 @@
 	;(goal strategy-goal sg-drush)
 	(goal attack-now-goal 1)
 	(current-age == dark-age)
+	(players-building-count focus-player > 0)
 	;(civilian-population g:< d-villager-goal)
 	(unit-type-count militiaman-line g:>= gl-drush-militia-count)
 	;(unit-type-count-total militiaman-line g:== gl-drush-militia-count)
@@ -23708,6 +24139,7 @@
 	(up-find-local c: 354 c: 240) ;female forager
 	(up-find-local c: 120 c: 240) ;male forager
 	(up-remove-objects search-local object-data-group-flag == 2)
+	;(up-remove-objects search-local object-data-group-flag == 9)
 	(up-remove-objects search-local object-data-hitpoints < 25)
 	(up-clean-search search-local object-data-hitpoints search-order-desc)
 	(up-remove-objects search-local -1 > 0) ;find one shepherd/hunter
@@ -23736,6 +24168,7 @@
 	(up-find-local c: 354 c: 240) ;female forager
 	(up-find-local c: 120 c: 240) ;male forager
 	(up-remove-objects search-local object-data-group-flag == 2)
+	(up-remove-objects search-local object-data-group-flag == 9)
 	(up-remove-objects search-local object-data-hitpoints < 25)
 	(up-clean-search search-local object-data-hitpoints search-order-desc)
 	(up-remove-objects search-local -1 > 0) ;find one shepherd
@@ -30167,6 +30600,7 @@
 (defrule
 	(current-age == castle-age)
 	(up-compare-goal gl-military-advantage < -4)
+	(players-current-age focus-player >= castle-age)
 	(military-population < 18)
 	(goal attack-now-goal 1)
 	(goal retreat-now-goal 0)
