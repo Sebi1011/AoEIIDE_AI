@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 23rd September 2023
+;last update: 24th September 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -566,17 +566,15 @@
 (defconst gl-collect-sheep 243)
 (defconst gl-camp-x 244)
 (defconst gl-camp-y 245)
-(defconst gl-lame-enemy 246)
-(defconst gl-lamed-target-id 247)
-(defconst gl-quick-wall-id 248)
-(defconst gl-priority-goal 249)
-(defconst ca-strategy 250)
-(defconst gl-castleage-stableunit 251)
-(defconst gl-castleage-rangeunit 252)
-(defconst gl-castleage-eagles 253)
-(defconst gl-castleage-siege-infantry 254)
-(defconst gl-lamed-target-x 255)
-(defconst gl-lamed-target-y 256)
+
+
+(defconst gl-priority-goal 252) ;setting unit/building target-priorities depending on strategy
+(defconst ca-strategy 253)
+(defconst gl-castleage-stableunit 254)
+(defconst gl-castleage-rangeunit 255)
+(defconst gl-castleage-eagles 256)
+(defconst gl-castleage-siege-infantry 257)
+
 
 (defconst market-point-x 258)
 (defconst market-point-y 259)
@@ -594,7 +592,6 @@
 (defconst scout-base-three-y 271)
 (defconst scout-base-four-x 272)
 (defconst scout-base-four-y 273)
-(defconst flare 274)
 (defconst gl-lame-boar 274)
 (defconst gl-lame-deer 275)
 (defconst gl-lame-berries 276)
@@ -609,6 +606,14 @@
 (defconst gl-distance-temp-one 290)
 (defconst gl-distance-temp-two 291)
 (defconst gl-distance-temp-three 292)
+
+(defconst gl-lame-enemy 293)
+(defconst gl-lamed-target-id 294)
+(defconst gl-quick-wall-id 295)
+(defconst gl-lamed-target-x 296)
+(defconst gl-lamed-target-y 297)
+(defconst gl-lame-curr-wall 298)
+(defconst gl-lame-nr-enemy-bushes 299)
 
 (defconst civ-eco-s 300)
 (defconst civ-archery-s 301)
@@ -665,7 +670,9 @@
 (defconst gl-my-player-number 422)
 
 (defconst temporary-goal 500)
+;goal limit: 511
 
+(defconst flare 274)
 (defconst ri-first-crusade 756)
 (defconst barracks-huskarl 759)
 (defconst elite-barracks-huskarl 761)
@@ -4544,6 +4551,21 @@
 ;look for deer (to kill); forage bushes, goldmines (to wall in)
 ;send villager to next target boar or to deer
 #load-if-not-defined UP-POCKET-POSITION
+
+; #load-if-defined UP-SCENARIO-GAME
+
+; (defrule ;for test scenarios
+	; (goal gl-lame-enemy -1)
+; =>
+	; (set-goal gl-lame-enemy YES)
+	; (set-goal gl-lame-boar NO)
+	; (set-goal gl-lame-deer NO)
+	; (set-goal gl-lame-berries YES)
+	; (chat-to-player my-player-number "I will lame my opponent")
+	; (disable-self)
+; )
+; #end-if
+
 #load-if-defined SOCOTRO-MAP
 
 (defrule ;always lame on socotra
@@ -4578,7 +4600,8 @@
 
 (defrule ;always active for testing purposes
 	(or (civ-selected gothic)
-	(civ-selected berbers)) ;koreans? ;mongols? 
+	(or (civ-selected korean)
+	(civ-selected berbers))) ;mongols? 
 	(goal gl-lame-enemy -1)
 =>
 	(set-goal gl-lame-enemy YES)
@@ -4666,6 +4689,16 @@
 
 ;todo: properly scouting around the opponents base
 
+
+
+
+
+
+
+
+
+
+
 (defrule
 	(current-age == dark-age)
 	(goal gl-lame-enemy YES)
@@ -4683,7 +4716,7 @@
 	(up-full-reset-search)
 	(up-set-target-point enemy-point-x)
 	;(up-send-flare enemy-point-x)
-	(up-filter-distance c: -1 c: 32)
+	(up-filter-distance c: 7 c: 32)
 	(set-strategic-number sn-focus-player-number 0)
 	(up-find-remote c: boar-class c: 1) ;will sometimes find a boar that is not visible
 	(up-get-search-state gl-local-total)
@@ -4714,8 +4747,8 @@
 	(players-building-type-count focus-player town-center >= 1)
 	(up-compare-goal gl-lamed-target-x != -1)
 =>
-	(up-lerp-tiles gl-lamed-target-x enemy-point-x c: 2)
-	(up-cross-tiles gl-lamed-target-x enemy-point-x c: 2) ;not fail-safe if tile is inaccessible
+	(up-lerp-tiles gl-lamed-target-x enemy-point-x c: -1)
+	(up-cross-tiles gl-lamed-target-x enemy-point-x c: 1) ;not fail-safe if tile is inaccessible ;towards our base
 	(up-send-flare gl-lamed-target-x)
 	(chat-to-player my-player-number "Adjust boar-lame spot")
 	(disable-self)
@@ -4725,15 +4758,18 @@
 	(current-age == dark-age)
 	;(civilian-population == 10)
 	(goal gl-lame-enemy YES)
-	(goal gl-lame-boar YES)
+	(or (goal gl-lame-boar YES)
+	(or (goal gl-lame-deer YES)
+	(goal gl-lame-berries YES)))
 	(up-group-size c: 9 < 1)
 	;(players-building-type-count focus-player town-center >= 1)
-	(unit-type-count villager-shepherd > 0)
+	(unit-type-count villager > 0)
 	;(up-compare-goal gl-lamed-target-x != -1)
 =>
 	(up-full-reset-search)
 	(up-find-local c: 590 c: 240) ;female shepherd
 	(up-find-local c: 592 c: 240) ;male shepherd
+	(up-find-local c: villager-class c: 240)
 	(up-clean-search search-local object-data-carry search-order-asc)
 	(up-remove-objects search-local -1 > 0) 
 	(up-reset-group c: 9)
@@ -4745,13 +4781,15 @@
 
 (defrule
 	(current-age == dark-age)
-	(goal gl-lame-enemy YES)
-	(goal gl-lame-boar YES)
+	(or (goal gl-lame-boar YES)
+	(or (goal gl-lame-deer YES)
+	(goal gl-lame-berries YES)))
 	(up-group-size c: 9 >= 1)
 	(up-compare-goal gl-lamed-target-x != -1)
 	(not (up-point-contains gl-lamed-target-x c: villager-class))
 	(building-type-count-total palisade-wall < 1)
 =>
+	(set-goal temp-goal-one 1)
 	(up-full-reset-search)
 	(up-set-group search-local c: 9)
 	(up-target-point gl-lamed-target-x action-move -1 -1)
@@ -4767,11 +4805,29 @@
 	(up-point-contains gl-lamed-target-x c: villager-class)
 	(building-type-count-total palisade-wall < 4)
 	(up-pending-objects c: palisade-wall < 1)
-	;(up-can-build-line 0 gl-lamed-target-x c: palisade-wall) ;not fail-safe if no wood to build
+	(up-compare-goal gl-lame-curr-wall < 1)
 =>
+	;(up-modify-goal gl-lame-curr-wall c:+ 1)
 	(up-modify-goal gl-lamed-target-x c:- 1)
 	(up-build-line gl-lamed-target-x gl-lamed-target-x c: palisade-wall)
 	(chat-to-player my-player-number "Villager reached the point, build first wall")
+)
+
+(defrule ;1st wall blocked
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-boar YES)
+	(up-group-size c: 9 >= 1)
+	(up-compare-goal gl-lamed-target-x != -1)
+	(not (up-can-build-line 0 gl-lamed-target-x c: palisade-wall))
+	(not (up-point-contains gl-lamed-target-x c: villager-class))
+	(building-type-count-total palisade-wall < 4)
+	(up-pending-objects c: palisade-wall == 0)
+	(up-compare-goal gl-lame-curr-wall < 1)
+	(up-compare-goal temp-goal-one == 1)
+=>
+	(set-goal gl-lame-curr-wall 1)
+	(chat-to-player my-player-number "wall spot blocked 1")
 )
 
 (defrule ;1st wall
@@ -4785,8 +4841,8 @@
 	(up-set-target-by-id g: gl-quick-wall-id)
 	(up-object-data object-data-hitpoints < 2)
 	(up-pending-objects c: palisade-wall == 1)
-	;(up-can-build-line 0 gl-lamed-target-x c: palisade-wall) ;not fail-safe if no wood to build
 =>
+	(set-goal gl-lame-curr-wall 1)
 	(up-full-reset-search)
 	(up-set-group search-local c: 9)
 	(up-set-target-by-id g: gl-quick-wall-id)
@@ -4805,12 +4861,30 @@
 	(up-get-point-contains gl-lamed-target-x gl-quick-wall-id c: palisade-wall)
 	(up-set-target-by-id g: gl-quick-wall-id)
 	(up-object-data object-data-hitpoints >= 2)
-	;(up-can-build-line 0 gl-lamed-target-x c: palisade-wall) ;not fail-safe if no wood to build
+	(up-compare-goal gl-lame-curr-wall < 2)
 =>
+	(up-modify-goal temp-goal-one c:+ 1)
 	(up-modify-goal gl-lamed-target-x c:+ 1)
 	(up-modify-goal gl-lamed-target-y c:+ 1)
 	(up-build-line gl-lamed-target-x gl-lamed-target-x c: palisade-wall)
 	(chat-to-player my-player-number "Setup 2nd wall")
+)
+
+(defrule ;1st wall blocked
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-boar YES)
+	(up-group-size c: 9 >= 1)
+	(up-compare-goal gl-lamed-target-x != -1)
+	(not (up-can-build-line 0 gl-lamed-target-x c: palisade-wall))
+	(not (up-point-contains gl-lamed-target-x c: villager-class))
+	(building-type-count-total palisade-wall < 4)
+	(up-pending-objects c: palisade-wall == 1)
+	(up-compare-goal gl-lame-curr-wall < 2)
+	(up-compare-goal temp-goal-one == 2)
+=>
+	(set-goal gl-lame-curr-wall 2)
+	(chat-to-player my-player-number "wall spot blocked 2")
 )
 
 (defrule ;2nd wall
@@ -4824,8 +4898,8 @@
 	(up-object-data object-data-hitpoints < 2)
 	(building-type-count-total palisade-wall < 4)
 	(up-pending-objects c: palisade-wall == 2)
-	;(up-can-build-line 0 gl-lamed-target-x c: palisade-wall) ;not fail-safe if no wood to build
 =>
+	(set-goal gl-lame-curr-wall 2)
 	(up-full-reset-search)
 	(up-set-group search-local c: 9)
 	(up-set-target-by-id g: gl-quick-wall-id)
@@ -4844,12 +4918,30 @@
 	(up-get-point-contains gl-lamed-target-x gl-quick-wall-id c: palisade-wall)
 	(up-set-target-by-id g: gl-quick-wall-id)
 	(up-object-data object-data-hitpoints >= 2)
-	;(up-can-build-line 0 gl-lamed-target-x c: palisade-wall) ;not fail-safe if no wood to build
+	(up-compare-goal gl-lame-curr-wall < 3)
 =>
+	(up-modify-goal temp-goal-one c:+ 1)
 	(up-modify-goal gl-lamed-target-x c:+ 1)
 	(up-modify-goal gl-lamed-target-y c:- 1)
 	(up-build-line gl-lamed-target-x gl-lamed-target-x c: palisade-wall)
 	(chat-to-player my-player-number "Setup 3rd wall")
+)
+
+(defrule ;3rd wall blocked
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-boar YES)
+	(up-group-size c: 9 >= 1)
+	(up-compare-goal gl-lamed-target-x != -1)
+	(not (up-can-build-line 0 gl-lamed-target-x c: palisade-wall))
+	(not (up-point-contains gl-lamed-target-x c: villager-class))
+	(building-type-count-total palisade-wall < 4)
+	(up-pending-objects c: palisade-wall == 2)
+	(up-compare-goal gl-lame-curr-wall < 3)
+	(up-compare-goal temp-goal-one == 3)
+=>
+	(set-goal gl-lame-curr-wall 3)
+	(chat-to-player my-player-number "wall spot blocked 3")
 )
 
 (defrule ;3rd wall
@@ -4863,8 +4955,8 @@
 	(up-object-data object-data-hitpoints < 2)
 	(building-type-count-total palisade-wall < 4)
 	(up-pending-objects c: palisade-wall == 3)
-	;(up-can-build-line 0 gl-lamed-target-x c: palisade-wall) ;not fail-safe if no wood to build
 =>
+	(set-goal gl-lame-curr-wall 3)
 	(up-full-reset-search)
 	(up-set-group search-local c: 9)
 	(up-set-target-by-id g: gl-quick-wall-id)
@@ -4883,12 +4975,30 @@
 	(up-get-point-contains gl-lamed-target-x gl-quick-wall-id c: palisade-wall)
 	(up-set-target-by-id g: gl-quick-wall-id)
 	(up-object-data object-data-hitpoints >= 2)
-	;(up-can-build-line 0 gl-lamed-target-x c: palisade-wall) ;not fail-safe if no wood to build
+	(up-compare-goal gl-lame-curr-wall < 4)
 =>
+	(up-modify-goal temp-goal-one c:+ 1)
 	(up-modify-goal gl-lamed-target-x c:- 1)
 	(up-modify-goal gl-lamed-target-y c:- 1)
 	(up-build-line gl-lamed-target-x gl-lamed-target-x c: palisade-wall)
 	(chat-to-player my-player-number "Setup 4th wall")
+)
+
+(defrule ;1st wall blocked
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-boar YES)
+	(up-group-size c: 9 >= 1)
+	(up-compare-goal gl-lamed-target-x != -1)
+	(not (up-can-build-line 0 gl-lamed-target-x c: palisade-wall))
+	(not (up-point-contains gl-lamed-target-x c: villager-class))
+	(building-type-count-total palisade-wall < 4)
+	(up-pending-objects c: palisade-wall == 3)
+	(up-compare-goal gl-lame-curr-wall < 4)
+	(up-compare-goal temp-goal-one == 4)
+=>
+	(set-goal gl-lame-curr-wall 4)
+	(chat-to-player my-player-number "wall spot blocked 4")
 )
 
 (defrule ;4th wall
@@ -4902,8 +5012,8 @@
 	(up-object-data object-data-hitpoints < 2)
 	(building-type-count-total palisade-wall <= 4)
 	(up-pending-objects c: palisade-wall == 4)
-	;(up-can-build-line 0 gl-lamed-target-x c: palisade-wall) ;not fail-safe if no wood to build
 =>
+	(set-goal gl-lame-curr-wall 4)
 	(up-full-reset-search)
 	(up-set-group search-local c: 9)
 	(up-set-target-by-id g: gl-quick-wall-id)
@@ -4938,12 +5048,12 @@
 	(goal gl-lame-enemy YES)
 	(goal gl-lame-boar YES)
 	(up-group-size c: 9 >= 1)
-	(up-set-target-object search-local c: 0)
+	;(up-set-target-object search-local c: 0)
 	;(up-object-data object-data-action != actionid-attack)	;don't spam shooting, villager is for some reason tasked to gold
-	;(up-get-point-contains gl-lamed-target-x gl-quick-wall-id c: palisade-wall) ;last palisade has been placed
+	(up-get-point-contains gl-lamed-target-x gl-quick-wall-id c: palisade-wall) ;last palisade has been placed
 	(up-set-target-by-id g: gl-quick-wall-id)
 	(up-object-data object-data-hitpoints >= 2) ;last palisade got started to build
-	(building-type-count-total palisade-wall >= 4) ;what if we can't build 4 palisade-walls?
+	(goal gl-lame-curr-wall 4)
 	(up-set-target-by-id g: gl-lamed-target-id)
 	(up-object-data object-data-hitpoints > 3) ;boar has more than 3hp
 =>
@@ -5052,7 +5162,7 @@
 	(up-full-reset-search)
 	(up-set-target-point enemy-point-x)
 	;(up-send-flare enemy-point-x)
-	(up-filter-distance c: -1 c: 32)
+	(up-filter-distance c: 7 c: 32)
 	(set-strategic-number sn-focus-player-number 0)
 	(up-find-remote c: deer-class c: 10)
 	(up-get-search-state gl-local-total)
@@ -5069,13 +5179,14 @@
 	(up-compare-goal gl-remote-total < 1)
 =>
 	(set-goal gl-lame-deer NO)
-	;(set-goal gl-lame-berries YES) ;temporary switched off until berry laming is working
-	(set-goal gl-lame-enemy NO) ;temporary until berry laming is working
-	(set-goal gl-lame-berries NO) ;temporary until berry laming is working
+	(set-goal gl-lame-berries YES) ;temporary switched off until berry laming is working
+	;(set-goal gl-lame-enemy NO) ;temporary until berry laming is working
+	;(set-goal gl-lame-berries NO) ;temporary until berry laming is working
 	(set-goal gl-lamed-target-x -1)
 	(set-goal gl-lamed-target-y -1)
 	(set-goal gl-lamed-target-id -1)
 	(set-goal gl-quick-wall-id -1)
+	(set-goal gl-lame-curr-wall 0)
 	(chat-to-player my-player-number "No deer found to lame, trying to lame the berries")
 )
 
@@ -5118,10 +5229,11 @@
 	(up-full-reset-search)
 	(up-set-target-point enemy-point-x)
 	;(up-send-flare enemy-point-x)
-	(up-filter-distance c: -1 c: 32)
+	(up-filter-distance c: 7 c: 32) ;to prevent finding berry bushes from gurjaras
 	(set-strategic-number sn-focus-player-number 0)
 	(up-find-remote c: forage-class c: 10)
 	(up-get-search-state gl-local-total)
+	(up-modify-goal gl-lame-nr-enemy-bushes g:= gl-remote-total)
 	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 	(up-chat-data-to-all "Nr. berries: %d" g: gl-remote-total)
 	;(up-chat-data-to-all "target-x: %d" g: gl-lamed-target-x)
@@ -5136,13 +5248,35 @@
 	(up-compare-goal gl-remote-total < 1)
 =>
 	(set-goal gl-lame-berries NO)
+	(set-goal gl-lame-enemy NO)
 	(set-goal gl-lamed-target-x -1)
 	(set-goal gl-lamed-target-y -1)
 	(set-goal gl-lamed-target-id -1)
 	(set-goal gl-quick-wall-id -1)
-	(chat-to-player my-player-number "No berries found to lame")
+	(chat-to-player my-player-number "Finish laming berries")
 )
 
+(defrule
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(up-compare-goal gl-lame-curr-wall g:< gl-lame-nr-enemy-bushes)
+=>
+	(up-get-rule-id gl-rule-jump-id)
+	(set-goal temp-goal-one 1)
+)
+
+(defrule
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(up-compare-goal temp-goal-one < 9)
+=>
+	(up-get-rule-id gl-player-loop-rule-id)
+)
+	
 (defrule ;getting forage-bush id
 	(current-age == dark-age)
 	(goal gl-lame-enemy YES)
@@ -5150,12 +5284,237 @@
 	(players-building-type-count focus-player town-center >= 1)
 	(up-compare-goal gl-remote-total >= 1)
 =>
-	(up-set-target-object search-remote c: 0)
+	(up-set-target-object search-remote g: gl-lame-curr-wall)
 	(up-get-object-data object-data-id gl-lamed-target-id)
 	(up-get-point position-object gl-lamed-target-x)
-	(up-send-flare gl-lamed-target-x)
-	(chat-to-player my-player-number "Getting forage bush position & id")
+	;(up-send-flare gl-lamed-target-x)
+	;(chat-to-player my-player-number "Getting forage bush position & id")
 )
+
+(defrule ;select target bush, try to build walls around it
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(goal temp-goal-one 1)
+=>
+	(up-modify-goal gl-lamed-target-x c:- 1)
+	(up-modify-goal gl-lamed-target-y c:- 1)
+)
+
+(defrule
+	(up-pending-objects c: palisade-wall < 1)
+	(goal temp-goal-one 2)
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+=>
+	;(up-get-point position-object watch-tower-point-x)
+	;(up-set-target-point watch-tower-point-x)
+	(up-modify-goal gl-lamed-target-x c:+ 1)
+)
+
+(defrule
+	(up-pending-objects c: palisade-wall < 1)
+	(goal temp-goal-one 3)
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+=>
+	;(up-get-point position-object watch-tower-point-x)
+	;(up-set-target-point watch-tower-point-x)
+	(up-modify-goal gl-lamed-target-x c:+ 1)
+)
+
+(defrule
+	(up-pending-objects c: palisade-wall < 1)
+	(goal temp-goal-one 4)
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+=>
+	;(up-get-point position-object watch-tower-point-x)
+	;(up-set-target-point watch-tower-point-x)
+	(up-modify-goal gl-lamed-target-y c:+ 1)
+)
+
+(defrule
+	(up-pending-objects c: palisade-wall < 1)
+	(goal temp-goal-one 5)
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+=>
+	;(up-get-point position-object watch-tower-point-x)
+	;(up-set-target-point watch-tower-point-x)
+	(up-modify-goal gl-lamed-target-y c:+ 1)
+)
+
+(defrule
+	(up-pending-objects c: palisade-wall < 1)
+	(goal temp-goal-one 6)
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+=>
+	;(up-get-point position-object watch-tower-point-x)
+	;(up-set-target-point watch-tower-point-x)
+	(up-modify-goal gl-lamed-target-x c:- 1)
+)
+
+(defrule
+	(up-pending-objects c: palisade-wall < 1)
+	(goal temp-goal-one 7)
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+=>
+	;(up-get-point position-object watch-tower-point-x)
+	;(up-set-target-point watch-tower-point-x)
+	(up-modify-goal gl-lamed-target-x c:- 1)
+)
+
+(defrule
+	(up-pending-objects c: palisade-wall < 1)
+	(goal temp-goal-one 8)
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+=>
+	;(up-get-point position-object watch-tower-point-x)
+	;(up-set-target-point watch-tower-point-x)
+	(up-modify-goal gl-lamed-target-y c:- 1)
+)
+
+(defrule
+	(up-pending-objects c: palisade-wall < 1)
+	(goal temp-goal-one 9)
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+=>
+	;(up-get-point position-object watch-tower-point-x)
+	;(up-set-target-point watch-tower-point-x)
+	(up-modify-goal gl-lamed-target-y c:- 1)
+)
+	
+(defrule ;build wall, wall-counter +1
+	(up-can-build-line 0 gl-lamed-target-x c: palisade-wall)
+	(up-compare-goal temp-goal-one < 9)
+	(up-compare-goal gl-lame-curr-wall g:< gl-lame-nr-enemy-bushes)
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+=>
+	(up-assign-builders c: palisade-wall c: -1)
+	(up-build-line gl-lamed-target-x gl-lamed-target-x c: palisade-wall)
+	(up-modify-goal temp-goal-one c:+ 1)
+)
+
+(defrule ;failed to build wall, temp-check +1
+	(or (up-point-contains watch-tower-point-x c: palisade-wall)
+	(not (up-can-build-line 0 watch-tower-point-x c: palisade-wall)))
+	(up-compare-goal temp-goal-one < 9)
+	(up-compare-goal gl-lame-curr-wall g:< gl-lame-nr-enemy-bushes)
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+=>
+	(up-modify-goal temp-goal-one c:+ 1)
+)
+
+(defrule
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(up-compare-goal temp-goal-one < 9)
+	(up-compare-goal gl-player-loop-rule-id != -1)
+=>
+	(up-jump-direct g: gl-player-loop-rule-id)
+)
+
+(defrule ;end loop
+	(up-compare-goal temp-goal-one >= 9)
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(up-compare-goal gl-lame-curr-wall g:< gl-lame-nr-enemy-bushes)
+	(up-compare-goal gl-rule-jump-id != -1)
+=>
+	(up-modify-goal gl-lame-curr-wall c:+ 1)
+	(up-chat-data-to-player my-player-number "curr bush: %d" g: gl-lame-curr-wall)
+	(up-jump-direct g: gl-rule-jump-id)
+)
+
+(defrule	
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(up-pending-objects c: palisade-wall > 0)
+	(up-group-size c: 9 >= 1)
+	(up-compare-goal gl-lame-curr-wall g:>= gl-lame-nr-enemy-bushes)
+=>
+	(up-full-reset-search)
+	(up-filter-status c: status-pending c: list-active)
+	(up-find-status-local c: palisade-wall c: 1)
+)
+
+(defrule
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(up-group-size c: 9 >= 1)
+	(up-compare-goal gl-lame-curr-wall g:>= gl-lame-nr-enemy-bushes)
+	(up-pending-objects c: palisade-wall > 0)
+	(up-set-target-object search-local c: 0)
+=>
+	(up-full-reset-search)
+	; (up-get-point-contains watch-tower-point-x gl-wall-id c: palisade-wall)
+	; (up-add-object-by-id search-remote g: gl-wall-id)
+	(up-set-group search-local c: 9)
+	(up-target-objects 1 action-default -1 -1)
+	(chat-to-player my-player-number "Tasking ctrl group to wall berries")
+)
+
+(defrule
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(up-group-size c: 9 >= 1)
+	(up-compare-goal gl-lame-curr-wall g:>= gl-lame-nr-enemy-bushes)
+	(or (up-pending-objects c: palisade-wall < 1)
+	(not (up-set-target-object search-local c: 0)))
+=>
+	(set-goal gl-lame-berries NO)
+	(chat-to-player my-player-number "Walling finished, laming successful")
+)
+
+(defrule
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-boar NO)
+	(goal gl-lame-deer NO)
+	(goal gl-lame-berries NO)
+	(up-group-size c: 9 >= 1)
+=>
+	(set-goal gl-lame-enemy NO)
+)
+
 
 ;to-do:
 	;find a reliable method to fully wall-in opponents forage bushes
@@ -7290,6 +7649,35 @@
 ;endregion
 
 ;region Evacuate Base
+
+(defrule
+    (current-age >= feudal-age)
+	(building-type-count-total town-center == 0)
+	(up-pending-objects c: town-center < 1)
+=>
+	(up-full-reset-search)
+	(up-filter-status c: status-pending c: list-active)
+	(up-find-status-local c: mining-camp c: 10)
+	(up-find-status-local c: lumber-camp c: 10)
+	(up-find-status-local c: mill c: 10)
+	(up-find-status-local c: barracks c: 10)
+	(up-find-status-local c: archery-range c: 10)
+	(up-find-status-local c: stable c: 10)
+	(up-find-status-local c: siege-workshop c: 10)
+	(up-find-status-local c: monastery c: 10)
+	(up-find-status-local c: university c: 10)
+	(up-find-status-local c: blacksmith c: 10)
+)
+
+(defrule
+    (current-age >= feudal-age)
+	(building-type-count-total town-center == 0)
+	(up-pending-objects c: town-center < 1)
+=>
+	(up-target-objects 1 action-delete -1 -1)
+	(chat-to-player my-player-number "Deleting unintended placed buildings under construction")
+)
+
 
 (defrule	
 	(gold-amount < 200)
