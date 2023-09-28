@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 24th September 2023
+;last update: 28th September 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -833,17 +833,6 @@
 	(disable-self)
 )
 
-; #load-if-defined ARENA-MAP
-
-; (defrule
-	; (true)
-; =>
-	; (set-strategic-number sn-relic-defend-priority 1)
-	; (disable-self)
-; )
-
-; #end-if
-
 
 #load-if-not-defined REVEAL-NORMAL
 
@@ -911,6 +900,7 @@
 	(true)
 =>
 	(chat-local-to-self "Playing on Arena")
+	; (set-strategic-number sn-relic-defend-priority 1)
 	(disable-self)
 )
 
@@ -4747,8 +4737,8 @@
 	(players-building-type-count focus-player town-center >= 1)
 	(up-compare-goal gl-lamed-target-x != -1)
 =>
-	(up-lerp-tiles gl-lamed-target-x enemy-point-x c: -1)
-	(up-cross-tiles gl-lamed-target-x enemy-point-x c: 1) ;not fail-safe if tile is inaccessible ;towards our base
+	(up-lerp-tiles gl-lamed-target-x enemy-point-x c: -2)
+	(up-cross-tiles gl-lamed-target-x enemy-point-x c: 2) ;not fail-safe if tile is inaccessible ;towards our base
 	(up-send-flare gl-lamed-target-x)
 	(chat-to-player my-player-number "Adjust boar-lame spot")
 	(disable-self)
@@ -4795,6 +4785,10 @@
 	(up-target-point gl-lamed-target-x action-move -1 -1)
 	(chat-to-player my-player-number "Sending villager forward to lame")
 )
+
+
+;todo: villager might eventually walk outside the walling area and die to the boar
+;todo: neither spam attack boar nor let villager retreat to the base from boar (use timer to tell to shoot & let villager walk on the center tile during attack delay)
 
 (defrule ;setup 1st wall
 	(current-age == dark-age)
@@ -5040,16 +5034,18 @@
 	; (set-strategic-number sn-minimum-boar-hunt-group-size 0)
 	; (set-strategic-number sn-minimum-number-hunters 0)
 	; (set-strategic-number sn-maximum-hunt-drop-distance -2)
+	; (set-strategic-number sn-boar-lure-destination -1)
+	; (set-strategic-number sn-filter-under-attack 0)
 	; (disable-self)
-;)
+; )
 
 (defrule ;lame the boar
 	(current-age == dark-age)
 	(goal gl-lame-enemy YES)
 	(goal gl-lame-boar YES)
 	(up-group-size c: 9 >= 1)
-	;(up-set-target-object search-local c: 0)
-	;(up-object-data object-data-action != actionid-attack)	;don't spam shooting, villager is for some reason tasked to gold
+	;(up-set-target-object search-local c: 0) ;!
+	;(up-object-data object-data-action != actionid-hunt) ;prevent spam shooting; currently causes vil to be retasked/to retreat from the boar ;!
 	(up-get-point-contains gl-lamed-target-x gl-quick-wall-id c: palisade-wall) ;last palisade has been placed
 	(up-set-target-by-id g: gl-quick-wall-id)
 	(up-object-data object-data-hitpoints >= 2) ;last palisade got started to build
@@ -5463,9 +5459,9 @@
 	(goal gl-lame-enemy YES)
 	(goal gl-lame-berries YES)
 	(players-building-type-count focus-player town-center >= 1)
-	(up-pending-objects c: palisade-wall > 0)
 	(up-group-size c: 9 >= 1)
 	(up-compare-goal gl-lame-curr-wall g:>= gl-lame-nr-enemy-bushes)
+	(up-pending-objects c: palisade-wall > 0)
 =>
 	(up-full-reset-search)
 	(up-filter-status c: status-pending c: list-active)
@@ -5482,9 +5478,12 @@
 	(up-pending-objects c: palisade-wall > 0)
 	(up-set-target-object search-local c: 0)
 =>
+	(up-set-target-object search-local c: 0)
+	(up-get-object-data object-data-id gl-quick-wall-id)
 	(up-full-reset-search)
 	; (up-get-point-contains watch-tower-point-x gl-wall-id c: palisade-wall)
 	; (up-add-object-by-id search-remote g: gl-wall-id)
+	(up-set-target-by-id g: gl-quick-wall-id)
 	(up-set-group search-local c: 9)
 	(up-target-objects 1 action-default -1 -1)
 	(chat-to-player my-player-number "Tasking ctrl group to wall berries")
@@ -5497,8 +5496,7 @@
 	(players-building-type-count focus-player town-center >= 1)
 	(up-group-size c: 9 >= 1)
 	(up-compare-goal gl-lame-curr-wall g:>= gl-lame-nr-enemy-bushes)
-	(or (up-pending-objects c: palisade-wall < 1)
-	(not (up-set-target-object search-local c: 0)))
+	(up-pending-objects c: palisade-wall < 1)
 =>
 	(set-goal gl-lame-berries NO)
 	(chat-to-player my-player-number "Walling finished, laming successful")
