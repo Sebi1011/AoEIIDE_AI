@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 28th September 2023
+;last update: 29th September 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -566,7 +566,10 @@
 (defconst gl-collect-sheep 243)
 (defconst gl-camp-x 244)
 (defconst gl-camp-y 245)
-
+(defconst temp-x 246)
+(defconst temp-y 247)
+(defconst scout-enemy-curr-x 248)
+(defconst scout-enemy-curr-y 249)
 
 (defconst gl-priority-goal 252) ;setting unit/building target-priorities depending on strategy
 (defconst ca-strategy 253)
@@ -3424,7 +3427,6 @@
 
 ;scouting own base
 (defrule
-	(goal gl-scout-base YES)
 	(current-age == dark-age)
 	(up-group-size c: 1 < 1)
 	(or (unit-type-count scout-cavalry-line > 0)
@@ -3465,6 +3467,7 @@
 	(chat-to-player my-player-number "Initializing scouting points")
 	(disable-timer scout-base-point-timer)
 	(up-set-timer c: scout-base-point-timer g: 35)
+	(set-goal gl-curr-point 1)
 	(disable-self)
 )
 
@@ -3985,30 +3988,30 @@
 
 ;region Scouting the Opponents base ================================
 
-(defrule
-	(current-age == dark-age)
-	(players-building-type-count focus-player town-center >= 1)
-	(up-compare-goal enemy-point-x != -1)
-	(up-compare-goal scout-enemy-one-x == -1)
-=>
-	(up-copy-point scout-enemy-one-x enemy-point-x)
-	(up-modify-goal scout-enemy-one-x c:- 15)
-	(up-modify-goal scout-enemy-one-y c:- 15)
-	(up-copy-point scout-enemy-two-x enemy-point-x)
-	(up-modify-goal scout-enemy-two-x c:- 15)
-	(up-modify-goal scout-enemy-two-y c:+ 15)	
-	(up-copy-point scout-enemy-three-x enemy-point-x)
-	(up-modify-goal scout-enemy-three-x c:+ 15)
-	(up-modify-goal scout-enemy-three-y c:+ 15)
-	(up-copy-point scout-enemy-four-x enemy-point-x)
-	(up-modify-goal scout-enemy-four-x c:+ 15)
-	(up-modify-goal scout-enemy-four-y c:- 15)
-	;(up-send-flare scout-enemy-one-x)
-	;(up-send-flare scout-enemy-two-x)
-	;(up-send-flare scout-enemy-three-x)
-	;(up-send-flare scout-enemy-four-x)
-	(chat-to-player my-player-number "Setting scouting goals for opponents base")
-)
+; (defrule
+	; (current-age == dark-age)
+	; (players-building-type-count focus-player town-center >= 1)
+	; (up-compare-goal enemy-point-x != -1)
+	; (up-compare-goal scout-enemy-one-x == -1)
+; =>
+	; (up-copy-point scout-enemy-one-x enemy-point-x)
+	; (up-modify-goal scout-enemy-one-x c:- 15)
+	; (up-modify-goal scout-enemy-one-y c:- 15)
+	; (up-copy-point scout-enemy-two-x enemy-point-x)
+	; (up-modify-goal scout-enemy-two-x c:- 15)
+	; (up-modify-goal scout-enemy-two-y c:+ 15)	
+	; (up-copy-point scout-enemy-three-x enemy-point-x)
+	; (up-modify-goal scout-enemy-three-x c:+ 15)
+	; (up-modify-goal scout-enemy-three-y c:+ 15)
+	; (up-copy-point scout-enemy-four-x enemy-point-x)
+	; (up-modify-goal scout-enemy-four-x c:+ 15)
+	; (up-modify-goal scout-enemy-four-y c:- 15)
+	; ;(up-send-flare scout-enemy-one-x)
+	; ;(up-send-flare scout-enemy-two-x)
+	; ;(up-send-flare scout-enemy-three-x)
+	; ;(up-send-flare scout-enemy-four-x)
+	; (chat-to-player my-player-number "Setting scouting goals for opponents base")
+; )
 
 ;endregion
 
@@ -4565,6 +4568,7 @@
 	(set-goal gl-lame-boar YES)
 	(set-goal gl-lame-deer NO)
 	(set-goal gl-lame-berries NO)
+	(set-goal gl-scout-base NO)
 	(chat-to-player my-player-number "I will lame my opponent")
 	(disable-self)
 )
@@ -4581,6 +4585,7 @@
 	(set-goal gl-lame-boar YES)
 	(set-goal gl-lame-deer NO)
 	(set-goal gl-lame-berries NO)
+	(set-goal gl-scout-base NO)
 	(chat-to-player my-player-number "I will lame my opponent")
 	(disable-self)
 )
@@ -4598,6 +4603,7 @@
 	(set-goal gl-lame-boar YES)
 	(set-goal gl-lame-deer NO)
 	(set-goal gl-lame-berries NO)
+	(set-goal gl-scout-base NO)
 	(chat-to-player my-player-number "I will forward my opponent")
 	(disable-self)
 )
@@ -4637,7 +4643,7 @@
 	(current-age == dark-age)
 	(goal gl-lame-enemy YES)
 	(goal gl-collect-sheep NO)
-	(players-building-type-count focus-player town-center < 1)
+	(players-building-count focus-player < 1)
 	(game-time < 90)
 	(game-time > 8)
 =>
@@ -4650,8 +4656,8 @@
 (defrule 
 	(current-age == dark-age)
 	(goal gl-lame-enemy YES)
-	(players-building-type-count focus-player town-center >= 1)
-	(players-building-type-count focus-player lumber-camp < 1)
+	(players-building-type-count focus-player town-center < 1)
+	(players-building-count focus-player > 0)
 	(game-time < 150)
 =>
 	(up-send-scout group-type-land-explore scout-enemy)
@@ -4679,15 +4685,609 @@
 
 ;todo: properly scouting around the opponents base
 
+; (defrule
+	; (players-building-type-count focus-player town-center >= 1)
+; =>
+	; (up-chat-data-to-player my-player-number "curr-point: %d" g: gl-curr-point)
+	; (up-chat-data-to-player my-player-number "ex: %d" g: enemy-point-x)
+	; (up-chat-data-to-player my-player-number "ey: %d" g: enemy-point-y)
+	; (up-chat-data-to-player my-player-number "x1: %d" g: scout-enemy-one-x)
+	; (up-chat-data-to-player my-player-number "y1: %d" g: scout-enemy-one-y)
+	; (up-chat-data-to-player my-player-number "x2: %d" g: scout-enemy-two-x)
+	; (up-chat-data-to-player my-player-number "y2: %d" g: scout-enemy-two-y)
+	; (up-chat-data-to-player my-player-number "x3: %d" g: scout-enemy-three-x)
+	; (up-chat-data-to-player my-player-number "y3: %d" g: scout-enemy-three-y)
+	; (up-chat-data-to-player my-player-number "x4: %d" g: scout-enemy-four-x)
+	; (up-chat-data-to-player my-player-number "y4: %d" g: scout-enemy-four-y)
+	; (up-chat-data-to-player my-player-number "cx: %d" g: scout-enemy-curr-x)
+	; (up-chat-data-to-player my-player-number "cy: %d" g: scout-enemy-curr-y)
+; )
 
+(defrule ;calculate first point
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-one-x == -1)
+	(players-building-type-count focus-player town-center >= 1)
+	(game-time > 4)
+=>
+	(up-copy-point scout-enemy-one-x enemy-point-x)
+	(up-lerp-tiles scout-enemy-one-x gl-starting-tc-x c: 13)
+	(up-cross-tiles scout-enemy-one-x gl-starting-tc-x c: -13)
+	(up-copy-point scout-enemy-curr-x scout-enemy-one-x)
+	;(up-send-flare scout-enemy-one-x)
+	(set-goal gl-curr-point 2)
+	;(chat-to-all "test 1")
+)
 
+(defrule ;get distance to calculate next points
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-one-x != -1)
+	(players-building-type-count focus-player town-center >= 1)
+	(game-time > 4)
+	(up-compare-goal scout-enemy-four-x == -1)
+=>
+	(up-modify-goal temp-x g:= enemy-point-x)
+	(up-modify-goal temp-y g:= enemy-point-y)
+	(up-modify-goal temp-x g:- scout-enemy-curr-x)
+	(up-modify-goal temp-y g:- scout-enemy-curr-y)
+	;(up-chat-data-to-player my-player-number "temp x: %d" g: temp-x)
+	;(up-chat-data-to-player my-player-number "temp y: %d" g: temp-y)
+)
 
+(defrule ;left/right side
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-one-x != -1)
+	(players-building-type-count focus-player town-center >= 1)
+	(game-time > 4)
+	(up-compare-goal scout-enemy-four-x == -1)
+	(or 
+		(and (up-compare-goal temp-x < 0) ;left
+			 (up-compare-goal temp-y < 0))
+		(and (up-compare-goal temp-x >= 0) ;right
+			 (up-compare-goal temp-y >= 0))
+	)
+=>
+	(up-modify-goal temp-y c:* 2)
+	(up-modify-goal scout-enemy-curr-y g:+ temp-y)
+	;(up-modify-goal scout-enemy-curr-y g:+ enemy-point-y)
+	;(up-modify-goal scout-enemy-curr-x g:+ temp-x)
+	;(up-chat-data-to-player my-player-number "curr x: %d" g: scout-enemy-curr-x)
+	;(up-chat-data-to-player my-player-number "curr y: %d" g: scout-enemy-curr-y)
+	(up-jump-rule 1)
+)
+	
+	
+(defrule ;bottom/top side
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-one-x != -1)
+	(players-building-type-count focus-player town-center >= 1)
+	(game-time > 4)
+	(up-compare-goal scout-enemy-four-x == -1)
+	(or 
+		(and (up-compare-goal temp-x >= 0) ;top
+			 (up-compare-goal temp-y < 0))
+		(and (up-compare-goal temp-x < 0) ;bottom
+			 (up-compare-goal temp-y >= 0))
+	)
+=>
+	(up-modify-goal temp-x c:* 2)
+	(up-modify-goal scout-enemy-curr-x g:+ temp-x)
+	;(up-modify-goal scout-enemy-curr-x g:+ enemy-point-x)
+	;(up-modify-goal scout-enemy-curr-y g:+ temp-y)
+	;(up-chat-data-to-player my-player-number "curr x: %d" g: scout-enemy-curr-x)
+	;(up-chat-data-to-player my-player-number "curr y: %d" g: scout-enemy-curr-y)
+)
 
+;assign calculated point to scouting point
 
+(defrule
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-one-x != -1)
+	(up-compare-goal scout-enemy-four-x == -1)
+	(players-building-type-count focus-player town-center >= 1)
+	(game-time > 4)
+	(goal gl-curr-point 4)
+=>
+	(set-goal gl-curr-point 5)
+	(up-copy-point scout-enemy-four-x scout-enemy-curr-x)
+	;(up-copy-point scout-enemy-four-x temp-x)
+	;(up-modify-goal scout-enemy-four-x g:+ enemy-point-x)
+	;(up-modify-goal scout-enemy-four-y g:+ enemy-point-y)
+	;(up-copy-point scout-enemy-curr-x scout-enemy-four-x)
+	;(chat-to-all "test 2")
+)
 
+(defrule
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-one-x != -1)
+	(up-compare-goal scout-enemy-three-x == -1)
+	(players-building-type-count focus-player town-center >= 1)
+	(game-time > 4)
+	(goal gl-curr-point 3)
+=>
+	(set-goal gl-curr-point 4)
+	(up-copy-point scout-enemy-three-x scout-enemy-curr-x)
+	;(up-copy-point scout-enemy-three-x temp-x)
+	;(up-modify-goal scout-enemy-three-x g:+ enemy-point-x)
+	;(up-modify-goal scout-enemy-three-y g:+ enemy-point-y)
+	;(up-copy-point scout-enemy-curr-x scout-enemy-three-x)
+	;(chat-to-all "test 3")
+)
 
+(defrule
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-one-x != -1)
+	(up-compare-goal scout-enemy-two-x == -1)
+	(players-building-type-count focus-player town-center >= 1)
+	(game-time > 4)
+	(goal gl-curr-point 2)
+=>
+	(set-goal gl-curr-point 3)
+	(up-copy-point scout-enemy-two-x scout-enemy-curr-x)
+	;(up-copy-point scout-enemy-two-x temp-x)
+	;(up-modify-goal scout-enemy-two-x g:+ enemy-point-x)
+	;(up-modify-goal scout-enemy-two-y g:+ enemy-point-y)
+	;(up-copy-point scout-enemy-curr-x scout-enemy-two-x)
+	;(chat-to-all "test 4")
+)
 
+(defrule
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(up-group-size c: 1 >= 1)
+	(goal gl-curr-point 5)
+	(players-building-type-count focus-player town-center >= 1)
+	(game-time > 4)
+=>
+	; (up-copy-point scout-enemy-one-x enemy-point-x)
+	; (up-modify-goal scout-enemy-one-x c:- 13)
+	; (up-modify-goal scout-enemy-one-y c:- 13)
+	; (up-copy-point scout-enemy-two-x enemy-point-x)
+	; (up-modify-goal scout-enemy-two-x c:- 13)
+	; (up-modify-goal scout-enemy-two-y c:+ 13)	
+	; (up-copy-point scout-enemy-three-x enemy-point-x)
+	; (up-modify-goal scout-enemy-three-x c:+ 13)
+	; (up-modify-goal scout-enemy-three-y c:+ 13)
+	; (up-copy-point scout-enemy-four-x enemy-point-x)
+	; (up-modify-goal scout-enemy-four-x c:+ 13)
+	; (up-modify-goal scout-enemy-four-y c:- 13)
+	(up-send-flare scout-enemy-one-x)
+	(up-send-flare scout-enemy-two-x)
+	(up-send-flare scout-enemy-three-x)
+	(up-send-flare scout-enemy-four-x)
+	(chat-to-player my-player-number "Initializing enemy base scouting points")	
+	(disable-timer scout-base-point-timer)
+	(up-set-timer c: scout-base-point-timer g: 35)
+	(set-goal gl-curr-point 1)
+	(disable-self)
+)
 
+;region adjusting points if outside of the map
+(defrule 
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-one-x < 1)
+	(game-time > 10)
+	(goal gl-curr-point 1)
+=>
+	(set-goal scout-enemy-one-x 1)
+	;(up-send-flare scout-base-one-x)
+	;(chat-to-player my-player-number "Adjusting x1")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-one-y < 1)
+	(game-time > 10)
+	(goal gl-curr-point 1)
+=>
+	(set-goal scout-enemy-one-y 1)
+	;(up-send-flare scout-base-one-x)
+	;(chat-to-player my-player-number "Adjusting y1")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-two-x < 1)
+	(game-time > 10)
+	(goal gl-curr-point 1)
+=>
+	(set-goal scout-enemy-two-x 1)
+	;(up-send-flare scout-base-two-x)
+	;(chat-to-player my-player-number "Adjusting x2")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-two-y < 1)
+	(game-time > 10)
+	(goal gl-curr-point 1)
+=>
+	(set-goal scout-enemy-two-y 1)
+	;(up-send-flare scout-base-two-x)
+	;(chat-to-player my-player-number "Adjusting y2")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-three-x < 1)
+	(game-time > 10)
+	(goal gl-curr-point 1)
+=>
+	(set-goal scout-enemy-three-x 1)
+	;(up-send-flare scout-base-three-x)
+	;(chat-to-player my-player-number "Adjusting x3")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-three-y < 1)
+	(game-time > 10)
+	(goal gl-curr-point 1)
+=>
+	(set-goal scout-enemy-three-y 1)
+	;(up-send-flare scout-base-three-x)
+	;(chat-to-player my-player-number "Adjusting y3")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-four-x < 1)
+	(game-time > 10)
+	(goal gl-curr-point 1)
+=>
+	(set-goal scout-enemy-four-x 1)
+	;(up-send-flare scout-base-four-x)
+	;(chat-to-player my-player-number "Adjusting x4")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-four-y < 1)
+	(game-time > 10)
+	(goal gl-curr-point 1)
+=>
+	(set-goal scout-enemy-four-y 1)
+	;(up-send-flare scout-enemy-four-x)
+	;(chat-to-player my-player-number "Adjusting y4")
+)
+
+(defrule 
+	(game-time > 10)
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-one-x >= FULL-MAP-SIZE)
+	(goal gl-curr-point 1)
+=>
+	(up-modify-goal scout-enemy-one-x g: FULL-MAP-SIZE)
+	(up-modify-goal scout-enemy-one-x c:- 1)
+	;(up-send-flare scout-enemy-one-x)
+	;(chat-to-player my-player-number "Adjusting x1")
+)
+
+(defrule
+	(game-time > 10)
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-one-y >= FULL-MAP-SIZE)
+	(goal gl-curr-point 1)
+=>
+	(up-modify-goal scout-enemy-one-y g: FULL-MAP-SIZE)
+	(up-modify-goal scout-enemy-one-y c:- 1)
+	;(up-send-flare scout-enemy-one-x)
+	;(chat-to-player my-player-number "Adjusting y1")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-two-x >= FULL-MAP-SIZE)
+	(game-time > 10)
+	(goal gl-curr-point 1)
+=>
+	(up-modify-goal scout-enemy-two-x g: FULL-MAP-SIZE)
+	(up-modify-goal scout-enemy-two-x c:- 1)
+	;(up-send-flare scout-enemy-two-x)
+	;(chat-to-player my-player-number "Adjusting x2")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-two-y >= FULL-MAP-SIZE)
+	(game-time > 10)
+	(goal gl-curr-point 1)
+=>
+	(up-modify-goal scout-enemy-two-y g: FULL-MAP-SIZE)
+	(up-modify-goal scout-enemy-two-y c:- 1)
+	;(up-send-flare scout-enemy-two-x)
+	;(chat-to-player my-player-number "Adjusting y2")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-three-x >= FULL-MAP-SIZE)
+	(game-time > 10)
+	(goal gl-curr-point 1)
+=>
+	(up-modify-goal scout-enemy-three-x g: FULL-MAP-SIZE)
+	(up-modify-goal scout-enemy-three-x c:- 1)
+	;(up-send-flare scout-enemy-three-x)
+	;(chat-to-player my-player-number "Adjusting x3")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-three-y >= FULL-MAP-SIZE)
+	(game-time > 10)
+	(goal gl-curr-point 1)
+=>
+	(up-modify-goal scout-enemy-three-y g: FULL-MAP-SIZE)
+	(up-modify-goal scout-enemy-three-y c:- 1)
+	;(up-send-flare scout-enemy-three-x)
+	;(chat-to-player my-player-number "Adjusting y3")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-four-x >= FULL-MAP-SIZE)
+	(game-time > 10)
+	(goal gl-curr-point 1)
+=>
+	(up-modify-goal scout-enemy-four-x g: FULL-MAP-SIZE)
+	(up-modify-goal scout-enemy-four-x c:- 1)
+	;(up-send-flare scout-enemy-four-x)
+	;(chat-to-player my-player-number "Adjusting x4")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(up-compare-goal scout-enemy-four-y >= FULL-MAP-SIZE)
+	(game-time > 10)
+	(goal gl-curr-point 1)
+=>
+	(up-modify-goal scout-enemy-four-y g: FULL-MAP-SIZE)
+	(up-modify-goal scout-enemy-four-y c:- 1)
+	;(up-send-flare scout-enemy-four-x)
+	;(chat-to-player my-player-number "Adjusting y4")
+)
+;endregion
+
+(defrule
+	(goal gl-collect-sheep YES)
+=>
+	(up-jump-rule 9)
+	;(chat-to-all "collecting sheep")
+)
+
+(defrule
+	(current-age == dark-age)
+	(up-compare-goal gl-curr-point < 5)
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(or (timer-triggered scout-base-point-timer)
+	(or (up-point-explored scout-enemy-one-x == explored-active)
+	(or (up-point-explored scout-enemy-two-x == explored-active)
+	(or (up-point-explored scout-enemy-three-x == explored-active)
+	(up-point-explored scout-enemy-four-x == explored-active)))))
+=>
+	(up-chat-data-to-self "curr point: %d" g: gl-curr-point)
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(timer-triggered t-3-sec)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(goal gl-curr-point 1)
+	(up-compare-goal scout-enemy-one-x > 0)
+	;(up-point-explored scout-base-one-x != explored-active)
+	;(up-point-explored scout-base-four-x == explored-no)
+=>
+	(up-set-group search-local c: 1)
+	;(up-set-target-point scout-enemy-one-x)
+	(up-target-point scout-enemy-one-x action-move -1 -1)
+	;(chat-to-player my-player-number "Sending scout to 1st point")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(goal gl-curr-point 1)
+	(or (timer-triggered scout-base-point-timer)
+	(up-point-explored scout-enemy-one-x == explored-active))
+=>
+	(up-modify-goal gl-curr-point c:+ 1)
+	(disable-timer scout-base-point-timer)
+	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
+	(chat-to-player my-player-number "Send scout to 2nd point")
+)
+	
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(timer-triggered t-3-sec)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(goal gl-curr-point 2)
+	(up-compare-goal scout-enemy-two-x > 0)
+	;(up-point-explored scout-base-one-x != explored-no)
+	;(up-point-explored scout-base-two-x != explored-active)
+=>
+	(up-set-group search-local c: 1)
+	;(up-set-target-point scout-enemy-two-x)
+	(up-target-point scout-enemy-two-x action-move -1 -1)
+	;(chat-to-player my-player-number "Sending scout to 2nd point")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(goal gl-curr-point 2)
+	(or (timer-triggered scout-base-point-timer)
+	(up-point-explored scout-enemy-two-x == explored-active))
+=>
+	(up-modify-goal gl-curr-point c:+ 1)
+	(disable-timer scout-base-point-timer)
+	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
+	(chat-to-player my-player-number "Send scout to 3rd point")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(timer-triggered t-3-sec)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(goal gl-curr-point 3)
+	(up-compare-goal scout-enemy-three-x > 0)
+	;(up-point-explored scout-enemy-two-x != explored-no)
+	;(up-point-explored scout-enemy-three-x != explored-active)
+=>
+	(up-set-group search-local c: 1)
+	;(up-set-target-point scout-enemy-three-x)
+	(up-target-point scout-enemy-three-x action-move -1 -1)
+	;(chat-to-player my-player-number "Sending scout to 3rd point")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(goal gl-curr-point 3)
+	(or (timer-triggered scout-base-point-timer)
+	(up-point-explored scout-enemy-three-x == explored-active))
+=>
+	(up-modify-goal gl-curr-point c:+ 1)
+	(disable-timer scout-base-point-timer)
+	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
+	(chat-to-player my-player-number "Send scout to 4th point")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(timer-triggered t-3-sec)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(goal gl-curr-point 4)
+	(up-compare-goal scout-enemy-four-x > 0)
+	;(up-point-explored scout-enemy-three-x != explored-no)
+	;(up-point-explored scout-enemy-four-x != explored-active)
+=>
+	(up-set-group search-local c: 1)
+	;(up-set-target-point scout-enemy-one-x)
+	(up-target-point scout-enemy-four-x action-move -1 -1)
+	;(chat-to-player my-player-number "Sending scout to 4th point")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(goal gl-curr-point 4)
+	(or (timer-triggered scout-base-point-timer)
+	(up-point-explored scout-enemy-four-x == explored-active))
+=>
+	(up-modify-goal gl-curr-point c:+ 1)
+	(disable-timer scout-base-point-timer)
+	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
+	(chat-to-player my-player-number "Send scout back to 1st point")
+)
+
+(defrule
+	(goal gl-lame-enemy YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(timer-triggered t-3-sec)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(goal gl-curr-point 5)
+	(up-compare-goal scout-enemy-four-x > 0)
+	;(up-point-explored scout-enemy-four-x != explored-no)
+	;(up-point-explored scout-enemy-one-x != explored-active)
+=>
+	(up-set-group search-local c: 1)
+	;(up-set-target-point scout-enemy-one-x)
+	(up-target-point scout-enemy-one-x action-move -1 -1)
+	;(chat-to-player my-player-number "Sending scout back to 1st point")
+)
+
+; (defrule
+	; (goal gl-lame-enemy YES)
+	; (goal gl-scout-base NO)
+	; (current-age == dark-age)
+	; (up-group-size c: 1 >= 1)
+	; (goal gl-curr-point 5)
+	; (players-building-type-count focus-player town-center >= 1)
+	; (or (timer-triggered scout-base-point-timer)
+	; (up-point-explored scout-enemy-one-x == explored-active))
+; =>
+	; (set-goal gl-scout-base YES)
+	; (chat-to-player my-player-number "Finished scouting opponent, resume base scouting")
+; )
 
 (defrule
 	(current-age == dark-age)
@@ -4819,6 +5419,7 @@
 	(up-pending-objects c: palisade-wall == 0)
 	(up-compare-goal gl-lame-curr-wall < 1)
 	(up-compare-goal temp-goal-one == 1)
+	(up-point-explored gl-lamed-target-x == explored-active)
 =>
 	(set-goal gl-lame-curr-wall 1)
 	(chat-to-player my-player-number "wall spot blocked 1")
@@ -5069,6 +5670,7 @@
 	(up-set-target-by-id g: gl-lamed-target-id)
 	(up-object-data object-data-hitpoints <= 3)
 	(up-object-data object-data-hitpoints > 0)
+	(goal gl-lame-curr-wall 4)
 =>
 	(up-full-reset-search)
 	(up-set-group search-local c: 9)
@@ -5195,6 +5797,7 @@
 =>
 	(up-set-target-object search-remote c: 0)
 	(up-get-object-data object-data-id gl-lamed-target-id)
+	(up-set-group search-local c: 9)
 	(chat-to-player my-player-number "Getting deer id")
 )
 
@@ -5202,6 +5805,8 @@
 	(current-age == dark-age)
 	(goal gl-lame-enemy YES)
 	(goal gl-lame-deer YES)
+	(up-set-target-object search-local c: 0)
+	(up-object-data object-data-action != actionid-attack)	
 	(players-building-type-count focus-player town-center >= 1)
 	(up-compare-goal gl-lamed-target-id != -1)
 	(up-set-target-by-id g: gl-lamed-target-id)
@@ -5454,6 +6059,20 @@
 	(up-jump-direct g: gl-rule-jump-id)
 )
 
+(defrule
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-berries YES)
+	(players-building-type-count focus-player town-center >= 1)
+	(up-group-size c: 9 >= 1)
+	(up-compare-goal gl-lame-curr-wall g:>= gl-lame-nr-enemy-bushes)
+	(up-pending-objects c: palisade-wall < 1)
+=>
+	(up-jump-rule 3)
+	(chat-to-player my-player-number "Skip")
+	(disable-self)
+)
+
 (defrule	
 	(current-age == dark-age)
 	(goal gl-lame-enemy YES)
@@ -5465,7 +6084,9 @@
 =>
 	(up-full-reset-search)
 	(up-filter-status c: status-pending c: list-active)
-	(up-find-status-local c: palisade-wall c: 1)
+	(up-find-status-local c: palisade-wall c: 20)
+	(up-get-search-state gl-local-total)
+	(up-chat-data-to-player my-player-number "nr walls to build: %d" g: gl-local-total)
 )
 
 (defrule
@@ -5499,6 +6120,7 @@
 	(up-pending-objects c: palisade-wall < 1)
 =>
 	(set-goal gl-lame-berries NO)
+	(set-goal gl-scout-base YES)
 	(chat-to-player my-player-number "Walling finished, laming successful")
 )
 
@@ -25623,6 +26245,7 @@
 	(building-type-count barracks < 1)	;we're not drushing
 	(players-building-type-count focus-player lumber-camp >= 1)
 	(players-building-type-count focus-player town-center >= 1)
+	(goal gl-lame-enemy NO)
 	(goal gl-scout-map YES)
 	(game-time > 5)
 =>
@@ -29914,6 +30537,7 @@
 	(not(goal strategy-goal sg-boom-imp))
 	(current-age >= castle-age)
 	(can-research ri-town-watch)
+	(up-compare-goal gl-military-advantage >= -3)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 =>
