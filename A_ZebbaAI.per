@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 29th September 2023
+;last update: 30th September 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -5616,20 +5616,20 @@
 	(chat-to-player my-player-number "Build 4th wall")
 )
 
-; (defrule ;setup to lame boar
-	; (current-age == dark-age)
-	; (goal gl-lame-enemy YES)
-	; (goal gl-lame-boar YES)
-	; (up-group-size c: 9 >= 1)
-	; (up-get-point-contains gl-lamed-target-x gl-quick-wall-id c: palisade-wall) ;last palisade has been placed
-	; (up-set-target-by-id g: gl-quick-wall-id)
-	; (up-object-data object-data-hitpoints >= 2) ;last palisade got started to build
-	; (building-type-count-total palisade-wall >= 4) ;what if we can't build 4 palisade-walls?
-	; (up-set-target-by-id g: gl-lamed-target-id)
-	; (up-object-data object-data-hitpoints > 3) ;boar has more than 3hp
-; =>
-	; (up-full-reset-search)
-	; (up-set-group search-local c: 9)
+(defrule ;setup to lame boar
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-boar YES)
+	(up-group-size c: 9 >= 1)
+	(up-get-point-contains gl-lamed-target-x gl-quick-wall-id c: palisade-wall) ;last palisade has been placed
+	(up-set-target-by-id g: gl-quick-wall-id)
+	(up-object-data object-data-hitpoints >= 2) ;last palisade got started to build
+	(building-type-count-total palisade-wall >= 4) ;what if we can't build 4 palisade-walls?
+	(up-set-target-by-id g: gl-lamed-target-id)
+	(up-object-data object-data-hitpoints > 3) ;boar has more than 3hp
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 9)
 	; (set-strategic-number sn-enable-boar-hunting 0)
 	; (set-strategic-number sn-minimum-boar-lure-group-size 0)
 	; (set-strategic-number sn-minimum-boar-hunt-group-size 0)
@@ -5637,16 +5637,15 @@
 	; (set-strategic-number sn-maximum-hunt-drop-distance -2)
 	; (set-strategic-number sn-boar-lure-destination -1)
 	; (set-strategic-number sn-filter-under-attack 0)
-	; (disable-self)
-; )
+)
 
 (defrule ;lame the boar
 	(current-age == dark-age)
 	(goal gl-lame-enemy YES)
 	(goal gl-lame-boar YES)
 	(up-group-size c: 9 >= 1)
-	;(up-set-target-object search-local c: 0) ;!
-	;(up-object-data object-data-action != actionid-hunt) ;prevent spam shooting; currently causes vil to be retasked/to retreat from the boar ;!
+	(up-set-target-object search-local c: 0) ;!
+	(up-object-data object-data-action != actionid-hunt) ;prevent spam shooting; currently causes vil to be retasked/to retreat from the boar ;!
 	(up-get-point-contains gl-lamed-target-x gl-quick-wall-id c: palisade-wall) ;last palisade has been placed
 	(up-set-target-by-id g: gl-quick-wall-id)
 	(up-object-data object-data-hitpoints >= 2) ;last palisade got started to build
@@ -5659,6 +5658,31 @@
 	(up-set-target-by-id g: gl-lamed-target-id)
 	(up-target-objects 1 action-default -1 -1)
 	(chat-to-player my-player-number "Lame the boar!") ;not optimized, villager keeps attempting to retreat
+	;(disable-self)
+)
+
+(defrule ;reset the villager
+	(current-age == dark-age)
+	(goal gl-lame-enemy YES)
+	(goal gl-lame-boar YES)
+	(up-group-size c: 9 >= 1)
+	(up-set-target-object search-local c: 0)
+	(or (up-object-data object-data-order == orderid-hunt)
+	(up-object-data object-data-order == orderid-gather))
+	(up-get-point-contains gl-lamed-target-x gl-quick-wall-id c: palisade-wall) 
+	(up-set-target-by-id g: gl-quick-wall-id)
+	(up-object-data object-data-hitpoints >= 2) 
+	(goal gl-lame-curr-wall 4)
+	(up-set-target-by-id g: gl-lamed-target-id)
+	(up-object-data object-data-hitpoints > 3) ;boar has more than 3hp
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 9)
+	;(up-set-target-by-id g: gl-lamed-target-id)
+	(up-target-objects 0 action-stop -1 -1)
+	; (up-set-target-by-id g: gl-quick-wall-id)
+	; (up-target-objects 1 action-default -1 -1)
+	(chat-to-player my-player-number "Stop") 
 	;(disable-self)
 )
 
@@ -5806,7 +5830,7 @@
 	(goal gl-lame-enemy YES)
 	(goal gl-lame-deer YES)
 	(up-set-target-object search-local c: 0)
-	(up-object-data object-data-action != actionid-attack)	
+	(up-object-data object-data-action != actionid-hunt)	
 	(players-building-type-count focus-player town-center >= 1)
 	(up-compare-goal gl-lamed-target-id != -1)
 	(up-set-target-by-id g: gl-lamed-target-id)
