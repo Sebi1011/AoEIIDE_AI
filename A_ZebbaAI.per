@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 30th September 2023
+;last update: 18th November 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -8319,7 +8319,7 @@
 	(up-pending-objects c: town-center < 1)
 =>
 	(up-target-objects 1 action-delete -1 -1)
-	(chat-to-player my-player-number "Deleting unintended placed buildings under construction")
+	;(chat-to-player my-player-number "Deleting unintended placed buildings under construction")
 )
 
 
@@ -18700,7 +18700,7 @@
 		(gold-amount < 450))
 		(and (gold-amount < 550)
 		(food-amount < 550)))
-	(up-compare-goal c-villager-goal < 125)
+	(up-compare-goal c-villager-goal < 110)
 	(up-modify-goal gl-castleup-compare g:= c-villager-goal)
 	(up-modify-goal gl-castleup-compare c:- 4)
 	(unit-type-count-total villager g:== gl-castleup-compare)
@@ -18720,7 +18720,7 @@
 		(gold-amount < 450))
 		(and (gold-amount < 550)
 		(food-amount < 550)))
-	(up-compare-goal c-villager-goal < 125)
+	(up-compare-goal c-villager-goal < 110)
 	(unit-type-count-total villager g:> c-villager-goal)
 	(up-research-status c: imperial-age != research-pending)
 =>
@@ -29773,7 +29773,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(civilian-population >= 130)
+	(civilian-population >= 125)
 	(up-compare-goal gl-military-advantage >= 10)
 =>
     (up-modify-sn sn-maximum-town-size c:+ 4)
@@ -35557,7 +35557,7 @@
 (defrule
 	(can-research-with-escrow imperial-age)
 	(or (unit-type-count-total villager g:>= c-villager-goal)
-	(or (unit-type-count-total villager >= 130)
+	(or (unit-type-count-total villager >= 70)
 	(population >= 195)))
 	(goal gl-food-saving 23)
 	(goal gl-gold-saving 23)
@@ -35575,7 +35575,7 @@
 (defrule
 	(can-research-with-escrow imperial-age)
 	(or (unit-type-count-total villager g:>= c-villager-goal)
-	(or (unit-type-count-total villager >= 130)
+	(or (unit-type-count-total villager >= 70)
 	(population >= 195)))
 =>
 	(up-modify-escrow food c:- 1000)
