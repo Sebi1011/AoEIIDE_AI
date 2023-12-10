@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 18th November 2023
+;last update: 10th December 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -9184,7 +9184,7 @@
 #load-if-defined PERSIAN-CIV
 
 (defrule
-	(can-research my-second-unique-research) ;camadaran
+	(can-research my-second-unique-research) ;Kamandaran
 	(or (not (goal strategy-goal sg-boom-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
@@ -9192,8 +9192,7 @@
 )
 
 (defrule
-	(can-research my-unique-research) ;mahouts
-	(unit-type-count-total war-elephant-line >= 5)
+	(can-research my-unique-research) ;citadels
 =>
 	(research my-unique-research)
 )
@@ -9260,8 +9259,8 @@
 #load-if-defined SARACEN-CIV
 
 (defrule
-	(can-research my-second-unique-research) ;zealotry
-	(unit-type-count-total camel-line >= 6)
+	(can-research my-second-unique-research) ;bimaristan
+	(unit-type-count-total monk >= 3)
 	(or (not (goal strategy-goal sg-boom-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
@@ -37109,7 +37108,6 @@
 	(research ri-cavalier)
 )
 
-
 (defrule
 	(can-research-with-escrow ri-paladin)
 	(goal gl-food-saving 19)
@@ -37131,6 +37129,29 @@
 	(up-modify-escrow food c:- 1300)
 	(up-modify-escrow gold c:- 750)
 	(research ri-paladin)
+)
+
+(defrule
+	(can-research-with-escrow ri-savar)
+	(goal gl-food-saving 19)
+	(goal gl-gold-saving 19)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research ri-savar)
+	(set-goal gl-gold-saving 0)
+	(set-goal gl-food-saving 0)
+)
+
+(defrule
+	(can-research-with-escrow ri-savar)
+	(unit-type-count-total knight-line >= 4)
+=>
+	(up-modify-escrow food c:- 1000)
+	(up-modify-escrow gold c:- 600)
+	(research ri-savar)
 )
 
 (defrule
@@ -38172,7 +38193,7 @@
 )
 
 (defrule
-	(current-age == imperial-age)
+	(current-age >= castle-age)
 	(can-research ri-parthian-tactics)
 	(unit-type-count-total cavalry-archer-line > 0)
 =>
@@ -38215,7 +38236,7 @@
 )
 
 (defrule
-	(current-age == imperial-age)
+	(current-age >= castle-age)
 	(can-research ri-parthian-tactics)
 	(unit-type-count-total mangudai-line > 0)
 =>
