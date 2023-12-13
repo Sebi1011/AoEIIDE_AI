@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 12th December 2023
+;last update: 13th December 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -32420,6 +32420,8 @@
 )
 
 (defrule
+	(or (not(goal strategy-goal sg-boom-imp))
+	(up-research-status c: imperial-age >= research-pending)
 	(current-age >= castle-age)	
 	(can-research-with-escrow ri-bow-saw)
 	(up-compare-goal gl-military-advantage >= -5)
@@ -35703,8 +35705,9 @@
 		(food-amount > 400))
 	(civilian-population < 70))
 	(or (not (goal strategy-goal sg-boom-imp))
+	(or (food-amount >= 400)
 	(and (goal strategy-goal sg-boom-imp)
-	(unit-type-count-total villager < 40)))
+	(unit-type-count-total villager < 40))))
 =>
 	(train villager)
 	(up-get-fact civilian-population 0 civilian-pop) 
@@ -43725,9 +43728,9 @@
 	(goal strategy-goal sg-boom-imp)
 	(goal gl-fastimp-unit fi-bbc-hc)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 25)
-	(set-strategic-number sn-food-gatherer-percentage 40)
-	(set-strategic-number sn-gold-gatherer-percentage 35)
+	(set-strategic-number sn-wood-gatherer-percentage 29)
+	(set-strategic-number sn-food-gatherer-percentage 32)
+	(set-strategic-number sn-gold-gatherer-percentage 39)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 	(chat-to-player my-player-number "Setting up economy for gunpowder units")
 	(disable-self)
