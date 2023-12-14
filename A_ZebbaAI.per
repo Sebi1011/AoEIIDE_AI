@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 13th December 2023
+;last update: 14th December 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -1824,17 +1824,30 @@
 )
 
 (defrule
-		(goal gl-nomad-map NO)
-		(goal gl-scout-map YES)
-		(current-age == dark-age)
-		(not (town-under-attack))
-		(up-enemy-units-in-town < 1)
-		(up-compare-sn sn-number-explore-groups != 1)
-		(unit-type-count-total militiaman-line < 1)
+	(goal gl-nomad-map NO)
+	(goal gl-scout-map YES)
+	(current-age == dark-age)
+	(not (town-under-attack))
+	(up-enemy-units-in-town < 1)
+	(up-compare-sn sn-number-explore-groups != 1)
+	(unit-type-count-total militiaman-line < 1)
 =>
-		(set-strategic-number sn-number-explore-groups 1)
-		(set-strategic-number sn-total-number-explorers 1)
-		(chat-to-player my-player-number "Enable standard scouting")
+	(set-strategic-number sn-number-explore-groups 1)
+	(set-strategic-number sn-total-number-explorers 1)
+	(chat-to-player my-player-number "Enable standard scouting")
+)
+
+(defrule
+	(goal gl-nomad-map YES)
+	(current-age == dark-age)
+	(civ-selected hun)
+	(up-compare-sn sn-wild-animal-exploration != 1)
+	(building-type-count town-center == 1)
+=>
+	(set-strategic-number sn-wild-animal-exploration 1)
+	(set-strategic-number sn-number-explore-groups 1)
+	(set-strategic-number sn-total-number-explorers 1)
+	(chat-to-player my-player-number "Scout with the horsey")
 )
 
 ;endregion 
@@ -11956,6 +11969,22 @@
 	(up-target-objects 1 action-delete -1 -1)
 	(chat-to-player my-player-number "Deleting walls under construction")
 )
+
+;endregion
+
+;region Scout Micro
+
+;Snipe enemy monks
+	;take enemy spearmen/scouts into account
+;find stray villagers (without loom)
+
+;endregion
+
+;region Monk Micro
+
+;healing
+;converting
+;taking relics
 
 ;endregion
 
@@ -32421,7 +32450,7 @@
 
 (defrule
 	(or (not(goal strategy-goal sg-boom-imp))
-	(up-research-status c: imperial-age >= research-pending)
+	(up-research-status c: imperial-age >= research-pending))
 	(current-age >= castle-age)	
 	(can-research-with-escrow ri-bow-saw)
 	(up-compare-goal gl-military-advantage >= -5)
@@ -36234,7 +36263,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(military-population < 26)
+	(military-population < 24)
 	(up-compare-goal gl-military-advantage < -5)
 	(goal attack-now-goal 1)
 	(goal retreat-now-goal 0)
@@ -36256,7 +36285,7 @@
 	(current-age == imperial-age)
 	(goal attack-now-goal 1)
 	;(goal retreat-now-goal 0)
-	(or (military-population >= 26)
+	(or (military-population >= 24)
 	(up-compare-goal gl-military-advantage >= 10))
 	(up-compare-goal gl-military-advantage >= -5)
 =>
@@ -37000,7 +37029,6 @@
 	(train hand-cannoneer)
 )
 
-
 (defrule
 	(goal strategy-goal sg-boom-imp)
 	(goal gl-fastimp-unit fi-bbc-hc)
@@ -37012,23 +37040,34 @@
 	(train bombard-cannon-line)
 )
 
-; (defrule
-	; (goal strategy-goal sg-boom-imp)
-	; (goal gl-fastimp-unit fi-monks)
-	; (current-age == imperial-age)
-	; (can-train spearman-line)
-; =>
-	; (train spearman-line)
-; )
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(goal gl-fastimp-unit fi-monks)
+	(current-age == imperial-age)
+	(can-train spearman-line)
+=>
+	(train spearman-line)
+)
 
-; (defrule
-	; (goal strategy-goal sg-boom-imp)
-	; (goal gl-fastimp-unit fi-monks)
-	; (current-age == imperial-age)
-	; (can-train magonel-line)
-; =>
-	; (train magonel-line)
-; )
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(goal gl-fastimp-unit fi-monks)
+	(current-age == imperial-age)
+	(can-train mangonel-line)
+	(gold-amount >= 235)
+=>
+	(train mangonel-line)
+)
+
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(goal gl-fastimp-unit fi-monks)
+	(current-age == imperial-age)
+	(can-train battering-ram-line)
+	(gold-amount >= 175)
+=>
+	(train battering-ram-line)
+)
 
 (defrule
 	(goal strategy-goal sg-boom-imp)
