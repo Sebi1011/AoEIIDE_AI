@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 14th December 2023
+;last update: 15th December 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -4354,7 +4354,7 @@
 	(goal gl-nomad-map NO)
 =>
 	(up-target-objects 0 action-default -1 -1)
-	(chat-local-to-self "Sending lumberjacks to lumbercamp")
+	;(chat-local-to-self "Sending lumberjacks to lumbercamp")
 	;(disable-self)
 )
 #end-if
@@ -11976,6 +11976,8 @@
 
 ;Snipe enemy monks
 	;take enemy spearmen/scouts into account
+	;take enemy units behind walls into account
+	;on arena, guard relics with scouts
 ;find stray villagers (without loom)
 
 ;endregion
@@ -31166,11 +31168,11 @@
 	(building-type-count-total mill > 0)
 	(or 
 		(and (goal sg-fastcastle-boom YES)
-		(and (building-type-count-total town-center >= 3)
+		(or (building-type-count-total town-center >= 3)
 		(building-type-count-total farm < 12)))
 	(or	(and (goal sg-fastcastle-boom NO)
-		(and (building-type-count-total town-center >= 2)
-		(building-type-count-total farm < 8)))
+		(or (building-type-count-total town-center >= 2)
+		(building-type-count-total farm < 12)))
 		(and (goal sg-fastcastle-boom -1)
 		(building-type-count-total farm < 8))
 	))
