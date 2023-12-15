@@ -510,6 +510,7 @@
 (defconst gl-water-on-map 181)
 (defconst gl-min-amnt-food-sources 182)
 (defconst gl-min-amnt-boars 183)
+(defconst gl-number-monks 187)
 (defconst gl-number-trebs 188)
 (defconst gl-number-scouts 189)
 (defconst gl-scout-index 190)
@@ -7593,7 +7594,7 @@
 
 (defrule
 	(up-compare-goal strategy-goal == -1)
-	(random-number > 0)
+	(random-number > 100)
 	(random-number <= 60)
 =>
 	(set-goal strategy-goal sg-fastcastle-gu)	
@@ -7607,7 +7608,7 @@
 
 (defrule
 	(up-compare-goal strategy-goal == -1)
-	(random-number > 60)
+	(random-number > 160)
 	(random-number <= 80)
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)	
@@ -7621,7 +7622,7 @@
 
 (defrule
 	(up-compare-goal strategy-goal == -1)
-	(random-number > 80)
+	(random-number > 0)
 	(random-number <= 100)
 =>
 	(set-goal strategy-goal sg-boom-imp)	
@@ -9461,6 +9462,20 @@
 ;endregion
 
 ;region Unique Units ===============================================
+
+#load-if-defined ARENA-MAP
+
+(defrule
+	(current-age == castle-age)
+	(building-type-count castle > 0)
+	(can-train petard)
+	(unit-type-count-total petard < 1)
+	(game-time < 1200)
+=>
+	(train petard)
+)
+
+#end-if
 
 (defrule
 	(current-age == castle-age)
@@ -11929,17 +11944,9 @@
 =>
 	(up-delete-objects c: wall-class c: 32767)
 	(up-delete-objects c: gate-class c: 32767)
-	(chat-local-to-self "Deleting my walls.")
+	(chat-local-to-self "Deleting walls.")
 )
 #end-if
-; (defrule
-	; (or (building-type-count-total gate-class > 0)
-	; (building-type-count-total wall-class > 0))
-; =>
-	; (up-delete-objects c: wall-class c: 32767)
-	; (up-delete-objects c: gate-class c: 32767)
-	; (chat-to-player my-player-number "Deleting my walls.")
-; )
 
 (defrule
 	(goal strategy-goal sg-towerrush)
@@ -11974,6 +11981,94 @@
 
 ;region Scout Micro
 
+#load-if-defined ARENA-MAP
+
+(defrule
+	(or (unit-type-count-total scout-cavalry-line > 0)
+	(unit-type-count-total eagle-warrior-line > 0))
+	(current-age < imperial-age)
+=>
+	(up-full-reset-search)
+	(up-reset-group c: 0)
+	(up-modify-group-flag 0 c: 0)
+	(up-find-local c: scout-cavalry-line c: 10)
+	(up-find-local c: eagle-warrior-line c: 10)
+	(up-get-search-state gl-local-total)
+	(up-modify-goal gl-number-scouts g:= gl-local-total)
+	(up-create-group 0 0 c: 0)
+	(up-modify-group-flag 1 c: 0)
+)
+
+(defrule
+	(up-group-size c: 0 > 0)
+	(current-age < imperial-age)
+	(or (unit-type-count-total scout-cavalry-line > 0)
+	(unit-type-count-total eagle-warrior-line > 0))
+=>
+	(up-get-rule-id gl-rule-jump-id)
+)
+
+(defrule
+	(or (unit-type-count-total scout-cavalry-line > 0)
+	(unit-type-count-total eagle-warrior-line > 0))
+	(current-age < imperial-age)
+	(up-group-size c: 0 > 0)
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 0)
+	(up-remove-objects search-local object-data-index != 0)
+	(up-set-target-object search-local c: 0)
+	(up-get-object-data object-data-id gl-curr-unit-id)
+	(up-get-point position-object gl-scout-x)
+	(up-set-target-point gl-scout-x)
+	(up-filter-distance c: -1 c: 8)	
+	(up-find-remote c: monastery-class c: 5)
+	(up-find-remote c: monk-with-relic-class c: 5)
+	(up-find-remote c: warrior-priest c: 5)
+	(up-clean-search search-remote object-data-distance search-order-asc)
+	(up-get-search-state gl-local-total)
+)
+
+(defrule
+	(or (unit-type-count-total scout-cavalry-line > 0)
+	(unit-type-count-total eagle-warrior-line > 0))
+	(up-compare-goal gl-remote-total >= 1)
+	(up-set-target-object search-remote c: 0)
+	(current-age < imperial-age)
+=>
+	(up-reset-search 1 1 0 0) ;reset local search only
+	(up-add-object-by-id search-local g: gl-curr-unit-id) 
+	(up-target-objects 1 action-default -1 -1)
+	(up-set-group search-local c: 0)
+	(up-remove-objects search-local object-data-index == 0)
+	(up-reset-group c: 0)
+	(up-create-group 0 0 c: 0)
+	(up-modify-group-flag 1 c: 0)
+	;(chat-local-to-self "Snipe enemy monk with scout")
+)
+
+(defrule
+	(up-compare-goal gl-scout-index g:>= gl-number-scouts)
+=>
+	(set-goal gl-scout-index 0)
+	(up-jump-rule 1)
+)
+
+(defrule
+	(current-age < castle-age)
+	(not (enemy-buildings-in-town))
+	(or (unit-type-count-total scout-cavalry-line > 0)
+	(unit-type-count-total eagle-warrior-line > 0))
+	(up-compare-goal gl-scout-index g:< gl-number-scouts)
+	(up-compare-goal gl-rule-jump-id != -1)
+	(up-group-size c: 0 > 0)
+=>
+	(up-modify-goal gl-scout-index c:+ 1)
+	(up-jump-direct g: gl-rule-jump-id)
+)
+
+#end-if
+
 ;Snipe enemy monks
 	;take enemy spearmen/scouts into account
 	;take enemy units behind walls into account
@@ -11984,9 +12079,197 @@
 
 ;region Monk Micro
 
-;healing
-;converting
-;taking relics
+
+(defrule
+	(or (unit-type-count-total monk > 0)
+	(unit-type-count-total missionary > 0))
+=>
+	(up-full-reset-search)
+	(up-reset-group c: 0)
+	(up-modify-group-flag 0 c: 0)
+	(up-find-local c: monastery-class c: 30)
+	(up-remove-objects search-local object-data-action == actionid-convert)
+	(up-get-search-state gl-local-total)
+	(up-modify-goal gl-number-monks g:= gl-local-total)
+	(up-create-group 0 0 c: 0)
+	(up-modify-group-flag 1 c: 0)
+)
+
+(defrule
+	(up-group-size c: 0 > 0)
+	(current-age < imperial-age)
+	(or (unit-type-count-total monk > 0)
+	(unit-type-count-total missionary > 0))
+=>
+	(up-get-rule-id gl-rule-jump-id)
+)
+
+(defrule
+	(or (unit-type-count-total monk > 0)
+	(unit-type-count-total missionary > 0))
+	(current-age < imperial-age)
+	(up-group-size c: 0 > 0)
+	(not (research-completed ri-atonement))
+	(not (research-completed ri-redemption))
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 0)
+	(up-remove-objects search-local object-data-index != 0)
+	(up-set-target-object search-local c: 0)
+	(up-get-object-data object-data-id gl-curr-unit-id)
+	(up-get-point position-object gl-unit-x)
+	(up-set-target-point gl-unit-x)
+	(up-filter-distance c: -1 c: 11)	
+	(up-find-remote c: cavalry-class c: 40)
+	(up-find-remote c: cavalry-cannon-class c: 40)
+	(up-find-remote c: cavalry-archer-class c: 40)
+	(up-find-remote c: scout-cavalry-class c: 40)
+	(up-find-remote c: archery-cannon-class c: 40)
+	(up-find-remote c: villager-class c: 40)
+	(up-find-remote c: infantry-class c: 40)
+	(up-find-remote c: archery-class c: 40)
+	(up-clean-search search-remote object-data-distance search-order-asc)
+	(up-remove-objects search-remote object-data-tasks-count > 0)
+	(up-get-search-state gl-local-total)
+)
+
+(defrule
+	(or (unit-type-count-total monk > 0)
+	(unit-type-count-total missionary > 0))
+	(current-age < imperial-age)
+	(up-group-size c: 0 > 0)
+	(not (research-completed ri-atonement))
+	(research-completed ri-redemption)
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 0)
+	(up-remove-objects search-local object-data-index != 0)
+	(up-set-target-object search-local c: 0)
+	(up-get-object-data object-data-id gl-curr-unit-id)
+	(up-get-point position-object gl-unit-x)
+	(up-set-target-point gl-unit-x)
+	(up-filter-distance c: -1 c: 11)	
+	(up-find-remote c: siege-weapon-class c: 40)
+	(up-clean-search search-remote object-data-distance search-order-asc)
+	(up-find-remote c: cavalry-class c: 40)
+	(up-find-remote c: cavalry-cannon-class c: 40)
+	(up-find-remote c: cavalry-archer-class c: 40)
+	(up-find-remote c: scout-cavalry-class c: 40)
+	(up-find-remote c: building-class c: 40)
+	(up-remove-objects search-remote object-data-type == monastery)
+	(up-remove-objects search-remote object-data-type == town-center)
+	(up-remove-objects search-remote object-data-type == castle)
+	(up-find-remote c: archery-cannon-class c: 40)
+	(up-find-remote c: villager-class c: 40)
+	(up-find-remote c: infantry-class c: 40)
+	(up-find-remote c: archery-class c: 40)
+	(up-remove-objects search-remote object-data-tasks-count > 0)
+	(up-get-search-state gl-local-total)
+)
+
+(defrule
+	(or (unit-type-count-total monk > 0)
+	(unit-type-count-total missionary > 0))
+	(current-age < imperial-age)
+	(up-group-size c: 0 > 0)
+	(research-completed ri-atonement)
+	(not (research-completed ri-redemption))
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 0)
+	(up-remove-objects search-local object-data-index != 0)
+	(up-set-target-object search-local c: 0)
+	(up-get-object-data object-data-id gl-curr-unit-id)
+	(up-get-point position-object gl-unit-x)
+	(up-set-target-point gl-unit-x)
+	(up-filter-distance c: -1 c: 11)	
+	(up-find-remote c: monastery-class c: 40)
+	(up-find-remote c: monk-with-relic-class c: 40)
+	(up-clean-search search-remote object-data-distance search-order-asc)
+	(up-find-remote c: cavalry-class c: 40)
+	(up-find-remote c: cavalry-cannon-class c: 40)
+	(up-find-remote c: cavalry-archer-class c: 40)
+	(up-find-remote c: scout-cavalry-class c: 40)
+	(up-find-remote c: archery-cannon-class c: 40)
+	(up-find-remote c: villager-class c: 40)
+	(up-find-remote c: infantry-class c: 40)
+	(up-find-remote c: archery-class c: 40)
+	(up-remove-objects search-remote object-data-tasks-count > 0)
+	(up-get-search-state gl-local-total)
+)
+
+(defrule
+	(or (unit-type-count-total monk > 0)
+	(unit-type-count-total missionary > 0))
+	(current-age < imperial-age)
+	(up-group-size c: 0 > 0)
+	(research-completed ri-atonement)
+	(research-completed ri-redemption)
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 0)
+	(up-remove-objects search-local object-data-index != 0)
+	(up-set-target-object search-local c: 0)
+	(up-get-object-data object-data-id gl-curr-unit-id)
+	(up-get-point position-object gl-unit-x)
+	(up-set-target-point gl-unit-x)
+	(up-filter-distance c: -1 c: 11)	
+	(up-find-remote c: monastery-class c: 40)
+	(up-find-remote c: siege-weapon-class c: 40)
+	(up-find-remote c: monk-with-relic-class c: 40)
+	(up-clean-search search-remote object-data-distance search-order-asc)
+	(up-find-remote c: cavalry-class c: 40)
+	(up-find-remote c: cavalry-cannon-class c: 40)
+	(up-find-remote c: cavalry-archer-class c: 40)
+	(up-find-remote c: scout-cavalry-class c: 40)
+	(up-find-remote c: building-class c: 40)
+	(up-remove-objects search-remote object-data-type == monastery)
+	(up-remove-objects search-remote object-data-type == town-center)
+	(up-remove-objects search-remote object-data-type == castle)	
+	(up-find-remote c: archery-cannon-class c: 40)
+	(up-find-remote c: villager-class c: 40)
+	(up-find-remote c: infantry-class c: 40)
+	(up-remove-objects search-remote object-data-tasks-count > 0)
+	(up-get-search-state gl-local-total)
+)
+
+(defrule
+	(or (unit-type-count-total monk > 0)
+	(unit-type-count-total missionary > 0))
+	(up-compare-goal gl-remote-total >= 1)
+	(up-set-target-object search-remote c: 0)
+	(current-age < imperial-age)
+=>
+	(up-reset-search 1 1 0 0) ;reset local search only
+	(up-add-object-by-id search-local g: gl-curr-unit-id) 
+	(up-target-objects 1 action-default -1 -1)
+	(up-set-group search-local c: 0)
+	(up-remove-objects search-local object-data-index == 0)
+	(up-reset-group c: 0)
+	(up-create-group 0 0 c: 0)
+	(up-modify-group-flag 1 c: 0)
+	;(chat-local-to-self "Snipe enemy monk with scout")
+)
+
+(defrule
+	(up-compare-goal gl-scout-index g:>= gl-number-monks)
+=>
+	(set-goal gl-scout-index 0)
+	(up-jump-rule 1)
+)
+
+(defrule
+	(current-age < castle-age)
+	(not (enemy-buildings-in-town))
+	(or (unit-type-count-total monk > 0)
+	(unit-type-count-total missionary > 0))
+	(up-compare-goal gl-scout-index g:< gl-number-monks)
+	(up-compare-goal gl-rule-jump-id != -1)
+	(up-group-size c: 0 > 0)
+=>
+	(up-modify-goal gl-scout-index c:+ 1)
+	(up-jump-direct g: gl-rule-jump-id)
+)
 
 ;endregion
 
@@ -23591,6 +23874,7 @@
 	(housing-headroom < 3)
 	(population-headroom > 0)
 	(not (up-can-build-line 0 gl-temp-x c: house))
+	(can-build house)
 =>
 	(up-assign-builders c: house c: 2)
     (build house)
@@ -29537,7 +29821,27 @@
 
 (defrule
 	(goal strategy-goal sg-boom-imp)
-	(current-age >= feudal-age)
+	(current-age == feudal-age)
+	(idle-farm-count < 1)
+	(can-build farm)
+	(up-compare-goal gl-water-on-map != 1)
+=>
+	(build farm)
+)
+
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(current-age == castle-age)
+	(or 
+		(and (building-type-count-total monastery >= 1)
+		(building-type-count-total university >= 1))
+	(or 
+		(and (building-type-count-total monastery >= 1)
+		(building-type-count-total siege-workshop >= 1))
+	(or 
+		(and (building-type-count-total siege-workshop >= 1)
+		(building-type-count-total university >= 1))
+	(building-type-count-total castle >= 1))))
 	(idle-farm-count < 1)
 	(can-build farm)
 	(up-compare-goal gl-water-on-map != 1)
@@ -32309,6 +32613,12 @@
 	(can-research-with-escrow ri-theocracy)
 	(unit-type-count-total monk >= 8)
 	(up-compare-goal gl-military-advantage < 35)
+	(or (and (up-research-status c: ri-redemption >= research-pending)
+			 (up-research-status c: ri-atonement >= research-pending))
+	(or (players-unit-type-count scout-cavalry-line < 1)
+	(or (players-unit-type-count eagle-warrior-line < 1)
+	(or (players-unit-type-count missionary < 1)
+	(players-unit-type-count monk < 1)))))
 	(or (not (goal strategy-goal sg-boom-imp))
 	(goal gl-fastimp-unit fi-monks))
 =>
@@ -37047,6 +37357,42 @@
 	(goal gl-fastimp-unit fi-monks)
 	(current-age == imperial-age)
 	(can-train spearman-line)
+	(unit-type-count-total spearman-line < 16)
+	(not (research-completed ri-pikeman))
+=>
+	(train spearman-line)
+)
+
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(goal gl-fastimp-unit fi-monks)
+	(current-age == imperial-age)
+	(can-train spearman-line)
+	(unit-type-count-total spearman-line < 32)
+	(up-research-status c: ri-pikeman >= research-pending)
+	(research-available ri-halberdier)
+	(not (research-completed ri-halberdier))
+=>
+	(train spearman-line)
+)
+
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(goal gl-fastimp-unit fi-monks)
+	(current-age == imperial-age)
+	(can-train spearman-line)
+	(up-research-status c: ri-pikeman >= research-pending)
+	(not (research-available ri-halberdier))
+=>
+	(train spearman-line)
+)
+
+(defrule
+	(goal strategy-goal sg-boom-imp)
+	(goal gl-fastimp-unit fi-monks)
+	(current-age == imperial-age)
+	(can-train spearman-line)
+	(up-research-status c: ri-halberdier >= research-pending)
 =>
 	(train spearman-line)
 )
