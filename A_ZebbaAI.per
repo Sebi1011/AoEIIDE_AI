@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 15th December 2023
+;last update: 17th December 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -7592,37 +7592,37 @@
 
 #load-if-defined ARENA-MAP
 
-(defrule
-	(up-compare-goal strategy-goal == -1)
-	(random-number > 100)
-	(random-number <= 60)
-=>
-	(set-goal strategy-goal sg-fastcastle-gu)	
-	(set-goal d-villager-goal 26)
-	(set-goal f-villager-goal 28)
-	(set-goal c-villager-goal 100)
-	(chat-to-player my-player-number "Going for a Fast-Castle")
-	;(chat-to-all "Going for a Fast-Castle")
-	(disable-self)
-)
+; (defrule
+	; (up-compare-goal strategy-goal == -1)
+	; (random-number > 0)
+	; (random-number <= 60)
+; =>
+	; (set-goal strategy-goal sg-fastcastle-gu)	
+	; (set-goal d-villager-goal 26)
+	; (set-goal f-villager-goal 28)
+	; (set-goal c-villager-goal 100)
+	; (chat-to-player my-player-number "Going for a Fast-Castle")
+	; ;(chat-to-all "Going for a Fast-Castle")
+	; (disable-self)
+; )
+
+; (defrule
+	; (up-compare-goal strategy-goal == -1)
+	; (random-number > 60)
+	; (random-number <= 80)
+; =>
+	; (set-goal strategy-goal sg-fastcastle-uu)	
+	; (set-goal d-villager-goal 26)
+	; (set-goal f-villager-goal 28)
+	; (set-goal c-villager-goal 100)
+	; (chat-to-player my-player-number "Going for a Fast-Castle UU")
+	; ;(chat-to-all "Going for a Fast-Castle UU")
+	; (disable-self)
+; )
 
 (defrule
 	(up-compare-goal strategy-goal == -1)
-	(random-number > 160)
-	(random-number <= 80)
-=>
-	(set-goal strategy-goal sg-fastcastle-uu)	
-	(set-goal d-villager-goal 26)
-	(set-goal f-villager-goal 28)
-	(set-goal c-villager-goal 100)
-	(chat-to-player my-player-number "Going for a Fast-Castle UU")
-	;(chat-to-all "Going for a Fast-Castle UU")
-	(disable-self)
-)
-
-(defrule
-	(up-compare-goal strategy-goal == -1)
-	(random-number > 0)
+	;(random-number > 80)
 	(random-number <= 100)
 =>
 	(set-goal strategy-goal sg-boom-imp)	
@@ -12047,6 +12047,62 @@
 	;(chat-local-to-self "Snipe enemy monk with scout")
 )
 
+; ;scout vs scout
+; (defrule
+	; (or (unit-type-count-total scout-cavalry-line > 0)
+	; (unit-type-count-total eagle-warrior-line > 0))
+	; (current-age < imperial-age)
+	; (up-group-size c: 0 > 0)
+; =>
+	; (up-full-reset-search)
+	; (up-set-group search-local c: 0)
+	; (up-remove-objects search-local object-data-index != 0)
+	; (up-set-target-object search-local c: 0)
+	; (up-get-object-data object-data-id gl-curr-unit-id)
+	; (up-get-point position-object gl-scout-x)
+	; (up-set-target-point gl-scout-x)
+	; (up-filter-distance c: -1 c: 8)	
+	; (up-find-remote c: scout-cavalry-line c: 5)
+	; (up-clean-search search-remote object-data-distance search-order-asc)
+	; (up-get-search-state gl-local-total)
+; )
+
+; (defrule
+	; (or (unit-type-count-total scout-cavalry-line > 0)
+	; (unit-type-count-total eagle-warrior-line > 0))
+	; (up-compare-goal gl-remote-total >= 1)
+	; (up-set-target-object search-remote c: 0)
+	; (current-age < imperial-age)
+; =>
+	; (up-reset-search 1 1 0 0) ;reset local search only
+	; (up-add-object-by-id search-local g: gl-curr-unit-id) 
+	; (up-target-objects 1 action-default -1 -1)
+	; (up-set-group search-local c: 0)
+	; (up-remove-objects search-local object-data-index == 0)
+	; (up-reset-group c: 0)
+	; (up-create-group 0 0 c: 0)
+	; (up-modify-group-flag 1 c: 0)
+	; (chat-local-to-self "Attack enemy scout")
+; )
+
+; (defrule
+	; (or (unit-type-count-total scout-cavalry-line > 0)
+	; (unit-type-count-total eagle-warrior-line > 0))
+	; (up-compare-goal gl-remote-total >= 1)
+	; (up-set-target-object search-remote c: 0)
+	; (current-age < imperial-age)
+; =>
+	; (up-reset-search 1 1 0 0) ;reset local search only
+	; (up-add-object-by-id search-local g: gl-curr-unit-id) 
+	; (up-target-objects 1 action-default -1 -1)
+	; (up-set-group search-local c: 0)
+	; (up-remove-objects search-local object-data-index == 0)
+	; (up-reset-group c: 0)
+	; (up-create-group 0 0 c: 0)
+	; (up-modify-group-flag 1 c: 0)
+	; (chat-local-to-self "Run away from enemy scout")
+; )
+
 (defrule
 	(up-compare-goal gl-scout-index g:>= gl-number-scouts)
 =>
@@ -12078,7 +12134,6 @@
 ;endregion
 
 ;region Monk Micro
-
 
 (defrule
 	(or (unit-type-count-total monk > 0)
@@ -22237,11 +22292,8 @@
 	(up-set-target-point enemy-point-x)
 	(up-filter-distance c: -1 c: 9) ;distance from which units shall retreat
 	(up-filter-include cmdid-military -1 -1 -1)
-	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
-	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
-	(up-filter-exclude -1 -1 -1 cavalry-class)
-	(up-filter-exclude -1 -1 -1 scout-cavalry-class)
 	(up-find-local c: -1 c: 50)
+	(up-find-local c: monastery-class c: 50)
 	(up-remove-objects search-local object-data-class == cavalry-class)
 	(up-remove-objects search-local object-data-class == scout-cavalry-class)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
@@ -22281,12 +22333,9 @@
 	(up-full-reset-search)	
 	(up-set-target-point enemy-point-x)
 	(up-filter-distance c: -1 c: 9)
-	(up-filter-include cmdid-military -1 -1 -1)	
-	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
-	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
-	(up-filter-exclude -1 -1 -1 cavalry-class) 
-	(up-filter-exclude -1 -1 -1 scout-cavalry-class) 
-	(up-find-local c: -1 c: 50)	
+	(up-filter-include cmdid-military -1 -1 -1)
+	(up-find-local c: -1 c: 50)
+	(up-find-local c: monastery-class c: 50)
 	(up-remove-objects search-local object-data-class == cavalry-class)
 	(up-remove-objects search-local object-data-class == scout-cavalry-class)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
@@ -22327,10 +22376,8 @@
 	(up-set-target-point enemy-point-x)
 	(up-filter-distance c: -1 c: 10)
 	(up-filter-include cmdid-military -1 -1 -1)
-	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
-	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
-	(up-filter-exclude -1 -1 -1 cavalry-class)
 	(up-find-local c: -1 c: 50)
+	(up-find-local c: monastery-class c: 50)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == battering-ram)
 	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
@@ -22370,11 +22417,9 @@
 	(up-full-reset-search)	
 	(up-set-target-point enemy-point-x)
 	(up-filter-distance c: -1 c: 10)
-	(up-filter-include cmdid-military -1 -1 -1)	
-	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
-	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
-	(up-filter-exclude -1 -1 -1 cavalry-class)
-	(up-find-local c: -1 c: 50)	
+	(up-filter-include cmdid-military -1 -1 -1)
+	(up-find-local c: -1 c: 50)
+	(up-find-local c: monastery-class c: 50)	
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == battering-ram)
 	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
@@ -22479,10 +22524,8 @@
 	(up-set-target-point enemy-castle-point-x)
 	(up-filter-distance c: -1 c: 14)
 	(up-filter-include cmdid-military -1 -1 -1)
-	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
-	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
-	(up-filter-exclude -1 -1 -1 cavalry-class)
-	(up-find-local c: -1 c: 1)
+	(up-find-local c: -1 c: 40)	
+	(up-find-local c: monastery-class c: 40)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == battering-ram)
 	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
@@ -22518,11 +22561,9 @@
 	(up-full-reset-search)	
 	(up-set-target-point enemy-castle-point-x)
 	(up-filter-distance c: -1 c: 14)
-	(up-filter-include cmdid-military -1 -1 -1)	
-	(up-filter-exclude -1 -1 -1 siege-weapon-class) ;does not work
-	(up-filter-exclude -1 -1 -1 armored-elephant-line) ;does not work
-	(up-filter-exclude -1 -1 -1 cavalry-class)
+	(up-filter-include cmdid-military -1 -1 -1)
 	(up-find-local c: -1 c: 40)	
+	(up-find-local c: monastery-class c: 40)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == battering-ram)
 	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
@@ -28051,7 +28092,8 @@
 	(goal strategy-goal sg-boom-imp)
 	(current-age == dark-age)
 	(civilian-population >= 20)
-	(building-type-count-total lumber-camp > 0)
+	(building-type-count-total lumber-camp >= 2)
+	(building-type-count-total mining-camp >= 1)
 	(idle-farm-count < 1)
 	(can-build farm)
 =>
@@ -29822,7 +29864,12 @@
 (defrule
 	(goal strategy-goal sg-boom-imp)
 	(current-age == feudal-age)
+	(building-type-count-total market >= 1)
+	(or (building-type-count-total blacksmith >= 1)
+	(or (building-type-count-total archery-range >= 1)
+	(building-type-count-total stable >= 1)))
 	(idle-farm-count < 1)
+	(building-type-count-total farm < 8)
 	(can-build farm)
 	(up-compare-goal gl-water-on-map != 1)
 =>
@@ -29843,6 +29890,8 @@
 		(building-type-count-total university >= 1))
 	(building-type-count-total castle >= 1))))
 	(idle-farm-count < 1)
+	(or (not (goal gl-fastimp-unit fi-monks))
+	(building-type-count-total farm < 10)) ;if going fi-monks, dont build more than 10 farms
 	(can-build farm)
 	(up-compare-goal gl-water-on-map != 1)
 =>
@@ -31504,7 +31553,8 @@
 	(goal strategy-goal sg-boom-imp)
 	(current-age == imperial-age)
 	(building-type-count-total lumber-camp > 0)
-	(building-type-count-total farm < 12)
+	(or (not (goal gl-fastimp-unit fi-monks))
+	(building-type-count-total farm < 12))
 	(up-pending-objects c: farm < 16)
 	(idle-farm-count < 10)
 	(wood-amount > 125)
@@ -32615,10 +32665,10 @@
 	(up-compare-goal gl-military-advantage < 35)
 	(or (and (up-research-status c: ri-redemption >= research-pending)
 			 (up-research-status c: ri-atonement >= research-pending))
-	(or (players-unit-type-count scout-cavalry-line < 1)
-	(or (players-unit-type-count eagle-warrior-line < 1)
-	(or (players-unit-type-count missionary < 1)
-	(players-unit-type-count monk < 1)))))
+	(or (players-unit-type-count focus-player scout-cavalry-line < 1)
+	(or (players-unit-type-count focus-player eagle-warrior-line < 1)
+	(or (players-unit-type-count focus-player missionary < 1)
+	(players-unit-type-count focus-player monk < 1)))))
 	(or (not (goal strategy-goal sg-boom-imp))
 	(goal gl-fastimp-unit fi-monks))
 =>
@@ -36953,7 +37003,7 @@
 (defrule
 	(current-age == imperial-age)
 	(not (goal strategy-goal sg-boom-imp))
-	(civilian-population > 80)
+	(civilian-population >= 80)
 	(building-type-count-total barracks < 10)
 	(building-type-count-total town-center >= 1)
 	(or (up-research-status c: ri-elite-eagle-warrior >= research-pending)
@@ -36969,7 +37019,7 @@
 (defrule
 	(current-age == imperial-age)
 	(not (goal strategy-goal sg-boom-imp))
-	(civilian-population > 80)
+	(civilian-population >= 80)
 	(building-type-count-total archery-range < 10)
 	(building-type-count-total town-center >= 1)
 	(or (up-research-status c: ri-arbalest >= research-pending)
@@ -36986,7 +37036,7 @@
 (defrule
 	(current-age == imperial-age)
 	(not (goal strategy-goal sg-boom-imp))
-	(civilian-population > 80)
+	(civilian-population >= 80)
 	(building-type-count-total siege-workshop < 4)
 	(building-type-count-total town-center >= 1)
 	(or (up-research-status c: ri-siege-ram >= research-pending)
@@ -37004,7 +37054,7 @@
 (defrule
 	(current-age == imperial-age)
 	(not (goal strategy-goal sg-boom-imp))
-	(civilian-population > 80)
+	(civilian-population >= 80)
 	(building-type-count-total stable < 10)
 	(building-type-count-total town-center >= 1)
 	(not (research-available ri-paladin))
@@ -37020,7 +37070,7 @@
 (defrule
 	(current-age == imperial-age)
 	(not (goal strategy-goal sg-boom-imp))
-	(civilian-population > 80)
+	(civilian-population >= 80)
 	(building-type-count-total stable < 8)
 	(building-type-count-total town-center >= 1)
 	(or (up-research-status c: ri-paladin >= research-pending)
@@ -38635,6 +38685,7 @@
 	(can-build barracks)
 	(building-type-count-total barracks < 8)
 	(building-type-count-total town-center >= 1)
+	(civilian-population >= 80)
 =>
 	;(set-strategic-number sn-placement-zone-size 0)
 	(up-set-placement-data my-player-number -1 c: 14)
@@ -44976,6 +45027,8 @@
 	(wood-amount < 100)
 	(gold-amount > 400)
     (current-age == imperial-age)
+	(or (not (goal gl-fastimp-unit fi-monks))
+	(gold-amount > 600))
     (building-type-count market >= 1)
 =>
 	(buy-commodity wood)
