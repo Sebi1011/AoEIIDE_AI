@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 17th December 2023
+;last update: 20th December 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -478,6 +478,8 @@
 (defconst gl-wood-saving 144)
 (defconst gl-gold-saving 145)
 (defconst gl-stone-saving 146)
+(defconst gl-layer-one-base-dist 147)
+(defconst gl-layer-two-base-dist 148)
 (defconst gl-team-military-advantage 149)
 (defconst gl-house 150)
 (defconst vil-loom-hp 151)
@@ -1855,13 +1857,30 @@
 
 ;region Map Settings ===============================================
 
-(defrule
+(defrule ;standard map settings
 	(true)
 =>
 	(set-goal gl-min-amnt-boars 2)
 	(set-goal gl-min-amnt-food-sources 10)
+	(set-goal gl-layer-one-base-dist 15)
+	(set-goal gl-layer-two-base-dist 24)
 	(disable-self)
 )
+
+#load-if-defined ARENA-MAP
+
+(defrule
+	(true)
+=>
+	(set-goal gl-min-amnt-boars 3)
+	(set-goal gl-min-amnt-food-sources 18)
+	(set-goal gl-layer-one-base-dist 10)
+	(set-goal gl-layer-two-base-dist 16)
+	(chat-to-player my-player-number "Playing on Arena")
+	(disable-self)
+)
+
+#end-if
 
 #load-if-defined YUCATAN-MAP
 
@@ -3463,17 +3482,17 @@
 	(game-time > 4)
 =>
 	(up-copy-point scout-base-one-x gl-starting-tc-x)
-	(up-modify-goal scout-base-one-x c:- 15)
-	(up-modify-goal scout-base-one-y c:- 15)
+	(up-modify-goal scout-base-one-x g:- gl-layer-one-base-dist)
+	(up-modify-goal scout-base-one-y g:- gl-layer-one-base-dist)
 	(up-copy-point scout-base-two-x gl-starting-tc-x)
-	(up-modify-goal scout-base-two-x c:- 15)
-	(up-modify-goal scout-base-two-y c:+ 15)	
+	(up-modify-goal scout-base-two-x g:- gl-layer-one-base-dist)
+	(up-modify-goal scout-base-two-y g:+ gl-layer-one-base-dist)	
 	(up-copy-point scout-base-three-x gl-starting-tc-x)
-	(up-modify-goal scout-base-three-x c:+ 15)
-	(up-modify-goal scout-base-three-y c:+ 15)
+	(up-modify-goal scout-base-three-x g:+ gl-layer-one-base-dist)
+	(up-modify-goal scout-base-three-y g:+ gl-layer-one-base-dist)
 	(up-copy-point scout-base-four-x gl-starting-tc-x)
-	(up-modify-goal scout-base-four-x c:+ 15)
-	(up-modify-goal scout-base-four-y c:- 15)
+	(up-modify-goal scout-base-four-x g:+ gl-layer-one-base-dist)
+	(up-modify-goal scout-base-four-y g:- gl-layer-one-base-dist)
 	;(up-send-flare scout-base-one-x)
 	;(up-send-flare scout-base-two-x)
 	;(up-send-flare scout-base-three-x)
@@ -3515,17 +3534,17 @@
 =>
 	(up-modify-goal gl-curr-point c:+ 1)
 	(up-copy-point scout-base-one-x gl-starting-tc-x)
-	(up-modify-goal scout-base-one-x c:- 24)
-	(up-modify-goal scout-base-one-y c:- 24)
+	(up-modify-goal scout-base-one-x g:- gl-layer-two-base-dist)
+	(up-modify-goal scout-base-one-y g:- gl-layer-two-base-dist)
 	(up-copy-point scout-base-two-x gl-starting-tc-x)
-	(up-modify-goal scout-base-two-x c:- 24)
-	(up-modify-goal scout-base-two-y c:+ 24)	
+	(up-modify-goal scout-base-two-x g:- gl-layer-two-base-dist)
+	(up-modify-goal scout-base-two-y g:+ gl-layer-two-base-dist)	
 	(up-copy-point scout-base-three-x gl-starting-tc-x)
-	(up-modify-goal scout-base-three-x c:+ 24)
-	(up-modify-goal scout-base-three-y c:+ 24)
+	(up-modify-goal scout-base-three-x g:+ gl-layer-two-base-dist)
+	(up-modify-goal scout-base-three-y g:+ gl-layer-two-base-dist)
 	(up-copy-point scout-base-four-x gl-starting-tc-x)
-	(up-modify-goal scout-base-four-x c:+ 24)
-	(up-modify-goal scout-base-four-y c:- 24)
+	(up-modify-goal scout-base-four-x g:+ gl-layer-two-base-dist)
+	(up-modify-goal scout-base-four-y g:- gl-layer-two-base-dist)
 	; (up-send-flare scout-base-one-x)
 	; (up-send-flare scout-base-two-x)
 	; (up-send-flare scout-base-three-x)
@@ -7606,35 +7625,35 @@
 	; (disable-self)
 ; )
 
-; (defrule
-	; (up-compare-goal strategy-goal == -1)
-	; (random-number > 60)
-	; (random-number <= 80)
-; =>
-	; (set-goal strategy-goal sg-fastcastle-uu)	
-	; (set-goal d-villager-goal 26)
-	; (set-goal f-villager-goal 28)
-	; (set-goal c-villager-goal 100)
-	; (chat-to-player my-player-number "Going for a Fast-Castle UU")
-	; ;(chat-to-all "Going for a Fast-Castle UU")
-	; (disable-self)
-; )
-
 (defrule
 	(up-compare-goal strategy-goal == -1)
-	;(random-number > 80)
+	(random-number > 0)
 	(random-number <= 100)
 =>
-	(set-goal strategy-goal sg-boom-imp)	
-	(set-goal d-villager-goal 30)
-	(set-goal f-villager-goal 32)
-	(set-goal c-villager-goal 34)
-	(chat-to-allies "I'll go Fast Imp")
-	(chat-to-player my-player-number "I'll go Fast Imp")
-	(up-chat-data-to-self "My fast-imp strategy will be %d" g: gl-fastimp-unit)
-	;(chat-local-using-id "My fast-imp strategy will be %d" g: gl-fastimp-unit)
+	(set-goal strategy-goal sg-fastcastle-uu)	
+	(set-goal d-villager-goal 26)
+	(set-goal f-villager-goal 28)
+	(set-goal c-villager-goal 100)
+	(chat-to-player my-player-number "Going for a Fast-Castle UU")
+	;(chat-to-all "Going for a Fast-Castle UU")
 	(disable-self)
 )
+
+; (defrule
+	; (up-compare-goal strategy-goal == -1)
+	; (random-number > 80)
+	; (random-number <= 100)
+; =>
+	; (set-goal strategy-goal sg-boom-imp)	
+	; (set-goal d-villager-goal 30)
+	; (set-goal f-villager-goal 32)
+	; (set-goal c-villager-goal 34)
+	; (chat-to-allies "I'll go Fast Imp")
+	; (chat-to-player my-player-number "I'll go Fast Imp")
+	; (up-chat-data-to-self "My fast-imp strategy will be %d" g: gl-fastimp-unit)
+	; ;(chat-local-using-id "My fast-imp strategy will be %d" g: gl-fastimp-unit)
+	; (disable-self)
+; )
 
 #end-if
 
@@ -22291,9 +22310,9 @@
 	(up-full-reset-search)
 	(up-set-target-point enemy-point-x)
 	(up-filter-distance c: -1 c: 9) ;distance from which units shall retreat
+	(up-find-local c: monk c: 50)
 	(up-filter-include cmdid-military -1 -1 -1)
 	(up-find-local c: -1 c: 50)
-	(up-find-local c: monastery-class c: 50)
 	(up-remove-objects search-local object-data-class == cavalry-class)
 	(up-remove-objects search-local object-data-class == scout-cavalry-class)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
@@ -22333,9 +22352,9 @@
 	(up-full-reset-search)	
 	(up-set-target-point enemy-point-x)
 	(up-filter-distance c: -1 c: 9)
+	(up-find-local c: monk c: 50)
 	(up-filter-include cmdid-military -1 -1 -1)
 	(up-find-local c: -1 c: 50)
-	(up-find-local c: monastery-class c: 50)
 	(up-remove-objects search-local object-data-class == cavalry-class)
 	(up-remove-objects search-local object-data-class == scout-cavalry-class)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
@@ -22375,9 +22394,9 @@
 	(up-full-reset-search)
 	(up-set-target-point enemy-point-x)
 	(up-filter-distance c: -1 c: 10)
+	(up-find-local c: monk c: 50)
 	(up-filter-include cmdid-military -1 -1 -1)
 	(up-find-local c: -1 c: 50)
-	(up-find-local c: monastery-class c: 50)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == battering-ram)
 	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
@@ -22417,9 +22436,9 @@
 	(up-full-reset-search)	
 	(up-set-target-point enemy-point-x)
 	(up-filter-distance c: -1 c: 10)
+	(up-find-local c: monk c: 50)	
 	(up-filter-include cmdid-military -1 -1 -1)
 	(up-find-local c: -1 c: 50)
-	(up-find-local c: monastery-class c: 50)	
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == battering-ram)
 	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
@@ -22523,9 +22542,9 @@
 	(up-full-reset-search)
 	(up-set-target-point enemy-castle-point-x)
 	(up-filter-distance c: -1 c: 14)
+	(up-find-local c: monk c: 40)
 	(up-filter-include cmdid-military -1 -1 -1)
 	(up-find-local c: -1 c: 40)	
-	(up-find-local c: monastery-class c: 40)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == battering-ram)
 	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
@@ -22561,9 +22580,9 @@
 	(up-full-reset-search)	
 	(up-set-target-point enemy-castle-point-x)
 	(up-filter-distance c: -1 c: 14)
+	(up-find-local c: monk c: 40)
 	(up-filter-include cmdid-military -1 -1 -1)
 	(up-find-local c: -1 c: 40)	
-	(up-find-local c: monastery-class c: 40)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == battering-ram)
 	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
@@ -37407,7 +37426,8 @@
 	(goal gl-fastimp-unit fi-monks)
 	(current-age == imperial-age)
 	(can-train spearman-line)
-	(unit-type-count-total spearman-line < 16)
+	(or (unit-type-count-total spearman-line < 8)
+	(wood-amount > 170))
 	(not (research-completed ri-pikeman))
 =>
 	(train spearman-line)
@@ -37418,7 +37438,7 @@
 	(goal gl-fastimp-unit fi-monks)
 	(current-age == imperial-age)
 	(can-train spearman-line)
-	(unit-type-count-total spearman-line < 32)
+	(unit-type-count-total spearman-line < 20)
 	(up-research-status c: ri-pikeman >= research-pending)
 	(research-available ri-halberdier)
 	(not (research-completed ri-halberdier))
