@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 22nd December 2023
+;last update: 21st January 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -839,107 +839,6 @@
 	(set-strategic-number sn-coop-share-information 1)
 	(disable-self)
 )
-
-
-#load-if-not-defined REVEAL-NORMAL
-
-(defrule
-	(true)
-=>
-	(set-strategic-number sn-unexplored-construction 1)
-	(chat-local-to-self "Playing on an explored map")
-	(disable-self)
-)
-
-#end-if
-
-#load-if-defined UP-NOMAD-STYLE
-
-(defrule
-	(true)
-=>
-	(set-goal gl-nomad-map YES)
-	(chat-local-to-self "Playing on a nomadic map")
-	(disable-self)
-)
-
-#end-if
-
-#load-if-defined LAND-NOMAD-MAP
-
-(defrule
-	(true)
-=>
-	(set-goal gl-nomad-map YES)
-	(chat-local-to-self "Playing on a nomadic map")
-	(disable-self)
-)
-
-#end-if
-
-#load-if-defined NOMAD-MAP
-
-(defrule
-	(true)
-=>
-	(set-goal gl-nomad-map YES)
-	(chat-local-to-self "Playing on a nomadic map")
-	(disable-self)
-)
-
-#end-if
-
-#load-if-defined WATER-NOMAD-MAP
-
-(defrule
-	(true)
-=>
-	(set-goal gl-nomad-map YES)
-	(chat-local-to-self "Playing on a nomadic map")
-	(disable-self)
-)
-
-#end-if
-
-#load-if-defined ARENA-MAP
-
-(defrule
-	(true)
-=>
-	(chat-local-to-self "Playing on Arena")
-	; (set-strategic-number sn-relic-defend-priority 1)
-	(disable-self)
-)
-
-#end-if
-
-#load-if-defined FORTRESS-MAP
-
-(defrule
-	(true)
-=>
-	(chat-local-to-self "Playing on Fortress")
-	(disable-self)
-)
-
-#end-if
-
-#load-if-not-defined UP-NOMAD-STYLE
-#load-if-not-defined LAND-NOMAD-MAP
-#load-if-not-defined NOMAD-MAP
-#load-if-not-defined WATER-NOMAD-MAP
-
-(defrule
-	(true)
-=>
-	(set-goal gl-nomad-map NO)
-	(disable-self)
-)
-
-#end-if
-#end-if
-#end-if
-#end-if
 
 ;region UNIT AND BUILDING PRIORITIZATIONS ============================
 
@@ -1877,7 +1776,7 @@
 	(set-goal gl-min-amnt-food-sources 18)
 	(set-goal gl-layer-one-base-dist 10)
 	(set-goal gl-layer-two-base-dist 16)
-	(chat-to-player my-player-number "Playing on Arena")
+	;(chat-to-player my-player-number "Playing on Arena")
 	(disable-self)
 )
 
@@ -1909,6 +1808,94 @@
 
 #end-if
 
+
+#load-if-not-defined REVEAL-NORMAL
+
+(defrule
+	(true)
+=>
+	(set-strategic-number sn-unexplored-construction 1)
+	(chat-local-to-self "Playing on an explored map")
+	(disable-self)
+)
+
+#end-if
+
+#load-if-defined UP-NOMAD-STYLE
+
+(defrule
+	(true)
+=>
+	(set-goal gl-nomad-map YES)
+	(chat-local-to-self "Playing on a nomadic map")
+	(disable-self)
+)
+
+#end-if
+
+#load-if-defined LAND-NOMAD-MAP
+
+(defrule
+	(true)
+=>
+	(set-goal gl-nomad-map YES)
+	(chat-local-to-self "Playing on a nomadic map")
+	(disable-self)
+)
+
+#end-if
+
+#load-if-defined NOMAD-MAP
+
+(defrule
+	(true)
+=>
+	(set-goal gl-nomad-map YES)
+	(chat-local-to-self "Playing on a nomadic map")
+	(disable-self)
+)
+
+#end-if
+
+#load-if-defined WATER-NOMAD-MAP
+
+(defrule
+	(true)
+=>
+	(set-goal gl-nomad-map YES)
+	(chat-local-to-self "Playing on a nomadic map")
+	(disable-self)
+)
+
+#end-if
+
+#load-if-defined FORTRESS-MAP
+
+(defrule
+	(true)
+=>
+	(chat-local-to-self "Playing on Fortress")
+	(disable-self)
+)
+
+#end-if
+
+#load-if-not-defined UP-NOMAD-STYLE
+#load-if-not-defined LAND-NOMAD-MAP
+#load-if-not-defined NOMAD-MAP
+#load-if-not-defined WATER-NOMAD-MAP
+
+(defrule
+	(true)
+=>
+	(set-goal gl-nomad-map NO)
+	(disable-self)
+)
+
+#end-if
+#end-if
+#end-if
+#end-if
 
 ;endregion
 
@@ -3463,140 +3450,139 @@
 
 ;send all remaining sheep to the right side of the tc
 
-(defrule ;reset sheep id
-	(up-compare-goal g-sheep-id != -1)	
-	(up-set-target-by-id g: g-sheep-id)		
-	(up-object-data object-data-hitpoints < 1)
-	(up-object-data object-data-carry < 1)
-	(up-object-data object-data-carry > -1)
-	; (up-compare-goal remaining-sheep-food < 1)
-	; (up-compare-goal remaining-sheep-food > -1)
-=>
-	(set-goal g-sheep-id -1)
-	(chat-to-player my-player-number "Sheep ID -1")
-)
+; (defrule ;reset sheep id
+	; (up-compare-goal g-sheep-id != -1)	
+	; (up-set-target-by-id g: g-sheep-id)		
+	; (up-object-data object-data-hitpoints < 1)
+	; (up-object-data object-data-carry < 1)
+	; (up-object-data object-data-carry > -1)
+	; ; (up-compare-goal remaining-sheep-food < 1)
+	; ; (up-compare-goal remaining-sheep-food > -1)
+; =>
+	; (set-goal g-sheep-id -1)
+	; (chat-to-player my-player-number "Sheep ID -1")
+; )
 
-(defrule
-	(current-age == dark-age)
-	(unit-type-count-total livestock-class > 0)
-=>
-	(up-copy-point gl-temp-x gl-self-point-x)
-	(up-modify-goal gl-temp-x c:+ 3)
-	(up-modify-goal gl-temp-y c:+ 3)
-	(up-full-reset-search)
-	(up-filter-distance c: -1 c: 24)
-	(up-find-local c: livestock-class c: 20)
-	(up-remove-objects search-local object-data-id g:== g-sheep-id)
-	(up-target-point gl-temp-x action-default -1 -1)
-)
+; (defrule
+	; (current-age == dark-age)
+	; (unit-type-count-total livestock-class > 0)
+; =>
+	; (up-copy-point gl-temp-x gl-self-point-x)
+	; (up-modify-goal gl-temp-x c:+ 3)
+	; (up-modify-goal gl-temp-y c:+ 3)
+	; (up-full-reset-search)
+	; (up-filter-distance c: -1 c: 24)
+	; (up-find-local c: livestock-class c: 20)
+	; (up-remove-objects search-local object-data-id g:== g-sheep-id)
+	; (up-target-point gl-temp-x action-default -1 -1)
+; )
 
-;check if there is a dead sheep/deer/boar under tc, check remaining food amount, then send new sheep to center of tc
+; ;check if there is a dead sheep/deer/boar under tc, check remaining food amount, then send new sheep to center of tc
 
-(defrule
-	(up-compare-goal g-sheep-id != -1)			
-	(up-set-target-by-id g: g-sheep-id)		
-	;(up-object-data object-data-hitpoints < 1)
-	(current-age == dark-age)					
-=>	
-	(up-full-reset-search)					
-	(up-set-target-by-id g: g-sheep-id)					
-	(up-get-object-data object-data-carry remaining-sheep-food) ;get amount of food the target sheep currently carries
-;	(up-chat-data-to-self "Sheep food remaining: %d" g: remaining-sheep-food) 
-)
+; (defrule
+	; (up-compare-goal g-sheep-id != -1)			
+	; (up-set-target-by-id g: g-sheep-id)		
+	; ;(up-object-data object-data-hitpoints < 1)
+	; (current-age == dark-age)					
+; =>	
+	; (up-full-reset-search)					
+	; (up-set-target-by-id g: g-sheep-id)					
+	; (up-get-object-data object-data-carry remaining-sheep-food) ;get amount of food the target sheep currently carries
+; ;	(up-chat-data-to-self "Sheep food remaining: %d" g: remaining-sheep-food) 
+; )
 	
-(defrule
-	(current-age == dark-age)
-	(unit-type-count-total livestock-class > 0)
-	;(up-compare-goal gl-local-total < 1)
-	(up-compare-goal remaining-sheep-food < 1)
-	(up-compare-goal g-sheep-id == -1)	
-=>
-	(up-full-reset-search)
-	(up-filter-distance c: -1 c: 5)
-	(up-find-local c: livestock-class c: 1)
-	;(chat-to-all "Test")
-)
+; (defrule
+	; (current-age == dark-age)
+	; (unit-type-count-total livestock-class > 0)
+	; ;(up-compare-goal gl-local-total < 1)
+	; (up-compare-goal remaining-sheep-food < 1)
+	; (up-compare-goal g-sheep-id == -1)	
+; =>
+	; (up-full-reset-search)
+	; (up-filter-distance c: -1 c: 5)
+	; (up-find-local c: livestock-class c: 1)
+; )
 
-(defrule
-	(current-age == dark-age)
-	(unit-type-count-total livestock-class > 0)
-	(up-compare-goal remaining-sheep-food < 1)
-	(up-compare-goal g-sheep-id == -1)	
-	(up-set-target-object search-local c: 0)
-=>
-	(up-get-object-data object-data-id g-sheep-id)
-	(up-get-object-data object-data-class test-goal)
-	(up-chat-data-to-self "New sheep id: %d" g: g-sheep-id) 
-	(up-chat-data-to-player my-player-number "class: %d" g: test-goal)
-)
+; (defrule
+	; (current-age == dark-age)
+	; (unit-type-count-total livestock-class > 0)
+	; (up-compare-goal remaining-sheep-food < 1)
+	; (up-compare-goal g-sheep-id == -1)	
+	; (up-set-target-object search-local c: 0)
+; =>
+	; (up-get-object-data object-data-id g-sheep-id)
+	; (up-get-object-data object-data-class test-goal)
+	; (up-chat-data-to-self "New sheep id: %d" g: g-sheep-id) 
+	; (up-chat-data-to-player my-player-number "class: %d" g: test-goal)
+; )
 
-(defrule
-	(current-age == dark-age)
-	(unit-type-count-total livestock-class > 0)
-=>
-	(up-full-reset-search)
-	(up-filter-distance c: -1 c: 2)
-	(up-find-local c: livestock-class c: 10)
-	(up-get-search-state gl-local-total)
-	;(up-chat-data-to-self "sheeps under tc: %d" g: gl-local-total)
-	;(up-chat-data-to-self "Curr sheep id: %d" g: g-sheep-id) 
-	;(up-chat-data-to-self "remaining-sheep-food: %d" g: remaining-sheep-food)
-)
+; (defrule
+	; (current-age == dark-age)
+	; (unit-type-count-total livestock-class > 0)
+; =>
+	; (up-full-reset-search)
+	; (up-filter-distance c: -1 c: 2)
+	; (up-find-local c: livestock-class c: 20)
+	; (up-get-search-state gl-local-total)
+	; ;(up-chat-data-to-self "sheeps under tc: %d" g: gl-local-total)
+	; ;(up-chat-data-to-self "Curr sheep id: %d" g: g-sheep-id) 
+	; ;(up-chat-data-to-self "remaining-sheep-food: %d" g: remaining-sheep-food)
+; )
 
-(defrule
-	(current-age == dark-age)
-	(unit-type-count-total livestock-class > 0)
-	(up-compare-goal gl-local-total < 1)
-	(up-compare-goal remaining-sheep-food <= 20)
-=>
-	(up-full-reset-search)
-	(up-filter-distance c: -1 c: 5)
-	(up-find-local c: livestock-class c: 1)
-	;(up-remove-objects search-local object-data-id g:== g-sheep-id)
-	(up-get-search-state gl-local-total)
-)
+; (defrule
+	; (current-age == dark-age)
+	; (unit-type-count-total livestock-class > 0)
+	; (up-compare-goal gl-local-total < 1)
+	; (up-compare-goal remaining-sheep-food <= 30)
+; =>
+	; (up-full-reset-search)
+	; (up-filter-distance c: -1 c: 5)
+	; (up-find-local c: livestock-class c: 1)
+	; ;(up-remove-objects search-local object-data-id g:== g-sheep-id)
+	; (up-get-search-state gl-local-total)
+; )
 
-(defrule
-	(current-age == dark-age)
-	(unit-type-count-total livestock-class > 0)
-	(up-compare-goal remaining-sheep-food <= 30)
-	(up-compare-goal gl-local-total >= 1)
-	(up-set-target-object search-local c: 0)
-=>
-	(up-copy-point gl-temp-x gl-self-point-x)
-	(up-modify-goal gl-temp-x c:- 1)
-	(up-modify-goal gl-temp-y c:+ 1)
-	(up-target-point gl-temp-x action-default -1 -1)
-	;(chat-to-player my-player-number "No sheep under tc, send next one")
-)
+; (defrule
+	; (current-age == dark-age)
+	; (unit-type-count-total livestock-class > 0)
+	; (up-compare-goal remaining-sheep-food <= 30)
+	; (up-compare-goal gl-local-total >= 1)
+	; (up-set-target-object search-local c: 0)
+; =>
+	; (up-copy-point gl-temp-x gl-self-point-x)
+	; (up-modify-goal gl-temp-x c:- 1)
+	; (up-modify-goal gl-temp-y c:+ 1)
+	; (up-target-point gl-temp-x action-default -1 -1)
+	; ;(chat-to-player my-player-number "No sheep under tc, send next one")
+; )
 
-;assign villagers to the next sheep
+; ;assign villagers to the next sheep
 
-(defrule
-	(current-age == dark-age)
-	(unit-type-count-total livestock-class > 0)
-	(unit-type-count villager-shepherd > 0)
-	(up-compare-goal g-sheep-id != -1)	
-=>
-	(up-full-reset-search)
-	(up-find-local c: 590 c: 40) ;female shepherd
-	(up-find-local c: 592 c: 40) ;male shepherd
-	(up-get-search-state gl-local-total)
-	;(up-chat-data-to-self "vils found: %d" g: gl-local-total)
-)
+; (defrule
+	; (current-age == dark-age)
+	; (unit-type-count-total livestock-class > 0)
+	; (unit-type-count villager-shepherd > 0)
+	; (up-compare-goal g-sheep-id != -1)	
+; =>
+	; (up-full-reset-search)
+	; (up-find-local c: 590 c: 40) ;female shepherd
+	; (up-find-local c: 592 c: 40) ;male shepherd
+	; (up-get-search-state gl-local-total)
+	; ;(up-chat-data-to-self "vils found: %d" g: gl-local-total)
+; )
 
-(defrule
-	(current-age == dark-age)
-	(unit-type-count-total livestock-class > 0)
-	(up-compare-goal gl-local-total > 0)
-	(up-set-target-object search-local c: 0)
-	(unit-type-count villager-shepherd > 0)
-	(up-compare-goal g-sheep-id != -1)	
-=>	
-	(up-set-target-by-id g: g-sheep-id)	
-	(up-target-objects 1 action-default -1 -1)
-	;(chat-to-player my-player-number "Task vils to sheep")
-)
+; (defrule
+	; (current-age == dark-age)
+	; (unit-type-count-total livestock-class > 0)
+	; (up-compare-goal gl-local-total > 0)
+	; (up-set-target-object search-local c: 0)
+	; (unit-type-count villager-shepherd > 0)
+	; (up-compare-goal g-sheep-id != -1)	
+; =>	
+	; (up-set-target-by-id g: g-sheep-id)	
+	; (up-target-objects 1 action-default -1 -1)
+	; ;(chat-to-player my-player-number "Task vils to sheep")
+; )
 
 ;endregion
 
@@ -4598,10 +4584,14 @@
 	(building-type-count mill > 0)
 	(up-gaia-type-count c: forage-class > 0)
 =>
-	(up-filter-distance c: -1 c: 20)
+	(up-find-local c: mill c: 1)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object gl-temp-x)
+	(up-set-target-point gl-temp-x)
+	(up-filter-distance c: -1 c: 6)
 	(up-find-remote c: forage-class c: 1)
 	;(up-get-search-state gl-local-total)
-	(up-target-objects 0 action-default -1 -1)
+	(up-target-objects 0 action-default -1  -1)
 	(chat-local-to-self "Sending villager to berries")
 )
 
@@ -7755,24 +7745,24 @@
 
 #load-if-defined ARENA-MAP
 
-; (defrule
-	; (up-compare-goal strategy-goal == -1)
-	; (random-number > 0)
-	; (random-number <= 60)
-; =>
-	; (set-goal strategy-goal sg-fastcastle-gu)	
-	; (set-goal d-villager-goal 26)
-	; (set-goal f-villager-goal 28)
-	; (set-goal c-villager-goal 100)
-	; (chat-to-player my-player-number "Going for a Fast-Castle")
-	; ;(chat-to-all "Going for a Fast-Castle")
-	; (disable-self)
-; )
-
 (defrule
 	(up-compare-goal strategy-goal == -1)
 	(random-number > 0)
-	(random-number <= 100)
+	(random-number <= 60)
+=>
+	(set-goal strategy-goal sg-fastcastle-gu)	
+	(set-goal d-villager-goal 26)
+	(set-goal f-villager-goal 28)
+	(set-goal c-villager-goal 100)
+	(chat-to-player my-player-number "Going for a Fast-Castle")
+	;(chat-to-all "Going for a Fast-Castle")
+	(disable-self)
+)
+
+(defrule
+	(up-compare-goal strategy-goal == -1)
+	(random-number > 60)
+	(random-number <= 80)
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)	
 	(set-goal d-villager-goal 26)
@@ -7783,21 +7773,21 @@
 	(disable-self)
 )
 
-; (defrule
-	; (up-compare-goal strategy-goal == -1)
-	; (random-number > 80)
-	; (random-number <= 100)
-; =>
-	; (set-goal strategy-goal sg-boom-imp)	
-	; (set-goal d-villager-goal 30)
-	; (set-goal f-villager-goal 32)
-	; (set-goal c-villager-goal 34)
-	; (chat-to-allies "I'll go Fast Imp")
-	; (chat-to-player my-player-number "I'll go Fast Imp")
-	; (up-chat-data-to-self "My fast-imp strategy will be %d" g: gl-fastimp-unit)
-	; ;(chat-local-using-id "My fast-imp strategy will be %d" g: gl-fastimp-unit)
-	; (disable-self)
-; )
+(defrule
+	(up-compare-goal strategy-goal == -1)
+	(random-number > 80)
+	(random-number <= 100)
+=>
+	(set-goal strategy-goal sg-boom-imp)	
+	(set-goal d-villager-goal 30)
+	(set-goal f-villager-goal 32)
+	(set-goal c-villager-goal 34)
+	(chat-to-allies "I'll go Fast Imp")
+	(chat-to-player my-player-number "I'll go Fast Imp")
+	(up-chat-data-to-self "My fast-imp strategy will be %d" g: gl-fastimp-unit)
+	;(chat-local-using-id "My fast-imp strategy will be %d" g: gl-fastimp-unit)
+	(disable-self)
+)
 
 #end-if
 
@@ -25288,6 +25278,7 @@
     (set-strategic-number sn-gold-dropsite-distance 6)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 1")
 )
 
 (defrule
@@ -25305,6 +25296,7 @@
     (set-strategic-number sn-gold-dropsite-distance 6)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 2")
 )
 
 (defrule ;mining camp is sometimes built on gold
@@ -25320,7 +25312,7 @@
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
     (set-strategic-number sn-gold-dropsite-distance 400)
     (set-strategic-number sn-stone-dropsite-distance 6)
-	(chat-to-player my-player-number "Build mining-camp on stone")
+	(chat-to-player my-player-number "Mining camp 3")
 	(build mining-camp)
 )
 
@@ -25339,6 +25331,7 @@
     (set-strategic-number sn-gold-dropsite-distance 6)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 4")
 )
 
 (defrule
@@ -25355,6 +25348,7 @@
     (set-strategic-number sn-gold-dropsite-distance 6)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 5")
 )
 
 (defrule
@@ -25371,6 +25365,7 @@
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 6)
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 6")
 )
 
 #load-if-defined EMPIRE-WARS
@@ -25389,6 +25384,7 @@
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 6)
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 7")
 )
 
 #end-if
@@ -25408,8 +25404,8 @@
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
     (set-strategic-number sn-gold-dropsite-distance 6)
     (set-strategic-number sn-stone-dropsite-distance 200)
-;	(chat-to-all "Baue mining camp auf Gold")
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 8")
 )
 #end-if
 
@@ -25428,8 +25424,8 @@
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 6)
-	;(chat-to-all "Baue mining camp auf Stein")
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 9")
 )
 
 (defrule
@@ -25450,7 +25446,7 @@
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 6)
 	(build mining-camp)
-	;(chat-to-all "Baue mining camp auf Stein")
+	(chat-to-player my-player-number "Mining camp 10")
 )
 
 (defrule
@@ -28334,6 +28330,24 @@
 	(build farm)
 )
 
+(defrule ;no food to make horse collar and no farms
+	(goal strategy-goal sg-scoutrush)
+	(goal meso-civ NO)
+	(current-age == feudal-age)
+	(civilian-population >= 20)
+	(or (building-type-count-total stable > 0)
+	(or (building-type-count-total archery-range > 0)
+	(building-type-count-total barracks > 1)))
+	(idle-farm-count < 1)
+	(can-build farm)
+	(up-compare-goal gl-water-on-map != 1)
+	(up-research-status c: ri-horse-collar < research-pending)
+	(food-amount < 75)
+	(building-type-count-total farm < 6)
+=>
+	(build farm)
+)
+
 (defrule
 	(goal strategy-goal sg-scoutrush)
 	(goal meso-civ YES)
@@ -29887,6 +29901,7 @@
     (set-strategic-number sn-gold-dropsite-distance 6)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 11")
 )
 
 (defrule
@@ -29903,6 +29918,7 @@
     (set-strategic-number sn-gold-dropsite-distance 6)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 12")
 )
 
 (defrule
@@ -31132,8 +31148,8 @@
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 6)
-;	(chat-to-all "Baue mining camp auf Stein")
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 13")
 )
 
 (defrule
@@ -31150,6 +31166,7 @@
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 6)
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 14")
 )
 
 (defrule
@@ -31718,8 +31735,8 @@
 	(building-type-count-total lumber-camp > 0)
 	(or (not (goal gl-fastimp-unit fi-monks))
 	(building-type-count-total farm < 12))
-	(up-pending-objects c: farm < 16)
-	(idle-farm-count < 10)
+	(up-pending-objects c: farm < 8)
+	(idle-farm-count < 2)
 	(wood-amount > 125)
 	(can-build farm)
 	(military-population < 16)
@@ -32911,12 +32928,14 @@
 	(research ri-sanctity)
 )
 
-; (defrule
-	; (current-age >= imperial-age)
-	; (can-research ri-herbal-medicine)
-; =>
-	; (research ri-herbal-medicine)
-; )
+(defrule
+	(current-age >= imperial-age)
+	(can-research ri-herbal-medicine)
+	(civ-selected aztec)
+	(unit-type-count-total monk > 9)
+=>
+	(research ri-herbal-medicine)
+)
 
 (defrule
 	(current-age >= castle-age)
@@ -32931,7 +32950,9 @@
 	(current-age >= castle-age)
 	(can-research ri-atonement)
 	(unit-type-count-total monk >= 3)
-	(players-unit-type-count focus-player monk >= 3)
+	(or (players-unit-type-count focus-player monk >= 3)
+	(and (civ-selected aztec)
+	(unit-type-count-total monk > 9)))
 	(up-compare-goal gl-military-advantage < 35)
 	(or (not (goal strategy-goal sg-boom-imp))
 	(goal gl-fastimp-unit fi-monks))
@@ -36777,6 +36798,7 @@
 	(or (military-population >= 26)
 	(up-compare-goal gl-military-advantage >= 0))
 	(current-age == imperial-age)
+	(not (goal strategy-goal sg-boom-imp))
 =>
 	(set-goal attack-now-goal 1)
 	;(set-goal retreat-now-goal 0)
@@ -36792,6 +36814,7 @@
 	(up-compare-goal gl-military-advantage < -5)
 	(goal attack-now-goal 1)
 	(goal retreat-now-goal 0)
+	(not (goal strategy-goal sg-boom-imp))
 =>
 	(set-goal attack-now-goal 0)
 	(set-goal retreat-now-goal 1)
@@ -36813,6 +36836,26 @@
 	(or (military-population >= 24)
 	(up-compare-goal gl-military-advantage >= 10))
 	(up-compare-goal gl-military-advantage >= -5)
+	(not (goal strategy-goal sg-boom-imp))
+=>
+	;(set-goal attack-now-goal 1)
+	(set-goal retreat-now-goal 0)
+	(up-gather-inside c: barracks c: 0)
+	(up-gather-inside c: archery-range c: 0)
+	(up-gather-inside c: stable c: 0)
+	(up-gather-inside c: siege-workshop c: 0)
+	(attack-now)
+	;(chat-to-player my-player-number "Starting an attack")
+	;(chat-to-allies "31")
+)
+
+(defrule
+	(current-age == imperial-age)
+	(goal attack-now-goal 1)
+	;(goal retreat-now-goal 0)
+	(or (military-population >= 20)
+	(up-compare-goal gl-military-advantage >= 10))
+	(goal strategy-goal sg-boom-imp)
 =>
 	;(set-goal attack-now-goal 1)
 	(set-goal retreat-now-goal 0)
@@ -37941,6 +37984,7 @@
     (set-strategic-number sn-gold-dropsite-distance 6)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 15")
 )
 
 (defrule
@@ -37958,6 +38002,7 @@
     (set-strategic-number sn-gold-dropsite-distance 6)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 16")
 )
 
 (defrule
@@ -37974,6 +38019,7 @@
     (set-strategic-number sn-gold-dropsite-distance 6)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 17") ;was built on stone
 )
 
 (defrule
@@ -37991,6 +38037,7 @@
     (set-strategic-number sn-gold-dropsite-distance 6)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 18")
 )
 
 (defrule
@@ -38008,6 +38055,7 @@
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 6)
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 19")
 )
 
 (defrule
@@ -38025,6 +38073,7 @@
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 6)
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 20")
 )
 
 (defrule
@@ -38042,6 +38091,7 @@
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 6)
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 21")
 )
 
 (defrule
@@ -38129,6 +38179,7 @@
     (set-strategic-number sn-gold-dropsite-distance 6)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 22")
 )
 
 (defrule
@@ -38144,6 +38195,7 @@
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 6)
 	(build mining-camp)
+	(chat-to-player my-player-number "Mining camp 23")
 )
 
 (defrule
@@ -38756,7 +38808,7 @@
 (defrule
 	(current-age >= castle-age)
 	(can-research-with-escrow ri-eagle-warrior)
-	(unit-type-count-total eagle-warrior-line >= 3)
+	(unit-type-count-total eagle-warrior-line >= 4)
 	(goal gl-food-saving 24)
 	(goal gl-gold-saving 24)
 =>
@@ -38772,7 +38824,7 @@
 (defrule
 	(current-age == castle-age)
 	(can-research ri-eagle-warrior)
-	(unit-type-count-total eagle-warrior-line >= 3)
+	(unit-type-count-total eagle-warrior-line >= 4)
 =>
 	(research ri-eagle-warrior)
 )
@@ -38795,7 +38847,7 @@
 (defrule
 	(current-age == imperial-age)
 	(can-research ri-elite-eagle-warrior)
-	(unit-type-count-total eagle-warrior-line >= 3)
+	(unit-type-count-total eagle-warrior-line >= 4)
 =>
 	(research ri-elite-eagle-warrior)
 )
@@ -44222,6 +44274,7 @@
 
 ; general Eco-Balance
 
+
 (defrule
 	(up-research-status c: castle-age >= research-pending)
 	(goal ca-strategy gl-castleage-eagles)
@@ -44231,9 +44284,9 @@
 	(not (goal strategy-goal sg-boom-imp))
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 29)
-	(set-strategic-number sn-food-gatherer-percentage 40)
-	(set-strategic-number sn-gold-gatherer-percentage 25)
-	(set-strategic-number sn-stone-gatherer-percentage 6)
+	(set-strategic-number sn-food-gatherer-percentage 43)
+	(set-strategic-number sn-gold-gatherer-percentage 28)
+	(set-strategic-number sn-stone-gatherer-percentage 0)
 	(chat-to-player my-player-number "Setting up economy for Castle-Age eagles")
 	(disable-self)
 )
@@ -44247,9 +44300,9 @@
 	(not (goal strategy-goal sg-boom-imp))
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 25)
-	(set-strategic-number sn-food-gatherer-percentage 44)
-	(set-strategic-number sn-gold-gatherer-percentage 25)
-	(set-strategic-number sn-stone-gatherer-percentage 6)
+	(set-strategic-number sn-food-gatherer-percentage 47)
+	(set-strategic-number sn-gold-gatherer-percentage 28)
+	(set-strategic-number sn-stone-gatherer-percentage 0)
 	(chat-to-player my-player-number "Setting up economy for Castle-Age longswords")
 	(disable-self)
 )
@@ -44262,10 +44315,10 @@
 	(not (goal sg-fastcastle-boom NO))
 	(not (goal strategy-goal sg-boom-imp))
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 35)
+	(set-strategic-number sn-wood-gatherer-percentage 38)
 	(set-strategic-number sn-food-gatherer-percentage 39)
-	(set-strategic-number sn-gold-gatherer-percentage 20)
-	(set-strategic-number sn-stone-gatherer-percentage 6)
+	(set-strategic-number sn-gold-gatherer-percentage 23)
+	(set-strategic-number sn-stone-gatherer-percentage 0)
 	(chat-to-player my-player-number "Setting up economy for Castle-Age range-unit")
 	(disable-self)
 )
@@ -44279,10 +44332,70 @@
 	(not (goal strategy-goal sg-boom-imp))
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 29)
+	(set-strategic-number sn-food-gatherer-percentage 48)
+	(set-strategic-number sn-gold-gatherer-percentage 23)
+	(set-strategic-number sn-stone-gatherer-percentage 0)
+	(chat-to-player my-player-number "Setting up economy for Castle-Age stable-unit")
+	(disable-self)
+)
+
+(defrule
+	(current-age == castle-age)
+	(goal ca-strategy gl-castleage-eagles)
+	(not (goal strategy-goal sg-fastcastle-uu))
+	(not (goal sg-fastcastle-boom YES))
+	(not (goal sg-fastcastle-boom NO))
+	(not (goal strategy-goal sg-boom-imp))
+=>
+	(set-strategic-number sn-wood-gatherer-percentage 29)
+	(set-strategic-number sn-food-gatherer-percentage 40)
+	(set-strategic-number sn-gold-gatherer-percentage 25)
+	(set-strategic-number sn-stone-gatherer-percentage 6)
+	(disable-self)
+)
+
+(defrule
+	(current-age == castle-age)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(not (goal strategy-goal sg-fastcastle-uu))
+	(not (goal sg-fastcastle-boom YES))
+	(not (goal sg-fastcastle-boom NO))
+	(not (goal strategy-goal sg-boom-imp))
+=>
+	(set-strategic-number sn-wood-gatherer-percentage 25)
+	(set-strategic-number sn-food-gatherer-percentage 44)
+	(set-strategic-number sn-gold-gatherer-percentage 25)
+	(set-strategic-number sn-stone-gatherer-percentage 6)
+	(disable-self)
+)
+
+(defrule
+	(current-age == castle-age)
+	(goal ca-strategy gl-castleage-rangeunit)
+	(not (goal strategy-goal sg-fastcastle-uu))
+	(not (goal sg-fastcastle-boom YES))
+	(not (goal sg-fastcastle-boom NO))
+	(not (goal strategy-goal sg-boom-imp))
+=>
+	(set-strategic-number sn-wood-gatherer-percentage 35)
+	(set-strategic-number sn-food-gatherer-percentage 39)
+	(set-strategic-number sn-gold-gatherer-percentage 20)
+	(set-strategic-number sn-stone-gatherer-percentage 6)
+	(disable-self)
+)
+
+(defrule
+	(current-age == castle-age)
+	(goal ca-strategy gl-castleage-stableunit)
+	(not (goal strategy-goal sg-fastcastle-uu))
+	(not (goal sg-fastcastle-boom YES))
+	(not (goal sg-fastcastle-boom NO))
+	(not (goal strategy-goal sg-boom-imp))
+=>
+	(set-strategic-number sn-wood-gatherer-percentage 29)
 	(set-strategic-number sn-food-gatherer-percentage 45)
 	(set-strategic-number sn-gold-gatherer-percentage 20)
 	(set-strategic-number sn-stone-gatherer-percentage 6)
-	(chat-to-player my-player-number "Setting up economy for Castle-Age stable-unit")
 	(disable-self)
 )
 
@@ -44303,10 +44416,10 @@
 	(goal strategy-goal sg-fastcastle-gu)
 	(goal sg-fastcastle-boom YES)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 44)
-	(set-strategic-number sn-food-gatherer-percentage 50)
+	(set-strategic-number sn-wood-gatherer-percentage 45)
+	(set-strategic-number sn-food-gatherer-percentage 45)
 	(set-strategic-number sn-gold-gatherer-percentage 10)
-	(set-strategic-number sn-stone-gatherer-percentage 6)
+	(set-strategic-number sn-stone-gatherer-percentage 0)
 	(chat-to-player my-player-number "Setting up economy for a Castle-Age Boom")
 	(disable-self)
 )
@@ -44316,10 +44429,36 @@
 	(goal strategy-goal sg-fastcastle-gu)
 	(goal sg-fastcastle-boom NO)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 36)
+	(set-strategic-number sn-wood-gatherer-percentage 42)
 	(set-strategic-number sn-food-gatherer-percentage 42)
 	(set-strategic-number sn-gold-gatherer-percentage 16)
+	(set-strategic-number sn-stone-gatherer-percentage 0)
+	(chat-to-player my-player-number "Setting up economy for capturing relics")
+	(disable-self)
+)
+
+(defrule
+	(current-age == castle-age)
+	(goal strategy-goal sg-fastcastle-gu)
+	(goal sg-fastcastle-boom YES)
+=>
+	(set-strategic-number sn-wood-gatherer-percentage 42)
+	(set-strategic-number sn-food-gatherer-percentage 45)
+	(set-strategic-number sn-gold-gatherer-percentage 7)
 	(set-strategic-number sn-stone-gatherer-percentage 6)
+	(chat-to-player my-player-number "Setting up economy for a Castle-Age Boom")
+	(disable-self)
+)
+
+(defrule
+	(current-age == castle-age)
+	(goal strategy-goal sg-fastcastle-gu)
+	(goal sg-fastcastle-boom NO)
+=>
+	(set-strategic-number sn-wood-gatherer-percentage 42)
+	(set-strategic-number sn-food-gatherer-percentage 42)
+	(set-strategic-number sn-gold-gatherer-percentage 16)
+	(set-strategic-number sn-stone-gatherer-percentage 0)
 	(chat-to-player my-player-number "Setting up economy for capturing relics")
 	(disable-self)
 )
