@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 21st January 2023
+;last update: 23rd January 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -14319,8 +14319,7 @@
 (defrule
 	(current-age == castle-age)
 	(unit-type-count-total skirmisher-line < 60)
-	(or (players-unit-type-count focus-player spearman-line >= 8)
-	(players-unit-type-count focus-player archer-line >= 8))
+	(players-unit-type-count focus-player archer-line >= 8)
 	(can-train skirmisher-line)
 	(not (research-completed ri-elite-skirmisher))
 	(research-available ri-elite-skirmisher)
@@ -14338,12 +14337,14 @@
 (defrule
 	(current-age == castle-age)
 	(unit-type-count-total skirmisher-line < 60)
-	(players-unit-type-count focus-player hand-cannoneer >= 5)
+	(or (players-unit-type-count focus-player spearman-line >= 8)
+	(players-unit-type-count focus-player hand-cannoneer >= 5))
 	(can-train skirmisher-line)
 	(not (research-completed ri-elite-skirmisher))
 	(research-available ri-elite-skirmisher)
 	(not (unit-available genitour-line))
 	(unit-type-count skirmisher-line <= 5)
+	(unit-type-count archer-line <= 5)
 	(or (not (goal strategy-goal sg-boom-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
@@ -14373,8 +14374,7 @@
 (defrule
 	(current-age == castle-age)
 	(unit-type-count-total skirmisher-line < 60)
-	(or (players-unit-type-count focus-player spearman-line >= 8)
-	(players-unit-type-count focus-player archer-line >= 8))
+	(players-unit-type-count focus-player archer-line >= 8)
 	(can-train-with-escrow skirmisher-line)
 	(up-research-status c: ri-elite-skirmisher >= research-pending)
 	(unit-type-count eagle-warrior-line <= 5)
@@ -14393,7 +14393,9 @@
 (defrule
 	(current-age == castle-age)
 	(unit-type-count-total skirmisher-line < 60)
-	(players-unit-type-count focus-player hand-cannoneer >= 5)
+	(or (players-unit-type-count focus-player spearman-line >= 8)
+	(players-unit-type-count focus-player hand-cannoneer >= 5))
+	(unit-type-count archer-line <= 5)
 	(can-train-with-escrow skirmisher-line)
 	(up-research-status c: ri-elite-skirmisher >= research-pending)
 	(not (unit-available genitour-line))
@@ -14666,9 +14668,8 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player spearman-line >= 12)
 	(or (players-unit-type-count focus-player archer-line >= 10)
-	(players-unit-type-count focus-player hand-cannoneer >= 6)))
+	(players-unit-type-count focus-player hand-cannoneer >= 6))
 	(can-train skirmisher-line)
 	(not (research-completed ri-elite-skirmisher))
 	(unit-type-count-total skirmisher-line < 6)
@@ -14683,11 +14684,41 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (players-unit-type-count focus-player spearman-line >= 12)
 	(or (players-unit-type-count focus-player archer-line >= 10)
-	(players-unit-type-count focus-player hand-cannoneer >= 6)))
+	(players-unit-type-count focus-player hand-cannoneer >= 6))
 	(can-train skirmisher-line)
 	(up-research-status c: ri-elite-skirmisher >= research-pending)
+	(not (unit-available genitour-line))
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
+=>
+	(train skirmisher-line)
+	;(chat-to-player my-player-number "Produziere Plaenkler gegen Bogenschuetzen und Speerkaempfer")
+)
+
+(defrule
+	(current-age == imperial-age)
+	(players-unit-type-count focus-player spearman-line >= 12)
+	(can-train skirmisher-line)
+	(not (research-completed ri-elite-skirmisher))
+	(unit-type-count-total skirmisher-line < 6)
+	(unit-type-count-total archer-line < 6)
+	(not (unit-available genitour-line))
+	(or (not (goal strategy-goal sg-boom-imp))
+		(and (up-research-status c: imperial-age >= research-pending)
+		(military-population >= 20)))
+=>
+	(train skirmisher-line)
+	;(chat-to-player my-player-number "Produziere Plaenkler gegen Bogenschuetzen und Speerkaempfer")
+)
+
+(defrule
+	(current-age == imperial-age)
+	(players-unit-type-count focus-player spearman-line >= 12)
+	(can-train skirmisher-line)
+	(up-research-status c: ri-elite-skirmisher >= research-pending)
+	(unit-type-count-total archer-line < 6)
 	(not (unit-available genitour-line))
 	(or (not (goal strategy-goal sg-boom-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
@@ -19385,6 +19416,7 @@
 	;(chat-to-player my-player-number "Spare nicht mehr auf 1.Holzupgrade")
 )
 
+#load-if-not-defined ARENA-MAP
 (defrule
 	(civilian-population >= 11)
 	(building-type-count-total barracks == 0)
@@ -19409,6 +19441,7 @@
 	(set-goal gl-wood-saving 0)
 	;(chat-to-player my-player-number "Spare nicht mehr auf Kaserne")
 )
+#end-if
 
 (defrule
 	(building-type-count-total barracks == 0)
@@ -25502,6 +25535,27 @@
 	;(chat-to-player my-player-number "Barracks 5")
 )
 
+#load-if-defined ARENA-MAP
+
+(defrule
+	(building-type-count-total town-center >= 1)
+	(goal strategy-goal sg-fastcastle-gu)
+    (not (goal sg-fastcastle-boom YES))
+	(can-build-with-escrow barracks)
+	(up-research-status c: castle-age >= research-pending)
+	(building-type-count-total barracks < 1)
+=>
+	(release-escrow wood)
+	; (set-strategic-number sn-placement-zone-size 0)
+	(up-set-placement-data my-player-number -1 c: 14)
+    (up-build place-control with-escrow c: barracks)
+	;(chat-to-player my-player-number "Barracks 6")
+)
+
+#end-if
+
+#load-if-not-defined ARENA-MAP
+
 (defrule
 	(building-type-count-total town-center >= 1)
 	(goal strategy-goal sg-fastcastle-gu)
@@ -25519,6 +25573,8 @@
 	(set-goal gl-wood-saving 0)
 	;(chat-to-player my-player-number "Barracks 6")
 )
+
+#end-if
 
 #load-if-defined ARENA-MAP
 
@@ -28262,9 +28318,24 @@
 (defrule
 	;(up-research-status c: feudal-age >= research-pending)
 	(unit-type-count villager >= 22)
+	(not (goal strategy-goal sg-fastcastle-gu))
 	(current-age == dark-age)
 	(building-type-count-total lumber-camp > 0)
 	;(building-type-count-total mining-camp > 0)
+	(building-type-count-total farm < 6)
+	(idle-farm-count < 1)
+	(can-build farm)
+=>
+	(build farm)
+)
+
+(defrule
+	;(up-research-status c: feudal-age >= research-pending)
+	(unit-type-count villager >= 22)
+	(goal strategy-goal sg-fastcastle-gu)
+	(current-age == dark-age)
+	(building-type-count-total lumber-camp > 0)
+	(building-type-count-total mining-camp > 0)
 	(building-type-count-total farm < 6)
 	(idle-farm-count < 1)
 	(can-build farm)
@@ -30015,6 +30086,7 @@
 	(or (building-type-count-total market >= 1)
 	(or (building-type-count-total archery-range >= 1)
 	(building-type-count-total stable >= 1)))
+	(building-type-count-total farm < 8)
 	(current-age == feudal-age)
 	(idle-farm-count < 1)
 	(can-build farm)
@@ -30087,7 +30159,6 @@
 =>
 	(build farm)
 )
-
 
 ;walls
 
@@ -31488,7 +31559,8 @@
 	(building-type-count-total town-center < 3)
 	(or (building-type-count-total stable > 1)
 	(or (building-type-count-total archery-range > 1)
-	(building-type-count-total barracks > 2)))
+	(or (building-type-count-total barracks > 2)
+	(up-compare-goal gl-military-advantage >= 0))))
 	(not (goal strategy-goal sg-boom-imp))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
@@ -31509,7 +31581,8 @@
 	(building-type-count-total town-center < 3)
 	(or (building-type-count-total stable > 1)
 	(or (building-type-count-total archery-range > 1)
-	(building-type-count-total barracks > 2)))
+	(or (building-type-count-total barracks > 2)
+	(up-compare-goal gl-military-advantage >= 0))))
 	(not (goal strategy-goal sg-boom-imp))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
@@ -31530,7 +31603,8 @@
 	(building-type-count-total town-center < 3)
 	(or (building-type-count-total stable > 1)
 	(or (building-type-count-total archery-range > 1)
-	(building-type-count-total barracks > 2)))
+	(or (building-type-count-total barracks > 2)
+	(up-compare-goal gl-military-advantage >= 0))))
 	(not (goal strategy-goal sg-boom-imp))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
@@ -31551,7 +31625,8 @@
 	(building-type-count-total town-center < 3)
 	(or (building-type-count-total stable > 1)
 	(or (building-type-count-total archery-range > 1)
-	(building-type-count-total barracks > 2)))
+	(or (building-type-count-total barracks > 2)
+	(up-compare-goal gl-military-advantage >= 0))))
 	(not (goal strategy-goal sg-boom-imp))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
@@ -31686,7 +31761,8 @@
 	(building-type-count-total lumber-camp > 0)
 	(or (building-type-count-total stable > 1)
 	(or (building-type-count-total archery-range > 1)
-	(building-type-count-total barracks > 2)))
+	(or (building-type-count-total barracks > 2)
+	(up-compare-goal gl-military-advantage >= 0))))
 	(up-pending-objects c: farm < 8)
 	(idle-farm-count < 5)
 	(wood-amount > 100)
@@ -33710,6 +33786,8 @@
 
 #load-if-defined ARENA-MAP
 
+;siege-tower
+
 ; (defrule ;needs to be DUC tasked on a wall, then units need to be DUC tasked on the siege-tower
 	; (current-age >= castle-age)
 	; (or (not (goal strategy-goal sg-boom-imp))
@@ -33728,6 +33806,7 @@
 
 ;ram-micro
 
+#load-if-not-defined ARENA-MAP
 (defrule
 	(current-age == castle-age)
 	(up-compare-goal attack-now-goal == 1)
@@ -33740,6 +33819,22 @@
 	(up-target-objects 0 action-default -1 -1)
 	;(chat-to-player my-player-number "ram micro test")
 )
+#end-if
+
+#load-if-defined ARENA-MAP
+(defrule
+	(current-age == castle-age)
+	(up-compare-goal attack-now-goal == 1)
+	(unit-type-count battering-ram-line > 0)
+=>
+	(up-full-reset-search)
+	(up-find-local c: battering-ram c: 20)
+	(up-find-local c: feudal-battering-ram c: 20)
+	(up-find-remote c: gate-class c: 1)
+	(up-target-objects 0 action-default -1 -1)
+	;(chat-to-player my-player-number "ram micro test")
+)
+#end-if
 
 
 (defrule
