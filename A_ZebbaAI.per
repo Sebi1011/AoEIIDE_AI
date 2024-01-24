@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 23rd January 2023
+;last update: 24th January 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -12295,8 +12295,9 @@
 	(up-full-reset-search)
 	(up-reset-group c: 0)
 	(up-modify-group-flag 0 c: 0)
-	(up-find-local c: monastery-class c: 30)
-	(up-remove-objects search-local object-data-action == actionid-convert)
+	(up-find-local c: monastery-class c: 40)
+	(up-remove-objects search-local object-data-action == actionid-convert) ;remove monks that are already converting
+	(up-remove-objects search-local object-data-carry != 100) ;remove monks that can't convert
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-number-monks g:= gl-local-total)
 	(up-create-group 0 0 c: 0)
@@ -12315,7 +12316,7 @@
 (defrule
 	(or (unit-type-count-total monk > 0)
 	(unit-type-count-total missionary > 0))
-	(current-age < imperial-age)
+	;(current-age < imperial-age)
 	(up-group-size c: 0 > 0)
 	(not (research-completed ri-atonement))
 	(not (research-completed ri-redemption))
@@ -12344,7 +12345,7 @@
 (defrule
 	(or (unit-type-count-total monk > 0)
 	(unit-type-count-total missionary > 0))
-	(current-age < imperial-age)
+	;(current-age < imperial-age)
 	(up-group-size c: 0 > 0)
 	(not (research-completed ri-atonement))
 	(research-completed ri-redemption)
@@ -12378,7 +12379,7 @@
 (defrule
 	(or (unit-type-count-total monk > 0)
 	(unit-type-count-total missionary > 0))
-	(current-age < imperial-age)
+	;(current-age < imperial-age)
 	(up-group-size c: 0 > 0)
 	(research-completed ri-atonement)
 	(not (research-completed ri-redemption))
@@ -12409,7 +12410,7 @@
 (defrule
 	(or (unit-type-count-total monk > 0)
 	(unit-type-count-total missionary > 0))
-	(current-age < imperial-age)
+	;(current-age < imperial-age)
 	(up-group-size c: 0 > 0)
 	(research-completed ri-atonement)
 	(research-completed ri-redemption)
@@ -12446,7 +12447,7 @@
 	(unit-type-count-total missionary > 0))
 	(up-compare-goal gl-remote-total >= 1)
 	(up-set-target-object search-remote c: 0)
-	(current-age < imperial-age)
+	;(current-age < imperial-age)
 =>
 	(up-reset-search 1 1 0 0) ;reset local search only
 	(up-add-object-by-id search-local g: gl-curr-unit-id) 
@@ -40983,6 +40984,20 @@
 	(up-gather-inside c: stable c: 1)
 	;(chat-to-player my-player-number "Warte mit Truppen in Staellen, bis genug Truppen vorhanden sind.")
 	;(disable-self)
+)
+
+(defrule ;ungarrison stables & barracks to defend relics
+	(current-age == castle-age)
+	(town-under-attack)
+	(or (unit-type-count-total eagle-warrior-line > 1)
+	(unit-type-count-total scout-cavalry-line > 1))
+	(goal sg-fastcastle-boom NO)
+=>
+	(up-ungarrison c: barracks)
+	(up-gather-inside c: barracks c: 0)
+	(up-ungarrison c: stable)
+	(up-gather-inside c: stable c: 0)
+	;(chat-to-player my-player-number "Schicke Truppen aus den Staellen.")
 )
 
 (defrule
