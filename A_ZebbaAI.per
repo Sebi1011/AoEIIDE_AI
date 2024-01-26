@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 24th January 2023
+;last update: 26th January 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -1418,6 +1418,19 @@
 (defrule
     (game-time > 5)
 	(not (goal strategy-goal sg-towerrush))
+	(current-age == dark-age)
+=>
+    (set-strategic-number sn-food-dropsite-distance 6)
+    (set-strategic-number sn-wood-dropsite-distance 9)
+    (set-strategic-number sn-gold-dropsite-distance 6)
+    (set-strategic-number sn-stone-dropsite-distance 6)
+	(disable-self)
+)
+
+(defrule
+    (game-time > 5)
+	(not (goal strategy-goal sg-towerrush))
+	(current-age > dark-age)
 =>
     (set-strategic-number sn-food-dropsite-distance 16)
     (set-strategic-number sn-wood-dropsite-distance 9)
@@ -7745,19 +7758,19 @@
 
 #load-if-defined ARENA-MAP
 
-(defrule
-	(up-compare-goal strategy-goal == -1)
-	(random-number > 0)
-	(random-number <= 100)
-=>
-	(set-goal strategy-goal sg-fastcastle-gu)	
-	(set-goal d-villager-goal 26)
-	(set-goal f-villager-goal 28)
-	(set-goal c-villager-goal 100)
-	(chat-to-player my-player-number "Going for a Fast-Castle")
-	;(chat-to-all "Going for a Fast-Castle")
-	(disable-self)
-)
+; (defrule
+	; (up-compare-goal strategy-goal == -1)
+	; (random-number > 0)
+	; (random-number <= 60)
+; =>
+	; (set-goal strategy-goal sg-fastcastle-gu)	
+	; (set-goal d-villager-goal 26)
+	; (set-goal f-villager-goal 28)
+	; (set-goal c-villager-goal 100)
+	; (chat-to-player my-player-number "Going for a Fast-Castle")
+	; ;(chat-to-all "Going for a Fast-Castle")
+	; (disable-self)
+; )
 
 ; (defrule
 	; (up-compare-goal strategy-goal == -1)
@@ -7773,21 +7786,21 @@
 	; (disable-self)
 ; )
 
-; (defrule
-	; (up-compare-goal strategy-goal == -1)
-	; (random-number > 80)
-	; (random-number <= 100)
-; =>
-	; (set-goal strategy-goal sg-boom-imp)	
-	; (set-goal d-villager-goal 30)
-	; (set-goal f-villager-goal 32)
-	; (set-goal c-villager-goal 34)
-	; (chat-to-allies "I'll go Fast Imp")
-	; (chat-to-player my-player-number "I'll go Fast Imp")
-	; (up-chat-data-to-self "My fast-imp strategy will be %d" g: gl-fastimp-unit)
-	; ;(chat-local-using-id "My fast-imp strategy will be %d" g: gl-fastimp-unit)
-	; (disable-self)
-; )
+(defrule
+	(up-compare-goal strategy-goal == -1)
+	(random-number > 0)
+	(random-number <= 100)
+=>
+	(set-goal strategy-goal sg-boom-imp)	
+	(set-goal d-villager-goal 30)
+	(set-goal f-villager-goal 32)
+	(set-goal c-villager-goal 34)
+	(chat-to-allies "I'll go Fast Imp")
+	(chat-to-player my-player-number "I'll go Fast Imp")
+	(up-chat-data-to-self "My fast-imp strategy will be %d" g: gl-fastimp-unit)
+	;(chat-local-using-id "My fast-imp strategy will be %d" g: gl-fastimp-unit)
+	(disable-self)
+)
 
 #end-if
 
@@ -8291,7 +8304,7 @@
 	(goal strategy-goal sg-fastcastle-gu)
 	(game-time > 60)
 	(goal sg-fastcastle-boom -1)
-	(random-number < 0)
+	(random-number >= 0)
 =>	
 	(set-goal sg-fastcastle-boom YES)
 	(chat-local-to-self "I will go for a boom")
@@ -8302,7 +8315,7 @@
 	(goal strategy-goal sg-fastcastle-gu)
 	(game-time > 60)
 	(goal sg-fastcastle-boom -1)
-	(random-number >= 0)
+	(random-number < 0)
 =>	
 	(set-goal sg-fastcastle-boom NO)
 	(up-set-offense-priority c: monk-with-relic-class c: 11)
@@ -8346,7 +8359,7 @@
 	(current-age >= castle-age)
 	(goal strategy-goal sg-fastcastle-gu)
 	(goal sg-fastcastle-boom YES)
-	(up-compare-goal gl-military-advantage < -15)
+	(up-compare-goal gl-military-advantage < -10)
 =>
 	(set-goal sg-fastcastle-boom -1)
 	(chat-local-to-self "I am behind, I will stop booming and go for army")
@@ -14847,6 +14860,10 @@
 	(or (up-compare-goal gl-military-advantage >= 2)
 	(or (enemy-buildings-in-town)
 	(military-population >= 6)))
+	(or (town-under-attack)
+	(or (building-type-count-total monastery > 0)
+	(or (building-type-count-total university > 0)
+	(building-type-count-total castle > 0))))
 =>
 	(up-modify-escrow wood c:- 160)
 	(up-modify-escrow gold c:- 75)
@@ -33803,35 +33820,35 @@
 
 ;ram-micro
 
-#load-if-not-defined ARENA-MAP
-(defrule
-	(current-age == castle-age)
-	(up-compare-goal attack-now-goal == 1)
-	(unit-type-count battering-ram-line == 1)
-=>
-	(up-full-reset-search)
-	(up-find-local c: battering-ram c: 1)
-	(up-find-local c: feudal-battering-ram c: 1)
-	(up-find-remote c: building-class c: 1)
-	(up-target-objects 0 action-default -1 -1)
-	;(chat-to-player my-player-number "ram micro test")
-)
-#end-if
+; #load-if-not-defined ARENA-MAP
+; (defrule
+	; (current-age == castle-age)
+	; (up-compare-goal attack-now-goal == 1)
+	; (unit-type-count battering-ram-line == 1)
+; =>
+	; (up-full-reset-search)
+	; (up-find-local c: battering-ram c: 1)
+	; (up-find-local c: feudal-battering-ram c: 1)
+	; (up-find-remote c: building-class c: 1)
+	; (up-target-objects 0 action-default -1 -1)
+	; ;(chat-to-player my-player-number "ram micro test")
+; )
+; #end-if
 
-#load-if-defined ARENA-MAP
-(defrule
-	(current-age == castle-age)
-	(up-compare-goal attack-now-goal == 1)
-	(unit-type-count battering-ram-line > 0)
-=>
-	(up-full-reset-search)
-	(up-find-local c: battering-ram c: 20)
-	(up-find-local c: feudal-battering-ram c: 20)
-	(up-find-remote c: gate-class c: 1)
-	(up-target-objects 0 action-default -1 -1)
-	;(chat-to-player my-player-number "ram micro test")
-)
-#end-if
+; #load-if-defined ARENA-MAP
+; (defrule
+	; (current-age == castle-age)
+	; (up-compare-goal attack-now-goal == 1)
+	; (unit-type-count battering-ram-line > 0)
+; =>
+	; (up-full-reset-search)
+	; (up-find-local c: battering-ram c: 20)
+	; (up-find-local c: feudal-battering-ram c: 20)
+	; (up-find-remote c: gate-class c: 1)
+	; (up-target-objects 0 action-default -1 -1)
+	; ;(chat-to-player my-player-number "ram micro test")
+; )
+; #end-if
 
 
 (defrule
@@ -33986,7 +34003,8 @@
 
 (defrule
 	(up-compare-goal gl-archery-class-units > 5)
-	(up-research-status c: ri-bracer >= research-pending)
+	(or (up-research-status c: ri-bracer >= research-pending)
+	(not (research-available ri-bracer)))
 	(can-research ri-ring-archer-armor)
 =>
 	(research ri-ring-archer-armor)
@@ -34145,7 +34163,8 @@
 
 (defrule
 	(unit-type-count-total archer-line >= 3)
-	(up-research-status c: ri-bracer >= research-pending)
+	(or (up-research-status c: ri-bracer >= research-pending)
+	(not (research-available ri-bracer)))
 	(can-research ri-ring-archer-armor)
 =>
 	(research ri-ring-archer-armor)
@@ -34292,7 +34311,8 @@
 
 (defrule
 	(unit-type-count-total skirmisher-line >= 3)
-	(up-research-status c: ri-bracer >= research-pending)
+	(or (up-research-status c: ri-bracer >= research-pending)
+	(not (research-available ri-bracer)))
 	(can-research ri-ring-archer-armor)
 =>
 	(research ri-ring-archer-armor)
@@ -34909,7 +34929,8 @@
 
 (defrule
 	(up-compare-goal gl-cavalry-archer-units > 5)
-	(up-research-status c: ri-bracer >= research-pending)
+	(or (up-research-status c: ri-bracer >= research-pending)
+	(not (research-available ri-bracer)))
 	(can-research ri-ring-archer-armor)
 =>
 	(research ri-ring-archer-armor)
@@ -35058,7 +35079,8 @@
 
 (defrule
 	(unit-type-count-total cavalry-archer-line > 5)
-	(can-research ri-ring-archer-armor)
+	(or (up-research-status c: ri-bracer >= research-pending)
+	(not (research-available ri-bracer)))
 =>
 	(research ri-ring-archer-armor)
 )
