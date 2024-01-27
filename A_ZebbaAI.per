@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 26th January 2023
+;last update: 27th January 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -7758,19 +7758,19 @@
 
 #load-if-defined ARENA-MAP
 
-; (defrule
-	; (up-compare-goal strategy-goal == -1)
-	; (random-number > 0)
-	; (random-number <= 60)
-; =>
-	; (set-goal strategy-goal sg-fastcastle-gu)	
-	; (set-goal d-villager-goal 26)
-	; (set-goal f-villager-goal 28)
-	; (set-goal c-villager-goal 100)
-	; (chat-to-player my-player-number "Going for a Fast-Castle")
-	; ;(chat-to-all "Going for a Fast-Castle")
-	; (disable-self)
-; )
+(defrule
+	(up-compare-goal strategy-goal == -1)
+	(random-number > 0)
+	(random-number <= 100)
+=>
+	(set-goal strategy-goal sg-fastcastle-gu)	
+	(set-goal d-villager-goal 26)
+	(set-goal f-villager-goal 28)
+	(set-goal c-villager-goal 100)
+	(chat-to-player my-player-number "Going for a Fast-Castle")
+	;(chat-to-all "Going for a Fast-Castle")
+	(disable-self)
+)
 
 ; (defrule
 	; (up-compare-goal strategy-goal == -1)
@@ -7786,21 +7786,21 @@
 	; (disable-self)
 ; )
 
-(defrule
-	(up-compare-goal strategy-goal == -1)
-	(random-number > 0)
-	(random-number <= 100)
-=>
-	(set-goal strategy-goal sg-boom-imp)	
-	(set-goal d-villager-goal 30)
-	(set-goal f-villager-goal 32)
-	(set-goal c-villager-goal 34)
-	(chat-to-allies "I'll go Fast Imp")
-	(chat-to-player my-player-number "I'll go Fast Imp")
-	(up-chat-data-to-self "My fast-imp strategy will be %d" g: gl-fastimp-unit)
-	;(chat-local-using-id "My fast-imp strategy will be %d" g: gl-fastimp-unit)
-	(disable-self)
-)
+; (defrule
+	; (up-compare-goal strategy-goal == -1)
+	; (random-number > 80)
+	; (random-number <= 100)
+; =>
+	; (set-goal strategy-goal sg-boom-imp)	
+	; (set-goal d-villager-goal 30)
+	; (set-goal f-villager-goal 32)
+	; (set-goal c-villager-goal 34)
+	; (chat-to-allies "I'll go Fast Imp")
+	; (chat-to-player my-player-number "I'll go Fast Imp")
+	; (up-chat-data-to-self "My fast-imp strategy will be %d" g: gl-fastimp-unit)
+	; ;(chat-local-using-id "My fast-imp strategy will be %d" g: gl-fastimp-unit)
+	; (disable-self)
+; )
 
 #end-if
 
@@ -30074,6 +30074,7 @@
 	(can-research ri-gold-mining)
 	(up-research-status c: castle-age >= research-pending)
 	(up-research-status c: ri-double-bit-axe >= research-pending)
+	(up-compare-sn sn-gold-gatherer-percentage >= 15)
 =>
 	(research ri-gold-mining)
 )
@@ -31791,8 +31792,9 @@
 	(building-type-count-total mill > 0)
 	(or 
 		(and (goal sg-fastcastle-boom YES)
-		(or (building-type-count-total town-center >= 3)
-		(building-type-count-total farm < 12)))
+		(or (building-type-count-total town-center >= 4)
+		(or (unit-type-count-total villager < 30)
+		(building-type-count-total farm < 12))))
 	(or	(and (goal sg-fastcastle-boom NO)
 		(or (building-type-count-total town-center >= 2)
 		(building-type-count-total farm < 12)))
@@ -33043,7 +33045,6 @@
 	(or (players-unit-type-count focus-player monk >= 3)
 	(and (civ-selected aztec)
 	(unit-type-count-total monk > 9)))
-	(up-compare-goal gl-military-advantage < 35)
 	(or (not (goal strategy-goal sg-boom-imp))
 	(goal gl-fastimp-unit fi-monks))
 =>
@@ -38125,7 +38126,6 @@
 	(goal strategy-goal sg-boom-imp)
 	(building-type-count-total mining-camp < 2)
 	(resource-found gold)
-	;(dropsite-min-distance gold > 2)
 	(dropsite-min-distance gold < 255)
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
@@ -44543,9 +44543,9 @@
 	(goal strategy-goal sg-fastcastle-gu)
 	(goal sg-fastcastle-boom YES)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 45)
-	(set-strategic-number sn-food-gatherer-percentage 45)
-	(set-strategic-number sn-gold-gatherer-percentage 10)
+	(set-strategic-number sn-wood-gatherer-percentage 50)
+	(set-strategic-number sn-food-gatherer-percentage 43)
+	(set-strategic-number sn-gold-gatherer-percentage 7)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 	(chat-to-player my-player-number "Setting up economy for a Castle-Age Boom")
 	(disable-self)
@@ -45304,15 +45304,56 @@
 )
 
 (defrule
-	(goal sg-fastcastle-boom YES)
-	(stone-amount < 90)
-	(wood-amount >= 275)
+    (gold-amount > 300)
+	(wood-amount < 100)
+	(stone-amount >= 100)
+	(up-compare-goal gl-gold-saving == 0)
     (current-age == castle-age)
     (building-type-count market >= 1)
-	(building-type-count-total town-center <= 4)
+	(goal strategy-goal sg-fastcastle-gu)
+	(goal sg-fastcastle-boom YES)
+	(civilian-population < 60)
+	(up-compare-goal gl-military-advantage > -3)
+=>
+    (buy-commodity wood)
+    ;(chat-to-player my-player-number "Kaufe Holz")
+)
+
+(defrule
+    (gold-amount > 300)
+	(food-amount < 100)
+	(up-compare-goal gl-gold-saving == 0)
+    (current-age == castle-age)
+    (building-type-count market >= 1)
+	(goal strategy-goal sg-fastcastle-gu)
+	(goal sg-fastcastle-boom YES)
+	(civilian-population < 70)
+	(up-compare-goal gl-military-advantage > -3)
+=>
+    (buy-commodity food)
+    ;(chat-to-player my-player-number "Kaufe Nahrung")
+)
+
+(defrule
+	(goal sg-fastcastle-boom YES)
+	(stone-amount < 70)
+    (current-age == castle-age)
+    (building-type-count market >= 1)
+	(building-type-count-total town-center < 4)
 	(can-buy-commodity stone)
 =>
 	(buy-commodity stone)
+)
+
+(defrule
+	(goal sg-fastcastle-boom YES)
+	(wood-amount < 275)
+    (current-age == castle-age)
+    (building-type-count market >= 1)
+	(building-type-count-total town-center < 4)
+	(can-buy-commodity wood)
+=>
+	(buy-commodity wood)
 )
 
 (defrule
