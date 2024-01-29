@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 27th January 2023
+;last update: 29th January 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -4545,9 +4545,12 @@
 	(up-gaia-type-count c: forage-class > 0)
 =>
 	(up-full-reset-search)
+	(up-find-local c: mill c: 1)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object gl-temp-x)
+	(up-reset-search 1 1 0 0)
 	(up-find-local c: 590 c: 240) ;female shepherd
 	(up-find-local c: 592 c: 240) ;male shepherd
-	;(up-remove-objects search-local object-data-class != villager-shepherd)
 	(up-remove-objects search-local -1 > 0) ;find one shepherd
 	(up-get-search-state gl-local-total)
 ;	(up-chat-data-to-player my-player-number "Amount of shepherds: %d" g: gl-local-total)
@@ -4570,8 +4573,8 @@
 	(building-type-count mill > 0)
 	(up-gaia-type-count c: forage-class > 0)
 =>
-	(up-set-target-point gl-starting-tc-x)
-	(up-filter-distance c: -1 c: 20)
+	(up-set-target-point gl-temp-x)
+	(up-filter-distance c: -1 c: 6)
 	(up-modify-sn sn-focus-player-number c:= 0)
 	(up-find-remote c: forage-class c: 40) ;find a nearby berry bush
 	(up-remove-objects search-remote -1 > 0)
@@ -4597,13 +4600,6 @@
 	(building-type-count mill > 0)
 	(up-gaia-type-count c: forage-class > 0)
 =>
-	(up-find-local c: mill c: 1)
-	(up-set-target-object search-local c: 0)
-	(up-get-point position-object gl-temp-x)
-	(up-set-target-point gl-temp-x)
-	(up-filter-distance c: -1 c: 6)
-	(up-find-remote c: forage-class c: 1)
-	;(up-get-search-state gl-local-total)
 	(up-target-objects 0 action-default -1  -1)
 	(chat-local-to-self "Sending villager to berries")
 )
@@ -22927,7 +22923,7 @@
 	;(up-set-target-object search-local g: gl-curr-local-unit)
 	(up-get-object-data object-data-id gl-curr-unit-id)
 	(up-get-point position-object object-point-x)
-	(up-lerp-tiles object-point-x enemy-tower-point-x c: -5)
+	(up-lerp-tiles object-point-x enemy-tower-point-x c: -3)
 	(up-cross-tiles object-point-x enemy-tower-point-x c: 9)
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
@@ -23026,7 +23022,7 @@
 	;(up-set-target-object search-local g: gl-curr-local-unit)
 	(up-get-object-data object-data-id gl-curr-unit-id)
 	(up-get-point position-object object-point-x)
-	(up-lerp-tiles object-point-x enemy-tower-point-x c: -5)
+	(up-lerp-tiles object-point-x enemy-tower-point-x c: -3)
 	(up-cross-tiles object-point-x enemy-tower-point-x c: 9)
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
@@ -27950,7 +27946,7 @@
 	(up-find-local c: battering-ram-line c: 40)
 	(up-set-target-point gl-starting-tc-x)
 	(up-filter-distance c: -1 c: 30)
-	(up-find-remote c: wall-class c: 1)
+	;(up-find-remote c: wall-class c: 1)
 	(up-find-remote c: watch-tower c: 1)
 	(up-find-remote c: donjon c: 1)
 	(up-find-remote c: villager-builder c: 1)
@@ -27973,7 +27969,7 @@
 	(up-find-local c: battering-ram-line c: 40)
 	(up-set-target-point gl-starting-tc-x)
 	(up-filter-distance c: -1 c: 30)
-	(up-find-remote c: wall-class c: 1)
+	;(up-find-remote c: wall-class c: 1)
 	(up-find-remote c: watch-tower c: 1)
 	(up-find-remote c: donjon c: 1)
 	(up-find-remote c: villager-builder c: 1)
@@ -27993,7 +27989,7 @@
 	(up-find-local c: armored-elephant-line c: 40)
 	(up-set-target-point gl-starting-tc-x)
 	(up-filter-distance c: -1 c: 30)
-	(up-find-remote c: wall-class c: 1)
+	;(up-find-remote c: wall-class c: 1)
 	(up-find-remote c: watch-tower c: 1)
 	(up-find-remote c: donjon c: 1)
 	(up-find-remote c: villager-builder c: 1)
