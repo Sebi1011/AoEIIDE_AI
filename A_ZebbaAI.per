@@ -32889,6 +32889,15 @@
 	(research ri-murder-holes)
 )
 
+#load-if-defined ARENA-MAP
+(defrule
+	(current-age >= castle-age)
+	(can-research ri-fortified-wall)
+	(up-compare-goal gl-military-advantage <= -15)
+=>
+	(research ri-fortified-wall)
+)
+#end-if
 (defrule
 	(current-age == imperial-age)
 	(players-unit-type-count focus-player battering-ram-line >= 3)
@@ -41157,6 +41166,22 @@
 	;(chat-to-player my-player-number "Schicke Truppen aus den Waffenschmiede.")
 )
 
+#load-if-defined UP-2-PLAYER-GAME
+(defrule
+	(current-age == castle-age)
+	(town-under-attack)
+	(players-military-population focus-player <= 8)
+	(military-population >= 4)
+	(up-compare-goal gl-military-advantage < 0)
+=>
+	(up-ungarrison c: barracks)
+	(up-ungarrison c: archery-range)
+	(up-ungarrison c: stable)
+	(up-ungarrison c: siege-workshop)
+	;(chat-to-player my-player-number "Being attacked by low amount of units, ungarrison army")
+)
+#end-if
+
 (defrule
 	(enemy-buildings-in-town)
 	(building-type-count-total siege-workshop > 0)
@@ -41463,6 +41488,7 @@
 	(can-research ri-guilds)
 	;(unit-type-count-total villager >= 120)
 	(game-time >= 3000)
+	(up-compare-goal gl-military-advantage >= 0)
 =>
 	(research ri-guilds)
 )
