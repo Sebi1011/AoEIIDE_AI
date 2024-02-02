@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 29th January 2023
+;last update: 2nd February 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -572,14 +572,13 @@
 (defconst temp-y 247)
 (defconst scout-enemy-curr-x 248)
 (defconst scout-enemy-curr-y 249)
-
+(defconst gl-standard-townsize 250)
 (defconst gl-priority-goal 252) ;setting unit/building target-priorities depending on strategy
 (defconst ca-strategy 253)
 (defconst gl-castleage-stableunit 254)
 (defconst gl-castleage-rangeunit 255)
 (defconst gl-castleage-eagles 256)
 (defconst gl-castleage-siege-infantry 257)
-
 
 (defconst market-point-x 258)
 (defconst market-point-y 259)
@@ -613,7 +612,6 @@
 (defconst gl-distance-temp-one 290)
 (defconst gl-distance-temp-two 291)
 (defconst gl-distance-temp-three 292)
-
 (defconst gl-lame-enemy 293)
 (defconst gl-lamed-target-id 294)
 (defconst gl-quick-wall-id 295)
@@ -1661,6 +1659,7 @@
 	(set-goal gl-number-boars-last 0)
 	(set-goal gl-dead-boars 0)
 	(enable-timer gl-curr-deer-timer 1)
+	(set-goal gl-standard-townsize 20)
 	(disable-self)
 )
 
@@ -3394,15 +3393,30 @@
 
 (defrule
 	(current-age >= castle-age)
+	(up-compare-goal gl-strategic-position != -2)
+	(up-compare-goal gl-military-advantage <= -30)
+	(military-population < 15)
+=>
+	(set-goal gl-strategic-position -2)
+	(up-modify-sn sn-camp-max-distance c:= 18)
+	(up-modify-sn sn-maximum-town-size c:= 18)
+	(chat-local-to-self "Switching to very defensive behaviour")
+	(chat-to-allies "I will go full defense now.")
+	(up-chat-data-to-self "Town-Size: %d " s: sn-maximum-town-size)
+)
+
+(defrule
+	(current-age >= castle-age)
 	(up-compare-goal gl-strategic-position != -1)
+	(up-compare-goal gl-military-advantage > -25)
 	(up-compare-goal gl-military-advantage <= -15)
-	(military-population <= 15)
+	(military-population < 15)
 =>
 	(set-goal gl-strategic-position -1)
+	(up-modify-sn sn-camp-max-distance c:= 30)
+	(up-modify-sn sn-maximum-town-size c:= 30)
 	(chat-local-to-self "Switching to defensive behaviour")
-	(chat-to-allies "I will stay more defensive now.")
-	(up-modify-sn sn-camp-max-distance c:%* 88)
-	(up-modify-sn sn-maximum-town-size c:%* 90)
+	(chat-to-allies "I will play standard defense now.")
 	(up-chat-data-to-self "Town-Size: %d " s: sn-maximum-town-size)
 )
 
@@ -3411,12 +3425,11 @@
 	(up-compare-goal gl-strategic-position != 0)
 	(up-compare-goal gl-military-advantage >= -5)
 	(up-compare-goal gl-military-advantage <= 5)
-	(military-population <= 15)
 =>
 	(set-goal gl-strategic-position 0)
+	(up-modify-sn sn-camp-max-distance g:= gl-standard-townsize)
+	(up-modify-sn sn-maximum-town-size g:= gl-standard-townsize)
 	(chat-local-to-self "Switching to standard behaviour")
-	(up-modify-sn sn-camp-max-distance c:%/ 88)
-	(up-modify-sn sn-maximum-town-size c:%/ 90)
 	(up-chat-data-to-self "Town-Size: %d " s: sn-maximum-town-size)
 )
 
@@ -3427,8 +3440,10 @@
 	(military-population >= 15)
 =>
 	(set-goal gl-strategic-position 1)
+	(up-modify-sn sn-camp-max-distance c:+ 20)
+	(up-modify-sn sn-maximum-town-size c:+ 20)
 	(chat-local-to-self "Switching to offensive behaviour")
-	(chat-to-allies "I will try to play more aggressive now.")
+	(chat-to-allies "I will play more aggressive now.")
 )
 
 
@@ -4752,7 +4767,7 @@
 
 #load-if-defined BLACK-FOREST
 
-(defrule ;always lame on socotra
+(defrule 
 	(or (civ-selected gothic)
 	(civ-selected berbers))
 	(goal gl-lame-enemy -1)
@@ -8355,7 +8370,7 @@
 	(current-age >= castle-age)
 	(goal strategy-goal sg-fastcastle-gu)
 	(goal sg-fastcastle-boom YES)
-	(up-compare-goal gl-military-advantage < -10)
+	(up-compare-goal gl-military-advantage < -8)
 =>
 	(set-goal sg-fastcastle-boom -1)
 	(chat-local-to-self "I am behind, I will stop booming and go for army")
@@ -8485,7 +8500,7 @@
 
 ;endregion
 
-;region Evacuate Base
+;region Evacuate Base ==============================================
 
 (defrule
     (current-age >= feudal-age)
@@ -9132,14 +9147,14 @@
 	(research my-second-unique-research)
 
 )
-
+#load-if-defined UP-ALLY-IN-GAME
 (defrule
 	(can-research my-unique-research) ;silk road
 	(building-type-count-total market >= 1)
 =>
 	(research my-unique-research)
 )
-
+#end-if
 #end-if
 
 #load-if-defined JAPANESE-CIV
@@ -12092,7 +12107,21 @@
 
 ;endregion
 
-;region Refresh Buildings ==========================================
+;region Building walls on Arena ======================================
+
+;todo:
+;- extend walls in imp
+;--- from main tc, go towards front gate
+;--- build walls & gates on height of front gate
+;- build backup-walls when being castle dropped 
+;--- get castle position
+;--- calculate wall spots
+;--- delete objects in new-wall line 
+;--- buy missing stone, sell resources if no gold
+
+;endregion
+
+;region Delete Walls ===============================================
 #load-if-not-defined UP-SCENARIO-GAME
 (defrule
 	(game-time > 2700)
@@ -15574,8 +15603,10 @@
 (defrule
 	(current-age == imperial-age)
 	(players-unit-type-count focus-player monk > 3)
+	(or (and (up-research-status c: ri-light-cavalry < research-pending)
+		(unit-type-count-total scout-cavalry-line < 3))
+		(up-research-status c: ri-light-cavalry >= research-pending))	
 	(can-train scout-cavalry-line)
-	(unit-type-count-total scout-cavalry-line < 10)
 =>
 	(train scout-cavalry-line)
 	;(chat-to-player my-player-number "Produziere Scouts gegen Moenche")
@@ -30361,6 +30392,7 @@
 	(up-research-status c: feudal-age == research-pending)
 =>
     (set-strategic-number sn-maximum-town-size 15)
+	(up-modify-goal gl-standard-townsize c:= 15)
 	(disable-self)
 )
 
@@ -30368,6 +30400,7 @@
 	(current-age == feudal-age)
 =>
     (set-strategic-number sn-maximum-town-size 17)
+	(up-modify-goal gl-standard-townsize c:= 17)
 	(set-strategic-number sn-enable-boar-hunting 2)
 	(disable-self)
 )
@@ -30392,6 +30425,7 @@
 	(current-age == castle-age)
 =>
     (set-strategic-number sn-maximum-town-size 30)
+	(up-modify-goal gl-standard-townsize c:= 30)
 	(set-strategic-number sn-camp-max-distance 28)
 	(set-strategic-number sn-number-explore-groups 1)
 	(set-strategic-number sn-total-number-explorers 1)
@@ -30404,6 +30438,7 @@
 	(building-type-count-total town-center == 2))
 =>
     (up-modify-sn sn-maximum-town-size c:+ 6)
+	(up-modify-goal gl-standard-townsize c:+ 6)
 	(up-modify-sn sn-camp-max-distance c:+ 6)
 	(disable-self)
 )
@@ -30413,6 +30448,7 @@
 	(building-type-count-total castle >= 1)
 =>
     (up-modify-sn sn-maximum-town-size c:+ 8)
+	(up-modify-goal gl-standard-townsize c:+ 8)
 	(up-modify-sn sn-camp-max-distance c:+ 3)
 	(disable-self)
 )
@@ -30427,6 +30463,7 @@
 	(building-type-count-total town-center < 3)
 =>
     (set-strategic-number sn-maximum-town-size 20)
+	(up-modify-goal gl-standard-townsize c:= 20)
 	(set-strategic-number sn-camp-max-distance 20)
 	(disable-self)
 )
@@ -30435,8 +30472,22 @@
 	(current-age >= castle-age)
 	(or (civilian-population >= 90)
 	(building-type-count-total town-center == 3))
+	(not (goal sg-fastcastle-boom YES))
 =>
     (up-modify-sn sn-maximum-town-size c:+ 9)
+	(up-modify-goal gl-standard-townsize c:+ 9)
+	(up-modify-sn sn-camp-max-distance c:+ 7)
+	(disable-self)
+)
+
+(defrule
+	(current-age >= castle-age)
+	(or (civilian-population >= 90)
+	(building-type-count-total town-center > 3))
+	(goal sg-fastcastle-boom YES)
+=>
+    (up-modify-sn sn-maximum-town-size c:+ 9)
+	(up-modify-goal gl-standard-townsize c:+ 9)
 	(up-modify-sn sn-camp-max-distance c:+ 7)
 	(disable-self)
 )
@@ -30447,8 +30498,22 @@
 	(current-age >= castle-age)
 	(or (civilian-population >= 90)
 	(building-type-count-total town-center == 3))
+	(not (goal sg-fastcastle-boom YES))
 =>
     (up-modify-sn sn-maximum-town-size c:+ 6)
+	(up-modify-goal gl-standard-townsize c:+ 6)
+	(up-modify-sn sn-camp-max-distance c:+ 6)
+	(disable-self)
+)
+
+(defrule
+	(current-age >= castle-age)
+	(or (civilian-population >= 90)
+	(building-type-count-total town-center >= 4))
+	(goal sg-fastcastle-boom YES)
+=>
+    (up-modify-sn sn-maximum-town-size c:+ 6)
+	(up-modify-goal gl-standard-townsize c:+ 6)
 	(up-modify-sn sn-camp-max-distance c:+ 6)
 	(disable-self)
 )
@@ -30459,6 +30524,7 @@
 	(up-compare-goal gl-military-advantage >= 5)
 =>
     (up-modify-sn sn-maximum-town-size c:+ 3)
+	(up-modify-goal gl-standard-townsize c:+ 3)
 	;(up-modify-sn sn-camp-max-distance c:+ 6)
 	(disable-self)
 )
@@ -30469,6 +30535,7 @@
 	(up-compare-goal gl-military-advantage >= 10)
 =>
     (up-modify-sn sn-maximum-town-size c:+ 4)
+	(up-modify-goal gl-standard-townsize c:+ 4)
 	;(up-modify-sn sn-camp-max-distance c:+ 9)
 	(disable-self)
 )
@@ -30478,6 +30545,7 @@
 	(up-compare-goal gl-military-advantage >= 5)
 =>
     (set-strategic-number sn-maximum-town-size HALF-MAP-SIZE)
+	(up-modify-goal gl-standard-townsize c:= HALF-MAP-SIZE)
 	(disable-self)
 )
 
@@ -30487,6 +30555,7 @@
 	(up-compare-goal gl-military-advantage >= 5)
 =>
     (up-modify-sn sn-maximum-town-size c:+ 3)
+	(up-modify-goal gl-standard-townsize c:+ 3)
 	(up-modify-sn sn-camp-max-distance c:+ 3)
 	(disable-self)
 )
@@ -30497,6 +30566,7 @@
 	(up-compare-goal gl-military-advantage >= 5)
 =>
     (up-modify-sn sn-maximum-town-size c:+ 4)
+	(up-modify-goal gl-standard-townsize c:+ 4)
 	;(up-modify-sn sn-camp-max-distance c:+ 10)
 	(disable-self)
 )
@@ -31238,7 +31308,7 @@
 	(building-type-count-total mining-camp < 7)
 	(not (goal strategy-goal sg-boom-imp))
 	(resource-found stone)
-	;(dropsite-min-distance stone > 2)
+	(dropsite-min-distance stone > 2) ;testing
 	(dropsite-min-distance stone < 255)
 	;(up-gaia-type-count c: stone-mine-class >= 1)
 	(can-build mining-camp)
@@ -31790,7 +31860,8 @@
 		(and (goal sg-fastcastle-boom YES)
 		(or (building-type-count-total town-center >= 4)
 		(or (unit-type-count-total villager < 30)
-		(building-type-count-total farm < 12))))
+		(or (wood-amount >= 335)
+		(building-type-count-total farm < 12)))))
 	(or	(and (goal sg-fastcastle-boom NO)
 		(or (building-type-count-total town-center >= 2)
 		(building-type-count-total farm < 12)))
@@ -31931,7 +32002,7 @@
 	(or (military-population < 15)
 	(up-compare-goal gl-military-advantage < 15))
 	(can-build-with-escrow castle)
-	(not (town-under-attack))
+	;(not (town-under-attack)) ;testing
 =>
 	(up-assign-builders c: castle c: 8)
 	(up-modify-escrow stone c:- 650)
@@ -33760,6 +33831,8 @@
 	(or (not (goal strategy-goal sg-boom-imp))
 	(up-research-status c: imperial-age >= research-pending))
 	(can-build siege-workshop)
+	(or (not (goal sg-fastcastle-boom YES))
+	(building-type-count-total town-center >= 4))
 	(not (town-under-attack))
 	(building-type-count-total siege-workshop < 1)
 	(goal ca-strategy gl-castleage-siege-infantry)
@@ -33859,6 +33932,7 @@
 	(unit-type-count-total archery-class >= 5)
 	(goal strategy-goal sg-archerrush)
 	(building-type-count-total blacksmith < 1)
+	(can-build blacksmith)
 =>
 	(up-set-placement-data my-player-number lumber-camp c: -2)
 	(set-strategic-number sn-placement-zone-size 5)
@@ -45263,7 +45337,7 @@
     (building-type-count market >= 1)
 	(up-research-status c: imperial-age != research-pending)
 =>
-    (sell-commodity wood)
+    (up-sell-commodity c: wood c: 500)
    ; (chat-to-player my-player-number "Verkaufe Holz")
 )
 
@@ -45316,13 +45390,14 @@
 )
 
 (defrule
-    (gold-amount > 300)
+    (gold-amount >= 230)
 	(food-amount < 100)
 	(up-compare-goal gl-gold-saving == 0)
     (current-age == castle-age)
     (building-type-count market >= 1)
 	(goal strategy-goal sg-fastcastle-gu)
 	(goal sg-fastcastle-boom YES)
+	(building-type-count-total town-center >= 4)
 	(civilian-population < 70)
 	(up-compare-goal gl-military-advantage > -3)
 =>
@@ -45332,9 +45407,10 @@
 
 (defrule
 	(goal sg-fastcastle-boom YES)
-	(stone-amount < 70)
+	(stone-amount < 90)
     (current-age == castle-age)
     (building-type-count market >= 1)
+	(building-type-count-total town-center == 3)
 	(building-type-count-total town-center < 4)
 	(can-buy-commodity stone)
 =>
@@ -45344,12 +45420,26 @@
 (defrule
 	(goal sg-fastcastle-boom YES)
 	(wood-amount < 275)
+	(stone-amount >= 90)
     (current-age == castle-age)
     (building-type-count market >= 1)
+	(building-type-count-total town-center == 3)
 	(building-type-count-total town-center < 4)
 	(can-buy-commodity wood)
 =>
 	(buy-commodity wood)
+)
+
+(defrule
+	(goal sg-fastcastle-boom YES)
+	(wood-amount >= 375)
+	(stone-amount < 90)
+    (current-age == castle-age)
+    (building-type-count market >= 1)
+	(building-type-count-total town-center == 3)
+	(building-type-count-total town-center < 4)
+=>
+	(sell-commodity wood)
 )
 
 (defrule
