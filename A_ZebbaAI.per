@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 2nd February 2023
+;last update: 9th February 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -7769,19 +7769,19 @@
 
 #load-if-defined ARENA-MAP
 
-(defrule
-	(up-compare-goal strategy-goal == -1)
-	(random-number > 0)
-	(random-number <= 100)
-=>
-	(set-goal strategy-goal sg-fastcastle-gu)	
-	(set-goal d-villager-goal 26)
-	(set-goal f-villager-goal 28)
-	(set-goal c-villager-goal 100)
-	(chat-to-player my-player-number "Going for a Fast-Castle")
-	;(chat-to-all "Going for a Fast-Castle")
-	(disable-self)
-)
+; (defrule
+	; (up-compare-goal strategy-goal == -1)
+	; (random-number > 0)
+	; (random-number <= 60)
+; =>
+	; (set-goal strategy-goal sg-fastcastle-gu)	
+	; (set-goal d-villager-goal 26)
+	; (set-goal f-villager-goal 28)
+	; (set-goal c-villager-goal 100)
+	; (chat-to-player my-player-number "Going for a Fast-Castle")
+	; ;(chat-to-all "Going for a Fast-Castle")
+	; (disable-self)
+; )
 
 ; (defrule
 	; (up-compare-goal strategy-goal == -1)
@@ -7797,21 +7797,21 @@
 	; (disable-self)
 ; )
 
-; (defrule
-	; (up-compare-goal strategy-goal == -1)
-	; (random-number > 80)
-	; (random-number <= 100)
-; =>
-	; (set-goal strategy-goal sg-boom-imp)	
-	; (set-goal d-villager-goal 30)
-	; (set-goal f-villager-goal 32)
-	; (set-goal c-villager-goal 34)
-	; (chat-to-allies "I'll go Fast Imp")
-	; (chat-to-player my-player-number "I'll go Fast Imp")
-	; (up-chat-data-to-self "My fast-imp strategy will be %d" g: gl-fastimp-unit)
-	; ;(chat-local-using-id "My fast-imp strategy will be %d" g: gl-fastimp-unit)
-	; (disable-self)
-; )
+(defrule
+	(up-compare-goal strategy-goal == -1)
+	(random-number > 0)
+	(random-number <= 100)
+=>
+	(set-goal strategy-goal sg-boom-imp)	
+	(set-goal d-villager-goal 30)
+	(set-goal f-villager-goal 32)
+	(set-goal c-villager-goal 34)
+	(chat-to-allies "I'll go Fast Imp")
+	(chat-to-player my-player-number "I'll go Fast Imp")
+	(up-chat-data-to-self "My fast-imp strategy will be %d" g: gl-fastimp-unit)
+	;(chat-local-using-id "My fast-imp strategy will be %d" g: gl-fastimp-unit)
+	(disable-self)
+)
 
 #end-if
 
@@ -8315,7 +8315,7 @@
 	(goal strategy-goal sg-fastcastle-gu)
 	(game-time > 60)
 	(goal sg-fastcastle-boom -1)
-	(random-number >= 0)
+	(random-number >= 50)
 =>	
 	(set-goal sg-fastcastle-boom YES)
 	(chat-local-to-self "I will go for a boom")
@@ -8326,7 +8326,7 @@
 	(goal strategy-goal sg-fastcastle-gu)
 	(game-time > 60)
 	(goal sg-fastcastle-boom -1)
-	(random-number < 0)
+	(random-number < 50)
 =>	
 	(set-goal sg-fastcastle-boom NO)
 	(up-set-offense-priority c: monk-with-relic-class c: 11)
@@ -30693,7 +30693,14 @@
 )
 
 (defrule
-	(civ-selected lithuanians)
+	(or (civ-selected lithuanians)
+	(or (civ-selected aztecs)
+	(civ-selected burgundians)))
+	(up-compare-goal gl-military-advantage >= -5)
+	(or (not (goal strategy-goal sg-boom-imp))
+	(building-type-count castle >= 1))
+	(or (not (goal strategy-goal sg-fastcastle-uu))
+	(building-type-count castle >= 1))
 	(current-age == castle-age)
 	(can-build-with-escrow monastery)
 	(building-type-count-total monastery == 0)
@@ -38454,7 +38461,6 @@
 	(unit-type-count-total cavalry-class > 4)
 	(or (research-available ri-cavalier)
 	(up-research-status c: ri-cavalier >= research-pending))
-	;(goal strategy-goal gl-archerrush)
 	(can-research ri-iron-casting)
 =>
 	(research ri-iron-casting)
@@ -38462,7 +38468,6 @@
 
 (defrule
 	(unit-type-count-total cavalry-class > 4)
-	;(goal strategy-goal gl-archerrush)
 	(can-research ri-blast-furnace)
 =>
 	(research ri-blast-furnace)
@@ -38470,15 +38475,15 @@
 
 (defrule
 	(unit-type-count-total infantry-class > 4)
-	;(goal strategy-goal gl-archerrush)
 	(can-research ri-scale-mail)
+	(or (not (goal strategy-goal sg-boom-imp))
+	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research ri-scale-mail)
 )
 
 (defrule
 	(unit-type-count-total militiaman-line > 9)
-	;(goal strategy-goal gl-archerrush)
 	(can-research-with-escrow ri-scale-mail)
 =>
 	(up-modify-escrow food c:- 100)
@@ -38487,7 +38492,6 @@
 
 (defrule
 	(unit-type-count-total infantry-class > 5)
-	;(goal strategy-goal gl-archerrush)
 	(can-research ri-chain-mail)
 =>
 	(research ri-chain-mail)
@@ -38495,7 +38499,6 @@
 
 (defrule
 	(unit-type-count-total militiaman-line > 10)
-	;(goal strategy-goal gl-archerrush)
 	(can-research-with-escrow ri-chain-mail)
 =>
 	(up-modify-escrow food c:- 200)
@@ -38505,7 +38508,6 @@
 
 (defrule
 	(unit-type-count-total infantry-class > 8)
-	;(goal strategy-goal gl-archerrush)
 	(can-research ri-plate-mail)
 =>
 	(research ri-plate-mail)
@@ -38513,7 +38515,6 @@
 
 (defrule
 	(unit-type-count-total infantry-class > 4)
-	;(goal strategy-goal gl-archerrush)
 	(can-research-with-escrow ri-scale-mail)
 	(goal gl-food-saving 20)
 =>
@@ -38525,7 +38526,6 @@
 
 (defrule
 	(unit-type-count-total infantry-class > 5)
-	;(goal strategy-goal gl-archerrush)
 	(can-research-with-escrow ri-chain-mail)
 	(goal gl-food-saving 20)
 	(goal gl-gold-saving 20)
@@ -38541,7 +38541,6 @@
 
 (defrule
 	(unit-type-count-total infantry-class > 8)
-	;(goal strategy-goal gl-archerrush)
 	(can-research-with-escrow ri-plate-mail)
 	(goal gl-food-saving 20)
 	(goal gl-gold-saving 20)
@@ -38559,7 +38558,6 @@
 	(unit-type-count-total infantry-class > 4)
 	(up-research-status c: ri-chain-mail >= research-pending)
 	(current-age == castle-age)
-	;(goal strategy-goal gl-archerrush)
 	(can-research ri-forging)
 =>
 	(research ri-forging)
@@ -38573,7 +38571,6 @@
 	(and (not (research-available ri-plate-mail))
 	(up-research-status c: ri-chain-mail >= research-pending)))
 	(current-age >= imperial-age)
-	;(goal strategy-goal gl-archerrush)
 	(can-research ri-forging)
 =>
 	(research ri-forging)
@@ -38582,7 +38579,6 @@
 (defrule
 	(unit-type-count-total infantry-class > 8)
 	(up-research-status c: ri-chain-mail >= research-pending)
-	;(goal strategy-goal gl-archerrush)
 	(can-research ri-iron-casting)
 =>
 	(research ri-iron-casting)
@@ -38590,7 +38586,6 @@
 
 (defrule
 	(unit-type-count-total infantry-class > 8)
-	;(goal strategy-goal gl-archerrush)
 	(can-research ri-blast-furnace)
 =>
 	(research ri-blast-furnace)
@@ -39104,7 +39099,8 @@
 
 (defrule
 	(unit-type-count-total infantry-class >= 5)
-	;(goal strategy-goal gl-archerrush)
+	(or (not (goal strategy-goal sg-boom-imp))
+	(up-research-status c: imperial-age >= research-pending))
 	(can-research ri-squires)
 =>
 	(research ri-squires)
@@ -39112,7 +39108,6 @@
 
 (defrule
 	(unit-type-count-total infantry-class >= 10)
-	;(goal strategy-goal gl-archerrush)
 	(can-research ri-arson)
 =>
 	(research ri-arson)
@@ -39120,7 +39115,6 @@
 
 (defrule
 	(unit-type-count-total militiaman-line >= 5)
-	;(goal strategy-goal gl-archerrush)
 	(can-research ri-gambesons)
 =>
 	(research ri-gambesons)
