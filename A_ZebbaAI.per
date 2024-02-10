@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 9th February 2023
+;last update: 10th February 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -1406,11 +1406,11 @@
 
 (defrule
 	(current-age == imperial-age)
-	(or (up-compare-sn sn-gold-dropsite-distance != 6)
-	(up-compare-sn sn-stone-dropsite-distance != 6))
+	(or (up-compare-sn sn-gold-dropsite-distance != 4)
+	(up-compare-sn sn-stone-dropsite-distance != 4))
 =>
-    (set-strategic-number sn-gold-dropsite-distance 6)
-    (set-strategic-number sn-stone-dropsite-distance 6)	
+    (set-strategic-number sn-gold-dropsite-distance 4)
+    (set-strategic-number sn-stone-dropsite-distance 4)	
 )
 
 (defrule
@@ -1420,8 +1420,8 @@
 =>
     (set-strategic-number sn-food-dropsite-distance 6)
     (set-strategic-number sn-wood-dropsite-distance 9)
-    (set-strategic-number sn-gold-dropsite-distance 6)
-    (set-strategic-number sn-stone-dropsite-distance 6)
+    (set-strategic-number sn-gold-dropsite-distance 4)
+    (set-strategic-number sn-stone-dropsite-distance 4)
 	(disable-self)
 )
 
@@ -1432,8 +1432,8 @@
 =>
     (set-strategic-number sn-food-dropsite-distance 16)
     (set-strategic-number sn-wood-dropsite-distance 9)
-    (set-strategic-number sn-gold-dropsite-distance 6)
-    (set-strategic-number sn-stone-dropsite-distance 6)
+    (set-strategic-number sn-gold-dropsite-distance 4)
+    (set-strategic-number sn-stone-dropsite-distance 4)
 	(disable-self)
 )
 
@@ -1445,7 +1445,7 @@
     (set-strategic-number sn-food-dropsite-distance 16)
     (set-strategic-number sn-wood-dropsite-distance 9)
     (set-strategic-number sn-gold-dropsite-distance 200)
-    (set-strategic-number sn-stone-dropsite-distance 6)
+    (set-strategic-number sn-stone-dropsite-distance 4)
 	(set-strategic-number sn-percent-building-cancellation -1)
 	(disable-self)
 )
@@ -8702,7 +8702,8 @@
 	(current-age == imperial-age)
 	(can-train trebuchet)
 	(up-compare-goal gl-number-trebs < 6)
-	(up-compare-goal gl-military-advantage >= -4)
+	(military-population >= 10)
+	(up-compare-goal gl-military-advantage >= -5)
 =>
 	(train trebuchet)
 )
@@ -15192,6 +15193,8 @@
 	(building-type-count castle >= 1)
 	(not (goal gl-gold-saving 33))
 	(not (goal gl-gold-saving 34))
+	(military-population >= 10)
+	(up-compare-goal gl-military-advantage >= -5)
 =>
 	(up-modify-escrow wood c:- 200)
 	(up-modify-escrow gold c:- 200)
@@ -22302,7 +22305,7 @@
 	(or (current-age >= castle-age)
 	(unit-type-count-total militiaman-line >= 20))
 =>
-	(up-jump-rule 12)
+	(up-jump-rule 14)
 )
 
 (defrule ;if tc is garrisoned, jump next code section
@@ -22311,7 +22314,7 @@
 	(or (up-object-data object-data-garrison-count >= 3)
 	(up-object-data object-data-hitpoints <= 450))
 =>
-	(up-jump-rule 6) 
+	(up-jump-rule 7) 
 )	
 	
 (defrule ;tc ungarrisoned
@@ -22382,6 +22385,12 @@
 )
 
 (defrule
+	(true)
+=>	
+	(up-modify-goal gl-curr-local-unit c:+ 1)
+)
+
+(defrule
 	(up-compare-goal gl-curr-local-unit g:>= gl-total-number-units)
 =>
 	(set-goal gl-curr-local-unit 0)
@@ -22394,7 +22403,7 @@
 	(goal split-rule-goal 48)
 =>
 	(set-goal split-rule-goal 47)
-	(up-modify-goal gl-curr-local-unit c:+ 1)
+	;(up-modify-goal gl-curr-local-unit c:+ 1)
 	(up-jump-direct g: gl-rule-jump-id)
 )
 
@@ -22404,7 +22413,7 @@
 	(or (up-object-data object-data-garrison-count < 3)
 	(up-object-data object-data-hitpoints <= 450))
 =>
-	(up-jump-rule 6)
+	(up-jump-rule 7)
 )	
 	
 (defrule
@@ -22476,6 +22485,12 @@
 )
 
 (defrule
+	(true)
+=>
+	(up-modify-goal gl-curr-local-unit c:+ 1)
+)
+
+(defrule
 	(up-compare-goal gl-curr-local-unit g:>= gl-total-number-units)
 =>
 	(set-goal gl-curr-local-unit 0)
@@ -22488,7 +22503,7 @@
 	(goal split-rule-goal 50)
 =>
 	(set-goal split-rule-goal 49)
-	(up-modify-goal gl-curr-local-unit c:+ 1)
+	;(up-modify-goal gl-curr-local-unit c:+ 1)
 	(up-jump-direct g: gl-rule-jump-id)
 )
 
@@ -22502,7 +22517,7 @@
 	(or (not (goal strategy-goal sg-boom-imp))
 	(current-age < imperial-age))
 =>	
-	(up-jump-rule 8)
+	(up-jump-rule 11)
 )
 	
 (defrule ;if tc is garrisoned, jump next code section
@@ -22526,7 +22541,7 @@
 	(up-filter-include cmdid-military -1 -1 -1)
 	(up-find-local c: -1 c: 50)
 	(up-remove-objects search-local object-data-class == cavalry-class)
-	(up-remove-objects search-local object-data-class == scout-cavalry-class)
+	(up-remove-objects search-local object-data-type == scout-cavalry-class)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == battering-ram)
 	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
@@ -22622,7 +22637,8 @@
 	(up-remove-objects search-local object-data-upgrade-type == elite-huskarl)
 	(up-remove-objects search-local object-data-class == cavalry-class)
 	(up-remove-objects search-local object-data-upgrade-type == light-cavalry)
-	(up-remove-objects search-local object-data-upgrade-type == long-swordsman)
+	(up-remove-objects search-local object-data-upgrade-type == hussar)
+	(up-remove-objects search-local object-data-upgrade-type == winged-hussar)
 	(set-goal split-rule-goal 53)
 	;(chat-to-player my-player-number "tc retreat test 4")
 )
@@ -22664,7 +22680,8 @@
 	(up-remove-objects search-local object-data-upgrade-type == elite-huskarl)
 	(up-remove-objects search-local object-data-class == cavalry-class)
 	(up-remove-objects search-local object-data-upgrade-type == light-cavalry)
-	(up-remove-objects search-local object-data-upgrade-type == long-swordsman)
+	(up-remove-objects search-local object-data-upgrade-type == hussar)
+	(up-remove-objects search-local object-data-upgrade-type == winged-hussar)
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
@@ -22674,6 +22691,12 @@
 )
 
 ;go through the list
+
+(defrule
+	(true)
+=>
+	(up-modify-goal gl-tc-loop-counter c:+ 1)
+)
 
 (defrule
 	(players-building-type-count focus-player town-center >= 1)
@@ -22690,7 +22713,7 @@
 	(up-compare-goal gl-tc-loop-counter g:< gl-tcs)
 	(up-compare-goal gl-building-loop-rule-id != -1)
 =>
-	(up-modify-goal gl-tc-loop-counter c:+ 1) ;go to next list-entry
+	;(up-modify-goal gl-tc-loop-counter c:+ 1) ;go to next list-entry
 	(up-jump-direct g: gl-building-loop-rule-id)
 )
 
@@ -22710,23 +22733,26 @@
 	(up-compare-goal gl-remote-total > 0)
 	(up-set-target-object search-remote c: 0)
 =>
-	(up-jump-rule 6)
+	(up-jump-rule 11)
 )
 
 ;loop through enemy castles
 
 (defrule
-	(players-building-type-count focus-player castle >= 1)
+	(or (players-building-type-count focus-player castle >= 1)
+	(players-building-type-count focus-player krepost >= 1))
 =>
 	(up-full-reset-search)
 	(up-filter-status c: status-ready c: list-active)
 	(up-find-status-remote c: castle c: 20)
+	(up-find-status-remote c: krepost c: 20)
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-castles g:= gl-remote-total)
 )
 
 (defrule
-	(players-building-type-count focus-player castle >= 1)
+	(or (players-building-type-count focus-player castle >= 1)
+	(players-building-type-count focus-player krepost >= 1))
 =>	
 	(up-get-rule-id gl-building-loop-rule-id)
 )
@@ -22738,7 +22764,8 @@
 )
 
 (defrule
-	(players-building-type-count focus-player castle >= 1)
+	(or (players-building-type-count focus-player castle >= 1)
+	(players-building-type-count focus-player krepost >= 1))
 	(up-set-target-object search-remote g: gl-castle-loop-counter)
 =>
 	(up-get-point position-object enemy-castle-point-x)
@@ -22746,10 +22773,23 @@
 	;(up-get-search-state gl-local-total)
 )
 
+(defrule ;skip castle retreat
+	(current-age >= castle-age)
+	(or 
+		(and (military-population >= 60)
+		(up-compare-goal gl-military-advantage >= 35))
+		(up-compare-goal gl-military-advantage >= 50)
+	)
+=>
+	(up-jump-rule 7)
+)
+
 (defrule
-	(players-building-type-count focus-player castle > 0)
+	(or (players-building-type-count focus-player castle >= 1)
+	(players-building-type-count focus-player krepost >= 1))
 	(goal split-rule-goal 0)
-	(up-point-contains enemy-castle-point-x c: castle)
+	(or (up-point-contains enemy-castle-point-x c: castle)
+	(up-point-contains enemy-castle-point-x c: krepost))
 =>
 	(up-full-reset-search)
 	(up-set-target-point enemy-castle-point-x)
@@ -22815,7 +22855,14 @@
 )
 
 (defrule
-	(players-building-type-count focus-player castle >= 1)
+	(true)
+=>
+	(up-modify-goal gl-castle-loop-counter c:+ 1) ;go to next list-entry
+)
+
+(defrule
+	(or (players-building-type-count focus-player castle >= 1)
+	(players-building-type-count focus-player krepost >= 1))
 	;(up-set-target-object search-remote g: gl-loop-counter)
 	(up-compare-goal gl-castle-loop-counter g:>= gl-castles)
 =>
@@ -22824,12 +22871,14 @@
 )
 
 (defrule
-	(players-building-type-count focus-player castle >= 1)
-	(up-point-contains enemy-castle-point-x c: castle)
+	(or (players-building-type-count focus-player castle >= 1)
+	(players-building-type-count focus-player krepost >= 1))
+	(or (up-point-contains enemy-castle-point-x c: castle)
+	(up-point-contains enemy-castle-point-x c: krepost))
 	(up-compare-goal gl-castle-loop-counter g:< gl-castles)
 	(up-compare-goal gl-building-loop-rule-id != -1)
 =>
-	(up-modify-goal gl-castle-loop-counter c:+ 1) ;go to next list-entry
+	;(up-modify-goal gl-castle-loop-counter c:+ 1) ;go to next list-entry
 	(up-jump-direct g: gl-building-loop-rule-id)
 )
 
@@ -22853,7 +22902,7 @@
 	(up-set-target-object search-remote c: 0)
 =>
 	;(chat-to-all "Test 1")
-	(up-jump-rule 20)
+	(up-jump-rule 23)
 )
 
 ;loop through enemy towers
@@ -22902,7 +22951,7 @@
 	(up-object-data object-data-hitpoints <= 170))
 =>
 	;(chat-to-all "Test 2")
-	(up-jump-rule 6)
+	(up-jump-rule 7)
 )	
 
 (defrule
@@ -22924,7 +22973,13 @@
 	(up-remove-objects search-local object-data-class == cavalry-class)
 	(up-remove-objects search-local object-data-class == siege-weapon-class)
 	(up-remove-objects search-local object-data-type == militiaman)
+	(up-remove-objects search-local object-data-type == eagle-warrior)
+	(up-remove-objects search-local object-data-upgrade-type == heavy-eagle-warrior)
+	(up-remove-objects search-local object-data-upgrade-type == elite-eagle-warrior)
+	(up-remove-objects search-local object-data-type == huskarl)
+	(up-remove-objects search-local object-data-upgrade-type == elite-huskarl)
 	(up-remove-objects search-local object-data-type == armored-elephant)
+	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-total-number-units g:= gl-local-total)
 	(up-create-group 0 0 c: 0)
@@ -22977,12 +23032,17 @@
 )
 
 (defrule
+	(true)
+=>
+	(up-modify-goal gl-curr-local-unit c:+ 1)
+)
+
+(defrule
 	(up-compare-goal gl-curr-local-unit g:>= gl-total-number-units)
 =>
 	(set-goal gl-curr-local-unit 0)
 	(up-jump-rule 1)
 )
-
 
 (defrule
 	(up-compare-goal gl-curr-local-unit g:< gl-total-number-units)
@@ -22990,7 +23050,7 @@
 	(goal split-rule-goal 7)
 =>
 	(set-goal split-rule-goal 6)
-	(up-modify-goal gl-curr-local-unit c:+ 1)
+	;(up-modify-goal gl-curr-local-unit c:+ 1)
 	(up-jump-direct g: gl-rule-jump-id)
 )
 
@@ -23001,7 +23061,7 @@
 	(up-object-data object-data-garrison-count >= 2)
 =>
 	;(chat-to-all "Test 3")
-	(up-jump-rule 6)
+	(up-jump-rule 7)
 )	
 
 (defrule
@@ -23023,7 +23083,13 @@
 	(up-remove-objects search-local object-data-class == cavalry-class)
 	(up-remove-objects search-local object-data-class == siege-weapon-class)
 	(up-remove-objects search-local object-data-type == militiaman)
+	(up-remove-objects search-local object-data-type == eagle-warrior)
+	(up-remove-objects search-local object-data-upgrade-type == heavy-eagle-warrior)
+	(up-remove-objects search-local object-data-upgrade-type == elite-eagle-warrior)
+	(up-remove-objects search-local object-data-type == huskarl)
+	(up-remove-objects search-local object-data-upgrade-type == elite-huskarl)
 	(up-remove-objects search-local object-data-type == armored-elephant)
+	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-total-number-units g:= gl-local-total)
 	(up-create-group 0 0 c: 0)
@@ -23076,6 +23142,12 @@
 )
 
 (defrule
+	(true)
+=>
+	(up-modify-goal gl-curr-local-unit c:+ 1)
+)
+
+(defrule
 	(up-compare-goal gl-curr-local-unit g:>= gl-total-number-units)
 =>
 	(set-goal gl-curr-local-unit 0)
@@ -23088,8 +23160,14 @@
 	(goal split-rule-goal 9)
 =>
 	(set-goal split-rule-goal 8)
-	(up-modify-goal gl-curr-local-unit c:+ 1)
+	;(up-modify-goal gl-curr-local-unit c:+ 1)
 	(up-jump-direct g: gl-rule-jump-id)
+)
+
+(defrule
+	(true)
+=>
+	(up-modify-goal gl-tower-loop-counter c:+ 1)
 )
 
 (defrule
@@ -23110,7 +23188,7 @@
 	(up-compare-goal gl-tower-loop-counter g:< gl-enemy-towers)
 	(up-compare-goal gl-building-loop-rule-id != -1)
 =>
-	(up-modify-goal gl-tower-loop-counter c:+ 1) ;go to next list-entry
+	;(up-modify-goal gl-tower-loop-counter c:+ 1) ;go to next list-entry
 	(up-jump-direct g: gl-building-loop-rule-id)
 )
 
@@ -23145,6 +23223,7 @@
 	;(chat-to-player my-player-number "Test 2")
 )
 
+
 (defrule
 	(current-age < castle-age)
 	(not (enemy-buildings-in-town))
@@ -23164,8 +23243,10 @@
 	(up-filter-distance c: -1 c: 3)
 	(up-find-remote c: villager-class c: 5)
 	(up-find-remote c: militiaman-line c: 5)
-	;(up-remove-objects search-remote object-data-hitpoints < 7)
+	(up-remove-objects search-remote object-data-action != actionid-attack)
+	(up-remove-objects search-remote object-data-order != orderid-attack)
 	(up-get-search-state gl-local-total)
+	(up-chat-data-to-player my-player-number "enemy threats found: %d" g: gl-remote-total)
 	;(chat-to-player my-player-number "Test 3")
 )
 
@@ -23187,7 +23268,8 @@
 	(up-set-target-point gl-militia-x)
 	(up-filter-distance c: -1 c: 3)
 	(up-find-remote c: villager-class c: 5)
-	;(up-remove-objects search-remote object-data-hitpoints < 7)
+	(up-remove-objects search-remote object-data-action != actionid-attack)
+	(up-remove-objects search-remote object-data-order != orderid-attack)
 	(up-get-search-state gl-local-total)
 	;(chat-to-player my-player-number "Test 4")
 )
@@ -23214,12 +23296,19 @@
 	(up-bound-point gl-militia-x gl-militia-x)	
 	(enable-timer militia-retreat-timer 2)
 	(up-target-point gl-militia-x action-move -1 stance-no-attack)
+	(chat-local-to-self "retreat with militia")
+)
+
+(defrule
+	(true)
+=>
+	(up-full-reset-search)
 	(up-set-group search-local c: 0)
 	(up-remove-objects search-local object-data-index == 0)
 	(up-reset-group c: 0)
 	(up-create-group 0 0 c: 0)
 	(up-modify-group-flag 1 c: 0)
-	;(chat-local-to-self "retreat with militia")
+	(up-modify-goal gl-loop-militias c:+ 1)
 )
 
 (defrule
@@ -23238,7 +23327,7 @@
 	(up-compare-goal gl-rule-jump-id != -1)
 	(up-group-size c: 0 > 0)
 =>
-	(up-modify-goal gl-loop-militias c:+ 1)
+	;(up-modify-goal gl-loop-militias c:+ 1)
 	;(chat-to-player my-player-number "Test 6")
 	(up-jump-direct g: gl-rule-jump-id)
 )
@@ -23304,7 +23393,8 @@
 	(up-find-remote c: spearman-line c: 5)
 	(up-find-remote c: militiaman-line c: 5)
 	(up-find-remote c: villager-class c: 5)
-	;(up-remove-objects search-remote object-data-hitpoints < 7)
+	(up-remove-objects search-remote object-data-action != actionid-attack)
+	(up-remove-objects search-remote object-data-order != orderid-attack)
 	(up-get-search-state gl-local-total)
 	;(chat-to-player my-player-number "Test 9")
 )
@@ -23329,12 +23419,22 @@
 	;(up-remove-objects search-local object-data-index g:!= gl-scout-index)
 	(enable-timer scout-retreat-timer 5)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
+	(chat-local-to-self "retreat with scout")
+)
+
+(defrule
+	(true)
+=>
+	(up-full-reset-search)
 	(up-set-group search-local c: 0)
 	(up-remove-objects search-local object-data-index == 0)
 	(up-reset-group c: 0)
 	(up-create-group 0 0 c: 0)
 	(up-modify-group-flag 1 c: 0)
-;	(chat-local-to-self "retreat with scout")
+	(up-get-search-state gl-local-total)
+	(up-modify-goal gl-scout-index c:+ 1)
+	;(up-chat-data-to-player my-player-number "curr nr scouts: %d" g: gl-local-total)
+	;(up-chat-data-to-player my-player-number "curr scout1: %d" g: gl-scout-index)
 )
 
 (defrule
@@ -23355,7 +23455,7 @@
 	(up-compare-goal gl-rule-jump-id != -1)
 	(up-group-size c: 0 > 0)
 =>
-	(up-modify-goal gl-scout-index c:+ 1)
+	;(up-modify-goal gl-scout-index c:+ 1)
 	; (chat-to-player my-player-number "Test 12")
 	; (up-chat-data-to-player my-player-number "curr scout: %d" g: gl-scout-index)
 	; (up-chat-data-to-player my-player-number "nr. scouts: %d" g: gl-number-scouts)
@@ -23412,8 +23512,8 @@
 	(up-get-object-data object-data-id gl-curr-unit-id)
 	(up-get-point position-object gl-unit-x)
 	(up-set-target-point gl-unit-x)
-	(up-filter-distance c: -1 c: 4)
-	(up-reset-search 0 0 1 1)
+	(up-filter-distance c: -1 c: 2)
+	;(up-reset-search 0 0 1 1)
 	(up-find-remote c: spearman-line c: 5)
 	;(up-remove-objects search-remote object-data-hitpoints < 7)
 	(up-get-search-state gl-local-total)
@@ -23440,12 +23540,23 @@
 	;(up-remove-objects search-local object-data-index g:!= gl-scout-index)
 	(enable-timer scout-retreat-timer 6)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
+	(chat-local-to-self "retreat with scout 2")
+)
+
+(defrule
+	(true)
+=>
+	(up-full-reset-search)
 	(up-set-group search-local c: 0)
 	(up-remove-objects search-local object-data-index == 0)
 	(up-reset-group c: 0)
 	(up-create-group 0 0 c: 0)
 	(up-modify-group-flag 1 c: 0)
-	;(chat-local-to-self "retreat with scout 2")
+	(up-modify-goal gl-scout-index c:+ 1)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-player my-player-number "curr scout: %d" g: gl-scout-index)
+	;(up-chat-data-to-player my-player-number "nr. scouts: %d" g: gl-number-scouts)
+	;(up-chat-data-to-player my-player-number "curr nr scouts 2: %d" g: gl-local-total)
 )
 
 (defrule
@@ -23465,7 +23576,7 @@
 	(up-compare-goal gl-rule-jump-id != -1)
 	(up-group-size c: 0 > 0)
 =>
-	(up-modify-goal gl-scout-index c:+ 1)
+	;(up-modify-goal gl-scout-index c:+ 1)
 	;(chat-to-player my-player-number "Test 17")
 	; (up-chat-data-to-player my-player-number "curr scout: %d" g: gl-scout-index)
 	; (up-chat-data-to-player my-player-number "nr. scouts: %d" g: gl-number-scouts)
@@ -25347,7 +25458,7 @@
 	(can-build mining-camp)
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
-    (set-strategic-number sn-gold-dropsite-distance 6)
+    (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 1")
@@ -25365,7 +25476,7 @@
 	(can-build mining-camp)
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
-    (set-strategic-number sn-gold-dropsite-distance 6)
+    (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 2")
@@ -25383,7 +25494,7 @@
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
     (set-strategic-number sn-gold-dropsite-distance 400)
-    (set-strategic-number sn-stone-dropsite-distance 6)
+    (set-strategic-number sn-stone-dropsite-distance 4)
 	(chat-to-player my-player-number "Mining camp 3")
 	(build mining-camp)
 )
@@ -25400,7 +25511,7 @@
 	(can-build mining-camp)
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
-    (set-strategic-number sn-gold-dropsite-distance 6)
+    (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 4")
@@ -25417,7 +25528,7 @@
 	(can-build mining-camp)
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
-    (set-strategic-number sn-gold-dropsite-distance 6)
+    (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 5")
@@ -25435,7 +25546,7 @@
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
     (set-strategic-number sn-gold-dropsite-distance 200)
-    (set-strategic-number sn-stone-dropsite-distance 6)
+    (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 6")
 )
@@ -25454,7 +25565,7 @@
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
     (set-strategic-number sn-gold-dropsite-distance 200)
-    (set-strategic-number sn-stone-dropsite-distance 6)
+    (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 7")
 )
@@ -25474,7 +25585,7 @@
 	(can-build mining-camp)
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
-    (set-strategic-number sn-gold-dropsite-distance 6)
+    (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 8")
@@ -25495,7 +25606,7 @@
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
     (set-strategic-number sn-gold-dropsite-distance 200)
-    (set-strategic-number sn-stone-dropsite-distance 6)
+    (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 9")
 )
@@ -25516,7 +25627,7 @@
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
     (set-strategic-number sn-gold-dropsite-distance 200)
-    (set-strategic-number sn-stone-dropsite-distance 6)
+    (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 10")
 )
@@ -27950,6 +28061,7 @@
 	;(chat-to-player my-player-number "Building Donjon against enemy towerrush")
 )
 
+;rush enemy tower with villagers
 (defrule ;dont attack forward towers by teutons with villagers if too many towers
 	(or (civilian-population < 18)
 		(and (or (players-building-type-count focus-player watch-tower >= 4)
@@ -27973,7 +28085,7 @@
 	(up-full-reset-search)
 	(up-find-local c: villager-class c: 40)
 	(up-clean-search search-local object-data-hitpoints search-order-desc)
-	(up-remove-objects search-local object-data-index > 9)
+	(up-remove-objects search-local object-data-index > 8)
 	(up-find-local c: battering-ram-line c: 40)
 	(up-set-target-point gl-starting-tc-x)
 	(up-filter-distance c: -1 c: 30)
@@ -30009,7 +30121,7 @@
 	(dropsite-min-distance gold < 255)
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
-    (set-strategic-number sn-gold-dropsite-distance 6)
+    (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 11")
@@ -30026,7 +30138,7 @@
 	(dropsite-min-distance gold < 255)
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
-    (set-strategic-number sn-gold-dropsite-distance 6)
+    (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 12")
@@ -30694,7 +30806,7 @@
 
 (defrule
 	(or (civ-selected lithuanians)
-	(or (civ-selected aztecs)
+	(or (civ-selected aztec)
 	(civ-selected burgundians)))
 	(up-compare-goal gl-military-advantage >= -5)
 	(or (not (goal strategy-goal sg-boom-imp))
@@ -31305,7 +31417,7 @@
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
     (set-strategic-number sn-gold-dropsite-distance 200)
-    (set-strategic-number sn-stone-dropsite-distance 6)
+    (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 13")
 )
@@ -31322,7 +31434,7 @@
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
     (set-strategic-number sn-gold-dropsite-distance 200)
-    (set-strategic-number sn-stone-dropsite-distance 6)
+    (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 14")
 )
@@ -36684,6 +36796,7 @@
 	(up-research-status c: ri-capped-ram >= research-pending)
 	(unit-type-count trebuchet-set < 10)
 	(military-population >= 10)
+	(up-compare-goal gl-military-advantage >= -5)
 	(building-type-count castle >= 1)
 =>
 	(up-modify-escrow wood c:- 200)
@@ -38182,7 +38295,7 @@
 	(civilian-population >= 24)
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
-    (set-strategic-number sn-gold-dropsite-distance 6)
+    (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 15")
@@ -38200,7 +38313,7 @@
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
 	(up-modify-sn sn-camp-max-distance c:+ 8)
-    (set-strategic-number sn-gold-dropsite-distance 6)
+    (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 16")
@@ -38216,7 +38329,7 @@
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
 	(up-modify-sn sn-camp-max-distance c:+ 4)
-    (set-strategic-number sn-gold-dropsite-distance 6)
+    (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 17") ;was built on stone
@@ -38234,7 +38347,7 @@
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
 	(up-modify-sn sn-camp-max-distance c:+ 12)
-    (set-strategic-number sn-gold-dropsite-distance 6)
+    (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 18")
@@ -38253,7 +38366,7 @@
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
     (set-strategic-number sn-gold-dropsite-distance 200)
-    (set-strategic-number sn-stone-dropsite-distance 6)
+    (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 19")
 )
@@ -38271,7 +38384,7 @@
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
 	(up-modify-sn sn-camp-max-distance c:+ 8)
     (set-strategic-number sn-gold-dropsite-distance 200)
-    (set-strategic-number sn-stone-dropsite-distance 6)
+    (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 20")
 )
@@ -38289,7 +38402,7 @@
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
 	(up-modify-sn sn-camp-max-distance c:+ 12)
     (set-strategic-number sn-gold-dropsite-distance 200)
-    (set-strategic-number sn-stone-dropsite-distance 6)
+    (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 21")
 )
@@ -38376,7 +38489,7 @@
 	(dropsite-min-distance gold < 255)
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
-    (set-strategic-number sn-gold-dropsite-distance 6)
+    (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 22")
@@ -38393,7 +38506,7 @@
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
     (set-strategic-number sn-gold-dropsite-distance 200)
-    (set-strategic-number sn-stone-dropsite-distance 6)
+    (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
 	(chat-to-player my-player-number "Mining camp 23")
 )
@@ -38675,17 +38788,17 @@
 
 ;region ELEPHANT-ARCHERS ===========================================
 
-(defrule
-	(current-age == castle-age)
-	(can-train elephant-archer-line)
-	(unit-type-count archer-line < 5)
-	(up-compare-goal gl-cavalry-archer-units < 5)
-	(unit-type-count camel-line < 5)
-	(or (civilian-population g:< c-villager-goal)
-	(up-research-status c: imperial-age == research-pending))
-=>
-	(train elephant-archer-line)
-)
+; (defrule
+	; (current-age == castle-age)
+	; (can-train elephant-archer-line)
+	; (unit-type-count archer-line < 5)
+	; (up-compare-goal gl-cavalry-archer-units < 5)
+	; (unit-type-count camel-line < 5)
+	; (or (civilian-population g:< c-villager-goal)
+	; (up-research-status c: imperial-age == research-pending))
+; =>
+	; (train elephant-archer-line)
+; )
 
 (defrule
 	(current-age == imperial-age)
