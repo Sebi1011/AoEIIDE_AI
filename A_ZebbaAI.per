@@ -18878,34 +18878,41 @@
 )
 
 (defrule
-    (current-age >= feudal-age)
+    (current-age < imperial-age)
 	(building-type-count-total mining-camp >= 1)
 	(up-pending-objects c: mining-camp > 0)
 =>
 	(up-full-reset-search)
 	(up-filter-status c: status-pending c: list-active)
 	(up-find-status-local c: mining-camp c: 10)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-player my-player-number "nr mining camps: %d" g: gl-local-total)
 )
 
 (defrule
+	(current-age < imperial-age)
 	(building-type-count-total mining-camp >= 1)
 	(up-pending-objects c: mining-camp > 0)
 	(up-set-target-object search-local c: 0)
 	(up-compare-goal gl-local-total > 0)
 =>
+	(up-set-target-object search-local c: 0)
 	(up-get-point position-object gl-camp-x)
 	(up-set-target-point gl-camp-x)
+	;(up-send-flare gl-camp-x)
 	(up-reset-search 0 0 1 1) ;reset remote list
 	(up-reset-filters)
 	(up-filter-distance c: -1 c: 3) ;distance to gold/stone
-	(up-filter-status c: status-ready c: list-active)
+	(up-filter-status c: status-resource c: list-active)
 	(up-find-resource c: gold c: 1)
 	(up-find-resource c: stone c: 1)
 	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-player my-player-number "obj in local list: %d" g: gl-local-total)
+	;(up-chat-data-to-player my-player-number "obj in remote list: %d" g: gl-remote-total)
 )
 
 (defrule
-    (current-age >= feudal-age)
+    (current-age < imperial-age)
 	(building-type-count-total mining-camp >= 1)
 	(up-pending-objects c: mining-camp > 0)
 	(up-compare-goal gl-remote-total < 1)
@@ -22379,26 +22386,28 @@
 ;region Retreat Rules new (Thanks to Esty for the "Esty the Tuto Master's" AI tutorial!)
 
 (defrule
-	(current-age < castle-age)
+	;(current-age < castle-age)
+	(true)
 =>
 	(set-strategic-number sn-focus-player-number 1)
 )
 
 (defrule
-	(current-age < castle-age)
+	;(current-age < castle-age)
+	(true)
 =>
 	(up-get-rule-id gl-player-loop-rule-id)
 )
 
 (defrule
-	(current-age < castle-age)
+	;(current-age < castle-age)
 	(up-compare-sn sn-focus-player-number >= 9) 
 =>
 	(up-jump-rule 1)
 )
 
 (defrule
-	(current-age < castle-age)
+	;(current-age < castle-age)
 	(not (stance-toward focus-player enemy))
 	(up-compare-goal gl-player-loop-rule-id != -1)
 =>
@@ -22418,7 +22427,7 @@
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-tcs g:= gl-remote-total)
 	;(up-chat-data-to-self "Nr enemy tcs: %d" g: gl-tcs)
-	;(up-chat-data-to-self "Current Focus TC: %d" g: gl-tc-loop-counter)
+	(set-goal gl-tc-loop-counter 0)
 )
 
 (defrule
@@ -22439,6 +22448,7 @@
 =>
 	(up-get-point position-object enemy-point-x) ;get position of first tc in the list
 	(up-set-target-point enemy-point-x) 
+	;(up-chat-data-to-self "Current Focus TC: %d" g: gl-tc-loop-counter)
 	;(up-get-search-state gl-local-total)
 )
 
@@ -22532,13 +22542,6 @@
 )
 
 (defrule
-	(up-compare-goal gl-curr-local-unit g:>= gl-total-number-units)
-=>
-	(set-goal gl-curr-local-unit 0)
-	(up-jump-rule 1)
-)
-
-(defrule
 	(up-compare-goal gl-curr-local-unit g:< gl-total-number-units)
 	(up-compare-goal gl-rule-jump-id != -1)
 	(goal split-rule-goal 48)
@@ -22546,6 +22549,13 @@
 	(set-goal split-rule-goal 47)
 	;(up-modify-goal gl-curr-local-unit c:+ 1)
 	(up-jump-direct g: gl-rule-jump-id)
+)
+
+(defrule
+	(up-compare-goal gl-curr-local-unit g:>= gl-total-number-units)
+=>
+	(set-goal gl-curr-local-unit 0)
+	;(up-jump-rule 2)
 )
 
 (defrule ; if tc is garrisoned
@@ -22632,13 +22642,6 @@
 )
 
 (defrule
-	(up-compare-goal gl-curr-local-unit g:>= gl-total-number-units)
-=>
-	(set-goal gl-curr-local-unit 0)
-	(up-jump-rule 1)
-)
-
-(defrule
 	(up-compare-goal gl-curr-local-unit g:< gl-total-number-units)
 	(up-compare-goal gl-rule-jump-id != -1)
 	(goal split-rule-goal 50)
@@ -22646,6 +22649,13 @@
 	(set-goal split-rule-goal 49)
 	;(up-modify-goal gl-curr-local-unit c:+ 1)
 	(up-jump-direct g: gl-rule-jump-id)
+)
+
+(defrule
+	(up-compare-goal gl-curr-local-unit g:>= gl-total-number-units)
+=>
+	(set-goal gl-curr-local-unit 0)
+	;(up-jump-rule 2)
 )
 
 (defrule ;castle-age rules
@@ -22675,7 +22685,9 @@
 	(players-building-type-count focus-player town-center > 0)
 	(up-point-contains enemy-point-x c: town-center)
 =>
-	(up-full-reset-search)
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)
 	(up-set-target-point enemy-point-x)
 	(up-filter-distance c: -1 c: 9) ;distance from which units shall retreat
 	(up-find-local c: monk c: 40)
@@ -22717,7 +22729,9 @@
 (defrule
 	(goal split-rule-goal 52)
 =>	
-	(up-full-reset-search)	
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)	
 	(up-set-target-point enemy-point-x)
 	(up-filter-distance c: -1 c: 9)
 	(up-find-local c: monk c: 40)
@@ -22745,7 +22759,7 @@
 	;(chat-to-player my-player-number "tc retreat test 3")
 )
 
-(defrule ; if tc is garrisoned
+(defrule ; if tc is not garrisoned
 	(players-building-type-count focus-player town-center >= 1)
 	(up-set-target-object search-remote g: gl-tc-loop-counter)
 	(or (up-object-data object-data-garrison-count < 3)
@@ -22759,7 +22773,9 @@
 	(players-building-type-count focus-player town-center > 0)
 	(up-point-contains enemy-point-x c: town-center)
 =>
-	(up-full-reset-search)
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)
 	(up-set-target-point enemy-point-x)
 	(up-filter-distance c: -1 c: 10)
 	(up-find-local c: monk c: 40)
@@ -22802,7 +22818,9 @@
 (defrule
 	(goal split-rule-goal 54)
 =>	
-	(up-full-reset-search)	
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)	
 	(up-set-target-point enemy-point-x)
 	(up-filter-distance c: -1 c: 10)
 	(up-find-local c: monk c: 40)
@@ -22833,19 +22851,12 @@
 
 ;go through the list
 
+
 (defrule
 	(up-compare-goal gl-tc-loop-counter g:< gl-tcs)
 =>
 	(up-modify-goal gl-tc-loop-counter c:+ 1)
-)
-
-(defrule
-	(players-building-type-count focus-player town-center >= 1)
-	;(up-set-target-object search-remote g: gl-loop-counter) ;did we run through the list?
-	(up-compare-goal gl-tc-loop-counter g:>= gl-tcs)
-=>
-	(set-goal gl-tc-loop-counter 0)
-	(up-jump-rule 1) ;end loop
+	;(up-chat-data-to-player my-player-number "curr tc 2: %d" g: gl-tc-loop-counter)
 )
 
 (defrule
@@ -22854,8 +22865,16 @@
 	(up-compare-goal gl-tc-loop-counter g:< gl-tcs)
 	(up-compare-goal gl-building-loop-rule-id != -1)
 =>
-	;(up-modify-goal gl-tc-loop-counter c:+ 1) ;go to next list-entry
 	(up-jump-direct g: gl-building-loop-rule-id)
+)
+
+(defrule
+	(players-building-type-count focus-player town-center >= 1)
+	(up-compare-goal gl-tc-loop-counter g:>= gl-tcs)
+=>
+	(set-goal gl-tc-loop-counter 0)
+	;(chat-to-all "skip")
+	;(up-jump-rule 2) ;end loop
 )
 
 ; Retreating from Castle 
@@ -22889,6 +22908,7 @@
 	(up-find-status-remote c: krepost c: 20)
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-castles g:= gl-remote-total)
+	(set-goal gl-castle-loop-counter 0)
 )
 
 (defrule
@@ -23004,16 +23024,6 @@
 (defrule
 	(or (players-building-type-count focus-player castle >= 1)
 	(players-building-type-count focus-player krepost >= 1))
-	;(up-set-target-object search-remote g: gl-loop-counter)
-	(up-compare-goal gl-castle-loop-counter g:>= gl-castles)
-=>
-	(set-goal gl-castle-loop-counter 0)
-	(up-jump-rule 1)
-)
-
-(defrule
-	(or (players-building-type-count focus-player castle >= 1)
-	(players-building-type-count focus-player krepost >= 1))
 	(or (up-point-contains enemy-castle-point-x c: castle)
 	(up-point-contains enemy-castle-point-x c: krepost))
 	(up-compare-goal gl-castle-loop-counter g:< gl-castles)
@@ -23021,6 +23031,16 @@
 =>
 	;(up-modify-goal gl-castle-loop-counter c:+ 1) ;go to next list-entry
 	(up-jump-direct g: gl-building-loop-rule-id)
+)
+
+(defrule
+	(or (players-building-type-count focus-player castle >= 1)
+	(players-building-type-count focus-player krepost >= 1))
+	;(up-set-target-object search-remote g: gl-loop-counter)
+	(up-compare-goal gl-castle-loop-counter g:>= gl-castles)
+=>
+	(set-goal gl-castle-loop-counter 0)
+	;(up-jump-rule 2)
 )
 
 ; Retreating from Enemy Towers
@@ -23043,7 +23063,7 @@
 	(up-set-target-object search-remote c: 0)
 =>
 	;(chat-to-all "Test 1")
-	(up-jump-rule 23)
+	(up-jump-rule 25)
 )
 
 ;loop through enemy towers
@@ -23058,6 +23078,7 @@
 	(up-find-status-remote c: donjon c: 10)
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-enemy-towers g:= gl-remote-total)
+	(set-goal gl-tower-loop-counter 0)
 	;(up-chat-data-to-self "nr towers: %d" g: gl-enemy-towers)
 )
 
@@ -23092,7 +23113,7 @@
 	(up-object-data object-data-hitpoints <= 170))
 =>
 	;(chat-to-all "Test 2")
-	(up-jump-rule 7)
+	(up-jump-rule 8)
 )	
 
 (defrule
@@ -23104,7 +23125,9 @@
 =>
 	(up-reset-group c: 0)
 	(up-modify-group-flag 0 c: 0)
-	(up-full-reset-search)
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)	
 	(up-set-target-point enemy-tower-point-x)
 	(up-filter-distance c: 1 c: 10)
 	(up-find-local c: monk c: 40)
@@ -23125,8 +23148,17 @@
 	(up-modify-goal gl-total-number-units g:= gl-local-total)
 	(up-create-group 0 0 c: 0)
 	(up-modify-group-flag 1 c: 0)
-	(set-goal gl-curr-local-unit 0)
 	(set-goal split-rule-goal 6)
+)
+
+(defrule
+	(goal split-rule-goal 6)
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
+	(or (up-point-contains enemy-tower-point-x c: watch-tower)
+	(up-point-contains enemy-tower-point-x c: donjon))
+=>
+	(set-goal gl-curr-local-unit 0)
 )
 
 (defrule
@@ -23143,7 +23175,9 @@
 	;(up-set-target-object search-local c: 0)
 	(up-group-size c: 0 > 0)
 =>
-	(up-full-reset-search)
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)	
 	(up-set-group search-local c: 0)
 	(up-remove-objects search-local object-data-index != 0)
 	(up-set-target-object search-local c: 0)
@@ -23179,13 +23213,6 @@
 )
 
 (defrule
-	(up-compare-goal gl-curr-local-unit g:>= gl-total-number-units)
-=>
-	(set-goal gl-curr-local-unit 0)
-	(up-jump-rule 1)
-)
-
-(defrule
 	(up-compare-goal gl-curr-local-unit g:< gl-total-number-units)
 	(up-compare-goal gl-rule-jump-id != -1)
 	(goal split-rule-goal 7)
@@ -23195,6 +23222,13 @@
 	(up-jump-direct g: gl-rule-jump-id)
 )
 
+(defrule
+	(up-compare-goal gl-curr-local-unit g:>= gl-total-number-units)
+=>
+	(set-goal gl-curr-local-unit 0)
+	;(up-jump-rule 2)
+)
+
 (defrule ; skip if tower is garrisoned
 	(or (players-building-type-count focus-player watch-tower >= 1)
 	(players-building-type-count focus-player donjon >= 1))
@@ -23202,7 +23236,7 @@
 	(up-object-data object-data-garrison-count >= 2)
 =>
 	;(chat-to-all "Test 3")
-	(up-jump-rule 7)
+	(up-jump-rule 8)
 )	
 
 (defrule
@@ -23214,7 +23248,9 @@
 =>
 	(up-reset-group c: 0)
 	(up-modify-group-flag 0 c: 0)
-	(up-full-reset-search)
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)	
 	(up-set-target-point enemy-tower-point-x)
 	(up-filter-distance c: 1 c: 10)
 	(up-find-local c: monk c: 40)
@@ -23235,8 +23271,17 @@
 	(up-modify-goal gl-total-number-units g:= gl-local-total)
 	(up-create-group 0 0 c: 0)
 	(up-modify-group-flag 1 c: 0)
-	(set-goal gl-curr-local-unit 0)
 	(set-goal split-rule-goal 8)
+)
+
+(defrule
+	(goal split-rule-goal 8)
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
+	(or (up-point-contains enemy-tower-point-x c: watch-tower)
+	(up-point-contains enemy-tower-point-x c: donjon))
+=>
+	(set-goal gl-curr-local-unit 0)
 )
 
 (defrule
@@ -23253,7 +23298,9 @@
 	;(up-set-target-object search-local c: 0)
 	(up-group-size c: 0 > 0)
 =>
-	(up-full-reset-search)
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)	
 	(up-set-group search-local c: 0)
 	(up-remove-objects search-local object-data-index != 0)
 	(up-set-target-object search-local c: 0)
@@ -23271,7 +23318,9 @@
 (defrule
 	(goal split-rule-goal 9)
 =>	
-	(up-full-reset-search)
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)	
 	(up-add-object-by-id search-local g: gl-curr-unit-id) 
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	(enable-timer split-stance-timer 2)
@@ -23289,13 +23338,6 @@
 )
 
 (defrule
-	(up-compare-goal gl-curr-local-unit g:>= gl-total-number-units)
-=>
-	(set-goal gl-curr-local-unit 0)
-	(up-jump-rule 1)
-)
-
-(defrule
 	(up-compare-goal gl-curr-local-unit g:< gl-total-number-units)
 	(up-compare-goal gl-rule-jump-id != -1)
 	(goal split-rule-goal 9)
@@ -23306,19 +23348,16 @@
 )
 
 (defrule
-	(up-compare-goal gl-tower-loop-counter g:< gl-enemy-towers)
+	(up-compare-goal gl-curr-local-unit g:>= gl-total-number-units)
 =>
-	(up-modify-goal gl-tower-loop-counter c:+ 1)
+	(set-goal gl-curr-local-unit 0)
+	;(up-jump-rule 2)
 )
 
 (defrule
-	(or (players-building-type-count focus-player watch-tower >= 1)
-	(players-building-type-count focus-player donjon >= 1))
-	;(up-set-target-object search-remote g: gl-loop-counter)
-	(up-compare-goal gl-tower-loop-counter g:>= gl-enemy-towers)
+	(up-compare-goal gl-tower-loop-counter g:< gl-enemy-towers)
 =>
-	(set-goal gl-tower-loop-counter 0)
-	(up-jump-rule 1)
+	(up-modify-goal gl-tower-loop-counter c:+ 1)
 )
 
 (defrule
@@ -23331,6 +23370,16 @@
 =>
 	;(up-modify-goal gl-tower-loop-counter c:+ 1) ;go to next list-entry
 	(up-jump-direct g: gl-building-loop-rule-id)
+)
+
+(defrule
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
+	;(up-set-target-object search-remote g: gl-loop-counter)
+	(up-compare-goal gl-tower-loop-counter g:>= gl-enemy-towers)
+=>
+	(set-goal gl-tower-loop-counter 0)
+	;(up-jump-rule 2)
 )
 
 ;region Militia Retreat Rules
@@ -23453,14 +23502,6 @@
 )
 
 (defrule
-	(up-compare-goal gl-loop-militias g:>= gl-militias)
-=>
-	(set-goal gl-loop-militias 0)
-	;(chat-to-player my-player-number "Test 5")
-	(up-jump-rule 1)
-)
-
-(defrule
 	(current-age < castle-age)
 	(not (enemy-buildings-in-town))
 	(unit-type-count militiaman-line >= 1)
@@ -23471,6 +23512,14 @@
 	;(up-modify-goal gl-loop-militias c:+ 1)
 	;(chat-to-player my-player-number "Test 6")
 	(up-jump-direct g: gl-rule-jump-id)
+)
+
+(defrule
+	(up-compare-goal gl-loop-militias g:>= gl-militias)
+=>
+	(set-goal gl-loop-militias 0)
+	;(chat-to-player my-player-number "Test 5")
+	;(up-jump-rule 2)
 )
 
 ;endregion
@@ -23579,14 +23628,6 @@
 )
 
 (defrule
-	(up-compare-goal gl-scout-index g:>= gl-number-scouts)
-=>
-	(set-goal gl-scout-index 0)
-	;(chat-to-player my-player-number "Test 11")
-	(up-jump-rule 1)
-)
-
-(defrule
 	(current-age < castle-age)
 	(not (enemy-buildings-in-town))
 	(or (unit-type-count scout-cavalry-line >= 1)
@@ -23603,6 +23644,13 @@
 	(up-jump-direct g: gl-rule-jump-id)
 )
 
+(defrule
+	(up-compare-goal gl-scout-index g:>= gl-number-scouts)
+=>
+	(set-goal gl-scout-index 0)
+	;(chat-to-player my-player-number "Test 11")
+	;(up-jump-rule 2)
+)
 
 ;special attention to enemy spearmen
 
@@ -23701,14 +23749,6 @@
 )
 
 (defrule
-	(up-compare-goal gl-scout-index g:>= gl-number-scouts)
-=>
-	(set-goal gl-scout-index 0)
-	;(chat-to-player my-player-number "Test 16")
-	(up-jump-rule 1)
-)
-
-(defrule
 	(current-age < castle-age)
 	(not (enemy-buildings-in-town))
 	(or (unit-type-count scout-cavalry-line >= 1)
@@ -23725,7 +23765,15 @@
 )
 
 (defrule
-	(current-age < castle-age)
+	(up-compare-goal gl-scout-index g:>= gl-number-scouts)
+=>
+	(set-goal gl-scout-index 0)
+	;(chat-to-player my-player-number "Test 16")
+	;(up-jump-rule 2)
+)
+
+(defrule
+	;(current-age < castle-age)
 	(up-compare-sn sn-focus-player-number < 8)
 	(up-compare-goal gl-player-loop-rule-id != -1)
 =>
@@ -23735,7 +23783,7 @@
 )
 
 (defrule
-	(current-age < castle-age)
+	;(current-age < castle-age)
 	(up-compare-sn sn-focus-player-number >= 8)
 =>
 	(up-modify-sn sn-focus-player-number s:= sn-target-player-number) 
@@ -41693,6 +41741,7 @@
 	(up-compare-goal gl-self-loop-counter g:>= gl-selfs)
 =>
 	(set-goal gl-self-loop-counter 0)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 	;(set-goal gl-attack-ram 0)
 	;(up-chat-data-to-all "Focus TC: %d" g: gl-self-loop-counter)
 	(up-jump-rule 1) ;end loop
@@ -42241,7 +42290,7 @@
 =>
 	(up-full-reset-search)
 	(up-set-target-point gl-starting-tc-x)
-	(up-filter-distance c: -1 g: gl-standard-townsize)
+	(up-filter-distance c: -1 g: 20)
 	(up-find-remote c: all-units-class c: 40)
 	(up-find-remote c: tower-class c: 10)
 )	
@@ -42272,7 +42321,11 @@
 	(up-full-reset-search)
 	(up-set-target-point gl-starting-tc-x)
 	(up-filter-distance c: -1 g: gl-standard-townsize)
-	(up-find-remote c: all-units-class c: 40)
+	;(up-filter-distance c: -1 c: 30)
+	(up-find-remote c: -1 c: 40)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-player my-player-number "focus-player: %d" s: sn-focus-player-number)
+	;(up-chat-data-to-player my-player-number "enemy units in town: %d" g: gl-remote-total)
 )
 
 (defrule
