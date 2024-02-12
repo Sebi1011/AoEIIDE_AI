@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 10th February 2023
+;last update: 12th February 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -424,6 +424,10 @@
 (defconst enemy-cavarcher-goal 78)
 (defconst enemy-siege-goal 79)
 (defconst gl-drush-militia-count 80)
+(defconst gl-cost-food 81)
+(defconst gl-cost-wood 82)
+(defconst gl-cost-stone 83)
+(defconst gl-cost-gold 84)
 (defconst preferred-target-player 86)
 (defconst temp-focus-player 87)
 (defconst TowerGarrisonGoal 88)
@@ -14155,7 +14159,8 @@
 	(or 
 		(not (goal gl-food-saving 22))
 		(and (goal gl-food-saving 22)
-		(up-compare-goal gl-military-advantage <= -12))
+		(and (players-current-age focus-player < castle-age)
+		(up-compare-goal gl-military-advantage <= -12)))
 	)
 =>
 	(up-modify-escrow food c:- 25)
@@ -14260,7 +14265,8 @@
 	(or 
 		(not (goal gl-food-saving 22))
 		(and (goal gl-food-saving 22)
-		(up-compare-goal gl-military-advantage <= -12))
+		(and (players-current-age focus-player < castle-age)
+		(up-compare-goal gl-military-advantage <= -12)))
 	)
 =>
 	(up-modify-escrow food c:- 80)
@@ -14277,7 +14283,8 @@
 	(or 
 		(not (goal gl-food-saving 22))
 		(and (goal gl-food-saving 22)
-		(up-compare-goal gl-military-advantage <= -12))
+		(and (players-current-age focus-player < castle-age)
+		(up-compare-goal gl-military-advantage <= -12)))
 	)
 =>
 	(up-modify-escrow food c:- 25)
@@ -14295,7 +14302,8 @@
 	(or 
 		(not (goal gl-food-saving 22))
 		(and (goal gl-food-saving 22)
-		(up-compare-goal gl-military-advantage <= -12))
+		(and (players-current-age focus-player < castle-age)
+		(up-compare-goal gl-military-advantage <= -12)))
 	)
 =>
 	(up-modify-escrow wood c:- 25)
@@ -18771,6 +18779,43 @@
 	(up-jump-rule -3)
 )
 
+;not necessary for now
+; (defrule
+    ; (current-age >= feudal-age)
+	; (building-type-count-total lumber-camp > 2)
+	; (up-pending-objects c: lumber-camp > 0)
+; =>
+	; (up-full-reset-search)
+	; (up-filter-status c: status-pending c: list-active)
+	; (up-find-status-local c: lumber-camp c: 10)
+; )
+
+; (defrule
+	; (building-type-count-total lumber-camp > 2)
+	; (up-pending-objects c: lumber-camp > 0)
+	; (up-set-target-object search-local c: 0)
+	; (up-compare-goal gl-local-total > 0)
+; =>
+	; (up-get-point position-object gl-camp-x)
+	; (up-set-target-point gl-camp-x)
+	; (up-reset-search 0 0 1 1) ;reset remote list
+	; (up-reset-filters)
+	; (up-filter-distance c: -1 c: 6) ;distance to trees
+	; (up-filter-status c: status-ready c: list-active)
+	; (up-find-resource c: wood c: 1)
+	; (up-get-search-state gl-local-total)
+	; ;(up-chat-data-to-player my-player-number "Found %d woodtiles" g: gl-remote-total)
+; )
+
+; (defrule
+    ; (current-age >= feudal-age)
+	; (building-type-count-total lumber-camp > 2)
+	; (up-pending-objects c: lumber-camp > 0)
+	; (up-compare-goal gl-remote-total > 0)
+; =>
+	; (up-target-objects 1 action-delete -1 -1)
+; )
+
 ;gold && stone
 
 (defrule
@@ -18830,6 +18875,43 @@
 =>
 	(up-modify-goal gl-loop-counter c:+ 1)
 	(up-jump-rule -3)
+)
+
+(defrule
+    (current-age >= feudal-age)
+	(building-type-count-total mining-camp >= 1)
+	(up-pending-objects c: mining-camp > 0)
+=>
+	(up-full-reset-search)
+	(up-filter-status c: status-pending c: list-active)
+	(up-find-status-local c: mining-camp c: 10)
+)
+
+(defrule
+	(building-type-count-total mining-camp >= 1)
+	(up-pending-objects c: mining-camp > 0)
+	(up-set-target-object search-local c: 0)
+	(up-compare-goal gl-local-total > 0)
+=>
+	(up-get-point position-object gl-camp-x)
+	(up-set-target-point gl-camp-x)
+	(up-reset-search 0 0 1 1) ;reset remote list
+	(up-reset-filters)
+	(up-filter-distance c: -1 c: 3) ;distance to gold/stone
+	(up-filter-status c: status-ready c: list-active)
+	(up-find-resource c: gold c: 1)
+	(up-find-resource c: stone c: 1)
+	(up-get-search-state gl-local-total)
+)
+
+(defrule
+    (current-age >= feudal-age)
+	(building-type-count-total mining-camp >= 1)
+	(up-pending-objects c: mining-camp > 0)
+	(up-compare-goal gl-remote-total < 1)
+=>
+	(up-target-objects 1 action-delete -1 -1)
+	(chat-to-player my-player-number "Deleting misplaced mining-camp")
 )
 
 ;endregion
@@ -22073,8 +22155,6 @@
 	(up-modify-escrow gold c:- 10)
 )
 
-
-
 (defrule
 	(goal gl-food-saving 24)
 	(not (research-completed ri-eagle-warrior))
@@ -22233,6 +22313,67 @@
 	(up-modify-escrow gold c:- 10)
 )
 
+;unique unit upgrade escrow caps
+
+(defrule
+	(true)
+=>
+	(up-setup-cost-data 1 gl-cost-food)
+	(up-add-research-cost c: my-unique-unit-upgrade c: 1)
+	; (up-chat-data-to-player my-player-number "UU-Upgrade food cost: %d" g: gl-cost-food)
+	; (up-chat-data-to-player my-player-number "UU-Upgrade wood cost: %d" g: gl-cost-wood)
+	; (up-chat-data-to-player my-player-number "UU-Upgrade gold cost: %d" g: gl-cost-gold)
+	(disable-self)
+)
+
+(defrule
+	(goal gl-food-saving 32)
+	(goal gl-wood-saving 32)
+	(escrow-amount food g:> gl-cost-food)
+=>
+	(up-modify-escrow food c:- 10)
+)
+
+(defrule
+	(goal gl-food-saving 32)
+	(goal gl-wood-saving 32)
+	(escrow-amount wood g:> gl-cost-wood)
+=>
+	(up-modify-escrow wood c:- 10)
+)
+
+(defrule
+	(goal gl-gold-saving 33)
+	(goal gl-wood-saving 33)
+	(escrow-amount gold g:> gl-cost-gold)
+=>
+	(up-modify-escrow gold c:- 10)
+)
+
+(defrule
+	(goal gl-gold-saving 33)
+	(goal gl-wood-saving 33)
+	(escrow-amount wood g:> gl-cost-wood)
+=>
+	(up-modify-escrow wood c:- 10)
+)
+
+(defrule
+	(goal gl-food-saving 34)
+	(goal gl-gold-saving 34)
+	(escrow-amount food g:> gl-cost-food)
+=>
+	(up-modify-escrow food c:- 10)
+)
+
+(defrule
+	(goal gl-food-saving 34)
+	(goal gl-gold-saving 34)
+	(escrow-amount gold g:> gl-cost-gold)
+=>
+	(up-modify-escrow gold c:- 10)
+)
+
 ;endregion
 
 ;region Retreat Rules new (Thanks to Esty for the "Esty the Tuto Master's" AI tutorial!)
@@ -22385,7 +22526,7 @@
 )
 
 (defrule
-	(true)
+	(up-compare-goal gl-curr-local-unit g:< gl-total-number-units)
 =>	
 	(up-modify-goal gl-curr-local-unit c:+ 1)
 )
@@ -22485,7 +22626,7 @@
 )
 
 (defrule
-	(true)
+	(up-compare-goal gl-curr-local-unit g:< gl-total-number-units)
 =>
 	(up-modify-goal gl-curr-local-unit c:+ 1)
 )
@@ -22693,7 +22834,7 @@
 ;go through the list
 
 (defrule
-	(true)
+	(up-compare-goal gl-tc-loop-counter g:< gl-tcs)
 =>
 	(up-modify-goal gl-tc-loop-counter c:+ 1)
 )
@@ -22855,7 +22996,7 @@
 )
 
 (defrule
-	(true)
+	(up-compare-goal gl-castle-loop-counter g:< gl-castles)
 =>
 	(up-modify-goal gl-castle-loop-counter c:+ 1) ;go to next list-entry
 )
@@ -23032,7 +23173,7 @@
 )
 
 (defrule
-	(true)
+	(up-compare-goal gl-curr-local-unit g:< gl-total-number-units)
 =>
 	(up-modify-goal gl-curr-local-unit c:+ 1)
 )
@@ -23142,7 +23283,7 @@
 )
 
 (defrule
-	(true)
+	(up-compare-goal gl-curr-local-unit g:< gl-total-number-units)
 =>
 	(up-modify-goal gl-curr-local-unit c:+ 1)
 )
@@ -23165,7 +23306,7 @@
 )
 
 (defrule
-	(true)
+	(up-compare-goal gl-tower-loop-counter g:< gl-enemy-towers)
 =>
 	(up-modify-goal gl-tower-loop-counter c:+ 1)
 )
@@ -29326,7 +29467,7 @@
 
 (defrule
 	(or (and (current-age == feudal-age)
-		(up-compare-goal gl-military-advantage < -1))
+		(up-compare-goal gl-military-advantage < -3))
 		(and (up-research-status c: castle-age == research-pending)
 		(and (players-current-age focus-player >= castle-age)
 		(up-compare-goal gl-military-advantage < 16))))
@@ -29484,7 +29625,7 @@
 	(current-age == feudal-age)
 	(not (town-under-attack))
 	(players-building-count focus-player > 0);!
-	(not (up-research-status c: castle-age >= research-pending))
+	(up-research-status c: castle-age < research-pending)
 	(military-population >= 3)
 	(up-compare-goal gl-military-advantage >= -2);!
 =>
@@ -29513,7 +29654,7 @@
 	(current-age == feudal-age)
 	(not (town-under-attack))
 	(players-building-count focus-player > 0)
-	(not (up-research-status c: castle-age >= research-pending))
+	(up-research-status c: castle-age < research-pending)
 	(military-population >= 3)
 	(up-compare-goal gl-military-advantage >= -2)
 =>
@@ -33864,50 +34005,51 @@
 	; (train knight-line)
 ; )
 
-(defrule
-	(current-age == castle-age)
-	(or 
-		(and 
-			(not(goal strategy-goal sg-boom-imp))
-			(or (and(goal sg-fastcastle-boom YES)
-					(building-type-count-total town-center >= 3))
-				(and(goal sg-fastcastle-boom NO)
-					(building-type-count-total town-center >= 2))))
-		(up-research-status c: imperial-age >= research-pending)
-	)
-	(goal ca-strategy gl-castleage-siege-infantry)
-	(can-research ri-man-at-arms)
-=>
-	(research ri-man-at-arms)
-)
+;siege-infantry militia line
+; (defrule
+	; (current-age == castle-age)
+	; (or 
+		; (and 
+			; (not(goal strategy-goal sg-boom-imp))
+			; (or (and(goal sg-fastcastle-boom YES)
+					; (building-type-count-total town-center >= 3))
+				; (and(goal sg-fastcastle-boom NO)
+					; (building-type-count-total town-center >= 2))))
+		; (up-research-status c: imperial-age >= research-pending)
+	; )
+	; (goal ca-strategy gl-castleage-siege-infantry)
+	; (can-research ri-man-at-arms)
+; =>
+	; (research ri-man-at-arms)
+; )
 
-(defrule
-	(current-age == castle-age)
-	(goal ca-strategy gl-castleage-siege-infantry)
-	(not (research-completed ri-long-swordsman))
-	(can-research ri-long-swordsman)
-=>
-	(research ri-long-swordsman)
-)
+; (defrule
+	; (current-age == castle-age)
+	; (goal ca-strategy gl-castleage-siege-infantry)
+	; (not (research-completed ri-long-swordsman))
+	; (can-research ri-long-swordsman)
+; =>
+	; (research ri-long-swordsman)
+; )
 
-(defrule
-	(current-age == castle-age)
-	(or (not (goal strategy-goal sg-boom-imp))
-	(up-research-status c: imperial-age >= research-pending))
-	(goal ca-strategy gl-castleage-siege-infantry)
-	(up-research-status c: long-swordsman >= research-pending)
-	(can-research ri-supplies)
-=>
-	(research ri-supplies)
-)
+; (defrule
+	; (current-age == castle-age)
+	; (or (not (goal strategy-goal sg-boom-imp))
+	; (up-research-status c: imperial-age >= research-pending))
+	; (goal ca-strategy gl-castleage-siege-infantry)
+	; (up-research-status c: long-swordsman >= research-pending)
+	; (can-research ri-supplies)
+; =>
+	; (research ri-supplies)
+; )
 
-(defrule
-	(current-age == castle-age)
-	(goal ca-strategy gl-castleage-siege-infantry)
-	(can-research ri-gambesons)
-=>
-	(research ri-gambesons)
-)
+; (defrule
+	; (current-age == castle-age)
+	; (goal ca-strategy gl-castleage-siege-infantry)
+	; (can-research ri-gambesons)
+; =>
+	; (research ri-gambesons)
+; )
 	
 (defrule
 	(current-age == castle-age)
@@ -33948,8 +34090,6 @@
 	(can-train spearman-line)
 	(goal ca-strategy gl-castleage-siege-infantry)
 	(up-research-status c: ri-pikeman >= research-pending)
-	(or (civ-selected gothic)
-	(up-research-status c: ri-gambesons >= research-pending))
 =>
 	(train spearman-line)
 )
@@ -42031,14 +42171,50 @@
 
 (defrule
 	(current-age >= feudal-age)
+	(food-amount < 800)
+	(up-research-status c: castle-age < research-pending)
+	(players-current-age focus-player >= castle-age)
+	(up-compare-goal gl-military-advantage <= -12)
+	(timer-triggered 10)
+=>
+	(disable-timer 10)
+	(chat-to-allies "3");food
+	(enable-timer 10 30)
+)
+
+(defrule
+	(current-age >= feudal-age)
+	(gold-amount < 200)
+	(up-research-status c: castle-age < research-pending)
+	(players-current-age focus-player >= castle-age)
+	(up-compare-goal gl-military-advantage <= -12)
+	(timer-triggered 10)
+=>
+	(disable-timer 10)
+	(chat-to-allies "5");gold
+	(enable-timer 10 30)
+)
+
+(defrule
+	(current-age >= feudal-age)
+	(building-type-count-total town-center == 0)
+	(wood-amount < 275)
+	(timer-triggered 10)
+=>
+	(disable-timer 10)
+	(chat-to-allies "4");wood
+	(enable-timer 10 30)
+)
+
+(defrule
+	(current-age >= feudal-age)
 	(building-type-count-total town-center == 0)
 	(stone-amount < 100)
 	(timer-triggered 10)
 =>
 	(disable-timer 10)
-	(chat-to-allies "3")
-	(chat-to-allies "6")
-	(enable-timer 10 60)
+	(chat-to-allies "6");stone
+	(enable-timer 10 30)
 )
 
 ;endregion
@@ -42065,7 +42241,7 @@
 =>
 	(up-full-reset-search)
 	(up-set-target-point gl-starting-tc-x)
-	(up-filter-distance c: -1 s: sn-maximum-town-size)
+	(up-filter-distance c: -1 g: gl-standard-townsize)
 	(up-find-remote c: all-units-class c: 40)
 	(up-find-remote c: tower-class c: 10)
 )	
@@ -42095,7 +42271,7 @@
 =>
 	(up-full-reset-search)
 	(up-set-target-point gl-starting-tc-x)
-	(up-filter-distance c: -1 s: sn-maximum-town-size)
+	(up-filter-distance c: -1 g: gl-standard-townsize)
 	(up-find-remote c: all-units-class c: 40)
 )
 
@@ -45792,6 +45968,23 @@
 =>
 	(sell-commodity stone)
     (chat-to-player my-player-number "Selling stone to get to imp")
+)
+
+;endregion
+
+;region Cancel unit training in certain conditions =================
+
+(defrule
+	(current-age == feudal-age)
+	(players-current-age focus-player >= castle-age)
+	(or (up-compare-goal gl-military-advantage <= -20)
+	(civilian-population < 24))
+=>
+	(up-reset-building 1 c: barracks)
+	(up-reset-building 1 c: archery-range)
+	(up-reset-building 1 c: stable)
+	(up-reset-building 1 c: siege-workshop)
+	(chat-to-player my-player-number "Cancel units")
 )
 
 ;endregion
