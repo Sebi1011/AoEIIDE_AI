@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 12th February 2023
+;last update: 13th February 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -8513,6 +8513,7 @@
 =>
 	(up-full-reset-search)
 	(up-filter-status c: status-pending c: list-active)
+	(up-find-status-local c: house c: 10)
 	(up-find-status-local c: mining-camp c: 10)
 	(up-find-status-local c: lumber-camp c: 10)
 	(up-find-status-local c: mill c: 10)
@@ -8520,6 +8521,7 @@
 	(up-find-status-local c: archery-range c: 10)
 	(up-find-status-local c: stable c: 10)
 	(up-find-status-local c: siege-workshop c: 10)
+	;(up-find-status-local c: market c: 10)
 	(up-find-status-local c: monastery c: 10)
 	(up-find-status-local c: university c: 10)
 	(up-find-status-local c: blacksmith c: 10)
@@ -12175,7 +12177,7 @@
 
 ;endregion
 
-;region Scout Micro
+;region Scout Micro ================================================
 
 #load-if-defined ARENA-MAP
 
@@ -12307,7 +12309,7 @@
 )
 
 (defrule
-	(current-age < castle-age)
+	(current-age < imperial-age)
 	(not (enemy-buildings-in-town))
 	(or (unit-type-count-total scout-cavalry-line > 0)
 	(unit-type-count-total eagle-warrior-line > 0))
@@ -12329,7 +12331,7 @@
 
 ;endregion
 
-;region Monk Micro
+;region Monk Micro =================================================
 
 (defrule
 	(or (unit-type-count-total monk > 0)
@@ -12525,7 +12527,7 @@
 
 ;endregion
 
-;region Microing Ranged Units
+;region Microing Ranged Units ======================================
 
 ; ;======== FIRE AFTER MOVING
 ; ;fire when all units in the group are ready to fire and the target is in range
@@ -13674,6 +13676,90 @@
 	; (up-target-point gl-self-point-x -1 formation-line stance-aggressive)
 	; ;(chat-to-all "Reset Skirms")
 ; )
+
+;endregion
+
+;region Spearman Micro =============================================
+
+(defrule
+	(unit-type-count-total spearman-line > 0)
+	(current-age < castle-age)
+=>
+	(up-full-reset-search)
+	(up-reset-group c: 0)
+	(up-modify-group-flag 0 c: 0)
+	(up-find-local c: spearman-line c: 10)
+	(up-get-search-state gl-local-total)
+	(up-modify-goal gl-number-scouts g:= gl-local-total)
+	(up-create-group 0 0 c: 0)
+	(up-modify-group-flag 1 c: 0)
+)
+
+(defrule
+	(up-group-size c: 0 > 0)
+	(unit-type-count-total spearman-line > 0)
+	(current-age < castle-age)
+=>
+	(up-get-rule-id gl-rule-jump-id)
+)
+
+(defrule
+	(unit-type-count-total spearman-line > 0)
+	(current-age < castle-age)
+	(up-group-size c: 0 > 0)
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 0)
+	(up-remove-objects search-local object-data-index != 0)
+	(up-set-target-object search-local c: 0)
+	(up-get-object-data object-data-id gl-curr-unit-id)
+	(up-get-point position-object gl-scout-x)
+	(up-set-target-point gl-scout-x)
+	(up-filter-distance c: -1 c: 3)	
+	(up-find-remote c: scout-cavalry-line c: 5)
+	(up-find-remote c: camel-scout c: 5)
+	(up-clean-search search-remote object-data-distance search-order-asc)
+	(up-remove-objects search-remote object-data-index > 0)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-player my-player-number "enemy scouts nearby: %d" g: gl-remote-total)
+)
+
+(defrule
+	(unit-type-count-total spearman-line > 0)
+	(current-age < castle-age)
+	(up-compare-goal gl-remote-total >= 1)
+	(up-set-target-object search-remote c: 0)
+=>
+	(up-reset-search 1 1 0 0) ;reset local search only
+	(up-add-object-by-id search-local g: gl-curr-unit-id) 
+	(up-target-objects 1 action-default -1 -1)
+	(up-set-group search-local c: 0)
+	(up-remove-objects search-local object-data-index == 0)
+	(up-reset-group c: 0)
+	(up-create-group 0 0 c: 0)
+	(up-modify-group-flag 1 c: 0)
+	;(chat-to-player my-player-number "Snipe enemy scout with spear")
+)
+
+(defrule
+	(up-compare-goal gl-scout-index g:>= gl-number-scouts)
+=>
+	;(up-chat-data-to-player my-player-number "curr spear: %d" g: gl-scout-index)
+	(set-goal gl-scout-index 0)
+	(up-jump-rule 1)
+)
+
+(defrule
+	(unit-type-count-total spearman-line > 0)
+	(current-age < castle-age)
+	(up-compare-goal gl-scout-index g:< gl-number-scouts)
+	(up-compare-goal gl-rule-jump-id != -1)
+	(up-group-size c: 0 > 0)
+=>
+	;(up-chat-data-to-player my-player-number "curr spear: %d" g: gl-scout-index)
+	(up-modify-goal gl-scout-index c:+ 1)
+	(up-jump-direct g: gl-rule-jump-id)
+)
 
 ;endregion
 
@@ -22880,16 +22966,19 @@
 ; Retreating from Castle 
 
 (defrule
-	(players-building-type-count focus-player castle >= 1)
+	(or (players-building-type-count focus-player castle >= 1)
+	(players-building-type-count focus-player krepost >= 1))
 =>	
 	(up-full-reset-search)
 	(up-filter-status c: status-pending c: list-active)
     (up-find-status-remote c: castle c: 1)
+	(up-find-status-remote c: krepost c: 1)
 	(up-get-search-state gl-local-total)
 )
 
 (defrule
-	(players-building-type-count focus-player castle >= 1)
+	(or (players-building-type-count focus-player castle >= 1)
+	(players-building-type-count focus-player krepost >= 1))
 	(up-compare-goal gl-remote-total > 0)
 	(up-set-target-object search-remote c: 0)
 =>
@@ -22942,7 +23031,7 @@
 		(up-compare-goal gl-military-advantage >= 50)
 	)
 =>
-	(up-jump-rule 7)
+	(up-jump-rule 6)
 )
 
 (defrule
@@ -22952,7 +23041,9 @@
 	(or (up-point-contains enemy-castle-point-x c: castle)
 	(up-point-contains enemy-castle-point-x c: krepost))
 =>
-	(up-full-reset-search)
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)	
 	(up-set-target-point enemy-castle-point-x)
 	(up-filter-distance c: -1 c: 14)
 	(up-find-local c: monk c: 40)
@@ -22990,7 +23081,9 @@
 (defrule
 	(goal split-rule-goal 4)
 =>	
-	(up-full-reset-search)	
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)	
 	(up-set-target-point enemy-castle-point-x)
 	(up-filter-distance c: -1 c: 14)
 	(up-find-local c: monk c: 40)
@@ -23117,9 +23210,9 @@
 )	
 
 (defrule
-	(goal split-rule-goal 0)
 	(or (players-building-type-count focus-player watch-tower >= 1)
 	(players-building-type-count focus-player donjon >= 1))
+	(goal split-rule-goal 0)
 	(or (up-point-contains enemy-tower-point-x c: watch-tower)
 	(up-point-contains enemy-tower-point-x c: donjon))
 =>
@@ -23436,7 +23529,7 @@
 	(up-remove-objects search-remote object-data-action != actionid-attack)
 	(up-remove-objects search-remote object-data-order != orderid-attack)
 	(up-get-search-state gl-local-total)
-	(up-chat-data-to-player my-player-number "enemy threats found: %d" g: gl-remote-total)
+	;(up-chat-data-to-player my-player-number "enemy threats found: %d" g: gl-remote-total)
 	;(chat-to-player my-player-number "Test 3")
 )
 
@@ -23607,7 +23700,7 @@
 	(set-goal retreating-goal YES)
 	;(up-set-target-object search-local g: gl-scout-index)
 	;(up-remove-objects search-local object-data-index g:!= gl-scout-index)
-	(enable-timer scout-retreat-timer 5)
+	(enable-timer scout-retreat-timer 3)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
 	(chat-local-to-self "retreat with scout")
 )
@@ -23704,6 +23797,7 @@
 	(up-filter-distance c: -1 c: 2)
 	;(up-reset-search 0 0 1 1)
 	(up-find-remote c: spearman-line c: 5)
+	(up-find-remote c: camel-scout c: 5)
 	;(up-remove-objects search-remote object-data-hitpoints < 7)
 	(up-get-search-state gl-local-total)
 	;(chat-to-player my-player-number "Test 15")
@@ -34133,13 +34227,23 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (not (goal strategy-goal sg-boom-imp))
-	(up-research-status c: imperial-age >= research-pending))
+	(not (goal strategy-goal sg-boom-imp))
 	(can-train spearman-line)
 	(goal ca-strategy gl-castleage-siege-infantry)
 	(up-research-status c: ri-pikeman >= research-pending)
+	(or (unit-type-count-total spearman-line < 20)
+	(unit-type-count-total mangonel-line >= 4))
 =>
 	(train spearman-line)
+)
+
+(defrule
+	(current-age >= castle-age)
+	(not (goal strategy-goal sg-boom-imp))
+	(can-research ri-pikeman)
+	(goal ca-strategy gl-castleage-siege-infantry)
+=>
+	(research ri-pikeman)
 )
 
 (defrule
@@ -41980,7 +42084,7 @@
 =>
 	(tribute-to-player this-any-ally food 100)
 	(chat-to-player-using-id this-any-ally 22077)
-	(chat-local-to-self "Tribute extra resources to an ally.")
+	(chat-local-to-self "Tribute food to an ally.")
 )
 
 (defrule
@@ -41993,7 +42097,7 @@
 =>
 	(tribute-to-player this-any-ally food 500)
 	(chat-to-player-using-id this-any-ally 22077)
-	(chat-local-to-self "Tribute extra resources to an ally.")
+	(chat-local-to-self "Tribute food to an ally.")
 )
 
 (defrule
@@ -42005,7 +42109,7 @@
 =>
 	(tribute-to-player this-any-ally food 1000)
 	(chat-to-player-using-id this-any-ally 22077)
-	(chat-local-to-self "Tribute extra resources to an ally.")
+	(chat-local-to-self "Tribute food to an ally.")
 )
 
 (defrule
@@ -42019,7 +42123,7 @@
 =>
 	(tribute-to-player this-any-ally wood 100)
 	(chat-to-player-using-id this-any-ally 22076)
-	(chat-local-to-self "Tribute extra resources to an ally.")
+	(chat-local-to-self "Tribute wood to an ally.")
 )
 
 (defrule
@@ -42032,7 +42136,7 @@
 =>
 	(tribute-to-player this-any-ally wood 500)
 	(chat-to-player-using-id this-any-ally 22076)
-	(chat-local-to-self "Tribute extra resources to an ally.")
+	(chat-local-to-self "Tribute wood to an ally.")
 )
 
 (defrule
@@ -42044,7 +42148,7 @@
 =>
 	(tribute-to-player this-any-ally wood 1000)
 	(chat-to-player-using-id this-any-ally 22076)
-	(chat-local-to-self "Tribute extra resources to an ally.")
+	(chat-local-to-self "Tribute wood to an ally.")
 )
 
 (defrule
@@ -42058,7 +42162,7 @@
 =>
 	(tribute-to-player this-any-ally gold 100)
 	(chat-to-player-using-id this-any-ally 22078)
-	(chat-local-to-self "Tribute extra resources to an ally.")
+	(chat-local-to-self "Tribute gold to an ally.")
 )
 
 (defrule
@@ -42071,7 +42175,7 @@
 =>
 	(tribute-to-player this-any-ally gold 500)
 	(chat-to-player-using-id this-any-ally 22078)
-	(chat-local-to-self "Tribute extra resources to an ally.")
+	(chat-local-to-self "Tribute gold to an ally.")
 )
 
 (defrule
@@ -42083,7 +42187,7 @@
 =>
 	(tribute-to-player this-any-ally gold 1000)
 	(chat-to-player-using-id this-any-ally 22078)
-	(chat-local-to-self "Tribute extra resources to an ally.")
+	(chat-local-to-self "Tribute gold to an ally.")
 )
 
 (defrule
@@ -42097,7 +42201,7 @@
 =>
 	(tribute-to-player this-any-ally stone 100)
 	(chat-to-player-using-id this-any-ally 22079)
-	(chat-local-to-self "Tribute extra resources to an ally.")
+	(chat-local-to-self "Tribute stone to an ally.")
 )
 
 (defrule
@@ -42110,8 +42214,9 @@
 =>
 	(tribute-to-player this-any-ally stone 500)
 	(chat-to-player-using-id this-any-ally 22079)
-	(chat-local-to-self "Tribute extra resources to an ally.")
+	(chat-local-to-self "Tribute stone to an ally.")
 )
+
 (defrule
 	(taunt-detected any-ally 38)
 	(building-type-count-total town-center > 0)
@@ -42121,7 +42226,59 @@
 =>
 	(tribute-to-player this-any-ally stone 1000)
 	(chat-to-player-using-id this-any-ally 22079)
-	(chat-local-to-self "Tribute extra resources to an ally.")
+	(chat-local-to-self "Tribute stone to an ally.")
+)
+
+(defrule
+	(taunt-detected any-ally 240)
+	(up-compare-goal gl-military-advantage >= 0)
+	(building-type-count market > 0)
+	(current-age >= castle-age)
+=>
+	(acknowledge-taunt every-ally 240)
+	(tribute-to-player this-any-ally wood 1000)
+	(tribute-to-player this-any-ally stone 1000)
+	(chat-to-player-using-id this-any-ally 22076)
+	(chat-local-to-self "Tribute wood to an ally.")
+)
+
+(defrule
+	(taunt-detected any-ally 241)
+	(up-compare-goal gl-military-advantage >= 0)
+	(building-type-count market > 0)
+	(current-age >= castle-age)
+=>
+	(acknowledge-taunt every-ally 241)
+	(tribute-to-player this-any-ally wood 1000)
+	(tribute-to-player this-any-ally stone 1000)
+	(chat-to-player-using-id this-any-ally 22079)
+	(chat-local-to-self "Tribute stone to an ally.")
+)
+
+(defrule
+	(taunt-detected any-ally 242)
+	(up-compare-goal gl-military-advantage >= 0)
+	(building-type-count market > 0)
+	(current-age >= castle-age)
+	(food-amount >= 500)
+=>
+	(acknowledge-taunt every-ally 242)
+	(tribute-to-player this-any-ally food 100)
+	(chat-to-player-using-id this-any-ally 22077)
+	(chat-local-to-self "Tribute food to an ally.")
+)
+
+(defrule
+	(taunt-detected any-ally 242)
+	(up-compare-goal gl-military-advantage >= 0)
+	(building-type-count market > 0)
+	(current-age >= castle-age)
+	(food-amount >= 1000)
+=>
+	(acknowledge-taunt every-ally 242)
+	(tribute-to-player this-any-ally food 500)
+	(chat-to-player-using-id this-any-ally 22077)
+	(chat-local-to-self "Tribute food to an ally.")
 )
 
 
@@ -42251,8 +42408,8 @@
 	(timer-triggered 10)
 =>
 	(disable-timer 10)
-	(chat-to-allies "4");wood
-	(enable-timer 10 30)
+	(chat-to-allies "240 I need wood for a TC")
+	(enable-timer 10 15)
 )
 
 (defrule
@@ -42262,10 +42419,20 @@
 	(timer-triggered 10)
 =>
 	(disable-timer 10)
-	(chat-to-allies "6");stone
-	(enable-timer 10 30)
+	(chat-to-allies "241 I need stone for a TC")
+	(enable-timer 10 15)
 )
 
+(defrule
+	(civilian-population < 50)
+	(game-time > 2100)
+	(food-amount < 100)
+	(timer-triggered 10)
+=>
+	(disable-timer 10)
+	(chat-to-allies "242 I need some food to reboom")
+	(enable-timer 10 60)
+)
 ;endregion
 
 ;region Requesting help when under attack and sending reinforcements
@@ -42281,6 +42448,39 @@
  
 ;requesting help 
  
+(defrule
+	(or (not (town-under-attack))
+	(up-enemy-units-in-town < 8))
+=>
+	(up-jump-rule 10)
+)	
+ 
+(defrule
+	(true)
+=>
+	(set-strategic-number sn-focus-player-number 1)
+)
+
+(defrule
+	(true)
+=>
+	(up-get-rule-id gl-player-loop-rule-id)
+)
+
+(defrule
+	(up-compare-sn sn-focus-player-number >= 9) 
+=>
+	(up-jump-rule 1)
+)
+
+(defrule
+	(not (stance-toward focus-player enemy))
+	(up-compare-goal gl-player-loop-rule-id != -1)
+=>
+	(up-modify-sn sn-focus-player-number c:+ 1) 
+	(up-jump-direct g: gl-player-loop-rule-id)
+)
+
 (defrule
 	(current-age == feudal-age)
 	(timer-triggered 11)
@@ -42343,6 +42543,27 @@
 	(chat-to-allies "48")
 	(enable-timer 11 120)
 )
+
+(defrule
+	(not (timer-triggered 11))
+=>
+	(up-jump-rule 1)
+)
+
+(defrule
+	(up-compare-sn sn-focus-player-number < 8)
+	(up-compare-goal gl-player-loop-rule-id != -1)
+=>
+	(up-modify-sn sn-focus-player-number c:+ 1) 
+	(up-jump-direct g: gl-player-loop-rule-id)
+)
+
+(defrule
+	(up-compare-sn sn-focus-player-number >= 8)
+=>
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number) 
+)
+
 
 ;sending units to ally to help
 
@@ -45124,7 +45345,7 @@
 	(timer-triggered t-eco-timer)
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
-	(food-amount > 500)
+	(food-amount > 400)
 	(wood-amount < 50)
 	(goal gl-food-saving 0)
 	(building-type-count town-center < 2)
@@ -45138,7 +45359,7 @@
 	(timer-triggered t-eco-timer)
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
-	(food-amount > 500)
+	(food-amount > 400)
 	(gold-amount < 50)
 	(goal gl-food-saving 0)
 	(building-type-count town-center < 2)
@@ -45178,10 +45399,10 @@
 	(timer-triggered t-eco-timer)
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
-	(gold-amount > 500)
+	(gold-amount > 400)
 	(food-amount < 50)
 	(goal gl-gold-saving 0)
-	(up-compare-sn sn-gold-gatherer-percentage c:> 10)
+	(up-compare-sn sn-gold-gatherer-percentage c:> 20)
 =>	(up-modify-sn sn-gold-gatherer-percentage c:- 5)
 	(up-modify-sn sn-food-gatherer-percentage c:+ 5)
 	;(chat-to-player my-player-number "Balancing eco from gold to food")
@@ -45191,10 +45412,10 @@
 	(timer-triggered t-eco-timer)
 	(current-age >= castle-age)
 	;(up-research-status c: imperial-age != research-pending)
-	(gold-amount > 500)
+	(gold-amount > 400)
 	(wood-amount < 50)
 	(goal gl-gold-saving 0)
-	(up-compare-sn sn-gold-gatherer-percentage c:> 10)
+	(up-compare-sn sn-gold-gatherer-percentage c:> 20)
 =>	(up-modify-sn sn-gold-gatherer-percentage c:- 5)
 	(up-modify-sn sn-wood-gatherer-percentage c:+ 5)
 	;(chat-to-player my-player-number "Balancing eco from gold to wood")
@@ -45244,7 +45465,7 @@
 (defrule
 	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
-	(food-amount > 800)
+	(food-amount > 500)
 	(wood-amount < 200)
 	(goal gl-food-saving 0)
 	(up-compare-sn sn-food-gatherer-percentage c:> 25)
@@ -45256,7 +45477,7 @@
 (defrule
 	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
-	(food-amount > 800)
+	(food-amount > 500)
 	(gold-amount < 200)
 	(goal gl-food-saving 0)
 	(up-compare-sn sn-food-gatherer-percentage c:> 25)
@@ -45268,7 +45489,7 @@
 (defrule
 	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
-	(wood-amount > 800)
+	(wood-amount > 500)
 	(food-amount < 200)
 	(goal gl-wood-saving 0)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 25)
@@ -45280,7 +45501,7 @@
 (defrule
 	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
-	(wood-amount > 800)
+	(wood-amount > 500)
 	(gold-amount < 200)
 	(goal gl-wood-saving 0)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 25)
@@ -45292,7 +45513,7 @@
 (defrule
 	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
-	(gold-amount > 2000)
+	(gold-amount > 1000)
 	(food-amount < 500)
 	(goal gl-gold-saving 0)
 	(up-compare-sn sn-gold-gatherer-percentage c:> 15)
@@ -45304,7 +45525,7 @@
 (defrule
 	(timer-triggered t-eco-timer)
 	(current-age >= imperial-age)
-	(gold-amount > 2000)
+	(gold-amount > 1000)
 	(wood-amount < 500)
 	(goal gl-gold-saving 0)
 	(up-compare-sn sn-gold-gatherer-percentage c:> 15)
@@ -45317,7 +45538,7 @@
 (defrule
 	(timer-triggered t-eco-timer)
 	(current-age >= imperial-age)
-	(stone-amount > 2000)
+	(stone-amount > 1000)
 	(wood-amount < 500)
 	(goal gl-stone-saving 0)
 	(up-compare-sn sn-stone-gatherer-percentage c:> 12)
@@ -45329,7 +45550,7 @@
 (defrule
 	(timer-triggered t-eco-timer)
 	(current-age >= imperial-age)
-	(stone-amount > 2000)
+	(stone-amount > 1000)
 	(food-amount < 500)
 	(goal gl-stone-saving 0)
 	(up-compare-sn sn-stone-gatherer-percentage c:> 12)
@@ -45341,7 +45562,7 @@
 (defrule
 	(timer-triggered t-eco-timer)
 	(current-age >= imperial-age)
-	(stone-amount > 2000)
+	(stone-amount > 1000)
 	(gold-amount < 500)
 	(goal gl-stone-saving 0)
 	(up-compare-sn sn-stone-gatherer-percentage c:> 12)
@@ -45469,7 +45690,7 @@
 
 ;endregion
 
-;region Market =====================================================
+;region Trade =====================================================
 
 #load-if-defined UP-ALLY-IN-GAME
 
@@ -45482,7 +45703,7 @@
 	(can-train trade-cart)
     (unit-type-count trade-cart < 60)
 	(or (unit-type-count-total villager g:< c-villager-goal)
-	(up-research-status c: imperial-age == research-pending))
+	(up-research-status c: imperial-age >= research-pending))
     (game-time > 5)
 =>
     (set-strategic-number sn-preferred-trade-distance 9999)
