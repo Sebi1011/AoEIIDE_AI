@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 13th February 2023
+;last update: 14th February 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -12527,7 +12527,7 @@
 
 ;endregion
 
-;region Microing Ranged Units ======================================
+;region Ranged Units Micro =========================================
 
 ; ;======== FIRE AFTER MOVING
 ; ;fire when all units in the group are ready to fire and the target is in range
@@ -22542,7 +22542,7 @@
 	(or (current-age >= castle-age)
 	(unit-type-count-total militiaman-line >= 20))
 =>
-	(up-jump-rule 14)
+	(up-jump-rule 16)
 )
 
 (defrule ;if tc is garrisoned, jump next code section
@@ -22561,12 +22561,12 @@
 =>
 	(up-reset-group c: 0)
 	(up-modify-group-flag 0 c: 0)
-	(up-full-reset-search)
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)
 	(up-set-target-point enemy-point-x)
 	(up-filter-distance c: -1 c: 9) ;distance from which units shall retreat
 	(up-filter-include cmdid-military -1 -1 -1)
-	(up-filter-exclude -1 -1 -1 siege-weapon-class)
-	(up-filter-exclude -1 -1 -1 armored-elephant-line)
 	(up-find-local c: -1 c: 40)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == battering-ram)
@@ -22592,7 +22592,9 @@
 	;(up-set-target-object search-local c: 0)
 	(up-group-size c: 0 > 0)
 =>
-	(up-full-reset-search)
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)
 	(up-set-group search-local c: 0)
 	(up-remove-objects search-local object-data-index != 0)
 	(up-set-target-object search-local c: 0)
@@ -22610,7 +22612,9 @@
 (defrule
 	(goal split-rule-goal 48)
 =>	
-	(up-full-reset-search)
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)
 	(up-add-object-by-id search-local g: gl-curr-unit-id) 
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	(enable-timer split-stance-timer 2)
@@ -22660,7 +22664,9 @@
 =>
 	(up-reset-group c: 0)
 	(up-modify-group-flag 0 c: 0)
-	(up-full-reset-search)
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)
 	(up-set-target-point enemy-point-x)
 	(up-filter-distance c: -1 c: 10)
 	(up-filter-include cmdid-military -1 -1 -1)
@@ -22692,7 +22698,9 @@
 	;(up-set-target-object search-local c: 0)
 	(up-group-size c: 0 > 0)
 =>
-	(up-full-reset-search)
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)
 	(up-set-group search-local c: 0)
 	(up-remove-objects search-local object-data-index != 0)
 	(up-set-target-object search-local c: 0)
@@ -22710,7 +22718,9 @@
 (defrule
 	(goal split-rule-goal 50)
 =>	
-	(up-full-reset-search)
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)
 	(up-add-object-by-id search-local g: gl-curr-unit-id) 
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	(enable-timer split-stance-timer 2)
@@ -22754,7 +22764,7 @@
 	(or (not (goal strategy-goal sg-boom-imp))
 	(current-age < imperial-age))
 =>	
-	(up-jump-rule 11)
+	(up-jump-rule 8)
 )
 	
 (defrule ;if tc is garrisoned, jump next code section
@@ -26183,6 +26193,18 @@
 =>
 	;(chat-local-to-self "Forced drop")
 	(up-drop-resources food c: 4)
+)
+
+(defrule ;drop wood for a house in dark-age when drushing
+	(current-age == dark-age)
+	(building-type-count-total barracks >= 1)
+	(population >= 20)
+	(population <= 25)
+	(up-research-status c: feudal-age != research-pending)
+	(wood-amount < 25)
+=>
+	(chat-local-to-self "Force drop wood")
+	(up-drop-resources wood c: 4)
 )
 
 (defrule
@@ -42324,13 +42346,46 @@
 )
 
 (defrule
+	(current-age >= feudal-age)
+	(building-type-count-total town-center == 0)
+	(wood-amount < 275)
+	(timer-triggered 10)
+=>
+	(disable-timer 10)
+	(chat-to-allies "240 I need wood for a TC")
+	(enable-timer 10 15)
+)
+
+(defrule
+	(current-age >= feudal-age)
+	(building-type-count-total town-center == 0)
+	(stone-amount < 100)
+	(timer-triggered 10)
+=>
+	(disable-timer 10)
+	(chat-to-allies "241 I need stone for a TC")
+	(enable-timer 10 15)
+)
+
+(defrule
+	(civilian-population < 50)
+	(game-time > 2100)
+	(food-amount < 100)
+	(timer-triggered 10)
+=>
+	(disable-timer 10)
+	(chat-to-allies "242 I need some food to reboom")
+	(enable-timer 10 60)
+)
+
+(defrule
 	(civilian-population == 0)
 	(building-type-count-total town-center == 0)
 	(building-type-count-total monastery == 0)
 	(unit-type-count-total monk == 0)
 	(building-type-count-total market == 0)
 =>
-	(up-jump-rule 5)
+	(up-jump-rule 6)
 )
 
 (defrule
@@ -42401,38 +42456,6 @@
 	(enable-timer 10 30)
 )
 
-(defrule
-	(current-age >= feudal-age)
-	(building-type-count-total town-center == 0)
-	(wood-amount < 275)
-	(timer-triggered 10)
-=>
-	(disable-timer 10)
-	(chat-to-allies "240 I need wood for a TC")
-	(enable-timer 10 15)
-)
-
-(defrule
-	(current-age >= feudal-age)
-	(building-type-count-total town-center == 0)
-	(stone-amount < 100)
-	(timer-triggered 10)
-=>
-	(disable-timer 10)
-	(chat-to-allies "241 I need stone for a TC")
-	(enable-timer 10 15)
-)
-
-(defrule
-	(civilian-population < 50)
-	(game-time > 2100)
-	(food-amount < 100)
-	(timer-triggered 10)
-=>
-	(disable-timer 10)
-	(chat-to-allies "242 I need some food to reboom")
-	(enable-timer 10 60)
-)
 ;endregion
 
 ;region Requesting help when under attack and sending reinforcements
