@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 14th February 2023
+;last update: 18th February 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -410,6 +410,7 @@
 (defconst sg-fastcastle-boom 62)
 (defconst relic-count 64)
 (defconst enemy-team-military-pop 65)
+(defconst gl-switch-focus-player 66)
 (defconst drush-goal 67)
 (defconst team-military-pop 68)
 (defconst gl-set-tc-garrison 69)
@@ -648,6 +649,10 @@
 (defconst scout-enemy-three-y 323)
 (defconst scout-enemy-four-x 324)
 (defconst scout-enemy-four-y 325)
+
+(defconst gl-main-enemy 330)
+(defconst main-enemy-military-pop 331)
+(defconst gl-military-advantage2 332)
 
 (defconst gl-darkage-safe 350)
 (defconst gl-feudalage-safe 351)
@@ -2177,7 +2182,7 @@
 )
 
 ;global position variable for other AIs to use in mixed teams
-;Thanks to Armelon, Bandit & TheKnightPanda for their help! :))
+;Thanks to Armelon, Bandit & TheKnightPanda for their help!
 
 #load-if-defined UP-POCKET-POSITION
 (defrule
@@ -2273,7 +2278,7 @@
 #end-if
 #end-if
 
-; ; ;playing with "pesky humans" 
+; ; ;playing with humans 
 ; #load-if-defined UP-POCKET-POSITION
 
 ; (defrule
@@ -2319,6 +2324,7 @@
 
 ; #end-if
 
+;select target player
 
 (defrule
 	(true)
@@ -2336,6 +2342,7 @@
 =>
 	(up-find-player enemy find-closest temporary-goal)
 	(up-modify-sn sn-target-player-number g:= temporary-goal)
+	(up-modify-goal gl-main-enemy g:= temporary-goal)
 )
 
 #end-if
@@ -2351,6 +2358,7 @@
 	(up-find-player enemy find-closest temporary-goal)
 	(up-find-next-player enemy find-closest temporary-goal)
 	(up-modify-sn sn-target-player-number g:= temporary-goal)
+	(up-modify-goal gl-main-enemy g:= temporary-goal)
 	(up-store-player-name target-player)
 	;(up-chat-data-to-self "I'm targeting %s" c: 7031232)
 )
@@ -2363,6 +2371,7 @@
 	(up-find-player enemy find-closest temporary-goal)
 	;(up-find-next-player enemy find-closest temporary-goal)
 	(up-modify-sn sn-target-player-number g:= temporary-goal)
+	(up-modify-goal gl-main-enemy g:= temporary-goal)
 	(up-store-player-name target-player)
 	;(up-chat-data-to-self "I'm targeting %s" c: 7031232)
 )
@@ -2419,6 +2428,19 @@
 	; (up-modify-sn sn-target-player-number g:= temporary-goal)
 ; )
 
+
+
+#load-if-not-defined UP-2-PLAYER-GAME
+(defrule
+	(up-compare-goal gl-switch-focus-player == YES)
+=>
+	(up-find-player enemy find-closest temporary-goal)
+	(up-find-next-player enemy find-closest temporary-goal)
+	(up-modify-sn sn-target-player-number g:= temporary-goal)
+	;(set-goal gl-switch-focus-player YES)
+)
+#end-if
+
 (defrule
 	(true)
 =>
@@ -2428,6 +2450,234 @@
 
 
 
+
+;endregion
+
+;region Check enemy's military population ==========================
+
+(defrule
+	(true)
+=>
+	(set-goal main-enemy-military-pop 0)
+	(set-goal enemy-military-pop 0)
+	(set-goal our-military-pop 0)
+	(set-goal team-military-pop 0)
+	;(set-goal enemy-warship-pop 0)
+	(disable-self)
+)	
+
+; (defrule ;does not work
+	; (players-military-population any-enemy >= 0)
+; =>
+	; (up-full-reset-search)
+	; (up-find-remote c: warship-class c: 200)
+	; (up-get-search-state gl-local-total)
+	; (up-modify-goal enemy-warship-pop g:= gl-remote-total)
+; )
+
+(defrule
+	(players-military-population any-enemy >= 0)
+=>
+	(up-get-player-fact this-any-enemy military-population 0 enemy-military-pop)
+)	
+
+(defrule
+	(military-population >= 0)
+=>
+	(up-get-fact military-population 0 our-military-pop)
+)
+
+(defrule
+	(civilian-population > 0)
+=>
+	(up-get-fact civilian-population 0 civilian-pop) 
+)	
+
+#load-if-defined UP-2-PLAYER-TEAM
+#load-if-defined UP-ALLY-IN-GAME
+#load-if-defined UP-MULTIPLE-ENEMIES
+
+(defrule
+	(true)
+=>
+	(up-get-fact-sum any-ally military-population 0 team-military-pop)
+)
+
+(defrule
+	(true)
+=>
+	(up-get-fact-sum any-enemy military-population 0 enemy-team-military-pop)
+)
+
+
+#end-if
+#end-if
+#end-if
+
+
+
+; (defrule
+	; (unit-type-count villager > 0)
+; =>
+	; (up-get-fact population 0 villager-pop) 
+; )
+
+; (defrule
+	; (true)
+; =>
+	; (up-get-fact civilization 0 my-civ) 
+	; (up-chat-data-to-player my-player-number "My civ is %d" g: my-civ)
+	; (disable-self)
+; )
+
+(defrule
+	(true)
+=>
+	;(up-chat-data-to-self "Our Military: %d" g: our-military-pop)
+	;(up-chat-data-to-self "Enemy Military: %d" g: enemy-military-pop)
+	(up-modify-goal gl-military-advantage g:= our-military-pop)
+	(up-modify-goal gl-military-advantage g:- enemy-military-pop)
+	;(up-chat-data-to-self "advantage: %d" g: gl-military-advantage)
+)
+
+(defrule
+	(timer-triggered t-3-sec)
+=>
+	;(up-chat-data-to-self "Our Military: %d" g: our-military-pop)
+	;(up-chat-data-to-self "Enemy Military: %d" g: enemy-military-pop)
+	(up-modify-goal gl-team-military-advantage g:= team-military-pop)
+	(up-modify-goal gl-team-military-advantage g:- enemy-team-military-pop)
+	;(up-chat-data-to-self "advantage: %d" g: gl-military-advantage)
+)
+
+#load-if-not-defined UP-2-PLAYER-GAME
+
+;todo 2nd military advantage comparator
+
+(defrule
+	(up-compare-goal gl-switch-focus-player == YES)
+=>
+	(up-modify-sn sn-focus-player-number g:= gl-main-enemy)
+)
+
+(defrule
+	(players-military-population any-enemy >= 0)
+	(up-compare-goal gl-switch-focus-player == YES)
+=>
+	(up-get-player-fact focus-player military-population 0 main-enemy-military-pop)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+)	
+
+(defrule
+	(true)
+=>
+	;(up-chat-data-to-self "Our Military: %d" g: our-military-pop)
+	;(up-chat-data-to-self "Enemy Military: %d" g: enemy-military-pop)
+	(up-modify-goal gl-military-advantage2 g:= our-military-pop)
+	(up-modify-goal gl-military-advantage2 g:- main-enemy-military-pop)
+	;(up-chat-data-to-self "advantage: %d" g: gl-military-advantage)
+)
+
+(defrule
+	(or (and (current-age < castle-age)
+	(up-compare-goal gl-military-advantage2 < 8))
+	(and (current-age >= castle-age)
+	(up-compare-goal gl-military-advantage2 < 15)))
+	(up-compare-goal gl-switch-focus-player == YES)
+=>
+	(up-find-player enemy find-closest temporary-goal)
+	;(up-find-next-player enemy find-closest temporary-goal)
+	(up-modify-sn sn-target-player-number g:= temporary-goal)
+	(set-goal gl-switch-focus-player NO)
+	(up-reset-attack-now)
+	(up-chat-data-to-player my-player-number "Switch back to focus-player %d" s: sn-target-player-number)
+)
+
+(defrule
+	(or (and (current-age < castle-age)
+	(up-compare-goal gl-military-advantage2 >= 16))
+	(and (current-age >= castle-age)
+	(up-compare-goal gl-military-advantage2 >= 30)))
+	(up-compare-goal gl-switch-focus-player != YES)
+=>
+	(up-find-player enemy find-closest temporary-goal)
+	(up-find-next-player enemy find-closest temporary-goal)
+	(up-modify-sn sn-target-player-number g:= temporary-goal)
+	(set-goal gl-switch-focus-player YES)
+	(up-reset-attack-now)
+	(up-chat-data-to-player my-player-number "Current target player is far behind, targeting player %d" s: sn-target-player-number)
+)
+
+(defrule
+	(true)
+=>
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	(up-store-player-name focus-player)
+)
+
+#end-if
+
+(defrule
+	(up-compare-goal gl-strategic-position != 0)
+=>
+	(set-goal gl-strategic-position 0)
+	(disable-self)
+)
+
+(defrule
+	(current-age >= castle-age)
+	(up-compare-goal gl-strategic-position != -2)
+	(up-compare-goal gl-military-advantage <= -30)
+	(military-population < 15)
+=>
+	(set-goal gl-strategic-position -2)
+	(up-modify-sn sn-camp-max-distance c:= 18)
+	(up-modify-sn sn-maximum-town-size c:= 18)
+	(chat-local-to-self "Switching to very defensive behaviour")
+	(chat-to-allies "I will go full defense now.")
+	(up-chat-data-to-self "Town-Size: %d " s: sn-maximum-town-size)
+)
+
+(defrule
+	(current-age >= castle-age)
+	(up-compare-goal gl-strategic-position != -1)
+	(up-compare-goal gl-military-advantage > -25)
+	(up-compare-goal gl-military-advantage <= -15)
+	(military-population < 15)
+=>
+	(set-goal gl-strategic-position -1)
+	(up-modify-sn sn-camp-max-distance c:= 30)
+	(up-modify-sn sn-maximum-town-size c:= 30)
+	(chat-local-to-self "Switching to defensive behaviour")
+	(chat-to-allies "I will play standard defense now.")
+	(up-chat-data-to-self "Town-Size: %d " s: sn-maximum-town-size)
+)
+
+(defrule
+	(current-age >= castle-age)
+	(up-compare-goal gl-strategic-position != 0)
+	(up-compare-goal gl-military-advantage >= -5)
+	(up-compare-goal gl-military-advantage <= 5)
+=>
+	(set-goal gl-strategic-position 0)
+	(up-modify-sn sn-camp-max-distance g:= gl-standard-townsize)
+	(up-modify-sn sn-maximum-town-size g:= gl-standard-townsize)
+	(chat-local-to-self "Switching to standard behaviour")
+	(up-chat-data-to-self "Town-Size: %d " s: sn-maximum-town-size)
+)
+
+(defrule
+	(current-age >= castle-age)
+	(up-compare-goal gl-strategic-position != 1)
+	(up-compare-goal gl-military-advantage >= 15)
+	(military-population >= 15)
+=>
+	(set-goal gl-strategic-position 1)
+	(up-modify-sn sn-camp-max-distance c:+ 20)
+	(up-modify-sn sn-maximum-town-size c:+ 20)
+	(chat-local-to-self "Switching to offensive behaviour")
+	(chat-to-allies "I will play more aggressive now.")
+)
 
 ;endregion
 
@@ -3289,167 +3539,6 @@
 ;endregion
 
 #end-if
-
-;endregion
-
-;region Check enemy's military population ==========================
-
-(defrule
-	(true)
-=>
-	(set-goal enemy-military-pop 0)
-	(set-goal our-military-pop 0)
-	(set-goal team-military-pop 0)
-	;(set-goal enemy-warship-pop 0)
-	(disable-self)
-)	
-
-; (defrule ;does not work
-	; (players-military-population any-enemy >= 0)
-; =>
-	; (up-full-reset-search)
-	; (up-find-remote c: warship-class c: 200)
-	; (up-get-search-state gl-local-total)
-	; (up-modify-goal enemy-warship-pop g:= gl-remote-total)
-; )
-
-(defrule
-	(players-military-population any-enemy >= 0)
-=>
-	(up-get-player-fact this-any-enemy military-population 0 enemy-military-pop)
-)	
-
-(defrule
-	(military-population >= 0)
-=>
-	(up-get-fact military-population 0 our-military-pop)
-)
-
-(defrule
-	(civilian-population > 0)
-=>
-	(up-get-fact civilian-population 0 civilian-pop) 
-)	
-
-#load-if-defined UP-2-PLAYER-TEAM
-#load-if-defined UP-ALLY-IN-GAME
-#load-if-defined UP-MULTIPLE-ENEMIES
-
-(defrule
-	(true)
-=>
-	(up-get-fact-sum any-ally military-population 0 team-military-pop)
-)
-
-(defrule
-	(true)
-=>
-	(up-get-fact-sum any-enemy military-population 0 enemy-team-military-pop)
-)
-
-
-#end-if
-#end-if
-#end-if
-
-
-
-; (defrule
-	; (unit-type-count villager > 0)
-; =>
-	; (up-get-fact population 0 villager-pop) 
-; )
-
-; (defrule
-	; (true)
-; =>
-	; (up-get-fact civilization 0 my-civ) 
-	; (up-chat-data-to-player my-player-number "My civ is %d" g: my-civ)
-	; (disable-self)
-; )
-
-(defrule
-	(true)
-=>
-	;(up-chat-data-to-self "Our Military: %d" g: our-military-pop)
-	;(up-chat-data-to-self "Enemy Military: %d" g: enemy-military-pop)
-	(up-modify-goal gl-military-advantage g:= our-military-pop)
-	(up-modify-goal gl-military-advantage g:- enemy-military-pop)
-	;(up-chat-data-to-self "advantage: %d" g: gl-military-advantage)
-)
-
-(defrule
-	(timer-triggered t-3-sec)
-=>
-	;(up-chat-data-to-self "Our Military: %d" g: our-military-pop)
-	;(up-chat-data-to-self "Enemy Military: %d" g: enemy-military-pop)
-	(up-modify-goal gl-team-military-advantage g:= team-military-pop)
-	(up-modify-goal gl-team-military-advantage g:- enemy-team-military-pop)
-	;(up-chat-data-to-self "advantage: %d" g: gl-military-advantage)
-)
-
-(defrule
-	(up-compare-goal gl-strategic-position != 0)
-=>
-	(set-goal gl-strategic-position 0)
-	(disable-self)
-)
-
-(defrule
-	(current-age >= castle-age)
-	(up-compare-goal gl-strategic-position != -2)
-	(up-compare-goal gl-military-advantage <= -30)
-	(military-population < 15)
-=>
-	(set-goal gl-strategic-position -2)
-	(up-modify-sn sn-camp-max-distance c:= 18)
-	(up-modify-sn sn-maximum-town-size c:= 18)
-	(chat-local-to-self "Switching to very defensive behaviour")
-	(chat-to-allies "I will go full defense now.")
-	(up-chat-data-to-self "Town-Size: %d " s: sn-maximum-town-size)
-)
-
-(defrule
-	(current-age >= castle-age)
-	(up-compare-goal gl-strategic-position != -1)
-	(up-compare-goal gl-military-advantage > -25)
-	(up-compare-goal gl-military-advantage <= -15)
-	(military-population < 15)
-=>
-	(set-goal gl-strategic-position -1)
-	(up-modify-sn sn-camp-max-distance c:= 30)
-	(up-modify-sn sn-maximum-town-size c:= 30)
-	(chat-local-to-self "Switching to defensive behaviour")
-	(chat-to-allies "I will play standard defense now.")
-	(up-chat-data-to-self "Town-Size: %d " s: sn-maximum-town-size)
-)
-
-(defrule
-	(current-age >= castle-age)
-	(up-compare-goal gl-strategic-position != 0)
-	(up-compare-goal gl-military-advantage >= -5)
-	(up-compare-goal gl-military-advantage <= 5)
-=>
-	(set-goal gl-strategic-position 0)
-	(up-modify-sn sn-camp-max-distance g:= gl-standard-townsize)
-	(up-modify-sn sn-maximum-town-size g:= gl-standard-townsize)
-	(chat-local-to-self "Switching to standard behaviour")
-	(up-chat-data-to-self "Town-Size: %d " s: sn-maximum-town-size)
-)
-
-(defrule
-	(current-age >= castle-age)
-	(up-compare-goal gl-strategic-position != 1)
-	(up-compare-goal gl-military-advantage >= 15)
-	(military-population >= 15)
-=>
-	(set-goal gl-strategic-position 1)
-	(up-modify-sn sn-camp-max-distance c:+ 20)
-	(up-modify-sn sn-maximum-town-size c:+ 20)
-	(chat-local-to-self "Switching to offensive behaviour")
-	(chat-to-allies "I will play more aggressive now.")
-)
-
 
 ;endregion
 
@@ -7952,7 +8041,7 @@
 
 (defrule
 	(up-compare-goal strategy-goal == -1)
-	(random-number < 10)
+	(random-number < 0)
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)	
 	(set-goal d-villager-goal 26)
@@ -7965,7 +8054,7 @@
 
 (defrule
 	(up-compare-goal strategy-goal == -1)
-	(random-number >= 10)
+	(random-number >= 0)
 	(random-number < 20)
 =>
 	(set-goal strategy-goal sg-fastcastle-gu)	
@@ -7980,7 +8069,7 @@
 (defrule
 	(up-compare-goal strategy-goal == -1)
 	(random-number >= 20)
-	(random-number < 95)
+	(random-number < 100)
 =>
 	(set-goal strategy-goal sg-scoutrush)	
 	(set-goal d-villager-goal 20)
@@ -7993,7 +8082,7 @@
 
 (defrule
 	(up-compare-goal strategy-goal == -1)
-	(random-number >= 95)
+	(random-number >= 1000)
 =>
 	(set-goal strategy-goal sg-boom-imp)	
 	(set-goal d-villager-goal 30)
@@ -12179,6 +12268,32 @@
 
 ;region Scout Micro ================================================
 
+(defrule
+	(true)
+=>
+	(set-strategic-number sn-focus-player-number 1)
+)
+
+(defrule
+	(true)
+=>
+	(up-get-rule-id gl-player-loop-rule-id)
+)
+
+(defrule
+	(up-compare-sn sn-focus-player-number >= 9) 
+=>
+	(up-jump-rule 1)
+)
+
+(defrule
+	(not (stance-toward focus-player enemy))
+	(up-compare-goal gl-player-loop-rule-id != -1)
+=>
+	(up-modify-sn sn-focus-player-number c:+ 1) 
+	(up-jump-direct g: gl-player-loop-rule-id)
+)
+
 #load-if-defined ARENA-MAP
 
 (defrule
@@ -12526,6 +12641,106 @@
 )
 
 ;endregion
+
+;region Spearman Micro =============================================
+
+(defrule
+	(unit-type-count-total spearman-line > 0)
+	(current-age < castle-age)
+=>
+	(up-full-reset-search)
+	(up-reset-group c: 0)
+	(up-modify-group-flag 0 c: 0)
+	(up-find-local c: spearman-line c: 10)
+	(up-get-search-state gl-local-total)
+	(up-modify-goal gl-number-scouts g:= gl-local-total)
+	(up-create-group 0 0 c: 0)
+	(up-modify-group-flag 1 c: 0)
+)
+
+(defrule
+	(up-group-size c: 0 > 0)
+	(unit-type-count-total spearman-line > 0)
+	(current-age < castle-age)
+=>
+	(up-get-rule-id gl-rule-jump-id)
+)
+
+(defrule
+	(unit-type-count-total spearman-line > 0)
+	(current-age < castle-age)
+	(up-group-size c: 0 > 0)
+=>
+	(up-full-reset-search)
+	(up-set-group search-local c: 0)
+	(up-remove-objects search-local object-data-index != 0)
+	(up-set-target-object search-local c: 0)
+	(up-get-object-data object-data-id gl-curr-unit-id)
+	(up-get-point position-object gl-scout-x)
+	(up-set-target-point gl-scout-x)
+	(up-filter-distance c: -1 c: 3)	
+	(up-find-remote c: scout-cavalry-class c: 5)
+	(up-find-remote c: cavalry-class c: 5)
+	(up-find-remote c: camel-scout c: 5)
+	(up-clean-search search-remote object-data-distance search-order-asc)
+	(up-remove-objects search-remote object-data-index > 0)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-player my-player-number "enemy scouts nearby: %d" g: gl-remote-total)
+)
+
+(defrule
+	(unit-type-count-total spearman-line > 0)
+	(current-age < castle-age)
+	(up-compare-goal gl-remote-total >= 1)
+	(up-set-target-object search-remote c: 0)
+=>
+	(up-reset-search 1 1 0 0) ;reset local search only
+	(up-add-object-by-id search-local g: gl-curr-unit-id) 
+	(up-target-objects 1 action-default -1 -1)
+	(up-set-group search-local c: 0)
+	(up-remove-objects search-local object-data-index == 0)
+	(up-reset-group c: 0)
+	(up-create-group 0 0 c: 0)
+	(up-modify-group-flag 1 c: 0)
+	;(chat-to-player my-player-number "Snipe enemy scout with spear")
+)
+
+(defrule
+	(up-compare-goal gl-scout-index g:>= gl-number-scouts)
+=>
+	;(up-chat-data-to-player my-player-number "curr spear: %d" g: gl-scout-index)
+	(set-goal gl-scout-index 0)
+	(up-jump-rule 1)
+)
+
+(defrule
+	(unit-type-count-total spearman-line > 0)
+	(current-age < castle-age)
+	(up-compare-goal gl-scout-index g:< gl-number-scouts)
+	(up-compare-goal gl-rule-jump-id != -1)
+	(up-group-size c: 0 > 0)
+=>
+	;(up-chat-data-to-player my-player-number "curr spear: %d" g: gl-scout-index)
+	(up-modify-goal gl-scout-index c:+ 1)
+	(up-jump-direct g: gl-rule-jump-id)
+)
+
+(defrule
+	(up-compare-sn sn-focus-player-number < 8)
+	(up-compare-goal gl-player-loop-rule-id != -1)
+=>
+	(up-modify-sn sn-focus-player-number c:+ 1) 
+	(up-jump-direct g: gl-player-loop-rule-id)
+)
+
+(defrule
+	(up-compare-sn sn-focus-player-number >= 8)
+=>
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number) 
+)
+
+;endregion
+
 
 ;region Ranged Units Micro =========================================
 
@@ -13679,89 +13894,6 @@
 
 ;endregion
 
-;region Spearman Micro =============================================
-
-(defrule
-	(unit-type-count-total spearman-line > 0)
-	(current-age < castle-age)
-=>
-	(up-full-reset-search)
-	(up-reset-group c: 0)
-	(up-modify-group-flag 0 c: 0)
-	(up-find-local c: spearman-line c: 10)
-	(up-get-search-state gl-local-total)
-	(up-modify-goal gl-number-scouts g:= gl-local-total)
-	(up-create-group 0 0 c: 0)
-	(up-modify-group-flag 1 c: 0)
-)
-
-(defrule
-	(up-group-size c: 0 > 0)
-	(unit-type-count-total spearman-line > 0)
-	(current-age < castle-age)
-=>
-	(up-get-rule-id gl-rule-jump-id)
-)
-
-(defrule
-	(unit-type-count-total spearman-line > 0)
-	(current-age < castle-age)
-	(up-group-size c: 0 > 0)
-=>
-	(up-full-reset-search)
-	(up-set-group search-local c: 0)
-	(up-remove-objects search-local object-data-index != 0)
-	(up-set-target-object search-local c: 0)
-	(up-get-object-data object-data-id gl-curr-unit-id)
-	(up-get-point position-object gl-scout-x)
-	(up-set-target-point gl-scout-x)
-	(up-filter-distance c: -1 c: 3)	
-	(up-find-remote c: scout-cavalry-line c: 5)
-	(up-find-remote c: camel-scout c: 5)
-	(up-clean-search search-remote object-data-distance search-order-asc)
-	(up-remove-objects search-remote object-data-index > 0)
-	(up-get-search-state gl-local-total)
-	;(up-chat-data-to-player my-player-number "enemy scouts nearby: %d" g: gl-remote-total)
-)
-
-(defrule
-	(unit-type-count-total spearman-line > 0)
-	(current-age < castle-age)
-	(up-compare-goal gl-remote-total >= 1)
-	(up-set-target-object search-remote c: 0)
-=>
-	(up-reset-search 1 1 0 0) ;reset local search only
-	(up-add-object-by-id search-local g: gl-curr-unit-id) 
-	(up-target-objects 1 action-default -1 -1)
-	(up-set-group search-local c: 0)
-	(up-remove-objects search-local object-data-index == 0)
-	(up-reset-group c: 0)
-	(up-create-group 0 0 c: 0)
-	(up-modify-group-flag 1 c: 0)
-	;(chat-to-player my-player-number "Snipe enemy scout with spear")
-)
-
-(defrule
-	(up-compare-goal gl-scout-index g:>= gl-number-scouts)
-=>
-	;(up-chat-data-to-player my-player-number "curr spear: %d" g: gl-scout-index)
-	(set-goal gl-scout-index 0)
-	(up-jump-rule 1)
-)
-
-(defrule
-	(unit-type-count-total spearman-line > 0)
-	(current-age < castle-age)
-	(up-compare-goal gl-scout-index g:< gl-number-scouts)
-	(up-compare-goal gl-rule-jump-id != -1)
-	(up-group-size c: 0 > 0)
-=>
-	;(up-chat-data-to-player my-player-number "curr spear: %d" g: gl-scout-index)
-	(up-modify-goal gl-scout-index c:+ 1)
-	(up-jump-direct g: gl-rule-jump-id)
-)
-
-;endregion
 
 ;region Counter Units ==============================================
 
@@ -26198,12 +26330,14 @@
 (defrule ;drop wood for a house in dark-age when drushing
 	(current-age == dark-age)
 	(building-type-count-total barracks >= 1)
+	(building-type-count-total house < 4)
+	(not (civ-selected hun))
 	(population >= 20)
 	(population <= 25)
 	(up-research-status c: feudal-age != research-pending)
 	(wood-amount < 25)
 =>
-	(chat-local-to-self "Force drop wood")
+	;(chat-local-to-self "Force drop wood")
 	(up-drop-resources wood c: 4)
 )
 
@@ -38349,7 +38483,9 @@
 (defrule
 	(current-age == castle-age)
 	(can-train battle-elephant-line)
-	(not (civ-selected dravidians))
+	;(not (civ-selected dravidians))
+	(civ-selected malay)
+	(unit-type-count-total battle-elephant-line < 6)
 	(unit-type-count knight-line < 5)
 	(civilian-population g:< c-villager-goal)
 =>
@@ -42326,7 +42462,7 @@
 (or	(taunt-detected any-ally 6)
 	(taunt-detected any-ally 38)))))
 =>
-	(chat-to-allies-using-id 22163); "39 I regret, sire, that I have nothing to spare."
+	;(chat-to-allies-using-id 22163); "39 I regret, sire, that I have nothing to spare."
 ;	(chat-to-allies-using-id 22118); "Alas, I cannot help that at this time."
 ;hm	(chat-to-player-using-id this-any-ally 22118); "Alas, I cannot help that at this time."
 	(acknowledge-taunt every-ally 3)
@@ -46276,12 +46412,104 @@
 	(players-current-age focus-player >= castle-age)
 	(or (up-compare-goal gl-military-advantage <= -20)
 	(civilian-population < 24))
+	(or (up-pending-objects c: infantry-class > 0)
+	(or (up-pending-objects c: archery-class > 0)
+	(or (up-pending-objects c: scout-cavalry-class > 0)
+	(up-pending-objects c: siege-weapon-class > 0))))
 =>
 	(up-reset-building 1 c: barracks)
 	(up-reset-building 1 c: archery-range)
 	(up-reset-building 1 c: stable)
 	(up-reset-building 1 c: siege-workshop)
 	(chat-to-player my-player-number "Cancel units")
+)
+
+(defrule
+	(nor 
+		(and (building-type-count monastery >= 1)
+		(building-type-count university >= 1))
+	(or 
+		(and (building-type-count monastery >= 1)
+		(building-type-count siege-workshop >= 1))
+	(or 
+		(and (building-type-count siege-workshop >= 1)
+		(building-type-count university >= 1))
+	(building-type-count castle >= 1))))
+=>
+	(up-jump-rule 3)
+)
+
+(defrule
+	(not (civ-selected byzantine))
+	(not (civ-selected italian))
+	(current-age == castle-age)
+	(up-research-status c: imperial-age < research-pending)
+	(or (up-pending-objects c: infantry-class > 0)
+	(or (up-pending-objects c: archery-class > 0)
+	(or (up-pending-objects c: cavalry-archer-class > 0)
+	(or (up-pending-objects c: cavalry-class > 0)
+	(or (up-pending-objects c: scout-cavalry-class > 0)
+	(or (up-pending-objects c: siege-weapon-class > 0)
+	(or (up-pending-objects c: scorpion-class > 0)
+	(up-pending-objects c: monastery-class > 0))))))))
+	(food-amount >= 850)
+	(gold-amount >= 680)
+=>
+	(up-reset-building 1 c: barracks)
+	(up-reset-building 1 c: archery-range)
+	(up-reset-building 1 c: stable)
+	(up-reset-building 1 c: siege-workshop)
+	(up-reset-building 1 c: monastery)
+	(up-reset-building 1 c: castle)
+	(chat-to-player my-player-number "Cancel units for imp")
+)
+
+(defrule
+	(civ-selected byzantine)
+	(current-age == castle-age)
+	(up-research-status c: imperial-age < research-pending)
+	(food-amount >= 565)
+	(gold-amount >= 455)
+	(or (up-pending-objects c: infantry-class > 0)
+	(or (up-pending-objects c: archery-class > 0)
+	(or (up-pending-objects c: cavalry-archer-class > 0)
+	(or (up-pending-objects c: cavalry-class > 0)
+	(or (up-pending-objects c: scout-cavalry-class > 0)
+	(or (up-pending-objects c: siege-weapon-class > 0)
+	(or (up-pending-objects c: scorpion-class > 0)
+	(up-pending-objects c: monastery-class > 0))))))))
+=>
+	(up-reset-building 1 c: barracks)
+	(up-reset-building 1 c: archery-range)
+	(up-reset-building 1 c: stable)
+	(up-reset-building 1 c: siege-workshop)
+	(up-reset-building 1 c: monastery)
+	(up-reset-building 1 c: castle)
+	(chat-to-player my-player-number "Cancel units for imp")
+)
+
+(defrule
+	(civ-selected italian)
+	(current-age == castle-age)
+	(up-research-status c: imperial-age < research-pending)
+	(food-amount >= 720)
+	(gold-amount >= 575)
+	(or (up-pending-objects c: infantry-class > 0)
+	(or (up-pending-objects c: archery-class > 0)
+	(or (up-pending-objects c: cavalry-archer-class > 0)
+	(or (up-pending-objects c: cavalry-class > 0)
+	(or (up-pending-objects c: scout-cavalry-class > 0)
+	(or (up-pending-objects c: siege-weapon-class > 0)
+	(or (up-pending-objects c: scorpion-class > 0)
+	(up-pending-objects c: monastery-class > 0))))))))
+=>
+	(up-reset-building 1 c: barracks)
+	(up-reset-building 1 c: archery-range)
+	(up-reset-building 1 c: stable)
+	(up-reset-building 1 c: siege-workshop)
+	(up-reset-building 1 c: monastery)
+	(up-reset-building 1 c: castle)
+	(chat-to-player my-player-number "Cancel units for imp")
 )
 
 ;endregion
