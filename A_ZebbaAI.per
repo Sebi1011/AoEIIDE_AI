@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 21th February 2023
+;last update: 21st February 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -386,7 +386,7 @@
 (defconst sg-towerrush 55)
 (defconst sg-fastcastle-uu 56)
 (defconst sg-drush 57)
-(defconst sg-smush 58)
+(defconst sg-defensive-feudal 58)
 (defconst sg-fastcastle-gu 59)
 (defconst sg-waterplay 60)
 (defconst sg-boom-imp 61)
@@ -1728,7 +1728,7 @@
 =>
 		(set-strategic-number sn-number-explore-groups 0)
 		(set-strategic-number sn-total-number-explorers 0)
-		(chat-to-player my-player-number "Disable standard scouting")
+		;(chat-to-player my-player-number "Disable standard scouting")
 )
 
 (defrule
@@ -1742,7 +1742,7 @@
 =>
 	(set-strategic-number sn-number-explore-groups 1)
 	(set-strategic-number sn-total-number-explorers 1)
-	(chat-to-player my-player-number "Enable standard scouting")
+	;(chat-to-player my-player-number "Enable standard scouting")
 )
 
 (defrule
@@ -1796,7 +1796,7 @@
 	(set-goal gl-min-amnt-food-sources 18)
 	(set-goal gl-layer-one-base-dist 12)
 	(set-goal gl-layer-two-base-dist 20)
-	(chat-to-player my-player-number "Playing on Yucatan")
+	;(chat-to-player my-player-number "Playing on Yucatan")
 	(disable-self)
 )
 
@@ -1809,7 +1809,7 @@
 =>
 	(set-goal gl-min-amnt-boars 1)
 	(set-goal gl-min-amnt-food-sources 9)
-	(chat-to-player my-player-number "Playing on Land Madness")
+	;(chat-to-player my-player-number "Playing on Land Madness")
 	(disable-self)
 )
 
@@ -1881,7 +1881,7 @@
 (defrule
 	(true)
 =>
-	(chat-local-to-self "Playing on Fortress")
+	;(chat-local-to-self "Playing on Fortress")
 	(disable-self)
 )
 
@@ -2519,31 +2519,16 @@
 (defrule
 	(true)
 =>
-	;(up-chat-data-to-self "Our Military: %d" g: our-military-pop)
-	;(up-chat-data-to-self "Enemy Military: %d" g: enemy-military-pop)
 	(up-modify-goal gl-military-advantage g:= our-military-pop)
 	(up-modify-goal gl-military-advantage g:- enemy-military-pop)
-	;(up-chat-data-to-self "advantage: %d" g: gl-military-advantage)
 )
 
 (defrule
 	(timer-triggered t-3-sec)
 =>
-	;(up-chat-data-to-self "Our Military: %d" g: our-military-pop)
-	;(up-chat-data-to-self "Enemy Military: %d" g: enemy-military-pop)
 	(up-modify-goal gl-team-military-advantage g:= team-military-pop)
 	(up-modify-goal gl-team-military-advantage g:- enemy-team-military-pop)
-	;(up-chat-data-to-self "advantage: %d" g: gl-military-advantage)
 )
-
-; (defrule
-	; (true)
-; =>
-	; (up-chat-data-to-self "advantage: %d" g: gl-military-advantage)
-	; (up-chat-data-to-self "advantage2: %d" g: gl-military-advantage2)
-	; (up-chat-data-to-self "target player: %d" s: sn-target-player-number)
-	; (up-chat-data-to-self "main enemy: %d" g: gl-main-enemy)
-; )
 
 #load-if-not-defined UP-2-PLAYER-GAME
 
@@ -2561,13 +2546,8 @@
 (defrule
 	(true)
 =>
-	;(up-chat-data-to-self "Our Military: %d" g: our-military-pop)
-	;(up-chat-data-to-self "Enemy Military: %d" g: enemy-military-pop)
-	;(up-chat-data-to-self "Main Enemy Military: %d" g: main-enemy-military-pop)
 	(up-modify-goal gl-military-advantage2 g:= our-military-pop)
 	(up-modify-goal gl-military-advantage2 g:- main-enemy-military-pop)
-	;(up-chat-data-to-self "advantage: %d" g: gl-military-advantage)
-	;(up-chat-data-to-self "advantage2: %d" g: gl-military-advantage2)
 )
 
 (defrule
@@ -2583,7 +2563,7 @@
 	(up-modify-sn sn-target-player-number g:= temporary-goal)
 	(set-goal gl-switch-focus-player NO)
 	(up-reset-attack-now)
-	(up-chat-data-to-player my-player-number "Switch back to focus-player %d" s: sn-target-player-number)
+	;(up-chat-data-to-player my-player-number "Switch back to focus-player %d" s: sn-target-player-number)
 )
 
 (defrule
@@ -2599,7 +2579,7 @@
 	(up-modify-sn sn-target-player-number g:= temporary-goal)
 	(set-goal gl-switch-focus-player YES)
 	(up-reset-attack-now)
-	(up-chat-data-to-player my-player-number "Current target player is far behind, targeting player %d" s: sn-target-player-number)
+	;(up-chat-data-to-player my-player-number "Current target player is far behind, targeting player %d" s: sn-target-player-number)
 )
 
 (defrule
@@ -3542,7 +3522,8 @@
 	(game-time > 20)
 	(current-age < castle-age)
 	(up-gaia-type-count c: ocean-fish-class > 0)
-	(up-gaia-type-count c: shore-fish-class > 3)
+	(or (up-gaia-type-count c: shore-fish-class > 3)
+	(up-gaia-type-count c: ocean-fish-class > 2))
 =>
 	(set-goal gl-water-on-map 1)
 	(chat-to-player my-player-number "Playing on a water-map")
@@ -3738,11 +3719,11 @@
 	(up-copy-point scout-base-four-x gl-starting-tc-x)
 	(up-modify-goal scout-base-four-x g:+ gl-layer-one-base-dist)
 	(up-modify-goal scout-base-four-y g:- gl-layer-one-base-dist)
-	; (up-send-flare scout-base-one-x)
-	; (up-send-flare scout-base-two-x)
-	; (up-send-flare scout-base-three-x)
-	; (up-send-flare scout-base-four-x)
-	(chat-to-player my-player-number "Initializing scouting points")
+	;(up-send-flare scout-base-one-x)
+	;(up-send-flare scout-base-two-x)
+	;(up-send-flare scout-base-three-x)
+	;(up-send-flare scout-base-four-x)
+	;(chat-to-player my-player-number "Initializing scouting points")
 	(disable-timer scout-base-point-timer)
 	(up-set-timer c: scout-base-point-timer c: 35)
 	(set-goal gl-curr-point 1)
@@ -3790,11 +3771,11 @@
 	(up-copy-point scout-base-four-x gl-starting-tc-x)
 	(up-modify-goal scout-base-four-x g:+ gl-layer-two-base-dist)
 	(up-modify-goal scout-base-four-y g:- gl-layer-two-base-dist)
-	; (up-send-flare scout-base-one-x)
-	; (up-send-flare scout-base-two-x)
-	; (up-send-flare scout-base-three-x)
-	; (up-send-flare scout-base-four-x)
-	(chat-to-player my-player-number "Initializing 2nd layer scouting points")
+	;(up-send-flare scout-base-one-x)
+	;(up-send-flare scout-base-two-x)
+	;(up-send-flare scout-base-three-x)
+	;(up-send-flare scout-base-four-x)
+	;(chat-to-player my-player-number "Initializing 2nd layer scouting points")
 	(set-goal gl-curr-layer-timer 37)
 	(disable-timer scout-base-point-timer)
 	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
@@ -4213,7 +4194,7 @@
 	(up-modify-goal gl-curr-point c:+ 1)
 	(disable-timer scout-base-point-timer)
 	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
-	(chat-to-player my-player-number "Current layer scouting finished")
+	;(chat-to-player my-player-number "Current layer scouting finished")
 )
 
 (defrule
@@ -4235,7 +4216,7 @@
 =>
 	(set-goal gl-scout-base NO)
 	(set-goal gl-push-deer YES)
-	(chat-to-player my-player-number "Finished scouting base, proceeding to push deer")
+	;(chat-to-player my-player-number "Finished scouting base, proceeding to push deer")
 )
 
 ;scouting the map
@@ -4703,7 +4684,7 @@
 	(up-gaia-type-count c: forage-class > 0)
 =>
 	(up-target-objects 0 action-default -1  -1)
-	(chat-local-to-self "Sending villager to berries")
+	;(chat-local-to-self "Sending villager to berries")
 )
 
 ;prevent overgathering of berries if farms are available
@@ -4751,7 +4732,7 @@
 	(up-remove-objects search-remote -1 g:>= gl-local-total) ; removes any excess idle farms
 	(up-remove-objects search-local -1 g:>= gl-remote-total) ; removes any excess foragers
 	(up-target-objects 0 action-default -1 -1) ; send idle villagers to idle farms
-	(chat-local-to-self "Sending foragers to farms")
+	;(chat-local-to-self "Sending foragers to farms")
 )
 
 ; ;task foragers to boar (not safe, needs better conditions)
@@ -7856,37 +7837,37 @@
 
 #load-if-defined ARENA-MAP
 
-; (defrule
-	; (up-compare-goal strategy-goal == -1)
-	; (random-number > 0)
-	; (random-number <= 60)
-; =>
-	; (set-goal strategy-goal sg-fastcastle-gu)	
-	; (set-goal d-villager-goal 26)
-	; (set-goal f-villager-goal 28)
-	; (set-goal c-villager-goal 100)
-	; (chat-to-player my-player-number "Going for a Fast-Castle")
-	; ;(chat-to-all "Going for a Fast-Castle")
-	; (disable-self)
-; )
-
-; (defrule
-	; (up-compare-goal strategy-goal == -1)
-	; (random-number > 60)
-	; (random-number <= 80)
-; =>
-	; (set-goal strategy-goal sg-fastcastle-uu)	
-	; (set-goal d-villager-goal 26)
-	; (set-goal f-villager-goal 28)
-	; (set-goal c-villager-goal 100)
-	; (chat-to-player my-player-number "Going for a Fast-Castle UU")
-	; ;(chat-to-all "Going for a Fast-Castle UU")
-	; (disable-self)
-; )
-
 (defrule
 	(up-compare-goal strategy-goal == -1)
 	(random-number > 0)
+	(random-number <= 60)
+=>
+	(set-goal strategy-goal sg-fastcastle-gu)	
+	(set-goal d-villager-goal 26)
+	(set-goal f-villager-goal 28)
+	(set-goal c-villager-goal 100)
+	(chat-to-player my-player-number "Going for a Fast-Castle")
+	;(chat-to-all "Going for a Fast-Castle")
+	(disable-self)
+)
+
+(defrule
+	(up-compare-goal strategy-goal == -1)
+	(random-number > 60)
+	(random-number <= 80)
+=>
+	(set-goal strategy-goal sg-fastcastle-uu)	
+	(set-goal d-villager-goal 26)
+	(set-goal f-villager-goal 28)
+	(set-goal c-villager-goal 100)
+	(chat-to-player my-player-number "Going for a Fast-Castle UU")
+	;(chat-to-all "Going for a Fast-Castle UU")
+	(disable-self)
+)
+
+(defrule
+	(up-compare-goal strategy-goal == -1)
+	(random-number > 80)
 	(random-number <= 100)
 =>
 	(set-goal strategy-goal sg-boom-imp)	
@@ -8349,7 +8330,7 @@
 	(players-unit-type-count focus-player hand-cannoneer >= 10))
 =>
 	(set-goal ca-strategy gl-castleage-rangeunit)
-	(chat-local-to-self "Switching to rangedunit")
+	(chat-local-to-self "Switching to ranged unit")
 )
 
 (defrule ;against mass maa: -> archers
@@ -8379,11 +8360,14 @@
 (defrule ;fc-uu -> boom
 	(current-age == castle-age)
 	(goal strategy-goal sg-fastcastle-uu)
-	(building-type-count castle >= 2)
+	(or (building-type-count castle >= 2)
+		(and (civ-selected bulgarians)
+		(or (building-type-count castle >= 1)
+		(building-type-count krepost >= 1))))
 =>
 	(set-goal strategy-goal sg-fastcastle-gu)
 	(set-goal sg-fastcastle-boom YES)
-	(chat-local-to-self "I have two castles, proceeding to boom")
+	(chat-local-to-self "I have my castles, proceeding to boom")
 )
 
 
@@ -8529,7 +8513,7 @@
 	(set-goal d-villager-goal 20)
 	(set-goal drush-goal 0)
 	(chat-to-allies "I see you are already going for a drush, I will go for scouts then")
-	(chat-to-player my-player-number "I see you are already going for a drush, I will go for scouts then")
+	;(chat-to-player my-player-number "I see you are already going for a drush, I will go for scouts then")
 	(disable-self)
 )
 
@@ -12305,6 +12289,7 @@
 	(up-find-local c: eagle-warrior-line c: 16)
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-number-scouts g:= gl-local-total)
+	;(up-chat-data-to-player my-player-number "nr. scouts: %d" g: gl-number-scouts)
 	(up-create-group 0 0 c: 0)
 	(up-modify-group-flag 1 c: 0)
 )
@@ -12331,7 +12316,7 @@
 	(up-get-object-data object-data-id gl-curr-unit-id)
 	(up-get-point position-object gl-scout-x)
 	(up-set-target-point gl-scout-x)
-	(up-filter-distance c: -1 c: 10)	
+	(up-filter-distance c: -1 c: 15)	
 	(up-find-remote c: monastery-class c: 5)
 	(up-find-remote c: monk-with-relic-class c: 5)
 	(up-find-remote c: warrior-priest c: 5)
@@ -12354,7 +12339,7 @@
 	(up-reset-group c: 0)
 	(up-create-group 0 0 c: 0)
 	(up-modify-group-flag 1 c: 0)
-	;(chat-local-to-self "Snipe enemy monk with scout")
+	;(chat-to-player my-player-number "Snipe enemy monk with scout")
 )
 
 ; ;scout vs scout
@@ -12457,13 +12442,14 @@
 	(up-remove-objects search-local object-data-carry != 100) ;remove monks that can't convert
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-number-monks g:= gl-local-total)
+	;(up-chat-data-to-player my-player-number "nr. monks: %d" g: gl-number-monks)
 	(up-create-group 0 0 c: 0)
 	(up-modify-group-flag 1 c: 0)
 )
 
 (defrule
 	(up-group-size c: 0 > 0)
-	(current-age < imperial-age)
+	;(current-age < imperial-age)
 	(or (unit-type-count-total monk > 0)
 	(unit-type-count-total missionary > 0))
 =>
@@ -12614,13 +12600,14 @@
 	(up-reset-group c: 0)
 	(up-create-group 0 0 c: 0)
 	(up-modify-group-flag 1 c: 0)
-	;(chat-local-to-self "Snipe enemy monk with scout")
+	;(chat-to-player my-player-number "Converting a unit")
 )
 
 (defrule
 	(up-compare-goal gl-scout-index g:>= gl-number-monks)
 =>
 	(set-goal gl-scout-index 0)
+	;(up-chat-data-to-player my-player-number "curr monk: %d" g: gl-scout-index)
 	(up-jump-rule 1)
 )
 
@@ -12633,6 +12620,7 @@
 	(up-compare-goal gl-rule-jump-id != -1)
 	(up-group-size c: 0 > 0)
 =>
+	;(up-chat-data-to-player my-player-number "curr monk: %d" g: gl-scout-index)
 	(up-modify-goal gl-scout-index c:+ 1)
 	(up-jump-direct g: gl-rule-jump-id)
 )
@@ -12651,6 +12639,7 @@
 	(up-find-local c: spearman-line c: 10)
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-number-scouts g:= gl-local-total)
+	;(up-chat-data-to-player my-player-number "nr. spears: %d" g: gl-number-scouts)
 	(up-create-group 0 0 c: 0)
 	(up-modify-group-flag 1 c: 0)
 )
@@ -15044,6 +15033,8 @@
 
 (defrule
 	(current-age >= feudal-age)
+	(or (enemy-buildings-in-town)
+	(up-compare-goal gl-military-advantage > 0))
 	(players-building-type-count focus-player watch-tower-line >= 1)
 	(can-build-with-escrow siege-workshop)
 	(building-type-count-total siege-workshop < 1)
@@ -15057,6 +15048,8 @@
 
 (defrule
 	(current-age == feudal-age)
+	(or (enemy-buildings-in-town)
+	(up-compare-goal gl-military-advantage > 0))
 	(players-building-type-count focus-player watch-tower-line >= 1)
 	(can-train-with-escrow battering-ram-line)
 	(unit-type-count-total battering-ram-line < 2)
@@ -19142,7 +19135,7 @@
 	(up-compare-goal gl-remote-total < 1)
 =>
 	(up-target-objects 1 action-delete -1 -1)
-	(chat-to-player my-player-number "Deleting misplaced mining-camp")
+	;(chat-to-player my-player-number "Deleting misplaced mining-camp")
 )
 
 ;endregion
@@ -19196,16 +19189,16 @@
 	(enable-timer 7 45)
 )
 
-(defrule
-	(timer-triggered 9)
-=>
-	(disable-timer 9)
-	(up-chat-data-to-self "Saving food for: %d" g: gl-food-saving)
-	(up-chat-data-to-self "Saving wood for: %d" g: gl-wood-saving)
-	(up-chat-data-to-self "Saving gold for: %d" g: gl-gold-saving)
-	(up-chat-data-to-self "Saving stone for: %d" g: gl-stone-saving)
-	(enable-timer 9 180)
-)
+; (defrule
+	; (timer-triggered 9)
+; =>
+	; (disable-timer 9)
+	; (up-chat-data-to-self "Saving food for: %d" g: gl-food-saving)
+	; (up-chat-data-to-self "Saving wood for: %d" g: gl-wood-saving)
+	; (up-chat-data-to-self "Saving gold for: %d" g: gl-gold-saving)
+	; (up-chat-data-to-self "Saving stone for: %d" g: gl-stone-saving)
+	; (enable-timer 9 180)
+; )
 
 (defrule
 	(goal gl-wood-saving 0)
@@ -19226,7 +19219,7 @@
 	(escrow-amount gold > 0)
 =>
 	(release-escrow gold)
-	(chat-to-player my-player-number "Release escrow gold")
+	;(chat-to-player my-player-number "Release escrow gold")
 )
 
 (defrule
@@ -19255,7 +19248,7 @@
 	(release-escrow wood)
 	(set-escrow-percentage wood 0)
 	(set-goal gl-wood-saving 0)
-	(chat-to-player my-player-number "Bugged Escrow, releasing wood")
+	;(chat-to-player my-player-number "Bugged Escrow, releasing wood")
 )	
 
 (defrule
@@ -19265,7 +19258,7 @@
 	(release-escrow food)
 	(set-escrow-percentage food 0)
 	(set-goal gl-food-saving 0)
-	(chat-to-player my-player-number "Bugged Escrow, releasing food")
+	;(chat-to-player my-player-number "Bugged Escrow, releasing food")
 )	
 
 (defrule
@@ -19275,7 +19268,7 @@
 	(release-escrow gold)
 	(set-escrow-percentage gold 0)
 	(set-goal gl-gold-saving 0)
-	(chat-to-player my-player-number "Bugged Escrow, releasing gold")
+	;(chat-to-player my-player-number "Bugged Escrow, releasing gold")
 )	
 
 (defrule
@@ -19285,7 +19278,7 @@
 	(release-escrow stone)
 	(set-escrow-percentage stone 0)
 	(set-goal gl-stone-saving 0)
-	(chat-to-player my-player-number "Bugged Escrow, releasing stone")
+	;(chat-to-player my-player-number "Bugged Escrow, releasing stone")
 )	
 
 (defrule
@@ -19295,7 +19288,7 @@
 	(release-escrow wood)
 	(set-escrow-percentage wood 0)
 	(set-goal gl-wood-saving 0)
-	(chat-to-player my-player-number "Bugged Escrow, releasing wood")
+	;(chat-to-player my-player-number "Bugged Escrow, releasing wood")
 )	
 
 (defrule
@@ -19305,7 +19298,7 @@
 	(release-escrow food)
 	(set-escrow-percentage food 0)
 	(set-goal gl-food-saving 0)
-	(chat-to-player my-player-number "Bugged Escrow, releasing food")
+	;(chat-to-player my-player-number "Bugged Escrow, releasing food")
 )	
 
 (defrule
@@ -19315,7 +19308,7 @@
 	(release-escrow gold)
 	(set-escrow-percentage gold 0)
 	(set-goal gl-gold-saving 0)
-	(chat-to-player my-player-number "Bugged Escrow, releasing gold")
+	;(chat-to-player my-player-number "Bugged Escrow, releasing gold")
 )	
 
 (defrule
@@ -19325,7 +19318,7 @@
 	(release-escrow stone)
 	(set-escrow-percentage stone 0)
 	(set-goal gl-stone-saving 0)
-	(chat-to-player my-player-number "Bugged Escrow, releasing stone")
+	;(chat-to-player my-player-number "Bugged Escrow, releasing stone")
 )	
 
 (defrule
@@ -19335,7 +19328,7 @@
 	(release-escrow wood)
 	(set-escrow-percentage wood 0)
 	(set-goal gl-wood-saving 0)
-	(chat-to-player my-player-number "Bugged Escrow, releasing wood")
+	;(chat-to-player my-player-number "Bugged Escrow, releasing wood")
 )	
 
 (defrule
@@ -19345,7 +19338,7 @@
 	(release-escrow food)
 	(set-escrow-percentage food 0)
 	(set-goal gl-food-saving 0)
-	(chat-to-player my-player-number "Bugged Escrow, releasing food")
+	;(chat-to-player my-player-number "Bugged Escrow, releasing food")
 )	
 
 (defrule
@@ -19355,7 +19348,7 @@
 	(release-escrow gold)
 	(set-escrow-percentage gold 0)
 	(set-goal gl-gold-saving 0)
-	(chat-to-player my-player-number "Bugged Escrow, releasing gold")
+	;(chat-to-player my-player-number "Bugged Escrow, releasing gold")
 )	
 
 (defrule
@@ -19365,7 +19358,7 @@
 	(release-escrow stone)
 	(set-escrow-percentage stone 0)
 	(set-goal gl-stone-saving 0)
-	(chat-to-player my-player-number "Bugged Escrow, releasing stone")
+	;(chat-to-player my-player-number "Bugged Escrow, releasing stone")
 )	
 
 (defrule
@@ -19375,7 +19368,7 @@
 	(release-escrow gold)
 	(set-escrow-percentage gold 0)
 	(set-goal gl-gold-saving 0)
-	(chat-to-player my-player-number "Bugged Escrow, releasing gold")
+	;(chat-to-player my-player-number "Bugged Escrow, releasing gold")
 )
 
 (defrule
@@ -23715,7 +23708,7 @@
 	(up-bound-point gl-militia-x gl-militia-x)	
 	(enable-timer militia-retreat-timer 2)
 	(up-target-point gl-militia-x action-move -1 stance-no-attack)
-	(chat-local-to-self "retreat with militia")
+	;(chat-local-to-self "retreat with militia")
 )
 
 (defrule
@@ -23838,7 +23831,7 @@
 	;(up-remove-objects search-local object-data-index g:!= gl-scout-index)
 	(enable-timer scout-retreat-timer 3)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
-	(chat-local-to-self "retreat with scout")
+	;(chat-local-to-self "retreat with scout")
 )
 
 (defrule
@@ -23967,7 +23960,7 @@
 	;(up-remove-objects search-local object-data-index g:!= gl-scout-index)
 	(enable-timer scout-retreat-timer 6)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
-	(chat-local-to-self "retreat with scout 2")
+	;(chat-local-to-self "retreat with scout 2")
 )
 
 (defrule
@@ -24304,7 +24297,7 @@
 	(up-find-resource c: wood c: 200)
 	(up-get-search-state gl-local-total)
 	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
-	(up-chat-data-to-player my-player-number "nr of trees: %d" g: gl-remote-total)
+	;(up-chat-data-to-player my-player-number "nr of trees: %d" g: gl-remote-total)
 )
 
 (defrule
@@ -24329,7 +24322,7 @@
 	(set-strategic-number sn-placement-fail-delta 1)
 	(up-assign-builders c: town-center-foundation c: 3)
 	(up-build place-point 0 c: town-center)
-	(chat-to-player my-player-number "Building my tc")
+	;(chat-to-player my-player-number "Building my tc")
 )
 
 (defrule
@@ -24670,7 +24663,7 @@
     (up-build-line gl-temp-x gl-temp-x c: house)
 	;(up-set-placement-data my-player-number town-center c: -10)
     ;(up-build place-control 0 c: house)
-	(chat-to-player my-player-number "Building first house")
+	;(chat-to-player my-player-number "Building first house")
 )
 
 (defrule
@@ -24686,7 +24679,7 @@
     (build house)
 	;(up-set-placement-data my-player-number town-center c: -10)
     ;(up-build place-control 0 c: house)
-	(chat-to-player my-player-number "Building first house after failed attempt")
+	;(chat-to-player my-player-number "Building first house after failed attempt")
 )
 
 
@@ -24847,7 +24840,7 @@
     (up-build-line gl-temp-x gl-temp-x c: house)
 	;(up-set-placement-data my-player-number town-center c: -10)
     ;(up-build place-control 0 c: house)
-	(chat-to-player my-player-number "Building second house")
+	;(chat-to-player my-player-number "Building second house")
 	(disable-self)
 )
 
@@ -25064,7 +25057,7 @@
 	(set-goal gl-house 0)
 	(set-goal gl-temp 0)
 	(up-assign-builders c: house c: 1)
-	(chat-to-player my-player-number "Building a house after failed attempt")
+	;(chat-to-player my-player-number "Building a house after failed attempt")
 	;(up-set-placement-data my-player-number town-center c: -10)
     ;(up-build place-control 0 c: house)
 )
@@ -25716,7 +25709,7 @@
 	(up-compare-goal gl-remote-total >= 3)
 	(can-build mill)
 =>
-	(chat-to-player my-player-number "Building early mill to garrison sheeps")
+	;(chat-to-player my-player-number "Building early mill to garrison sheeps")
 	(build mill)
 )
 
@@ -25757,7 +25750,7 @@
 	(can-build farm)
 	(idle-farm-count < 1)
 =>
-	(chat-to-player my-player-number "No food in sight - making a farm")
+	;(chat-to-player my-player-number "No food in sight - making a farm")
 	(build farm)
 )
 
@@ -25767,7 +25760,7 @@
 	(civilian-population == 14)
 =>
 	(up-retask-gatherers food c: 1)
-	(chat-to-player my-player-number "Retask 1 villager to gather gold")
+	;(chat-to-player my-player-number "Retask 1 villager to gather gold")
 	(disable-self)
 )
 
@@ -25892,7 +25885,7 @@
     (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 1")
+	;(chat-to-player my-player-number "Mining camp 1")
 )
 
 (defrule
@@ -25910,7 +25903,7 @@
     (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 2")
+	;(chat-to-player my-player-number "Mining camp 2")
 )
 
 (defrule ;mining camp is sometimes built on gold
@@ -25926,7 +25919,7 @@
 	(set-strategic-number sn-allow-adjacent-dropsites 0)
     (set-strategic-number sn-gold-dropsite-distance 400)
     (set-strategic-number sn-stone-dropsite-distance 4)
-	(chat-to-player my-player-number "Mining camp 3")
+	;(chat-to-player my-player-number "Mining camp 3")
 	(build mining-camp)
 )
 
@@ -25945,7 +25938,7 @@
     (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 4")
+	;(chat-to-player my-player-number "Mining camp 4")
 )
 
 (defrule
@@ -25962,7 +25955,7 @@
     (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 5")
+	;(chat-to-player my-player-number "Mining camp 5")
 )
 
 (defrule
@@ -25979,7 +25972,7 @@
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 6")
+	;(chat-to-player my-player-number "Mining camp 6")
 )
 
 #load-if-defined EMPIRE-WARS
@@ -25998,7 +25991,7 @@
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 7")
+	;(chat-to-player my-player-number "Mining camp 7")
 )
 
 #end-if
@@ -26019,7 +26012,7 @@
     (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 8")
+	;(chat-to-player my-player-number "Mining camp 8")
 )
 #end-if
 
@@ -26039,7 +26032,7 @@
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 9")
+	;(chat-to-player my-player-number "Mining camp 9")
 )
 
 (defrule
@@ -26060,7 +26053,7 @@
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 10")
+	;(chat-to-player my-player-number "Mining camp 10")
 )
 
 (defrule
@@ -26575,7 +26568,7 @@
 	(set-strategic-number sn-minimum-boar-hunt-group-size 1)
 	(set-strategic-number sn-minimum-number-hunters 2)
 	(set-strategic-number sn-disable-villager-garrison 0)
-	(chat-local-to-self "Disabling hunting restrictions.")
+	;(chat-local-to-self "Disabling hunting restrictions.")
 )
 ;endregion
 
@@ -26835,7 +26828,7 @@
 	(up-target-objects 0 action-garrison -1 -1)
 	(up-gather-inside c: town-center c: -1)
 	(set-goal gl-garrison-tc-two 1)
-	(chat-to-player my-player-number "No villagers to garrison, change boar hunting method")
+	;(chat-to-player my-player-number "No villagers to garrison, change boar hunting method")
 	;(chat-to-all "No villagers to garrison, change boar hunting method")
 	(enable-timer 6 8)
 )
@@ -26916,7 +26909,7 @@
 	(set-strategic-number sn-minimum-boar-hunt-group-size 1)
 	(set-strategic-number sn-minimum-number-hunters 2)
 	(set-strategic-number sn-disable-villager-garrison 0)
-	(chat-local-to-self "Disabling hunting restrictions.")
+	;(chat-local-to-self "Disabling hunting restrictions.")
 )
 
 #end-if
@@ -26969,7 +26962,7 @@
 	(up-get-point position-object deer-x)
 	;(up-set-timer c: gl-curr-deer-timer c: -1)
 	;(up-set-timer c: gl-curr-deer-timer c: 180)
-	(chat-to-player my-player-number "Found a deer")
+	;(chat-to-player my-player-number "Found a deer")
 )
 
 (defrule
@@ -26984,7 +26977,7 @@
 =>
 	(set-goal gl-push-deer NO)
 	(set-goal gl-scout-map YES)
-	(chat-to-player my-player-number "No deer found, finish deer pushing")
+	;(chat-to-player my-player-number "No deer found, finish deer pushing")
 )
 
 (defrule
@@ -27183,7 +27176,7 @@
 	(up-set-group search-local c: 4)
 	(up-set-target-by-id g: g-deer-id)
 	(up-target-objects 1 action-default -1 -1)
-	(chat-to-player my-player-number "Kill the deer")
+	;(chat-to-player my-player-number "Kill the deer")
 )
 
 (defrule
@@ -27197,7 +27190,7 @@
 =>
 	(set-goal g-deer-id -1)
 	;(up-set-timer c: gl-curr-deer-timer c: -1)
-	(chat-to-player my-player-number "Resetting deer id")
+	;(chat-to-player my-player-number "Resetting deer id")
 )
 
 ;endregion
@@ -27229,7 +27222,7 @@
 	;(enable-timer 19 5)
 	(up-send-scout group-type-land-explore scout-flank)
 	(set-goal gl-scout-map YES)
-	(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
+	;(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
 	(disable-self)
 )
 
@@ -27259,7 +27252,7 @@
 	;(enable-timer 19 5)
 	(set-goal gl-scout-map YES)
 	(up-send-scout group-type-land-explore scout-enemy)
-	(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
+	;(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
 	(disable-self)
 )
 
@@ -27315,7 +27308,7 @@
 	;(enable-timer 19 5)
 	(set-goal gl-scout-map YES)
 	(up-send-scout group-type-land-explore scout-flank)
-	(chat-to-player my-player-number "Scouting opponent")
+	;(chat-to-player my-player-number "Scouting opponent")
 	(disable-self)
 )
 
@@ -27332,7 +27325,7 @@
 	;(enable-timer 19 5)
 	(set-goal gl-scout-map YES)
 	(up-send-scout group-type-land-explore scout-enemy)
-	(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
+	;(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
 	(disable-self)
 )
 #end-if
@@ -27350,7 +27343,7 @@
 	;(enable-timer 19 5)
 	(set-goal gl-scout-map YES)
 	(up-send-scout group-type-land-explore scout-flank)
-	(chat-to-player my-player-number "Scouting opponent")
+	;(chat-to-player my-player-number "Scouting opponent")
 	(disable-self)
 )
 
@@ -27368,7 +27361,7 @@
 	;(enable-timer 19 5)
 	(set-goal gl-scout-map YES)
 	(up-send-scout group-type-land-explore scout-flank)
-	(chat-to-player my-player-number "Scouting opponent")
+	;(chat-to-player my-player-number "Scouting opponent")
 	(disable-self)
 )
 
@@ -27389,7 +27382,7 @@
 	;(enable-timer 19 5)
 	(up-send-scout group-type-land-explore scout-flank)
 	(set-goal gl-scout-map YES)
-	(chat-to-player my-player-number "Looking for enemy")
+	;(chat-to-player my-player-number "Looking for enemy")
 	(disable-self)
 )
 
@@ -27403,7 +27396,7 @@
 	;(enable-timer 19 5)
 	(up-send-scout group-type-land-explore scout-enemy)
 	(set-goal gl-scout-map YES)
-	(chat-to-player my-player-number "Scouting opponent base")
+	;(chat-to-player my-player-number "Scouting opponent base")
 	(disable-self)
 )
 #end-if
@@ -27416,7 +27409,7 @@
 	;(enable-timer 19 5)
 	(up-send-scout group-type-land-explore scout-flank)
 	(set-goal gl-scout-map YES)
-	(chat-to-player my-player-number "Scouting opponent base")
+	;(chat-to-player my-player-number "Scouting opponent base")
 	(disable-self)
 )
 #end-if
@@ -27431,7 +27424,7 @@
 	;(enable-timer 19 5)
 	(up-send-scout group-type-land-explore scout-mirror)
 	(set-goal gl-scout-map YES)
-	(chat-to-player my-player-number "Looking for enemy")
+	;(chat-to-player my-player-number "Looking for enemy")
 	(disable-self)
 )
 
@@ -27443,7 +27436,7 @@
 	;(enable-timer 19 5)
 	(up-send-scout group-type-land-explore scout-enemy)
 	(set-goal gl-scout-map YES)
-	(chat-to-player my-player-number "Scouting opponent base")
+	;(chat-to-player my-player-number "Scouting opponent base")
 	(disable-self)
 )
 #end-if
@@ -27457,7 +27450,7 @@
 	;(enable-timer 19 5)
 	(up-send-scout group-type-land-explore scout-mirror)
 	(set-goal gl-scout-map YES)
-	(chat-to-player my-player-number "Scouting opponent base")
+	;(chat-to-player my-player-number "Scouting opponent base")
 	(disable-self)
 )
 #end-if
@@ -27469,7 +27462,7 @@
 	;(enable-timer 19 5)
 	(up-send-scout group-type-land-explore scout-mirror)
 	(set-goal gl-scout-map YES)
-	(chat-to-player my-player-number "Scouting opponent base")
+	;(chat-to-player my-player-number "Scouting opponent base")
 	(disable-self)
 )
 #end-if
@@ -27484,7 +27477,7 @@
 	;(enable-timer 19 5)
 	(up-send-scout group-type-land-explore scout-flank)
 	(set-goal gl-scout-map YES)
-	(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
+	;(chat-to-player my-player-number "Scouting opponent for my upcoming attack")
 	(disable-self)
 )
 #end-if
@@ -27499,7 +27492,7 @@
 	(game-time > 5)
 =>
 	(set-goal gl-scout-map NO)
-	(chat-to-player my-player-number "Opponent scouted")
+	;(chat-to-player my-player-number "Opponent scouted")
 	(disable-self)
 )
 
@@ -27511,7 +27504,7 @@
 	(game-time > 5)
 =>
 	(set-goal gl-scout-map NO)
-	(chat-to-player my-player-number "Opponent scouted")
+	;(chat-to-player my-player-number "Opponent scouted")
 	(disable-self)
 )
 
@@ -27527,7 +27520,7 @@
 	(set-goal gl-push-deer NO)
 	(set-goal gl-scout-map YES)
 	(set-goal g-deer-id -1)
-	(chat-to-player my-player-number "Start scouting opponent, finish deer pushing")
+	;(chat-to-player my-player-number "Start scouting opponent, finish deer pushing")
 )
 
 (defrule
@@ -27544,7 +27537,7 @@
 =>
 	(set-goal gl-push-deer YES)
 	;(up-set-timer c: gl-curr-deer-timer c: 1)
-	(chat-to-player my-player-number "Opponent has been scouted, resume deer pushing")
+	;(chat-to-player my-player-number "Opponent has been scouted, resume deer pushing")
 )
 
 ;endregion
@@ -27744,7 +27737,7 @@
 	(strategic-number sn-camp-max-distance < 45)
 =>
     (up-modify-sn sn-camp-max-distance c:+ 4)
-	(up-chat-data-to-self "Camp distance: %d." s: sn-camp-max-distance)
+	;(up-chat-data-to-self "Camp distance: %d." s: sn-camp-max-distance)
     (disable-self)
 )
 			
@@ -27755,7 +27748,7 @@
 	(game-time > 5)
 =>
     (up-modify-sn sn-camp-max-distance c:+ 8)
-	(up-chat-data-to-self "Camp distance: %d." s: sn-camp-max-distance)
+	;(up-chat-data-to-self "Camp distance: %d." s: sn-camp-max-distance)
 	(disable-self)
 )
 
@@ -27766,7 +27759,7 @@
         (building-type-count-total mining-camp >= 4))
 =>
     (set-strategic-number sn-camp-max-distance HALF-MAP-SIZE)
-	(chat-local-to-self "Camp distance half of the map size.")
+	;(chat-local-to-self "Camp distance half of the map size.")
     (disable-self)
 )
 			
@@ -27777,7 +27770,7 @@
         (population >= 120))
 =>
     (set-strategic-number sn-camp-max-distance FULL-MAP-SIZE)
-	(chat-local-to-self "Camp distance full map size.")
+	;(chat-local-to-self "Camp distance full map size.")
 	(disable-self)
 )
 
@@ -27990,7 +27983,7 @@
 (defrule
 	(building-type-count-total barracks > 0)
 	(goal strategy-goal sg-drush)
-	(random-number <= 80)
+	(random-number <= 85)
 	(goal gl-house 0)
 =>
 	(set-goal strategy-goal sg-archerrush)
@@ -28046,8 +28039,8 @@
 (defrule
 	(building-type-count-total barracks > 0)
 	(goal strategy-goal sg-drush)
-	(random-number > 80)
-	(random-number <= 90)
+	(random-number > 85)
+	(random-number <= 100)
 	(goal gl-house 0)
 =>
 	(set-goal strategy-goal sg-fastcastle-gu)
@@ -28065,7 +28058,7 @@
 (defrule
 	(building-type-count-total barracks > 0)
 	(goal strategy-goal sg-drush)
-	(random-number > 90)
+	(random-number > 190)
 	(goal gl-house 0)
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)
@@ -28175,7 +28168,7 @@
 	(goal drush-goal 1)
 =>
 	(set-goal drush-goal 0)
-	(up-chat-data-to-player my-player-number "Militia count: %d - stop militia production" g: gl-drush-militia-count)
+	;(up-chat-data-to-player my-player-number "Militia count: %d - stop militia production" g: gl-drush-militia-count)
 	(disable-self)
 )
 
@@ -28739,7 +28732,7 @@
 	(civ-selected cumans)
 	(building-type-count town-center == 2)
 	(can-train villager)
-	(unit-type-count-total villager g:>= f-villager-goal)
+	;(unit-type-count-total villager g:>= f-villager-goal)
 	(up-research-status c: castle-age == research-pending)
 =>
 	(train villager)
@@ -28950,6 +28943,33 @@
 	(build farm)
 )
 
+#load-if-defined UP-POCKET-POSITION
+(defrule
+	(goal strategy-goal sg-scoutrush)
+	(goal meso-civ NO)
+	(current-age == feudal-age)
+	(civilian-population >= 20)
+	(or (building-type-count-total stable > 0)
+	(or (building-type-count-total archery-range > 0)
+	(building-type-count-total barracks > 1)))
+	(up-research-status c: ri-horse-collar >= research-pending)
+	(idle-farm-count < 1)
+	(can-build farm)
+	(or (building-type-count-total mining-camp >= 1)
+	(civilian-population < 27))
+	(up-compare-goal gl-water-on-map != 1)
+	(or (and (food-amount < 800)
+		(and (gold-amount < 200)
+		(up-research-status c: castle-age < research-pending)))
+	(or (building-type-count-total market >= 1)
+	(or (building-type-count-total farm < 8)
+	(up-research-status c: castle-age >= research-pending))))
+=>
+	(build farm)
+)
+#end-if
+
+#load-if-not-defined UP-POCKET-POSITION
 (defrule
 	(goal strategy-goal sg-scoutrush)
 	(goal meso-civ NO)
@@ -28970,11 +28990,12 @@
 		(and (gold-amount < 200)
 		(up-research-status c: castle-age < research-pending)))
 	(or (building-type-count-total market >= 1)
-	(up-research-status c: castle-age >= research-pending)))
+	(or (building-type-count-total farm < 8)
+	(up-research-status c: castle-age >= research-pending))))
 =>
 	(build farm)
 )
-
+#end-if
 (defrule
 	(goal strategy-goal sg-scoutrush)
 	(goal meso-civ NO)
@@ -30156,7 +30177,7 @@
 	(up-reset-attack-now)
 	(up-retreat-now)
 	;(up-retreat-to town-center c: -1)
-	(chat-to-allies "I can't support you any longer, I will retreat")
+	(chat-to-allies "I can't support you at the moment")
 	(up-chat-data-to-self "I'm targeting %s" c: 7031232)
 	(up-modify-sn sn-focus-player-number g:= temporary-goal)
 )
@@ -30236,7 +30257,7 @@
 	(up-build place-control 0 c: blacksmith)
 	;(build blacksmith)
 )
-
+#load-if-not-defined UP-POCKET-POSITION
 (defrule
 	(goal strategy-goal sg-scoutrush)
 	(goal meso-civ NO)
@@ -30254,6 +30275,25 @@
 	(up-build place-control 0 c: blacksmith)
 	;(build blacksmith)
 )
+#end-if
+#load-if-defined UP-POCKET-POSITION
+(defrule
+	(goal strategy-goal sg-scoutrush)
+	(goal meso-civ NO)
+	(current-age >= feudal-age)
+	(building-type-count-total blacksmith == 0)
+	(building-type-count-total stable >= 1)
+	(or (civilian-population >= 26)
+	(unit-type-count-total scout-cavalry-line >= 4))
+	(can-build blacksmith)
+=>
+	(up-set-placement-data my-player-number lumber-camp c: -2)
+	(set-strategic-number sn-placement-zone-size 5)
+	(set-strategic-number sn-placement-fail-delta 0)
+	(up-build place-control 0 c: blacksmith)
+	;(build blacksmith)
+)
+#end-if
 
 (defrule
 	(goal strategy-goal sg-scoutrush)
@@ -30335,7 +30375,7 @@
 (defrule
 	(goal strategy-goal sg-scoutrush)
 	(current-age >= feudal-age)
-	(or (wood-amount > 300)
+	(or (wood-amount > 325)
 	(civilian-population >= 34))
 	(building-type-count-total market == 0)
 	(can-build market)
@@ -30581,7 +30621,7 @@
     (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 11")
+	;(chat-to-player my-player-number "Mining camp 11")
 )
 
 (defrule
@@ -30598,7 +30638,7 @@
     (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 12")
+	;(chat-to-player my-player-number "Mining camp 12")
 )
 
 (defrule
@@ -31147,7 +31187,7 @@
 )
 
 (defrule ;when booming, prevent that AI queues villagers in working TC, leaving other TCs idle
-	(current-age >= feudal-age)
+	(current-age >= castle-age)
 	(up-compare-sn sn-enable-training-queue == 1)
 	(goal sg-fastcastle-boom YES)
 	(building-type-count-total town-center >= 2)
@@ -31157,7 +31197,7 @@
 )
 
 (defrule ;when booming, prevent that AI queues villagers in working TC, leaving other TCs idle
-	(current-age >= feudal-age)
+	(current-age >= castle-age)
 	(up-compare-sn sn-enable-training-queue == 0)
 	(goal sg-fastcastle-boom YES)
 	(building-type-count-total town-center >= 2)
@@ -31512,7 +31552,7 @@
 	(up-find-remote c: gate-class c: 3)
 	(up-clean-search search-remote object-data-distance search-order-asc)
 	(up-get-search-state gl-local-total)
-	(up-chat-data-to-self "gates found: %d" g: gl-remote-total)
+	;(up-chat-data-to-self "gates found: %d" g: gl-remote-total)
 )
 
 (defrule
@@ -31543,9 +31583,9 @@
 	; (set-strategic-number sn-placement-fail-delta 0)
 	(up-set-target-point gl-castle-drop-x)
 	;(up-build place-point 0 c: castle)
-	(up-send-flare gl-castle-drop-x)
+	;(up-send-flare gl-castle-drop-x)
 	(up-build-line gl-castle-drop-x gl-castle-drop-x c: castle)
-	(chat-to-player my-player-number "Building forward castle 1")
+	;(chat-to-player my-player-number "Building forward castle 1")
 	(set-goal gl-stone-saving 0)
 	(disable-self)
 )
@@ -31566,7 +31606,7 @@
 	(up-find-remote c: gate-class c: 3)
 	(up-clean-search search-remote object-data-distance search-order-asc)
 	(up-get-search-state gl-local-total)
-	(up-chat-data-to-self "gates found: %d" g: gl-remote-total)
+	;(up-chat-data-to-self "gates found: %d" g: gl-remote-total)
 )
 
 (defrule
@@ -31593,9 +31633,9 @@
 	; (set-strategic-number sn-placement-fail-delta 0)
 	(up-set-target-point gl-castle-drop-x)
 	;(up-build place-point 0 c: castle)
-	(up-send-flare gl-castle-drop-x)
+	;(up-send-flare gl-castle-drop-x)
 	(up-build-line gl-castle-drop-x gl-castle-drop-x c: castle)
-	(chat-to-player my-player-number "Building forward castle 2")
+	;(chat-to-player my-player-number "Building forward castle 2")
 	(disable-self)
 )
 
@@ -31611,9 +31651,9 @@
 	(not (enemy-buildings-in-town))
 =>
 	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 1)
-	(up-send-flare gl-castle-drop-x)
+	;(up-send-flare gl-castle-drop-x)
 	(up-build-line gl-castle-drop-x gl-castle-drop-x c: castle)
-	(chat-to-player my-player-number "Adjusting forward castle position")
+	;(chat-to-player my-player-number "Adjusting forward castle position")
 )
 
 #end-if
@@ -31639,7 +31679,7 @@
 	(up-clean-search search-remote object-data-distance search-order-asc)
 	(up-find-remote c: wall-class c: 40)
 	(up-get-search-state gl-local-total)
-	(up-chat-data-to-self "gates found: %d" g: gl-remote-total)
+	;(up-chat-data-to-self "gates found: %d" g: gl-remote-total)
 )
 
 (defrule
@@ -31670,7 +31710,7 @@
 	(up-set-target-point gl-castle-drop-x)
 	(up-send-flare gl-castle-drop-x)
 	(up-build-line gl-castle-drop-x gl-castle-drop-x c: castle)
-	(chat-to-player my-player-number "Building forward castle 1")
+	;(chat-to-player my-player-number "Building forward castle 1")
 	(chat-to-allies "Building forward castle")
 	(set-goal gl-stone-saving 0)
 	(disable-self)
@@ -31721,7 +31761,7 @@
 	(up-set-target-point gl-castle-drop-x)
 	(up-send-flare gl-castle-drop-x)
 	(up-build-line gl-castle-drop-x gl-castle-drop-x c: castle)
-	(chat-to-player my-player-number "Building forward castle 2")
+	;(chat-to-player my-player-number "Building forward castle 2")
 	(chat-to-allies "Building forward castle")
 	(disable-self)
 )
@@ -31741,9 +31781,9 @@
 	(not (enemy-buildings-in-town))
 =>
 	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 1)
-	(up-send-flare gl-castle-drop-x)
+	;(up-send-flare gl-castle-drop-x)
 	(up-build-line gl-castle-drop-x gl-castle-drop-x c: castle)
-	(chat-to-player my-player-number "Adjusting forward castle position")
+	;(chat-to-player my-player-number "Adjusting forward castle position")
 )
 
 (defrule
@@ -31764,7 +31804,7 @@
 	(up-set-placement-data my-player-number -1 c: 6)
     (up-build place-control with-escrow c: castle)
 	(set-goal gl-stone-saving 0)
-	(chat-to-player my-player-number "Castle drop too dangerous, will build a safe castle")
+	;(chat-to-player my-player-number "Castle drop too dangerous, will build a safe castle")
 )
 
 #end-if
@@ -31807,8 +31847,8 @@
 	(set-goal gl-wood-saving 0)
 	(set-goal gl-stone-saving 0)
 	(up-release-escrow)
-	(chat-to-player my-player-number "Castle drop finished, proceeding to go imp")
-	(chat-to-allies "Castle drop finished, proceeding to go imp")
+	;(chat-to-player my-player-number "Castle drop finished, proceeding to go imp")
+	;(chat-to-allies "Castle drop finished, proceeding to go imp")
 	(disable-self)
 )
 
@@ -31844,7 +31884,7 @@
 	(up-set-target-point gl-castle-drop-x)
 	(up-send-flare gl-castle-drop-x)
 	(up-build-line gl-castle-drop-x gl-castle-drop-x c: castle)
-	(chat-to-player my-player-number "Building follow-up castle")
+	;(chat-to-player my-player-number "Building follow-up castle")
 	(chat-to-allies "Building follow-up castle")
 	(set-goal gl-stone-saving 0)
 	(disable-self)	
@@ -31859,9 +31899,9 @@
 	(building-type-count-total town-center >= 1)
 =>
 	(up-lerp-tiles gl-castle-drop-x gl-starting-tc-x c: 1)
-	(up-send-flare gl-castle-drop-x)
+	;(up-send-flare gl-castle-drop-x)
 	(up-build-line gl-castle-drop-x gl-castle-drop-x c: castle)
-	(chat-to-player my-player-number "Adjusting follow-up castle position")
+	;(chat-to-player my-player-number "Adjusting follow-up castle position")
 )
 
 (defrule
@@ -31884,7 +31924,7 @@
 =>
 	(set-goal strategy-goal sg-fastcastle-gu)
 	(set-goal sg-fastcastle-boom YES)
-	(chat-to-player my-player-number "Castle drop didn't work out, proceeding with boom")
+	;(chat-to-player my-player-number "Castle drop didn't work out, proceeding with boom")
 )
 #end-if
 
@@ -31902,7 +31942,7 @@
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 13")
+	;(chat-to-player my-player-number "Mining camp 13")
 )
 
 (defrule
@@ -31919,7 +31959,7 @@
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 14")
+	;(chat-to-player my-player-number "Mining camp 14")
 )
 
 (defrule
@@ -33056,7 +33096,10 @@
 )
 
 (defrule
-	(goal strategy-goal sg-smush)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(building-type-count-total monastery >= 2)
+	(or (building-type-count-total barracks >= 2)
+	(building-type-count-total stable >= 1))
 	(current-age == castle-age)
 	(can-train battering-ram-line)
 	(unit-type-count-total battering-ram-line < 3)
@@ -33064,12 +33107,13 @@
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 	(military-population >= 10)
+	(not(goal strategy-goal sg-boom-imp))
 =>
 	(train battering-ram-line)
 )
 
 (defrule
-	(goal strategy-goal sg-smush)
+	(goal ca-strategy gl-castleage-siege-infantry)
 	(current-age == castle-age)
 	(can-train armored-elephant-line)
 	(unit-type-count-total armored-elephant-line < 3)
@@ -33077,6 +33121,7 @@
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 	(military-population >= 10)
+	(not(goal strategy-goal sg-boom-imp))
 =>
 	(train armored-elephant-line)
 )
@@ -33121,7 +33166,7 @@
 ; )
 
 (defrule
-	;(goal strategy-goal sg-smush)
+	;(goal ca-strategy gl-castleage-siege-infantry)
 	(current-age == castle-age)
 	(can-train mangonel-line)
 	(unit-type-count-total mangonel-line < 6)
@@ -33138,25 +33183,33 @@
 )
 
 (defrule
-	(goal strategy-goal sg-smush)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(building-type-count-total monastery >= 2)
+	(or (building-type-count-total barracks >= 2)
+	(building-type-count-total stable >= 1))
 	(current-age == castle-age)
 	(can-train mangonel-line)
 	(unit-type-count-total mangonel-line < 3)
 	(wood-amount > 75)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
+	(not(goal strategy-goal sg-boom-imp))
 =>
 	(train mangonel-line)
 )
 
 (defrule
-	(goal strategy-goal sg-smush)
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(building-type-count-total monastery >= 2)
+	(or (building-type-count-total barracks >= 2)
+	(building-type-count-total stable >= 1))
 	(current-age == castle-age)
 	(can-train scorpion-line)
 	(unit-type-count-total scorpion-line < 3)
 	(wood-amount > 75)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
+	(not(goal strategy-goal sg-boom-imp))
 =>
 	(train scorpion-line)
 )
@@ -33176,6 +33229,31 @@
 )
 
 (defrule
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(current-age == castle-age)
+	(can-build monastery)
+	(building-type-count-total monastery < 2)
+	(or (civilian-population g:< c-villager-goal)
+	(up-research-status c: imperial-age == research-pending))
+	(not(goal strategy-goal sg-boom-imp))
+=>
+	(up-assign-builders c: monastery c: 2)
+	(up-set-placement-data my-player-number -1 c: 9)
+    (up-build place-control 0 c: monastery)	
+)
+
+(defrule
+	(goal ca-strategy gl-castleage-siege-infantry)
+	(current-age == castle-age)
+	(can-train monk)
+	(or (civilian-population g:< c-villager-goal)
+	(up-research-status c: imperial-age == research-pending))
+	(not(goal strategy-goal sg-boom-imp))
+=>
+	(train monk)
+)
+
+(defrule
 	(current-age == imperial-age)
 	(can-research ri-heavy-scorpion)
 	(unit-type-count-total scorpion-line >= 1)
@@ -33184,11 +33262,12 @@
 )
 
 (defrule
-	(goal strategy-goal sg-smush)
+	(goal ca-strategy gl-castleage-siege-infantry)
 	(current-age == imperial-age)
 	(can-train scorpion-line)
 	(up-research-status c: ri-heavy-scorpion >= research-pending)
 	(unit-type-count-total scorpion-line < 5)
+	(not(goal strategy-goal sg-boom-imp))
 =>
 	(train scorpion-line)
 )
@@ -34426,7 +34505,6 @@
 (defrule
 	(current-age == castle-age)
 	(can-train militiaman-line)
-	(goal ca-strategy gl-castleage-siege-infantry)
 	(up-research-status c: ri-long-swordsman >= research-pending)
 	(not (goal strategy-goal sg-boom-imp))
 	(or (civ-selected gothic)
@@ -34437,7 +34515,6 @@
 
 (defrule
 	(current-age == imperial-age)
-	(goal ca-strategy gl-castleage-siege-infantry)
 	(can-research ri-two-handed-swordsman)
 =>
 	(research ri-two-handed-swordsman)
@@ -34446,7 +34523,6 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train militiaman-line)
-	(goal ca-strategy gl-castleage-siege-infantry)
 	(or (and (up-research-status c: ri-two-handed-swordsman >= research-pending)
 		(or (civ-selected bulgarians)
 		(civ-selected malay)))
@@ -34458,11 +34534,12 @@
 (defrule
 	(current-age == castle-age)
 	(not (goal strategy-goal sg-boom-imp))
-	(can-train spearman-line)
 	(goal ca-strategy gl-castleage-siege-infantry)
+	(can-train spearman-line)
 	(up-research-status c: ri-pikeman >= research-pending)
-	(or (unit-type-count-total spearman-line < 20)
-	(unit-type-count-total mangonel-line >= 4))
+	(or (unit-type-count-total spearman-line < 10)
+	(and (unit-type-count-total mangonel-line >= 2)
+	(unit-type-count-total monk >= 4)))
 =>
 	(train spearman-line)
 )
@@ -34572,6 +34649,15 @@
 ; )
 ; #end-if
 
+(defrule
+	(unit-type-count-total scorpion-line > 5)
+	(civ-selected romans)
+	(can-research-with-escrow ri-ballistics)
+=>
+	(up-modify-escrow wood c:- 300)
+	(up-modify-escrow gold c:- 175)
+	(research ri-ballistics)
+)
 
 (defrule
 	(can-research ri-fletching)
@@ -37593,7 +37679,7 @@
 =>
 	(set-goal gl-fastimp-unit fi-condottieros)
 	(chat-to-player my-player-number "Condottieros available, I'll play those instead")
-	(chat-to-allies "Condottieros available, I'll play those instead")
+	(chat-to-allies "I'll play Condottieros")
 )
 
 (defrule
@@ -38835,7 +38921,7 @@
     (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 15")
+	;(chat-to-player my-player-number "Mining camp 15")
 )
 
 (defrule
@@ -38853,7 +38939,7 @@
     (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 16")
+	;(chat-to-player my-player-number "Mining camp 16")
 )
 
 (defrule
@@ -38869,7 +38955,7 @@
     (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 17") ;was built on stone
+	;(chat-to-player my-player-number "Mining camp 17") ;was built on stone
 )
 
 (defrule
@@ -38887,7 +38973,7 @@
     (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 18")
+	;(chat-to-player my-player-number "Mining camp 18")
 )
 
 (defrule
@@ -38905,7 +38991,7 @@
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 19")
+	;(chat-to-player my-player-number "Mining camp 19")
 )
 
 (defrule
@@ -38923,7 +39009,7 @@
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 20")
+	;(chat-to-player my-player-number "Mining camp 20")
 )
 
 (defrule
@@ -38941,7 +39027,7 @@
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 21")
+	;(chat-to-player my-player-number "Mining camp 21")
 )
 
 (defrule
@@ -39029,7 +39115,7 @@
     (set-strategic-number sn-gold-dropsite-distance 4)
     (set-strategic-number sn-stone-dropsite-distance 200)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 22")
+	;(chat-to-player my-player-number "Mining camp 22")
 )
 
 (defrule
@@ -39045,7 +39131,7 @@
     (set-strategic-number sn-gold-dropsite-distance 200)
     (set-strategic-number sn-stone-dropsite-distance 4)
 	(build mining-camp)
-	(chat-to-player my-player-number "Mining camp 23")
+	;(chat-to-player my-player-number "Mining camp 23")
 )
 
 (defrule
@@ -42827,7 +42913,7 @@
 	(up-find-flare gl-point-x) ;find flare and save it into gl-point-x
 	(set-goal gl-helping-ally 1)
 	;(up-send-flare gl-point-x) ;test
-	(chat-to-player my-player-number "Ally is in danger: Checking if I can help")
+	;(chat-to-player my-player-number "Ally is in danger: Checking if I can help")
 )
 
 (defrule
@@ -42841,7 +42927,7 @@
 	(up-filter-exclude armored-elephant-line -1 -1 -1)
 	(up-find-local c: all-units-class c: 40)
 	(up-get-search-state gl-local-total)
-	(chat-to-player my-player-number "Checking if my units are close enough to help.")
+	;(chat-to-player my-player-number "Checking if my units are close enough to help.")
 )
 
 (defrule
@@ -45338,11 +45424,11 @@
 	(not (goal sg-fastcastle-boom NO))
 	(not (goal strategy-goal sg-boom-imp))
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 25)
-	(set-strategic-number sn-food-gatherer-percentage 47)
-	(set-strategic-number sn-gold-gatherer-percentage 28)
+	(set-strategic-number sn-wood-gatherer-percentage 40)
+	(set-strategic-number sn-food-gatherer-percentage 20)
+	(set-strategic-number sn-gold-gatherer-percentage 40)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
-	(chat-to-player my-player-number "Setting up economy for Castle-Age infantry")
+	(chat-to-player my-player-number "Setting up economy for Castle-Age siege-infantry")
 	(disable-self)
 )
 
@@ -45401,10 +45487,10 @@
 	(not (goal sg-fastcastle-boom NO))
 	(not (goal strategy-goal sg-boom-imp))
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 25)
-	(set-strategic-number sn-food-gatherer-percentage 44)
-	(set-strategic-number sn-gold-gatherer-percentage 25)
-	(set-strategic-number sn-stone-gatherer-percentage 6)
+	(set-strategic-number sn-wood-gatherer-percentage 38)
+	(set-strategic-number sn-food-gatherer-percentage 20)
+	(set-strategic-number sn-gold-gatherer-percentage 38)
+	(set-strategic-number sn-stone-gatherer-percentage 4)
 	(disable-self)
 )
 
@@ -46500,7 +46586,7 @@
     (building-type-count market >= 1)
 =>
 	(sell-commodity stone)
-    (chat-to-player my-player-number "Selling stone to get to imp")
+   ; (chat-to-player my-player-number "Selling stone to get to imp")
 )
 
 ;endregion
@@ -46521,7 +46607,7 @@
 	(up-reset-building 1 c: archery-range)
 	(up-reset-building 1 c: stable)
 	(up-reset-building 1 c: siege-workshop)
-	(chat-to-player my-player-number "Cancel units")
+	;(chat-to-player my-player-number "Cancel units")
 )
 
 (defrule
@@ -46561,7 +46647,7 @@
 	(up-reset-building 1 c: siege-workshop)
 	(up-reset-building 1 c: monastery)
 	(up-reset-building 1 c: castle)
-	(chat-to-player my-player-number "Cancel units for imp")
+	;(chat-to-player my-player-number "Cancel units for imp")
 )
 
 (defrule
@@ -46585,7 +46671,7 @@
 	(up-reset-building 1 c: siege-workshop)
 	(up-reset-building 1 c: monastery)
 	(up-reset-building 1 c: castle)
-	(chat-to-player my-player-number "Cancel units for imp")
+	;(chat-to-player my-player-number "Cancel units for imp")
 )
 
 (defrule
@@ -46609,7 +46695,7 @@
 	(up-reset-building 1 c: siege-workshop)
 	(up-reset-building 1 c: monastery)
 	(up-reset-building 1 c: castle)
-	(chat-to-player my-player-number "Cancel units for imp")
+	;(chat-to-player my-player-number "Cancel units for imp")
 )
 
 ;endregion
