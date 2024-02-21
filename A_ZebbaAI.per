@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2023
 
 ;Version: 1.2.5
-;last update: 20th February 2023
+;last update: 21th February 2023
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -1794,6 +1794,8 @@
 =>
 	(set-goal gl-min-amnt-boars 3)
 	(set-goal gl-min-amnt-food-sources 18)
+	(set-goal gl-layer-one-base-dist 12)
+	(set-goal gl-layer-two-base-dist 20)
 	(chat-to-player my-player-number "Playing on Yucatan")
 	(disable-self)
 )
@@ -2571,8 +2573,9 @@
 (defrule
 	(or (and (current-age < castle-age)
 	(up-compare-goal gl-military-advantage2 < 0))
-	(and (current-age >= castle-age)
-	(up-compare-goal gl-military-advantage2 < 0)))
+	(or (and (current-age >= castle-age)
+	(up-compare-goal gl-military-advantage2 < 0))
+	(up-players-in-game enemy < 2)))
 	(up-compare-goal gl-switch-focus-player == YES)
 =>
 	(up-find-player enemy find-closest temporary-goal)
@@ -2589,6 +2592,7 @@
 	(and (current-age >= castle-age)
 	(up-compare-goal gl-military-advantage >= 24)))
 	(up-compare-goal gl-switch-focus-player != YES)
+	(up-players-in-game enemy >= 2)
 =>
 	(up-find-player enemy find-closest temporary-goal)
 	(up-find-next-player enemy find-closest temporary-goal)
@@ -6726,7 +6730,7 @@
 	(up-modify-goal civ-cavalry-s c: 6)
 	(up-modify-goal civ-siege-s c: 7)
 	(up-modify-goal civ-uu-s c: 9)
-	(set-goal ca-strategy gl-castleage-stableunit)
+	(set-goal ca-strategy gl-castleage-rangeunit)
 	(set-goal gl-fastimp-unit fi-champs)	
 	(disable-self)
 )
@@ -12287,7 +12291,7 @@
 	(up-jump-direct g: gl-player-loop-rule-id)
 )
 
-#load-if-defined ARENA-MAP
+;#load-if-defined ARENA-MAP
 
 (defrule
 	(or (unit-type-count-total scout-cavalry-line > 0)
@@ -12429,7 +12433,7 @@
 	(up-jump-direct g: gl-rule-jump-id)
 )
 
-#end-if
+;#end-if
 
 ;Snipe enemy monks
 	;take enemy spearmen/scouts into account
@@ -19122,7 +19126,7 @@
 	;(up-send-flare gl-camp-x)
 	(up-reset-search 0 0 1 1) ;reset remote list
 	(up-reset-filters)
-	(up-filter-distance c: -1 c: 3) ;distance to gold/stone
+	(up-filter-distance c: -1 c: 4) ;distance to gold/stone
 	(up-filter-status c: status-resource c: list-active)
 	(up-find-resource c: gold c: 1)
 	(up-find-resource c: stone c: 1)
@@ -22723,7 +22727,7 @@
 	(up-cross-tiles object-point-x enemy-point-x c: 9)
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
-	(enable-timer retreating-timer 2)
+	(enable-timer retreating-timer 3)
 	(set-goal split-rule-goal 48)
 )
 
@@ -22829,7 +22833,7 @@
 	(up-cross-tiles object-point-x enemy-point-x c: 9)
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
-	(enable-timer retreating-timer 2)
+	(enable-timer retreating-timer 3)
 	(set-goal split-rule-goal 50)
 )
 
@@ -22908,9 +22912,9 @@
 	(up-filter-include cmdid-military -1 -1 -1)
 	(up-find-local c: -1 c: 50)
 	(up-remove-objects search-local object-data-class == cavalry-class)
-	(up-remove-objects search-local object-data-type == light-cavalry)
-	(up-remove-objects search-local object-data-type == hussar)
-	(up-remove-objects search-local object-data-type == winged-hussar)
+	(up-remove-objects search-local object-data-upgrade-type == light-cavalry)
+	(up-remove-objects search-local object-data-upgrade-type == hussar)
+	(up-remove-objects search-local object-data-upgrade-type == winged-hussar)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == battering-ram)
 	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
@@ -23413,7 +23417,7 @@
 	(up-cross-tiles object-point-x enemy-tower-point-x c: 9)
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
-	(enable-timer retreating-timer 1)
+	(enable-timer retreating-timer 2)
 	(set-goal split-rule-goal 7)
 )
 
@@ -23536,7 +23540,7 @@
 	(up-cross-tiles object-point-x enemy-tower-point-x c: 9)
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
-	(enable-timer retreating-timer 1)
+	(enable-timer retreating-timer 2)
 	(set-goal split-rule-goal 9)
 )
 
@@ -23953,7 +23957,7 @@
 	;(up-set-target-object search-local c: 0)
 	(up-group-size c: 0 > 0)
 	(up-set-target-object search-remote c: 0)
-	(up-object-data object-data-hitpoints > 5)
+	(up-object-data object-data-hitpoints > 10)
 	(not (research-completed ri-light-cavalry))
 =>
 	(up-full-reset-search)
@@ -25848,6 +25852,8 @@
 	(not(goal strategy-goal sg-drush))
 	(current-age >= dark-age)
 	(civilian-population >= 19)
+	(or (building-type-count-total mining-camp >= 1)
+	(not (goal strategy-goal sg-archerrush)))
 	(building-type-count-total lumber-camp == 1)
 	(resource-found wood)
 	(dropsite-min-distance wood < 255)
@@ -26564,6 +26570,7 @@
 	(current-age == dark-age)
 =>
 	(set-goal boar-hunting 0)
+	(up-gather-inside c: town-center c: 0)
 	(set-strategic-number sn-enable-boar-hunting 1); enable hunting of all kinds
 	(set-strategic-number sn-minimum-boar-hunt-group-size 1)
 	(set-strategic-number sn-minimum-number-hunters 2)
@@ -26887,6 +26894,7 @@
 	(goal boar-hunting 0)
 =>
 	(set-strategic-number sn-disable-villager-garrison 0)
+	(up-gather-inside c: town-center c: 0)
 	(set-goal gl-garrison-tc-two 0)
 	;(chat-to-player my-player-number "villager garrisoning allowed")
 	;(chat-to-all "villager garrisoning allowed")
@@ -26902,6 +26910,7 @@
 	(current-age == dark-age)
 =>
 	(up-ungarrison c: town-center)
+	(up-gather-inside c: town-center c: 0)
 	(set-goal boar-hunting 0)
 	(set-strategic-number sn-enable-boar-hunting 1); enable hunting of all kinds
 	(set-strategic-number sn-minimum-boar-hunt-group-size 1)
@@ -26914,6 +26923,13 @@
 #end-if
 #end-if
 #end-if
+
+(defrule
+	(up-research-status c: feudal-age == research-pending)
+=>
+	(up-gather-inside c: town-center c: 0)
+	(disable-self)
+)
 
 ;endregion
 
@@ -29766,7 +29782,7 @@
 
 (defrule
 	(or (and (current-age == feudal-age)
-		(up-compare-goal gl-military-advantage < -1))
+		(up-compare-goal gl-military-advantage < -2))
 		(and (up-research-status c: castle-age == research-pending)
 		(and (players-current-age focus-player >= castle-age)
 		(up-compare-goal gl-military-advantage < 16))))
@@ -31891,7 +31907,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(building-type-count-total mining-camp < 7)
+	(building-type-count-total mining-camp < 4)
 	(not (goal strategy-goal sg-boom-imp))
 	(resource-found stone)
 	(dropsite-min-distance stone > 2) ;testing
@@ -34077,7 +34093,7 @@
 	(can-train archer-line)
 	(goal strategy-goal sg-archerrush)
 	(not (goal ca-strategy gl-castleage-rangeunit))
-	(wood-amount > 75)
+	(gold-amount > 180)
 	(unit-type-count-total archer-line < 8)
 	(up-research-status c: ri-crossbow >= research-pending)
 	(or (civilian-population g:< c-villager-goal)
@@ -34332,6 +34348,34 @@
 ; =>
 	; (train knight-line)
 ; )
+
+(defrule
+	(current-age == castle-age)
+	(goal ca-strategy gl-castleage-stableunit)
+	(not (goal strategy-goal sg-boom-imp))
+	(not (goal sg-fastcastle-boom NO))
+	(civ-selected bengalis)
+	(can-train scout-cavalry-line)
+	(or (and (up-research-status c: ri-light-cavalry >= research-pending)
+	(unit-type-count-total scout-cavalry-line < 15))
+	(unit-type-count-total scout-cavalry-line < 5))
+=>
+	(train scout-cavalry-line)
+)
+
+(defrule
+	(current-age == castle-age)
+	(goal ca-strategy gl-castleage-stableunit)
+	(not (goal strategy-goal sg-boom-imp))
+	(not (goal sg-fastcastle-boom NO))
+	(civ-selected bengalis)
+	(can-build monastery)
+	(building-type-count-total monastery < 2)
+=>
+	(up-assign-builders c: monastery c: 2)
+	(up-set-placement-data my-player-number -1 c: 9)
+    (up-build place-control 0 c: monastery)	
+)
 
 ;siege-infantry militia line
 ; (defrule
@@ -38833,7 +38877,7 @@
 	(current-age == imperial-age)
 	(not (goal strategy-goal sg-boom-imp))
 	(up-compare-sn sn-gold-gatherer-percentage > 30)
-	(building-type-count-total mining-camp < 7)
+	(building-type-count-total mining-camp < 4)
 	(resource-found gold)
 	;(dropsite-min-distance gold > 2)
 	(dropsite-min-distance gold < 255)
@@ -38887,7 +38931,7 @@
 	(current-age == imperial-age)
 	(not (goal strategy-goal sg-boom-imp))
 	(up-compare-sn sn-stone-gatherer-percentage > 20)
-	(building-type-count-total mining-camp < 7)
+	(building-type-count-total mining-camp < 4)
 	(resource-found stone)
 	;(dropsite-min-distance stone > 2)
 	(dropsite-min-distance stone < 255)
@@ -38903,7 +38947,7 @@
 (defrule
 	(game-time > 3000)
 	(can-build lumber-camp)
-	(building-type-count-total lumber-camp < 7)
+	(building-type-count-total lumber-camp < 3)
 	(resource-found wood)
 	;(dropsite-min-distance wood > 4)
 	(dropsite-min-distance wood < 255)
@@ -42824,7 +42868,7 @@
 	(up-reset-attack-now)
 	(up-target-point gl-point-x action-attack-move -1 -1) ;sending units to gl-point-x
 	(chat-to-allies "Units are on the way")
-	(attack-now)
+	;(attack-now)
 	(enable-timer 17 180)
 )
 
@@ -43018,6 +43062,7 @@
 	;(up-object-data object-data-garrison-count > 0)
 =>
 	(up-target-point gl-self-point-x action-work -1 -1)
+	;(up-target-point gl-self-point-x action-ungarrison -1 -1)
 	;(chat-to-all "Threat is over, release vills")
 	(set-goal gl-garrison-tc -1)
 )
@@ -45297,7 +45342,7 @@
 	(set-strategic-number sn-food-gatherer-percentage 47)
 	(set-strategic-number sn-gold-gatherer-percentage 28)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
-	(chat-to-player my-player-number "Setting up economy for Castle-Age longswords")
+	(chat-to-player my-player-number "Setting up economy for Castle-Age infantry")
 	(disable-self)
 )
 
