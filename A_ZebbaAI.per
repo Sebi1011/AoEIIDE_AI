@@ -1,7 +1,7 @@
-;ZebbaAI - Created by Zebba 2021 - 2023
+;ZebbaAI - Created by Zebba 2021 - 2024
 
 ;Version: 1.2.6
-;last update: 27th February 2023
+;last update: 29th February 2024
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -9,7 +9,7 @@
 (defrule
 	(game-time > 10)
 =>
-	(chat-to-all "ZebbaAI: Version 1.2.5 by Zebba")
+	(chat-to-all "ZebbaAI: Version 1.2.6 by Zebba")
 	(disable-self)
 )
 
@@ -389,7 +389,7 @@
 (defconst sg-defensive-feudal 58)
 (defconst sg-fastcastle-gu 59)
 (defconst sg-waterplay 60)
-(defconst sg-boom-imp 61)
+(defconst sg-fast-imp 61)
 (defconst sg-fastcastle-boom 62)
 (defconst relic-count 64)
 (defconst enemy-team-military-pop 65)
@@ -1692,6 +1692,31 @@
 	(disable-self)
 )
 
+; (defrule ;build farms around Folwark: not optimal as AI doesn't build it perfectly around the folwark
+	; (building-type-count-total farm < 8)
+	; (can-build farm)
+	; (game-time > 5)
+	; (civ-selected poles)
+; =>
+	; (up-full-reset-search)
+	; (up-find-local c: mill c: 1)
+; )
+
+; (defrule ;build farms around TC
+	; (building-type-count-total farm < 8)
+	; (can-build farm)
+	; (game-time > 5)
+	; (up-set-target-object search-local c: 0)
+	; (civ-selected poles)
+; =>
+	; (up-set-target-object search-local c: 0)
+	; (up-get-point position-object gl-temp-x)
+	; (up-set-target-point gl-temp-x)
+	; (up-send-flare gl-temp-x)
+	; (up-build place-point 0 c: farm)
+	; (chat-to-all "building farm")
+; )
+
 #load-if-defined UP-SCENARIO-GAME
 
 (defrule
@@ -2623,8 +2648,8 @@
 (defrule
 	(current-age >= castle-age)
 	(up-compare-goal gl-strategic-position != -1)
-	(up-compare-goal gl-military-advantage > -25)
 	(up-compare-goal gl-military-advantage <= -15)
+	(up-compare-goal gl-military-advantage > -25)
 	(military-population < 15)
 =>
 	(set-goal gl-strategic-position -1)
@@ -2638,8 +2663,8 @@
 (defrule
 	(current-age >= castle-age)
 	(up-compare-goal gl-strategic-position != 0)
-	(up-compare-goal gl-military-advantage >= -5)
 	(up-compare-goal gl-military-advantage <= 5)
+	(up-compare-goal gl-military-advantage >= -5)
 =>
 	(set-goal gl-strategic-position 0)
 	(up-modify-sn sn-camp-max-distance g:= gl-standard-townsize)
@@ -7972,7 +7997,7 @@
 	(random-number > 80)
 	(random-number <= 100)
 =>
-	(set-goal strategy-goal sg-boom-imp)	
+	(set-goal strategy-goal sg-fast-imp)	
 	(set-goal d-villager-goal 30)
 	(set-goal f-villager-goal 32)
 	(set-goal c-villager-goal 34)
@@ -8006,7 +8031,7 @@
 	(random-number > 80)
 	(random-number <= 100)
 =>
-	(set-goal strategy-goal sg-boom-imp)	
+	(set-goal strategy-goal sg-fast-imp)	
 	(set-goal d-villager-goal 30)
 	(set-goal f-villager-goal 32)
 	(set-goal c-villager-goal 34)
@@ -8161,7 +8186,7 @@
 	(up-compare-goal strategy-goal == -1)
 	(random-number >= 1000)
 =>
-	(set-goal strategy-goal sg-boom-imp)	
+	(set-goal strategy-goal sg-fast-imp)	
 	(set-goal d-villager-goal 30)
 	(set-goal f-villager-goal 32)
 	(set-goal c-villager-goal 34)
@@ -8209,7 +8234,7 @@
 	(up-compare-goal strategy-goal == -1)
 	(random-number >= 80)
 =>
-	(set-goal strategy-goal sg-boom-imp)	
+	(set-goal strategy-goal sg-fast-imp)	
 	(set-goal d-villager-goal 30)
 	(set-goal f-villager-goal 32)
 	(set-goal c-villager-goal 34)
@@ -8241,7 +8266,7 @@
 	(up-compare-goal strategy-goal == -1)
 	(random-number >= 80)
 =>
-	(set-goal strategy-goal sg-boom-imp)	
+	(set-goal strategy-goal sg-fast-imp)	
 	(set-goal d-villager-goal 30)
 	(set-goal f-villager-goal 32)
 	(set-goal c-villager-goal 34)
@@ -8414,7 +8439,7 @@
 	(up-research-status c: castle-age < research-pending)
 	(current-age == feudal-age)
 	(building-type-count town-center == 2)
-	(up-compare-goal strategy-goal != sg-boom-imp)
+	(up-compare-goal strategy-goal != sg-fast-imp)
 	(up-compare-goal strategy-goal != sg-fastcastle-gu)
 	(up-compare-goal strategy-goal != sg-fastcastle-uu)
 =>
@@ -8570,7 +8595,8 @@
 
 (defrule
 	(goal strategy-goal sg-fastcastle-gu)
-	(up-research-status c: castle-age >= research-pending)
+	;(up-research-status c: castle-age >= research-pending)
+	(game-time > 60)
 	(current-age < imperial-age)
 	(goal sg-fastcastle-boom -1)
 =>
@@ -8580,7 +8606,8 @@
 
 (defrule
 	(goal strategy-goal sg-fastcastle-gu)
-	(up-research-status c: castle-age >= research-pending)
+	;(up-research-status c: castle-age >= research-pending)
+	(game-time > 60)
 	(current-age < imperial-age)
 	(random-number <= 50)
 =>	
@@ -8591,7 +8618,8 @@
 
 (defrule
 	(goal strategy-goal sg-fastcastle-gu)
-	(up-research-status c: castle-age >= research-pending)
+	;(up-research-status c: castle-age >= research-pending)
+	(game-time > 60)
 	(current-age < imperial-age)
 	(random-number > 50)
 =>	
@@ -8762,11 +8790,25 @@
 )
 
 #load-if-defined UP-ALLY-IN-GAME
+
+(defrule
+	(current-age >= feudal-age)
+	(building-type-count-total town-center == 1)
+	(up-pending-objects c: town-center < 1)
+=>
+	(up-full-reset-search)
+	(up-find-local c: town-center c: 1)
+	(up-remove-objects search-local object-data-hitpoints >= 475)
+	(up-get-search-state gl-local-total)
+)
+
 #load-if-not-defined UP-4-PLAYER-TEAM
 
 (defrule
 	(current-age >= feudal-age)
-	(building-type-count-total town-center < 1)
+	(or (building-type-count-total town-center == 0)
+		(and (up-compare-goal gl-local-total > 0)
+		(up-set-target-object search-local c: 0)))
 	(up-pending-objects c: town-center < 1)
 =>
 	(up-full-reset-search)
@@ -8780,7 +8822,9 @@
 #load-if-defined UP-4-PLAYER-TEAM
 (defrule
 	(current-age >= feudal-age)
-	(building-type-count-total town-center < 1)
+	(or (building-type-count-total town-center == 0)
+		(and (up-compare-goal gl-local-total > 0)
+		(up-set-target-object search-local c: 0)))
 	(up-pending-objects c: town-center < 1)
 =>
 	(up-full-reset-search)
@@ -8794,8 +8838,12 @@
 
 (defrule
 	(current-age >= feudal-age)
-	(building-type-count-total town-center < 1)
+	(or (building-type-count-total town-center == 0)
+		(and (up-compare-goal gl-local-total > 0)
+		(up-set-target-object search-local c: 0)))
+	(building-type-count-total town-center < 2)
 	(up-pending-objects c: town-center < 1)
+	(unit-type-count-total villager > 0)
 =>
 	(up-full-reset-search)
 	(up-find-local c: villager-class c: 240)
@@ -8808,7 +8856,10 @@
 	(can-build-with-escrow town-center)
 	(up-pending-objects c: town-center < 1)
 	(building-type-count-total town-center < 2)
-	(up-enemy-units-in-town >= 10)
+	;(up-enemy-units-in-town >= 10)
+	;(town-under-attack)
+	(up-compare-goal gl-military-advantage < -24)
+	(unit-type-count-total villager > 0)
 =>
 	(up-modify-escrow wood c:- 275)
 	(up-modify-escrow stone c:- 100)
@@ -8818,7 +8869,6 @@
 	(up-build place-control 0 c: town-center)
 	(chat-to-player my-player-number "building evacuation tc")
 )
-
 #end-if
 ;endregion
 
@@ -8855,7 +8905,7 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train-with-escrow trebuchet)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(up-compare-goal gl-number-trebs < 1)
 =>
 	(up-modify-escrow wood c:- 200)
@@ -8900,7 +8950,7 @@
 	(or (unit-type-count-total demolition-ship-line > 1)
 	(or (unit-type-count-total galley-line > 4)
 	(unit-type-count-total dromon > 1)))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -8923,7 +8973,7 @@
 (defrule
 	(can-research my-second-unique-research) ;atlatl
 	(unit-type-count skirmisher-line >= 5)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -8947,7 +8997,7 @@
 	(or (unit-type-count my-unique-unit-line >= 5)
 	(or (unit-type-count battle-elephant-line >= 5)
 	(unit-type-count elephant-archer-line >= 5))))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -8968,7 +9018,7 @@
 
 (defrule
 	(can-research my-second-unique-research) ;kasbah
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -8990,7 +9040,7 @@
 (defrule
 	(can-research my-second-unique-research) ;wagenburg tactics
 	(unit-type-count hand-cannoneer >= 5)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9011,7 +9061,7 @@
 	(can-research my-unique-research) ;yeoman
 	(or(unit-type-count archer-line >= 3)
 	(unit-type-count longbowman-line >= 3))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-unique-research)
@@ -9031,7 +9081,7 @@
 (defrule
 	(can-research my-second-unique-research) ;stirrups
 	(unit-type-count cavalry-class >= 6)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9050,7 +9100,7 @@
 
 (defrule
 	(can-research my-second-unique-research) ;burgundian vineyards
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9071,7 +9121,7 @@
 	(can-research my-unique-research) ;manipur cavalry
 	(or (unit-type-count-total cavalry-class >= 5)
 	(unit-type-count-total scout-cavalry-line >= 5))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-unique-research)
@@ -9093,7 +9143,7 @@
 	(or (unit-type-count-total fire-ship-line >= 3)
 	(or (building-type-count-total bombard-tower >= 2)
 	(unit-type-count-total dromon >= 2)))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9112,7 +9162,7 @@
 
 (defrule
 	(can-research my-second-unique-research) ;stronghold
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9132,7 +9182,7 @@
 (defrule
 	(can-research my-second-unique-research) ;great wall
 	(building-type-count-total watch-tower-line >= 2)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9153,7 +9203,7 @@
 (defrule 
 	(can-research my-second-unique-research) ;steppe husbandry
 	(building-type-count-total stable >= 2)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9174,7 +9224,7 @@
 	(or (unit-type-count armored-elephant-line >= 3)
 	(or (unit-type-count battle-elephant-line >= 5)	
 	(unit-type-count elephant-archer-line >= 5)))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9197,7 +9247,7 @@
 	(or (unit-type-count-total shotel-line >= 5)
 	(unit-type-count-total camel-line >= 3))
 	(goal enemy-cavalry-goal 1)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-unique-research)
@@ -9217,7 +9267,7 @@
 (defrule
 	(can-research my-second-unique-research) ;barded axe
 	(unit-type-count-total throwing-axeman-line >= 5)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9239,7 +9289,7 @@
 	(or (building-type-count-total castle >= 2)
 	(or (building-type-count-total town-center >= 4)
 	(building-type-count-total watch-tower-line >= 2)))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9258,7 +9308,7 @@
 
 (defrule
 	(can-research my-second-unique-research) ;anarchy
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9286,7 +9336,7 @@
 
 (defrule
 	(can-research my-second-unique-research) ;kshatriyas
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9325,7 +9375,7 @@
 	(can-research my-second-unique-research) ;andean sling
 	(or (unit-type-count-total skirmisher-line >= 5)
 	(unit-type-count-total slinger >= 5))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9347,7 +9397,7 @@
 (defrule
 	(can-research my-second-unique-research) ;grand trunk road
 	(building-type-count-total market >= 1)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9368,7 +9418,7 @@
 	(can-research my-second-unique-research) ;pavise
 	(or (unit-type-count-total archer-line >= 3)
 	(unit-type-count-total genoese-crossbowman-line >= 3))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9583,7 +9633,7 @@
 (defrule
 	(can-research my-second-unique-research) ;hul'che javelineers
 	(unit-type-count skirmisher-line >= 5)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9620,7 +9670,7 @@
 
 (defrule
 	(can-research my-second-unique-research) ;Kamandaran
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9639,7 +9689,7 @@
 (defrule
 	(can-research my-second-unique-research) ;szlachta privileges
 	(unit-type-count-total knight-line >= 4)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9696,7 +9746,7 @@
 (defrule
 	(can-research my-second-unique-research) ;bimaristan
 	(unit-type-count-total monk >= 3)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9734,7 +9784,7 @@
 
 (defrule
 	(can-research my-second-unique-research) ;detinets
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9773,7 +9823,7 @@
 	(or (unit-type-count-total scout-cavalry-line >= 5)
 	(or (unit-type-count-total steppe-lancer-line >= 5)
 	(unit-type-count-total cavalry-archer-line >= 5)))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -9847,7 +9897,7 @@
 (defrule
 	(can-research my-second-unique-research) ;chieftains
 	(unit-type-count-total infantry-class >= 4)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research my-second-unique-research)
@@ -11740,6 +11790,9 @@
 (defrule
 	(current-age == castle-age)
 	(players-unit-type-count focus-player monk < 3)
+	(unit-type-count-total war-elephant-line < 4)
+	(unit-type-count-total knight-line < 3)
+	(unit-type-count-total camel-line < 3)
 	(can-train war-elephant-line)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
@@ -11767,6 +11820,8 @@
 	(current-age == imperial-age)
 	(can-train war-elephant-line)
 	(players-unit-type-count focus-player monk < 3)
+	(unit-type-count-total knight-line < 3)
+	(unit-type-count-total camel-line < 3)
 	(unit-type-count war-elephant-line < 5)
 	(not (research-completed ri-elite-war-elephant))
 	(or (up-compare-goal gl-number-trebs >= 1)
@@ -11778,6 +11833,8 @@
 (defrule
 	(current-age == imperial-age)
 	(players-unit-type-count focus-player monk < 3)
+	(unit-type-count-total knight-line < 3)
+	(unit-type-count-total camel-line < 3)
 	(can-train war-elephant-line)
 	(up-research-status c: ri-elite-war-elephant >= research-pending)
 	(or (up-compare-goal gl-number-trebs >= 1)
@@ -12530,6 +12587,7 @@
 	(building-type-count town-center > 0)
 	(unit-type-count villager > 0)
 	(current-age < castle-age)
+	(goal gl-garrison-tc-two 0) ;prevent that boar luring villager accidently garrisons
 =>
 	(up-full-reset-search)
 	(up-set-target-point gl-starting-tc-x)
@@ -12547,6 +12605,7 @@
 	(building-type-count town-center > 0)
 	(unit-type-count villager > 0)
 	(current-age < castle-age)
+	(goal gl-garrison-tc-two 0)
 =>
 	(up-modify-sn sn-focus-player-number c:= my-player-number)
 	(up-find-remote c: town-center c: 2)
@@ -14216,7 +14275,7 @@
 	(building-type-count-total barracks < 1)
 	(military-population < 2)
 	(can-build barracks)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 	(or (not (goal sg-fastcastle-boom YES))
 		(building-type-count-total town-center >= 4))
@@ -14453,7 +14512,7 @@
 	(players-unit-type-count focus-player militiaman-line >= 6)))
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range < 2)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -14467,7 +14526,7 @@
 	(players-unit-type-count focus-player skirmisher-line >= 6)
 	(can-build-with-escrow stable)
 	(building-type-count-total stable < 2)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -14481,7 +14540,7 @@
 	(goal enemy-cavarcher-goal 1)
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range == 0)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -14887,7 +14946,7 @@
 	(players-unit-type-count focus-player hand-cannoneer >= 5)))
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range < 2)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -14906,7 +14965,7 @@
 	(not (unit-available genitour-line))
 	(unit-type-count skirmisher-line <= 5)
 	(unit-type-count eagle-warrior-line <= 5)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -14925,7 +14984,7 @@
 	(not (unit-available genitour-line))
 	(unit-type-count skirmisher-line <= 5)
 	(unit-type-count archer-line <= 5)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -14941,7 +15000,7 @@
 	(can-research-with-escrow ri-elite-skirmisher)
 	(not (research-completed ri-elite-skirmisher))
 	(not (unit-available genitour-line))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -14960,7 +15019,7 @@
 	(unit-type-count eagle-warrior-line <= 5)
 	(not (unit-available genitour-line))
 	(not (goal gl-food-saving 23))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -14980,7 +15039,7 @@
 	(up-research-status c: ri-elite-skirmisher >= research-pending)
 	(not (unit-available genitour-line))
 	(not (goal gl-food-saving 23))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -14995,7 +15054,7 @@
 	(or (players-unit-type-count focus-player spearman-line >= 6)
 	(players-unit-type-count focus-player archer-line >= 8))
 	(can-train genitour-line)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -15012,7 +15071,7 @@
 	(building-type-count-total town-center >= 2)
 	(can-build-with-escrow barracks)
 	(unit-type-count-total camel-line <= 3)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(up-modify-escrow wood c:- 175)
@@ -15032,7 +15091,7 @@
 	(research-available ri-pikeman)
 	(unit-type-count-total spearman-line <= 5)
 	(unit-type-count-total camel-line <= 3)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(train spearman-line)
@@ -15048,7 +15107,7 @@
 	(can-research ri-pikeman)
 	(not (research-completed ri-pikeman))
 	(unit-type-count-total camel-line <= 3)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research ri-pikeman)
@@ -15064,7 +15123,7 @@
 	(building-type-count-total town-center >= 2)
 	(up-research-status c: ri-pikeman >= research-pending)
 	(unit-type-count-total camel-line <= 3)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(up-modify-escrow food c:- 35)
@@ -15080,7 +15139,7 @@
 	(can-research-with-escrow ri-elite-skirmisher)
 	(not (research-completed ri-elite-skirmisher))
 	(unit-type-count skirmisher-line > 3)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -15098,7 +15157,7 @@
 	(can-train-with-escrow skirmisher-line)
 	(up-research-status c: ri-elite-skirmisher >= research-pending)
 	(not (goal gl-food-saving 23))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -15115,7 +15174,7 @@
 	(can-train-with-escrow skirmisher-line)
 	(not (research-completed ri-elite-skirmisher))
 	(not (goal gl-food-saving 23))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -15132,7 +15191,7 @@
 	(can-train skirmisher-line)
 	(up-research-status c: ri-elite-skirmisher >= research-pending)
 	(not (goal gl-food-saving 23))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -15164,7 +15223,7 @@
 	(current-age == castle-age)
 	(goal enemy-cavalry-goal 1)
 	(players-unit-type-count focus-player cataphract-line < 1)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 	(can-train spearman-line)
 	(building-type-count-total town-center >= 2)
@@ -15185,7 +15244,7 @@
 	(can-research ri-pikeman)
 	(not (research-completed ri-pikeman))
 	(unit-type-count-total camel-line <= 3)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research ri-pikeman)
@@ -15200,7 +15259,7 @@
 	(building-type-count-total town-center >= 2)
 	(up-research-status c: ri-pikeman >= research-pending)
 	(unit-type-count-total camel-line <= 3)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(up-modify-escrow food c:- 35)
@@ -15213,7 +15272,7 @@
 	(current-age >= castle-age)
 	(players-unit-type-count focus-player archer-line >= 6)
 	(can-research ri-elite-genitour)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -15254,7 +15313,7 @@
 	(not (research-completed ri-elite-skirmisher))
 	(unit-type-count-total skirmisher-line < 6)
 	(not (unit-available genitour-line))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -15269,7 +15328,7 @@
 	(can-train skirmisher-line)
 	(up-research-status c: ri-elite-skirmisher >= research-pending)
 	(not (unit-available genitour-line))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -15285,7 +15344,7 @@
 	(unit-type-count-total skirmisher-line < 6)
 	(unit-type-count-total archer-line < 6)
 	(not (unit-available genitour-line))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -15300,7 +15359,7 @@
 	(up-research-status c: ri-elite-skirmisher >= research-pending)
 	(unit-type-count-total archer-line < 6)
 	(not (unit-available genitour-line))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -15315,7 +15374,7 @@
 	(can-train genitour-line)
 	(research-available ri-elite-genitour)
 	(unit-type-count genitour-line <= 6)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -15329,7 +15388,7 @@
 	(players-unit-type-count focus-player archer-line >= 10))
 	(can-train genitour-line)
 	(up-research-status c: ri-elite-genitour >= research-pending)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -15528,7 +15587,7 @@
 	(players-unit-type-count focus-player battering-ram-line >= 1))))))
 	(can-train-with-escrow mangonel-line)
 	(unit-type-count-total mangonel-line < 1)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -15547,7 +15606,7 @@
 	(players-unit-type-count focus-player battering-ram-line >= 1)))))
 	(can-train mangonel-line)
 	(unit-type-count-total mangonel-line <= 5)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -15580,7 +15639,7 @@
 	(players-unit-type-count focus-player camel-archer-line >= 6))))
 	(can-train scorpion-line)
 	(unit-type-count scorpion-line < 4)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -15593,7 +15652,7 @@
 	(goal enemy-archery-goal 1)
 	(can-train scorpion-line)
 	(unit-type-count scorpion-line < 4)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -15611,7 +15670,7 @@
 	(or (unit-type-count-total camel-line >= 5)
 	(unit-type-count-total monk >= 2))))
 	(can-train scorpion-line)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -15625,7 +15684,7 @@
 	(players-unit-type-count focus-player skirmisher-line < 18)
 	(can-train scorpion-line)
 	(unit-type-count scorpion-line < 4)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(military-population >= 20))
 =>
 	(train scorpion-line)
@@ -16108,7 +16167,7 @@
 	(current-age >= castle-age)
 	(goal enemy-cavalry-goal 1)
 	(can-train monk)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(train monk)
@@ -16121,7 +16180,7 @@
 	(can-train scout-cavalry-line)
 	(research-available ri-light-cavalry)
 	(unit-type-count-total scout-cavalry-line < 5)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(train scout-cavalry-line)
@@ -16134,7 +16193,7 @@
 	(can-train scout-cavalry-line)
 	(not (research-available ri-light-cavalry))
 	(unit-type-count-total scout-cavalry-line < 10)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(train scout-cavalry-line)
@@ -16146,7 +16205,7 @@
 	(players-unit-type-count focus-player monk > 3)
 	(can-train scout-cavalry-line)
 	(up-research-status c: ri-light-cavalry >= research-pending)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(train scout-cavalry-line)
@@ -16171,7 +16230,7 @@
 	(can-train eagle-warrior-line)
 	(up-research-status c: ri-eagle-warrior >= research-pending)
 	(unit-type-count-total eagle-warrior-line < 20)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(train eagle-warrior-line)
@@ -16183,7 +16242,7 @@
 	(players-unit-type-count focus-player monk > 3)
 	(can-research ri-eagle-warrior)
 	(not (research-completed ri-eagle-warrior))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research ri-eagle-warrior)
@@ -16207,7 +16266,7 @@
 	(goal enemy-cavarcher-goal 1))
 	(can-train skirmisher-line)
 	(up-research-status c: ri-elite-skirmisher >= research-pending)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -16220,7 +16279,7 @@
 	(players-unit-type-count focus-player archer-line >= 10)
 	(can-train genitour-line)
 	(up-research-status c: ri-elite-genitour >= research-pending)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -16595,7 +16654,7 @@
 	(up-research-status c: ri-redemption >= research-pending)
 	(can-train monk)
 	(building-type-count-total monastery > 0)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(train monk)
@@ -16620,7 +16679,7 @@
 	(not (civ-selected japanese))
 	(can-train mangonel-line)
 	(building-type-count-total siege-workshop > 0)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -16638,7 +16697,7 @@
 	(or (unit-type-count-total mangonel-line < 2)
 	(up-research-status c: ri-onager >= research-pending))
 	(building-type-count-total siege-workshop > 0)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(military-population >= 20))
 =>
 	(train mangonel-line)
@@ -16683,7 +16742,7 @@
 	(players-unit-type-count focus-player coustillier-line >= 6)
 	(can-train monk)
 	(building-type-count-total monastery > 0)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(train monk)
@@ -16744,7 +16803,7 @@
 	(players-unit-type-count focus-player arambai-line >= 6)
 	(can-train monk)
 	(building-type-count-total monastery > 0)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(train monk)
@@ -16756,7 +16815,7 @@
 	(research-available ri-crossbow)
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range < 2)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -16795,7 +16854,7 @@
 		(and (current-age == imperial-age)
 			(not (research-available ri-arbalest))))
 	(can-research-with-escrow ri-elite-skirmisher)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -16824,7 +16883,7 @@
 	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(building-type-count-total archery-range > 0)
 	(not (goal gl-food-saving 23))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -16867,7 +16926,7 @@
 	(can-train skirmisher-line)
 	(up-research-status c: ri-elite-skirmisher >= research-pending)
 	(building-type-count-total archery-range > 0)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -16891,7 +16950,7 @@
 	(players-unit-type-count focus-player cataphract-line >= 6)
 	(can-train monk)
 	(building-type-count-total monastery > 0)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(train monk)
@@ -16903,7 +16962,7 @@
 	(research-available ri-crossbow)
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range < 2)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -17097,7 +17156,7 @@
 	; (players-unit-type-count focus-player ghulam-line >= 6)
 	; (can-build-with-escrow archery-range)
 	; (building-type-count-total archery-range < 2)
-	; (or (not (goal strategy-goal sg-boom-imp))
+	; (or (not (goal strategy-goal sg-fast-imp))
 		; (and (up-research-status c: imperial-age >= research-pending)
 		; (military-population >= 20)))
 ; =>
@@ -17190,7 +17249,7 @@
 	(players-unit-type-count focus-player chakram-thrower-line >= 6)
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range < 2)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -17407,7 +17466,7 @@
 	(players-unit-type-count focus-player conquistador-line >= 6)
 	(can-train monk)
 	(building-type-count-total monastery > 0)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(train monk)
@@ -17419,7 +17478,7 @@
 	(research-available ri-crossbow)
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range < 2)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -17447,7 +17506,7 @@
 	(players-unit-type-count focus-player conquistador-line >= 6)
 	(current-age >= castle-age)
 	(can-research-with-escrow ri-elite-skirmisher)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -17465,7 +17524,7 @@
 	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(building-type-count-total archery-range > 0)
 	(not (goal gl-food-saving 23))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -17483,7 +17542,7 @@
 	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(building-type-count-total archery-range > 0)
 	(not (goal gl-food-saving 23))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -17498,7 +17557,7 @@
 	(research-available ri-crossbow)
 	(can-build-with-escrow archery-range)
 	(building-type-count-total archery-range < 2)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -17529,7 +17588,7 @@
 	(current-age >= castle-age)
 	(can-research-with-escrow ri-elite-skirmisher)
 	(not (unit-available camel-line))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -17548,7 +17607,7 @@
 	(building-type-count-total archery-range > 0)
 	(not (unit-available camel-line))
 	(not (goal gl-food-saving 23))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -17567,7 +17626,7 @@
 	(building-type-count-total archery-range > 0)
 	(not (unit-available camel-line))
 	(not (goal gl-food-saving 23))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -19788,7 +19847,7 @@
 (defrule
 	(current-age == feudal-age)
 	(not (goal strategy-goal sg-scoutrush))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(timer-triggered 8)
 	(or 
 		(food-amount >= 450) ;600
@@ -19848,7 +19907,7 @@
 
 (defrule
 	(current-age == feudal-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(timer-triggered 8)
 	(can-research-with-escrow castle-age)
 	(up-modify-goal gl-feudalup-compare g:= f-villager-goal)
@@ -19864,7 +19923,7 @@
 
 (defrule
 	(current-age == feudal-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(timer-triggered 8)
 	(food-amount < 400) ;600
 	(gold-amount < 325) ;375
@@ -19882,7 +19941,7 @@
 
 (defrule
 	(current-age == feudal-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(timer-triggered 8)
 	(food-amount < 400) ;600
 	(gold-amount >= 325) ;375
@@ -19901,7 +19960,7 @@
 
 (defrule
 	(current-age == feudal-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(timer-triggered 8)
 	(unit-type-count-total villager g:> f-villager-goal)
 	(up-research-status c: castle-age != research-pending)
@@ -19928,7 +19987,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(timer-triggered 8)
 	(or (and (food-amount >= 650)
 		(gold-amount >= 450))
@@ -19949,7 +20008,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(timer-triggered 8)
 	(can-research-with-escrow imperial-age)
 	(up-modify-goal gl-castleup-compare g:= c-villager-goal)
@@ -19965,7 +20024,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(timer-triggered 8)
 	(or (and (food-amount < 650)
 		(gold-amount < 450))
@@ -19985,7 +20044,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(timer-triggered 8)
 	(or (and (food-amount < 650)
 		(gold-amount < 450))
@@ -20004,7 +20063,7 @@
 (defrule	
 	(not (civ-selected byzantine))
 	(not (civ-selected italian))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age == castle-age)
 	(unit-type-count-total villager g:!= c-villager-goal)
 	(up-research-status c: imperial-age != research-pending)
@@ -20026,7 +20085,7 @@
 )
 
 (defrule	
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(civ-selected byzantine)
 	(current-age == castle-age)
 	(unit-type-count-total villager g:!= c-villager-goal)
@@ -20049,7 +20108,7 @@
 )
 
 (defrule	
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(civ-selected italian)
 	(current-age == castle-age)
 	(unit-type-count-total villager g:!= c-villager-goal)
@@ -20072,7 +20131,7 @@
 )
 
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(civ-selected burgundians)
 	(civilian-population >= 10)
 	(building-type-count-total lumber-camp >= 1)
@@ -20273,7 +20332,7 @@
 )
 
 (defrule
-	(or (goal strategy-goal sg-boom-imp)
+	(or (goal strategy-goal sg-fast-imp)
 	(or (goal strategy-goal sg-fastcastle-gu)
 	(goal strategy-goal sg-fastcastle-uu)))
 	(civilian-population >= 26)
@@ -20288,7 +20347,7 @@
 )
 
 (defrule
-	(or (goal strategy-goal sg-boom-imp)
+	(or (goal strategy-goal sg-fast-imp)
 	(or (goal strategy-goal sg-fastcastle-gu)
 	(goal strategy-goal sg-fastcastle-uu)))
 	(or (civilian-population < 26)
@@ -20303,7 +20362,7 @@
 )
 
 (defrule
-	(or (goal strategy-goal sg-boom-imp)
+	(or (goal strategy-goal sg-fast-imp)
 	(or (goal strategy-goal sg-fastcastle-gu)
 	(goal strategy-goal sg-fastcastle-uu)))
 	(civilian-population >= 26)
@@ -20319,7 +20378,7 @@
 )
 
 (defrule
-	(or (goal strategy-goal sg-boom-imp)
+	(or (goal strategy-goal sg-fast-imp)
 	(or (goal strategy-goal sg-fastcastle-gu)
 	(goal strategy-goal sg-fastcastle-uu)))
 	(or (civilian-population < 26)
@@ -20582,7 +20641,7 @@
 	; (or (and (goal strategy-goal sg-scoutrush)
 		; (building-type-count-total stable < 1))
 	; (or	(goal strategy-goal sg-drush)
-	; (goal strategy-goal sg-boom-imp))))))
+	; (goal strategy-goal sg-fast-imp))))))
 	; (goal gl-wood-saving 8)
 	; (goal gl-stone-saving 8)
 ; =>
@@ -20874,7 +20933,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(building-type-count-total university >= 1)
 	(research-available ri-chemistry)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(or (up-compare-goal gl-archery-class-units >= 5)
 	(or (unit-type-count-total archery-class >= 5)
 	(up-compare-goal gl-cavalry-archer-units >= 5)))
@@ -20891,7 +20950,7 @@
 
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(or (building-type-count-total university < 1)
 	(up-research-status c: ri-chemistry >= research-pending))
 	(goal gl-food-saving 26)
@@ -20911,7 +20970,7 @@
 	(building-type-count-total university >= 1)
 	(research-available ri-chemistry)
 	(unit-available bombard-cannon-line)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-bbc-hc)
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
@@ -20926,7 +20985,7 @@
 
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-bbc-hc)
 	(or (building-type-count-total university < 1)
 		(or (up-research-status c: ri-chemistry >= research-pending)
@@ -20983,7 +21042,7 @@
 (defrule
 	(not (civ-selected viking))
 	(current-age >= castle-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(building-type-count-total town-center >= 1)
 	(research-available ri-wheel-barrow)
 	(goal gl-food-saving 0)
@@ -21020,7 +21079,7 @@
 ; (defrule
 	; (not (civ-selected viking))
 	; (current-age >= castle-age)
-	; (not (goal strategy-goal sg-boom-imp))
+	; (not (goal strategy-goal sg-fast-imp))
 	; (building-type-count-total town-center >= 1)
 	; (unit-type-count-total villager >= 42)
 	; (research-available ri-hand-cart)
@@ -21055,7 +21114,7 @@
 
 (defrule
 	(not (civ-selected burgundians))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(building-type-count-total lumber-camp >= 1)
 	(up-research-status c: castle-age >= research-pending)
 	(research-available ri-bow-saw)
@@ -21088,7 +21147,7 @@
 
 (defrule
 	(civ-selected burgundians)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(not (goal strategy-goal sg-fastcastle-gu))
 	(not (goal strategy-goal sg-fastcastle-uu))
 	(building-type-count-total lumber-camp >= 1)
@@ -21370,7 +21429,7 @@
 	(up-research-status c: ri-two-handed-swordsman >= research-pending)
 	(building-type-count-total barracks >= 1)
 	(or (and (goal gl-fastimp-unit fi-champs)
-	(goal strategy-goal sg-boom-imp))
+	(goal strategy-goal sg-fast-imp))
 	(research-completed ri-two-handed-swordsman))
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
@@ -21386,7 +21445,7 @@
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total barracks < 1)
-		(or (not (goal strategy-goal sg-boom-imp))
+		(or (not (goal strategy-goal sg-fast-imp))
 		(or (up-research-status c: ri-champion >= research-pending)
 		(up-research-status c: ri-two-handed-swordsman < research-pending))))
 	(goal gl-food-saving 42)
@@ -21405,7 +21464,7 @@
 	(up-research-status c: ri-long-swordsman >= research-pending)
 	(building-type-count-total barracks >= 1)
 	(or (and (goal gl-fastimp-unit fi-champs)
-	(goal strategy-goal sg-boom-imp))
+	(goal strategy-goal sg-fast-imp))
 	(research-completed ri-long-swordsman))
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
@@ -21421,7 +21480,7 @@
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total barracks < 1)
-		(or (not (goal strategy-goal sg-boom-imp))
+		(or (not (goal strategy-goal sg-fast-imp))
 		(or (up-research-status c: ri-legionary >= research-pending)
 		(up-research-status c: ri-long-swordsman < research-pending))))
 	(goal gl-food-saving 42)
@@ -21645,7 +21704,7 @@
 	(up-research-status c: castle-age >= research-pending)
 	(building-type-count-total barracks >= 1)
 	(or (unit-type-count-total eagle-warrior-line >= 3)
-		(and(goal strategy-goal sg-boom-imp)
+		(and(goal strategy-goal sg-fast-imp)
 			(goal gl-fastimp-unit fi-eaglespam)))
 	(research-available ri-eagle-warrior)
 	(goal gl-food-saving 0)
@@ -21664,7 +21723,7 @@
 	(or (building-type-count-total barracks < 1)
 		(or 
 			(and(unit-type-count-total eagle-warrior-line < 2)
-			(and(not(goal strategy-goal sg-boom-imp))
+			(and(not(goal strategy-goal sg-fast-imp))
 				(not(goal gl-fastimp-unit fi-eaglespam))))
 			(or (up-research-status c: ri-eagle-warrior >= research-pending)
 				(not(research-available ri-elite-eagle-warrior)))))
@@ -21684,7 +21743,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(building-type-count-total barracks >= 1)
 	(or (unit-type-count-total eagle-warrior-line >= 3)
-		(and(goal strategy-goal sg-boom-imp)
+		(and(goal strategy-goal sg-fast-imp)
 			(goal gl-fastimp-unit fi-eaglespam)))
 	(research-available ri-elite-eagle-warrior)
 	(up-research-status c: ri-eagle-warrior >= research-pending)
@@ -21702,7 +21761,7 @@
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
 	(or (building-type-count-total barracks < 1)
-		(or (and(not(goal strategy-goal sg-boom-imp))
+		(or (and(not(goal strategy-goal sg-fast-imp))
 				(not(goal gl-fastimp-unit fi-eaglespam)))
 			(up-research-status c: ri-elite-eagle-warrior >= research-pending)))
 	(goal gl-food-saving 24)
@@ -22167,7 +22226,7 @@
 (defrule
 	(research-available imperial-age)
 	(or (civilian-population g:>= gl-castleage-safe)
-	(goal strategy-goal sg-boom-imp))
+	(goal strategy-goal sg-fast-imp))
 	(up-compare-goal gl-military-advantage >= -25)
 	(goal gl-food-saving 0)
 	(goal gl-gold-saving 0)
@@ -22183,7 +22242,7 @@
 (defrule
 	(or (up-research-status c: imperial-age >= research-pending)
 	(or (and (civilian-population g:< gl-castleage-safe)
-		(not (goal strategy-goal sg-boom-imp)))
+		(not (goal strategy-goal sg-fast-imp)))
 	(up-compare-goal gl-military-advantage < -25)))
 	(goal gl-food-saving 23)
 	(goal gl-gold-saving 23)
@@ -22996,7 +23055,7 @@
 	(players-building-type-count focus-player town-center >= 1)
 	(up-set-target-object search-remote g: gl-tc-loop-counter) 
 	(or (up-object-data object-data-garrison-count >= 3)
-	(up-object-data object-data-hitpoints <= 450))
+	(up-object-data object-data-hitpoints <= 475))
 =>
 	(up-jump-rule 7) 
 )	
@@ -23099,7 +23158,7 @@
 	(players-building-type-count focus-player town-center >= 1)
 	(up-set-target-object search-remote g: gl-tc-loop-counter)
 	(or (up-object-data object-data-garrison-count < 3)
-	(up-object-data object-data-hitpoints <= 450))
+	(up-object-data object-data-hitpoints <= 475))
 =>
 	(up-jump-rule 7)
 )	
@@ -23208,7 +23267,7 @@
 	(or	(unit-type-count huskarl-set > 9)
 	(or	(unit-type-count ghulam-line > 9)
 	(unit-type-count cavalry-class > 19))))))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(current-age < imperial-age))
 =>	
 	(up-jump-rule 8)
@@ -23218,7 +23277,7 @@
 	(players-building-type-count focus-player town-center >= 1)
 	(up-set-target-object search-remote g: gl-tc-loop-counter)
 	(or (up-object-data object-data-garrison-count >= 3)
-	(up-object-data object-data-hitpoints <= 450))
+	(up-object-data object-data-hitpoints <= 475))
 =>
 	(up-jump-rule 3)
 )	
@@ -23308,7 +23367,7 @@
 	(players-building-type-count focus-player town-center >= 1)
 	(up-set-target-object search-remote g: gl-tc-loop-counter)
 	(or (up-object-data object-data-garrison-count < 3)
-	(up-object-data object-data-hitpoints <= 450))
+	(up-object-data object-data-hitpoints <= 475))
 =>
 	(up-jump-rule 3)
 )	
@@ -24717,7 +24776,7 @@
 	(nor(civ-selected mayan)
 		(civ-selected chinese))
 	(current-age >= castle-age)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research ri-loom)
@@ -26173,7 +26232,7 @@
 )
 
 (defrule
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(not(goal strategy-goal sg-towerrush))
 	(not(goal strategy-goal sg-drush))
 	(current-age >= dark-age)
@@ -26192,7 +26251,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(current-age >= dark-age)
 	(civilian-population >= 15)
 	(building-type-count-total lumber-camp == 1)
@@ -26262,7 +26321,7 @@
 )
 
 (defrule
-	(or (goal strategy-goal sg-boom-imp)
+	(or (goal strategy-goal sg-fast-imp)
 	(goal strategy-goal sg-drush))
 	(current-age == dark-age)
 	(civilian-population >= 25)
@@ -26382,7 +26441,7 @@
 (defrule
 	(or (goal strategy-goal sg-fastcastle-gu)
 	(or (goal strategy-goal sg-fastcastle-uu)
-	(goal strategy-goal sg-boom-imp)))
+	(goal strategy-goal sg-fast-imp)))
 	(current-age >= dark-age)
 	(current-age < castle-age)
 	(enemy-buildings-in-town)
@@ -29249,7 +29308,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(current-age == dark-age)
 	(civilian-population >= 20)
 	(building-type-count-total lumber-camp >= 2)
@@ -29475,7 +29534,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(or (and (goal sg-fastcastle-boom YES)
 		(building-type-count-total town-center >= 4))
 	(or (and (goal sg-fastcastle-boom NO)
@@ -29495,7 +29554,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(or (up-compare-sn sn-wood-gatherer-percentage >= 55)
 	(game-time > 2100))
 	(building-type-count-total lumber-camp < 4)
@@ -29517,7 +29576,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(building-type-count-total lumber-camp < 6)
 	(resource-found wood)
 	;(dropsite-min-distance wood > 4)
@@ -30547,7 +30606,7 @@
 (defrule
 	(or (goal strategy-goal sg-fastcastle-gu)
 	(or (goal strategy-goal sg-fastcastle-uu)
-	(goal strategy-goal sg-boom-imp)))
+	(goal strategy-goal sg-fast-imp)))
 	(current-age >= feudal-age)
 	(building-type-count-total blacksmith == 0)
 	(can-build-with-escrow blacksmith)
@@ -30566,7 +30625,7 @@
 (defrule
 	(or (goal strategy-goal sg-fastcastle-gu)
 	(or (goal strategy-goal sg-fastcastle-uu)
-	(goal strategy-goal sg-boom-imp)))
+	(goal strategy-goal sg-fast-imp)))
 	(current-age >= feudal-age)
 	(building-type-count-total blacksmith == 0)
 	(can-build blacksmith)
@@ -30740,7 +30799,7 @@
 (defrule
 	(or (goal strategy-goal sg-fastcastle-gu)
 	(or (goal strategy-goal sg-fastcastle-uu)
-	(goal strategy-goal sg-boom-imp)))
+	(goal strategy-goal sg-fast-imp)))
 	(current-age >= feudal-age)
 	(building-type-count-total market == 0)
 	(can-build-with-escrow market)
@@ -30898,7 +30957,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(current-age == imperial-age)
 	(food-amount >= 150)
 	(military-population >= 20)
@@ -30908,7 +30967,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(current-age == imperial-age)
 	(food-amount >= 125)
 	(military-population >= 20)
@@ -30919,7 +30978,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(current-age == imperial-age)
 	(military-population >= 20)
 	(can-research ri-wheel-barrow)
@@ -31057,7 +31116,7 @@
 #end-if
 
 (defrule
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(can-research ri-gold-mining)
 	(up-research-status c: castle-age >= research-pending)
 	(up-research-status c: ri-double-bit-axe >= research-pending)
@@ -31068,7 +31127,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(current-age == imperial-age)
 	(military-population >= 20)
 	(can-research ri-gold-mining)
@@ -31115,7 +31174,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(current-age == feudal-age)
 	(building-type-count-total market >= 1)
 	(or (building-type-count-total blacksmith >= 1)
@@ -31130,7 +31189,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(current-age == castle-age)
 	(or 
 		(and (building-type-count-total monastery >= 1)
@@ -31152,7 +31211,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(current-age >= feudal-age)
 	(idle-farm-count < 1)
 	(can-build farm)
@@ -31564,7 +31623,7 @@
 	(up-research-status c: imperial-age == research-pending))
 	(unit-type-count-total villager < 130)
 	(food-amount >= 300)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(not (research-completed ri-wheel-barrow))
 	(not (can-research-with-escrow ri-wheel-barrow))
 =>
@@ -31580,7 +31639,7 @@
 	(or (unit-type-count-total villager g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 	(unit-type-count-total villager < 40)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 =>
 	(up-modify-escrow food c:- 50)
 	(train villager)
@@ -31593,10 +31652,10 @@
 	(can-train-with-escrow villager)
 	(or (unit-type-count-total villager g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(unit-type-count-total villager < 130)
 	(food-amount >= 300)
-	(or (goal strategy-goal sg-boom-imp)
+	(or (goal strategy-goal sg-fast-imp)
 	(up-research-status c: ri-wheel-barrow >= research-pending))
 =>
 	(up-modify-escrow food c:- 50)
@@ -31623,7 +31682,7 @@
 (defrule
 	(current-age == castle-age)
 	(can-train-with-escrow villager)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(goal sg-fastcastle-boom YES)
 	(or (unit-type-count-total villager g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
@@ -31639,7 +31698,7 @@
 	(current-age == castle-age)
 	(players-current-age focus-player < castle-age)
 	(not(goal sg-fastcastle-boom NO))
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(building-type-count stable > 0)
 	(can-train knight-line)
 =>
@@ -31658,7 +31717,7 @@
 	(or (players-unit-type-count focus-player knight-line >= 4)
 	(or (players-unit-type-count focus-player camel-line >= 4)
 	(players-unit-type-count focus-player battle-elephant-line >= 2)))
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(building-type-count barracks > 0)
 	(can-train spearman-line)
 =>
@@ -31700,7 +31759,7 @@
 	(or (civ-selected aztec)
 	(civ-selected burgundians)))
 	(up-compare-goal gl-military-advantage >= -5)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(building-type-count castle >= 1))
 	(or (not (goal strategy-goal sg-fastcastle-uu))
 	(building-type-count castle >= 1))
@@ -31718,7 +31777,7 @@
 	(or (civ-selected armenians)
 	(civ-selected georgians))
 	(up-compare-goal gl-military-advantage >= -5)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(building-type-count castle >= 1))
 	(or (not (goal strategy-goal sg-fastcastle-uu))
 	(building-type-count castle >= 1))
@@ -31734,7 +31793,7 @@
 
 (defrule
 	(not (goal gl-fastimp-unit fi-bbc-hc))
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(current-age == castle-age)
 	(can-build monastery)
 	(building-type-count-total monastery == 0)
@@ -31746,7 +31805,7 @@
 
 (defrule
 	(goal gl-fastimp-unit fi-bbc-hc)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(current-age >= castle-age)
 	(can-build university)
 	(building-type-count-total university == 0)
@@ -31757,7 +31816,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(current-age == castle-age)
 	(can-build siege-workshop)
 	(building-type-count-total siege-workshop == 0)
@@ -32226,7 +32285,7 @@
 	(current-age == castle-age)
 =>
 	(set-strategic-number sn-percent-building-cancellation 35)
-	(set-goal strategy-goal sg-boom-imp)
+	(set-goal strategy-goal sg-fast-imp)
 	(set-goal c-villager-goal 40)
 	(set-goal gl-food-saving 23)
 	(set-goal gl-gold-saving 23)
@@ -32335,7 +32394,7 @@
 (defrule
 	(current-age == imperial-age)
 	(building-type-count-total mining-camp < 4)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(resource-found stone)
 	(dropsite-min-distance stone > 2) ;testing
 	(dropsite-min-distance stone < 255)
@@ -32351,7 +32410,7 @@
 )
 
 (defrule
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(current-age >= castle-age)
 	(can-research ri-town-watch)
 	(up-compare-goal gl-military-advantage >= -3)
@@ -32362,7 +32421,7 @@
 )
 
 (defrule
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(current-age >= castle-age)
 	(civilian-population >= 100)
 	(can-research ri-town-patrol)
@@ -32371,7 +32430,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(current-age == imperial-age)
 	(military-population >= 20)
 	(can-research ri-town-watch)
@@ -32380,7 +32439,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(current-age == imperial-age)
 	(civilian-population >= 100)
 	(can-research ri-town-patrol)
@@ -32556,7 +32615,7 @@
 	(or (building-type-count-total stable > 1)
 	(or (building-type-count-total archery-range > 1)
 	(building-type-count-total barracks > 2)))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
 	(random-number <= 50)
@@ -32585,7 +32644,7 @@
 	(or (building-type-count-total stable > 1)
 	(or (building-type-count-total archery-range > 1)
 	(building-type-count-total barracks > 2)))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
 	(random-number > 50)
@@ -32614,7 +32673,7 @@
 	(or (building-type-count-total stable > 1)
 	(or (building-type-count-total archery-range > 1)
 	(building-type-count-total barracks > 2)))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
 	(random-number > 50)
@@ -32643,7 +32702,7 @@
 	(or (building-type-count-total stable > 1)
 	(or (building-type-count-total archery-range > 1)
 	(building-type-count-total barracks > 2)))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
 	(random-number <= 50)
@@ -32671,7 +32730,7 @@
 	(or (building-type-count-total archery-range > 1)
 	(or (building-type-count-total barracks > 2)
 	(up-compare-goal gl-military-advantage >= 0))))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
 	(random-number <= 50)
@@ -32693,7 +32752,7 @@
 	(or (building-type-count-total archery-range > 1)
 	(or (building-type-count-total barracks > 2)
 	(up-compare-goal gl-military-advantage >= 0))))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
 	(random-number > 50)
@@ -32715,7 +32774,7 @@
 	(or (building-type-count-total archery-range > 1)
 	(or (building-type-count-total barracks > 2)
 	(up-compare-goal gl-military-advantage >= 0))))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
 	(random-number > 50)
@@ -32737,7 +32796,7 @@
 	(or (building-type-count-total archery-range > 1)
 	(or (building-type-count-total barracks > 2)
 	(up-compare-goal gl-military-advantage >= 0))))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(nand (goal strategy-goal sg-fastcastle-uu)
 	(building-type-count-total castle == 0))
 	(random-number <= 50)
@@ -32753,7 +32812,7 @@
 	(current-age == castle-age)
 	(game-time >= 2400)
 	(can-build town-center)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(building-type-count-total town-center == 3)
 	(up-compare-goal gl-military-advantage >= -12)
 =>
@@ -32767,7 +32826,7 @@
 	(current-age == castle-age)
 	(game-time >= 3000)
 	(can-build town-center)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(building-type-count-total town-center == 4)
 	(building-type-count-total town-center < 5)
 	(up-compare-goal gl-military-advantage >= -12)
@@ -32846,7 +32905,7 @@
 	(current-age == imperial-age)
 	(game-time > 3600)
 	(can-build town-center)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(building-type-count-total castle >= 1)
 	(building-type-count-total town-center < 7)
 	(up-compare-goal gl-military-advantage >= -12)
@@ -32907,7 +32966,7 @@
 )
 
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age == imperial-age)
 	(building-type-count-total lumber-camp > 0)
 	(up-pending-objects c: farm < 16)
@@ -32919,7 +32978,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(current-age == imperial-age)
 	(building-type-count-total lumber-camp > 0)
 	(or (not (goal gl-fastimp-unit fi-monks))
@@ -32934,7 +32993,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(current-age == imperial-age)
 	(building-type-count-total lumber-camp > 0)
 	(up-pending-objects c: farm < 16)
@@ -33495,7 +33554,7 @@
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 	(military-population >= 10)
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 =>
 	(train battering-ram-line)
 )
@@ -33509,7 +33568,7 @@
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 	(military-population >= 10)
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 =>
 	(train armored-elephant-line)
 )
@@ -33563,7 +33622,7 @@
 	(up-research-status c: imperial-age == research-pending))
 	(or (up-compare-goal gl-military-advantage >= 6)
 	(military-population >= 15))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -33581,7 +33640,7 @@
 	(wood-amount > 75)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 =>
 	(train mangonel-line)
 )
@@ -33597,7 +33656,7 @@
 	(wood-amount > 75)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 =>
 	(train scorpion-line)
 )
@@ -33623,7 +33682,7 @@
 	(building-type-count-total monastery < 2)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 =>
 	(up-assign-builders c: monastery c: 2)
 	(up-set-placement-data my-player-number -1 c: 9)
@@ -33636,7 +33695,7 @@
 	(can-train monk)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 =>
 	(train monk)
 )
@@ -33649,7 +33708,7 @@
 	(unit-type-count-total warrior-priest < 6)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 =>
 	(train warrior-priest)
 )
@@ -33668,7 +33727,7 @@
 	(can-train scorpion-line)
 	(up-research-status c: ri-heavy-scorpion >= research-pending)
 	(unit-type-count-total scorpion-line < 5)
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 =>
 	(train scorpion-line)
 )
@@ -33728,7 +33787,7 @@
 )
 
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(can-research ri-pikeman)
 	(unit-type-count-total spearman-line > 4)
 =>
@@ -33736,7 +33795,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(current-age == imperial-age)
 	(unit-type-count-total spearman-line > 4)
 	(can-research ri-pikeman)
@@ -33769,7 +33828,7 @@
 	(or 
 		(not (map-type arena))
 		(and (building-type-count castle >= 1)
-		(and (goal strategy-goal sg-boom-imp)
+		(and (goal strategy-goal sg-fast-imp)
 		(up-research-status c: imperial-age >= research-pending)))
 	)
 	(military-population < 18)
@@ -33846,7 +33905,7 @@
 	;(goal retreat-now-goal 0)
 	(civilian-population g:< c-villager-goal)
 	(building-type-count castle >= 1)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(up-research-status c: imperial-age < research-pending)
 =>
 	;(set-goal attack-now-goal 1)
@@ -33913,7 +33972,7 @@
 	(civilian-population g:>= c-villager-goal)
 	(building-type-count-total university == 0)
 	(can-build-with-escrow university)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 =>
 	(up-modify-escrow wood c:- 200)
 	(up-set-placement-data my-player-number lumber-camp c: -2)
@@ -33925,7 +33984,7 @@
 	(civilian-population g:>= c-villager-goal)
 	(building-type-count-total siege-workshop == 0)
 	(can-build-with-escrow siege-workshop)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 =>
 	(up-modify-escrow wood c:- 200)
 	(up-set-placement-data my-player-number -1 c: 12)
@@ -33937,7 +33996,7 @@
 	(civilian-population g:>= c-villager-goal)
 	(building-type-count-total monastery == 0)
 	(can-build-with-escrow monastery)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(not (civ-selected armenians))
 	(not (civ-selected georgians))
 =>
@@ -33952,7 +34011,7 @@
 	(civilian-population g:>= c-villager-goal)
 	(building-type-count-total monastery == 0)
 	(can-build-with-escrow monastery)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(or (civ-selected armenians)
 	(civ-selected georgians))
 =>
@@ -34024,7 +34083,7 @@
 )
 
 (defrule
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(current-age >= castle-age)
 	(civ-selected lithuanians)
 	(building-type-count-total monastery == 0)
@@ -34037,7 +34096,7 @@
 )
 
 (defrule
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(current-age >= castle-age)
 	(civilian-population >= 55)
 	(building-type-count-total monastery == 0)
@@ -34050,13 +34109,13 @@
 )
 
 (defrule
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(current-age == castle-age)
 	(can-train monk)
 	(unit-type-count-total monk < 3)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(train monk)
@@ -34078,7 +34137,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(can-train monk)
 	(unit-type-count-total monk < 3)
 =>
@@ -34090,7 +34149,7 @@
 	(can-research ri-block-printing)
 	(unit-type-count-total monk >= 3)
 	(up-compare-goal gl-military-advantage < 35)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(goal gl-fastimp-unit fi-monks))
 =>
 	(research ri-block-printing)
@@ -34101,7 +34160,7 @@
 	(can-research ri-illumination)
 	(unit-type-count-total monk >= 5)
 	(up-compare-goal gl-military-advantage < 35)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(goal gl-fastimp-unit fi-monks))
 =>
 	(research ri-illumination)
@@ -34118,7 +34177,7 @@
 	(or (players-unit-type-count focus-player eagle-warrior-line < 1)
 	(or (players-unit-type-count focus-player missionary < 1)
 	(players-unit-type-count focus-player monk < 1)))))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(goal gl-fastimp-unit fi-monks))
 =>
 	(up-modify-escrow gold c:- 200)
@@ -34130,7 +34189,7 @@
 	(can-research-with-escrow ri-fervor)
 	(civ-selected bohemians)
 	(up-compare-goal gl-military-advantage < 35)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(goal gl-fastimp-unit fi-monks))
 =>
 	(up-modify-escrow gold c:- 140)
@@ -34142,7 +34201,7 @@
 	(can-research ri-fervor)
 	(unit-type-count-total monk >= 3)
 	(up-compare-goal gl-military-advantage < 35)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(goal gl-fastimp-unit fi-monks))
 =>
 	(research ri-fervor)
@@ -34154,7 +34213,7 @@
 	(or (players-unit-type-count focus-player monk >= 3)
 	(players-building-type-count focus-player monastery >= 2))
 	(up-compare-goal gl-military-advantage < 35)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(goal gl-fastimp-unit fi-monks))
 =>
 	(research ri-devotion)
@@ -34167,7 +34226,7 @@
 	(and (players-building-type-count focus-player monastery >= 2)
 	(players-unit-type-count focus-player monk >= 5)))
 	(up-compare-goal gl-military-advantage < 35)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(goal gl-fastimp-unit fi-monks))
 =>
 	(research ri-faith)
@@ -34180,7 +34239,7 @@
 	(and (players-building-type-count focus-player monastery >= 2)
 	(players-unit-type-count focus-player monk >= 4)))
 	(up-compare-goal gl-military-advantage < 35)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(goal gl-fastimp-unit fi-monks))
 =>
 	(research ri-heresy)
@@ -34191,7 +34250,7 @@
 	(can-research ri-sanctity)
 	(unit-type-count-total monk >= 3)
 	(up-compare-goal gl-military-advantage < 35)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(goal gl-fastimp-unit fi-monks))
 =>
 	(research ri-sanctity)
@@ -34222,14 +34281,14 @@
 	(or (players-unit-type-count focus-player monk >= 3)
 	(and (civ-selected aztec)
 	(unit-type-count-total monk > 9)))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(goal gl-fastimp-unit fi-monks))
 =>
 	(research ri-atonement)
 )
 
 (defrule
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(current-age >= feudal-age)
 	(goal gl-food-saving 12)
 	(goal gl-wood-saving 12)
@@ -34246,7 +34305,7 @@
 )
 
 (defrule
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(current-age >= castle-age)
 	;(not(goal strategy-goal fastcastle))
 	(can-research-with-escrow ri-bow-saw)
@@ -34263,7 +34322,7 @@
 )
 
 (defrule
-	(or (not(goal strategy-goal sg-boom-imp))
+	(or (not(goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 	(current-age >= castle-age)	
 	(can-research-with-escrow ri-bow-saw)
@@ -34281,7 +34340,7 @@
 )	
 
 (defrule
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(current-age == imperial-age)
 	;(not(goal strategy-goal fastcastle))
 	(can-research ri-bow-saw)
@@ -34301,7 +34360,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(can-research-with-escrow ri-wheel-barrow)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
@@ -34319,7 +34378,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(can-research-with-escrow ri-wheel-barrow)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
@@ -34331,7 +34390,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(can-research ri-wheel-barrow)
 =>
 	(research ri-wheel-barrow)
@@ -34339,7 +34398,7 @@
 
 ; (defrule
 	; (current-age >= castle-age)
-	; (not(goal strategy-goal sg-boom-imp))
+	; (not(goal strategy-goal sg-fast-imp))
 	; (can-research-with-escrow ri-hand-cart)
 	; (unit-type-count-total villager >= 42)
 	; (goal gl-food-saving 29)
@@ -34356,7 +34415,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(can-research ri-hand-cart)
 	(unit-type-count-total villager >= 60)
 =>
@@ -34365,7 +34424,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(can-research-with-escrow ri-hand-cart)
 =>
 	(up-modify-escrow wood c:- 200)
@@ -34510,7 +34569,7 @@
 )
 
 (defrule ;before crossbow research
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age == castle-age)
 	(can-train archer-line)
 	(unit-type-count-total archer-line < 6)
@@ -34536,7 +34595,7 @@
 )
 ;going for crossbows in castle-age
 (defrule ;after crossbow, before ballistics
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age == castle-age)
 	(can-train archer-line)
 	(goal ca-strategy gl-castleage-rangeunit)
@@ -34561,7 +34620,7 @@
 )
 
 (defrule ;after crossbow & ballistics 
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age == castle-age)
 	(can-train archer-line)
 	(goal ca-strategy gl-castleage-rangeunit)
@@ -34585,7 +34644,7 @@
 )
 ;not going for crossbows in castle-age
 (defrule ;after crossbow
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age == castle-age)
 	(can-train archer-line)
 	(goal strategy-goal sg-archerrush)
@@ -34609,7 +34668,7 @@
 
 
 ; (defrule
-	; (not (goal strategy-goal sg-boom-imp))
+	; (not (goal strategy-goal sg-fast-imp))
 	; (current-age == castle-age)
 	; (can-train archer-line)
 	; (unit-type-count-total archer-line < 3)
@@ -34637,7 +34696,7 @@
 ; )
 
 ; (defrule
-	; (not (goal strategy-goal sg-boom-imp))
+	; (not (goal strategy-goal sg-fast-imp))
 	; (current-age == castle-age)
 	; (can-train archer-line)
 	; (wood-amount > 75)
@@ -34700,7 +34759,7 @@
 (defrule
 	(current-age == castle-age)
 	(goal ca-strategy gl-castleage-stableunit)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(not (goal sg-fastcastle-boom NO))
 	(can-train knight-line)
 	(unit-type-count-total knight-line < 5)
@@ -34723,7 +34782,7 @@
 	(current-age == castle-age)
 	(goal ca-strategy gl-castleage-stableunit)
 	(not (goal sg-fastcastle-boom NO))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(can-train knight-line)
 	(up-research-status c: ri-chain-barding < research-pending)
 	(up-research-status c: ri-bloodlines < research-pending)	
@@ -34749,7 +34808,7 @@
 (defrule
 	(current-age == castle-age)
 	(goal ca-strategy gl-castleage-stableunit)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(not (goal sg-fastcastle-boom NO))
 	(can-train knight-line)
 	(or (up-research-status c: ri-chain-barding >= research-pending)
@@ -34774,7 +34833,7 @@
 
 ; (defrule
 	; (current-age == castle-age)
-	; (not (goal strategy-goal sg-boom-imp))
+	; (not (goal strategy-goal sg-fast-imp))
 	; (not (goal sg-fastcastle-boom NO))
 	; (can-train knight-line)
 	; (unit-type-count-total knight-line < 5)
@@ -34800,7 +34859,7 @@
 ; (defrule
 	; (current-age == castle-age)
 	; (not (goal sg-fastcastle-boom NO))
-	; (not (goal strategy-goal sg-boom-imp))
+	; (not (goal strategy-goal sg-fast-imp))
 	; (can-train knight-line)
 	; (up-research-status c: ri-chain-barding < research-pending)
 	; (up-research-status c: ri-bloodlines < research-pending)	
@@ -34829,7 +34888,7 @@
 
 ; (defrule
 	; (current-age == castle-age)
-	; (not (goal strategy-goal sg-boom-imp))
+	; (not (goal strategy-goal sg-fast-imp))
 	; (not (goal sg-fastcastle-boom NO))
 	; (can-train knight-line)
 	; (or (up-research-status c: ri-chain-barding >= research-pending)
@@ -34859,7 +34918,7 @@
 (defrule
 	(current-age == castle-age)
 	(goal ca-strategy gl-castleage-stableunit)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(not (goal sg-fastcastle-boom NO))
 	(civ-selected bengalis)
 	(can-train scout-cavalry-line)
@@ -34873,7 +34932,7 @@
 (defrule
 	(current-age == castle-age)
 	(goal ca-strategy gl-castleage-stableunit)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(not (goal sg-fastcastle-boom NO))
 	(civ-selected bengalis)
 	(can-build monastery)
@@ -34889,7 +34948,7 @@
 	; (current-age == castle-age)
 	; (or 
 		; (and 
-			; (not(goal strategy-goal sg-boom-imp))
+			; (not(goal strategy-goal sg-fast-imp))
 			; (or (and(goal sg-fastcastle-boom YES)
 					; (building-type-count-total town-center >= 3))
 				; (and(goal sg-fastcastle-boom NO)
@@ -34913,7 +34972,7 @@
 
 ; (defrule
 	; (current-age == castle-age)
-	; (or (not (goal strategy-goal sg-boom-imp))
+	; (or (not (goal strategy-goal sg-fast-imp))
 	; (up-research-status c: imperial-age >= research-pending))
 	; (goal ca-strategy gl-castleage-siege-infantry)
 	; (up-research-status c: long-swordsman >= research-pending)
@@ -34934,7 +34993,7 @@
 	(current-age == castle-age)
 	(can-train militiaman-line)
 	(up-research-status c: ri-long-swordsman >= research-pending)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(or (civ-selected gothic)
 	(up-research-status c: ri-gambesons >= research-pending))
 =>
@@ -34961,7 +35020,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(goal ca-strategy gl-castleage-siege-infantry)
 	(can-train spearman-line)
 	(up-research-status c: ri-pikeman >= research-pending)
@@ -34974,7 +35033,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(can-research ri-pikeman)
 	(goal ca-strategy gl-castleage-siege-infantry)
 =>
@@ -34983,7 +35042,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 	(can-build siege-workshop)
 	(or (not (goal sg-fastcastle-boom YES))
@@ -34998,7 +35057,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 	(can-build siege-workshop)
 	(or (not (goal sg-fastcastle-boom YES))
@@ -35015,7 +35074,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 	(can-train mangonel-line)
@@ -35031,7 +35090,7 @@
 
 ; (defrule ;needs to be DUC tasked on a wall, then units need to be DUC tasked on the siege-tower
 	; (current-age >= castle-age)
-	; (or (not (goal strategy-goal sg-boom-imp))
+	; (or (not (goal strategy-goal sg-fast-imp))
 	; (up-research-status c: imperial-age >= research-pending))
 	; (can-train-with-escrow siege-tower)
 	; (unit-type-count-total siege-tower < 1)
@@ -37630,9 +37689,9 @@
 	(or (and (up-compare-goal gl-military-advantage >= -20)
 		(food-amount > 400))
 	(civilian-population < 70))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(or (food-amount >= 400)
-	(and (goal strategy-goal sg-boom-imp)
+	(and (goal strategy-goal sg-fast-imp)
 	(unit-type-count-total villager < 40))))
 =>
 	(train villager)
@@ -37644,7 +37703,7 @@
 	(current-age == imperial-age)
 	(can-train-with-escrow villager)
 	(civilian-population < 75)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 =>
 	(up-modify-escrow food c:- 50)
 	(train villager)
@@ -37662,7 +37721,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(or (not (goal gl-fastimp-unit fi-monks))
 	(building-type-count-total castle >= 1))
 	(current-age == imperial-age)
@@ -37676,7 +37735,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-monks)
 	(current-age == imperial-age)
 	(or (players-unit-type-count focus-player scout-cavalry-line >= 25)
@@ -37713,7 +37772,7 @@
 (defrule
 	(current-age == imperial-age)
 	(can-build town-center)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(building-type-count-total town-center < 5)
 	(up-compare-goal gl-military-advantage >= -10)
 =>
@@ -37780,7 +37839,7 @@
 )
 
 (defrule
-	(and (not (goal strategy-goal sg-boom-imp))
+	(and (not (goal strategy-goal sg-fast-imp))
 	(goal gl-fastimp-unit fi-bbc-hc))
 	(current-age == imperial-age)
 	(can-train armored-elephant-line)
@@ -37884,7 +37943,7 @@
 	(up-research-status c: ri-onager >= research-pending)
 	(unit-type-count-total mangonel-line < 5)
 	(wood-amount > 75)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(military-population >= 20))
 =>
 	(train mangonel-line)
@@ -37896,7 +37955,7 @@
 	(research-available ri-onager)
 	(unit-type-count-total mangonel-line < 2)
 	(wood-amount > 75)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 =>
@@ -38062,7 +38121,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 	(can-train barracks-huskarl)
 =>
@@ -38102,7 +38161,7 @@
 
 (defrule
 	(unit-available condottiero)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(not (goal gl-fastimp-unit fi-condottieros))
 =>
 	(set-goal gl-fastimp-unit fi-condottieros)
@@ -38129,7 +38188,7 @@
 
 (defrule
 	(can-train condottiero)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-condottieros)
 	(building-type-count-total barracks > 0)
 =>
@@ -38137,7 +38196,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-condottieros)
 	(building-type-count-total barracks < 6)
 	(can-build barracks)
@@ -38154,7 +38213,7 @@
 	(or (goal gl-helping-ally 2)
 	(up-compare-goal gl-military-advantage >= 0)))
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 =>
 	(set-goal attack-now-goal 1)
 	;(set-goal retreat-now-goal 0)
@@ -38170,7 +38229,7 @@
 	(up-compare-goal gl-military-advantage < -8)
 	(goal attack-now-goal 1)
 	(goal retreat-now-goal 0)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(not (goal gl-helping-ally 2))
 =>
 	(set-goal attack-now-goal 0)
@@ -38193,7 +38252,7 @@
 	(or (military-population >= 24)
 	(up-compare-goal gl-military-advantage >= 10))
 	(up-compare-goal gl-military-advantage >= -5)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 =>
 	;(set-goal attack-now-goal 1)
 	(set-goal retreat-now-goal 0)
@@ -38212,7 +38271,7 @@
 	;(goal retreat-now-goal 0)
 	(or (military-population >= 20)
 	(up-compare-goal gl-military-advantage >= 10))
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 =>
 	;(set-goal attack-now-goal 1)
 	(set-goal retreat-now-goal 0)
@@ -38263,7 +38322,7 @@
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
 	(building-type-count-total university >= 1)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(or (up-compare-goal gl-archery-class-units >= 5)
 	(up-compare-goal gl-cavalry-archer-units >= 5))
 	(can-research-with-escrow ri-chemistry)
@@ -38283,7 +38342,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(building-type-count-total university >= 1)
 	(unit-available bombard-cannon-line)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-bbc-hc)
 	(can-research-with-escrow ri-chemistry)
 	(goal gl-food-saving 26)
@@ -38375,7 +38434,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(can-research ri-stone-mining)
 	(or (up-compare-sn sn-stone-gatherer-percentage > 6)
 	(civilian-population >= 75))
@@ -38385,7 +38444,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population > 50)
 	(can-research ri-stone-mining)
 	(strategic-number sn-stone-gatherer-percentage > 6)
@@ -38394,7 +38453,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(up-research-status c: imperial-age >= research-pending)
 	(can-build barracks)
 	(building-type-count-total barracks < 1)
@@ -38571,7 +38630,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(civilian-population >= 80)
 	(building-type-count-total barracks < 10)
 	(building-type-count-total town-center >= 1)
@@ -38587,7 +38646,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(civilian-population >= 80)
 	(building-type-count-total archery-range < 10)
 	(building-type-count-total town-center >= 1)
@@ -38604,7 +38663,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(civilian-population >= 80)
 	(building-type-count-total siege-workshop < 4)
 	(building-type-count-total town-center >= 1)
@@ -38622,7 +38681,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(civilian-population >= 80)
 	(building-type-count-total stable < 10)
 	(building-type-count-total town-center >= 1)
@@ -38638,7 +38697,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(civilian-population >= 80)
 	(building-type-count-total stable < 8)
 	(building-type-count-total town-center >= 1)
@@ -38659,7 +38718,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(building-type-count-total siege-workshop < 2)
 	(building-type-count-total town-center >= 1)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-bbc-hc)
 	(can-build siege-workshop)
 =>
@@ -38672,7 +38731,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(building-type-count-total archery-range < 4)
 	(building-type-count-total town-center >= 1)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-bbc-hc)
 	(can-build archery-range)
 =>
@@ -38685,7 +38744,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(building-type-count-total stable < 4)
 	(building-type-count-total town-center >= 1)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-cavalier)
 	(can-build stable)
 =>
@@ -38698,7 +38757,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(building-type-count-total barracks < 4)
 	(building-type-count-total town-center >= 1)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(or (goal gl-fastimp-unit fi-champs)
 	(or (goal gl-fastimp-unit fi-condottieros)
 	(goal gl-fastimp-unit fi-eaglespam)))
@@ -38713,7 +38772,7 @@
 	(up-research-status c: imperial-age >= research-pending)
 	(building-type-count-total monastery < 6)
 	(building-type-count-total town-center >= 1)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-monks)
 	(can-build monastery)
 =>
@@ -38737,7 +38796,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-cavalier)
 	(current-age == imperial-age)
 	(can-train knight-line)
@@ -38748,7 +38807,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-cavalier)
 	(current-age == imperial-age)
 	(can-train knight-line)
@@ -38761,7 +38820,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-cavalier)
 	(current-age == imperial-age)
 	(can-train knight-line)
@@ -38771,7 +38830,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-eaglespam)
 	(up-research-status c: imperial-age >= research-pending)
 	(can-research-with-escrow ri-eagle-warrior)
@@ -38788,7 +38847,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-eaglespam)
 	(current-age == imperial-age)
 	(can-research-with-escrow ri-elite-eagle-warrior)
@@ -38805,7 +38864,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-eaglespam)
 	(up-research-status c: imperial-age >= research-pending)
 	(can-research-with-escrow ri-eagle-warrior)
@@ -38816,7 +38875,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-eaglespam)
 	(current-age == imperial-age)
 	(can-research-with-escrow ri-elite-eagle-warrior)
@@ -38827,7 +38886,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-eaglespam)
 	(current-age == imperial-age)
 	(can-train eagle-warrior-line)
@@ -38837,7 +38896,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-champs)
 	(up-research-status c: imperial-age >= research-pending)
 	(can-research-with-escrow ri-man-at-arms)
@@ -38848,7 +38907,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-champs)
 	(up-research-status c: imperial-age >= research-pending)
 	(can-research-with-escrow ri-long-swordsman)
@@ -38859,7 +38918,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-champs)
 	(up-research-status c: imperial-age >= research-pending)
 	(can-research-with-escrow ri-two-handed-swordsman)
@@ -38870,7 +38929,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-champs)
 	(current-age == imperial-age)
 	(can-research-with-escrow ri-champion)
@@ -38881,7 +38940,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-champs)
 	(current-age == imperial-age)
 	(can-research-with-escrow ri-legionary)
@@ -38892,7 +38951,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-champs)
 	(current-age == imperial-age)
 	(can-train militiaman-line)
@@ -38907,7 +38966,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-champs)
 	(current-age == imperial-age)
 	(can-train militiaman-line)
@@ -38919,7 +38978,7 @@
 
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-bbc-hc)
 	(current-age == imperial-age)
 	(unit-type-count-total hand-cannoneer < 10)
@@ -38930,7 +38989,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-bbc-hc)
 	(current-age == imperial-age)
 	(unit-type-count-total hand-cannoneer < 20)
@@ -38942,7 +39001,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-bbc-hc)
 	(current-age == imperial-age)
 	(unit-type-count-total bombard-cannon >= 4)
@@ -38961,7 +39020,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-bbc-hc)
 	(current-age == imperial-age)
 	(can-train-with-escrow bombard-cannon-line)
@@ -38972,7 +39031,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-monks)
 	(current-age == imperial-age)
 	(can-train spearman-line)
@@ -38984,7 +39043,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-monks)
 	(current-age == imperial-age)
 	(can-train spearman-line)
@@ -38997,7 +39056,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-monks)
 	(current-age == imperial-age)
 	(can-train spearman-line)
@@ -39008,7 +39067,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-monks)
 	(current-age == imperial-age)
 	(can-train spearman-line)
@@ -39018,7 +39077,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-monks)
 	(current-age == imperial-age)
 	(can-train mangonel-line)
@@ -39028,7 +39087,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-monks)
 	(current-age == imperial-age)
 	(can-train battering-ram-line)
@@ -39038,7 +39097,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-monks)
 	(up-research-status c: imperial-age >= research-pending)
 	(can-train monk)
@@ -39068,7 +39127,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(current-age == imperial-age)
 	(goal ca-strategy gl-castleage-siege-infantry)
 	(or (and (up-research-status c: ri-two-handed-swordsman >= research-pending)
@@ -39095,7 +39154,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(can-train battle-elephant-line)
 	(not (civ-selected dravidians))
 	(not (research-completed ri-elite-battle-elephant))
@@ -39107,7 +39166,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(can-train battle-elephant-line)
 	(up-research-status c: ri-elite-battle-elephant >= research-pending)
 	(unit-type-count knight-line < 5)
@@ -39168,9 +39227,9 @@
 	(can-research-with-escrow ri-cavalier)
 	(unit-type-count-total knight-line >= 4)
 	(or 
-		(and (goal strategy-goal sg-boom-imp)
+		(and (goal strategy-goal sg-fast-imp)
 			 (goal gl-fastimp-unit fi-cavalier))
-		(not (goal strategy-goal sg-boom-imp)))
+		(not (goal strategy-goal sg-fast-imp)))
 =>
 	(up-modify-escrow food c:- 150)
 	(up-modify-escrow gold c:- 150)
@@ -39194,9 +39253,9 @@
 	(can-research-with-escrow ri-cavalier)
 	(unit-type-count-total knight-line >= 0)
 	(or 
-		(and (goal strategy-goal sg-boom-imp)
+		(and (goal strategy-goal sg-fast-imp)
 			 (goal gl-fastimp-unit fi-cavalier))
-		(not (goal strategy-goal sg-boom-imp)))
+		(not (goal strategy-goal sg-fast-imp)))
 	(goal gl-food-saving 19)
 	(goal gl-gold-saving 19)
 =>
@@ -39215,9 +39274,9 @@
 	(can-research-with-escrow ri-cavalier)
 	(unit-type-count-total knight-line >= 4)
 	(or 
-		(and (goal strategy-goal sg-boom-imp)
+		(and (goal strategy-goal sg-fast-imp)
 			 (goal gl-fastimp-unit fi-cavalier))
-		(not (goal strategy-goal sg-boom-imp)))
+		(not (goal strategy-goal sg-fast-imp)))
 =>
 	(up-modify-escrow food c:- 300)
 	(up-modify-escrow gold c:- 300)
@@ -39301,7 +39360,7 @@
 
 (defrule
 	(can-build lumber-camp)
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(current-age == castle-age)
 	(up-compare-sn sn-wood-gatherer-percentage > 40)
 	(building-type-count-total lumber-camp < 4)
@@ -39323,7 +39382,7 @@
 
 (defrule
 	(can-build lumber-camp)
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(current-age == imperial-age)
 	(up-compare-sn sn-wood-gatherer-percentage > 40)
 	(building-type-count-total lumber-camp < 5)
@@ -39358,7 +39417,7 @@
 
 (defrule
 	(can-build mining-camp)
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(current-age == castle-age)
 	(up-compare-sn sn-gold-gatherer-percentage > 30)
 	(building-type-count-total mining-camp < 4)
@@ -39378,7 +39437,7 @@
 (defrule
 	(can-build mining-camp)
 	(up-research-status c: imperial-age >= research-pending)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(building-type-count-total mining-camp < 2)
 	(resource-found gold)
 	(dropsite-min-distance gold < 255)
@@ -39395,7 +39454,7 @@
 (defrule
 	(can-build mining-camp)
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(up-compare-sn sn-gold-gatherer-percentage > 30)
 	(building-type-count-total mining-camp < 4)
 	(resource-found gold)
@@ -39432,7 +39491,7 @@
 
 (defrule
 	(can-build mining-camp)
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(current-age == castle-age)
 	(up-compare-sn sn-stone-gatherer-percentage > 20)
 	(building-type-count-total mining-camp < 4)
@@ -39452,7 +39511,7 @@
 (defrule
 	(can-build mining-camp)
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(up-compare-sn sn-stone-gatherer-percentage > 20)
 	(building-type-count-total mining-camp < 4)
 	(resource-found stone)
@@ -39653,7 +39712,7 @@
 (defrule
 	(unit-type-count-total infantry-class > 4)
 	(can-research ri-scale-mail)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research ri-scale-mail)
@@ -39742,7 +39801,7 @@
 
 (defrule
 	(unit-type-count-total infantry-class > 4)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(or (and (research-available ri-plate-mail)
 	(up-research-status c: ri-plate-mail >= research-pending))
 	(and (not (research-available ri-plate-mail))
@@ -39776,7 +39835,7 @@
 (defrule
 	(current-age == imperial-age)
 	(can-build market)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(building-type-count-total market < 3)
 =>
 	(set-strategic-number sn-placement-zone-size 4)
@@ -39797,6 +39856,7 @@
 	(up-get-point position-object market-point-x)
 	(up-cross-tiles market-point-x gl-starting-tc-x c: 6)
 	(up-bound-point market-point-x market-point-x)
+	(up-set-target-point market-point-x)
 	(up-build place-point 0 c: caravanserai)
 )
 
@@ -39810,7 +39870,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(can-train steppe-lancer-line)
 	(up-compare-goal gl-cavalry-archer-units < 5)
 	(unit-type-count-total knight-line < 5)
@@ -39822,7 +39882,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(can-train steppe-lancer-line)
 	(up-research-status c: ri-elite-steppe-lancer >= research-pending)
 =>
@@ -39831,7 +39891,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(research-available ri-elite-steppe-lancer)
 	(can-train steppe-lancer-line)
 	(unit-type-count steppe-lancer-line < 5)
@@ -39841,7 +39901,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(unit-type-count steppe-lancer-line >= 3)
 	(can-research ri-elite-steppe-lancer)
 =>
@@ -39866,7 +39926,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(can-train elephant-archer-line)
 	(up-research-status c: ri-elite-elephant-archer >= research-pending)
 	(unit-type-count archer-line < 5)
@@ -39877,7 +39937,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(research-available ri-elite-elephant-archer)
 	(can-train elephant-archer-line)
 	(unit-type-count elephant-archer-line < 5)
@@ -39889,7 +39949,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(unit-type-count elephant-archer-line >= 3)
 	(can-research ri-elite-elephant-archer)
 =>
@@ -39988,7 +40048,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(not (research-available ri-cavalier))
 	(can-train camel-line)
 	(research-available ri-heavy-camel)
@@ -39999,7 +40059,7 @@
 
 (defrule
 	(current-age == imperial-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(not (research-available ri-cavalier))
 	(can-train camel-line)
 	(up-research-status c: ri-heavy-camel >= research-pending)
@@ -40105,7 +40165,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: ri-eagle-warrior >= research-pending)
 	(can-train eagle-warrior-line)
 	(or (civilian-population g:< c-villager-goal)
@@ -40126,7 +40186,7 @@
 
 (defrule
 	(current-age == castle-age)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(can-train eagle-warrior-line)
 	(up-research-status c: ri-eagle-warrior < research-pending)
 	(unit-type-count eagle-warrior-line < 5)
@@ -40221,7 +40281,7 @@
 	(current-age == castle-age)
 	(or (goal meso-civ YES)
 	(goal ca-strategy gl-castleage-siege-infantry))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 	(can-build barracks)
 	(building-type-count-total barracks < 4)
@@ -40243,7 +40303,7 @@
 	(current-age == castle-age)
 	(or (goal meso-civ YES)
 	(goal ca-strategy gl-castleage-siege-infantry))
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 	(can-build barracks)
 	(building-type-count-total barracks < 4)
@@ -40274,7 +40334,7 @@
 
 (defrule
 	(unit-type-count-total infantry-class >= 5)
-	(or (not (goal strategy-goal sg-boom-imp))
+	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 	(can-research ri-squires)
 =>
@@ -40715,7 +40775,7 @@
 ;region MILITIA-LINE ===============================================
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-champs)
 	(can-research-with-escrow ri-two-handed-swordsman)
 	(building-type-count-total barracks >= 1)
@@ -40726,7 +40786,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-champs)
 	(can-research-with-escrow ri-champion)
 	(goal gl-food-saving 42)
@@ -40765,7 +40825,7 @@
 #load-if-defined AZTEC-CIV
 
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(or (research-completed ri-arbalest)
 	(research-completed ri-elite-eagle-warrior))
 	(current-age >= imperial-age)
@@ -40830,7 +40890,7 @@
 
 #load-if-defined BOHEMIANS-CIV
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
 	(or (research-completed ri-arbalest)
@@ -40896,7 +40956,7 @@
 
 #load-if-defined BRITON-CIV
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
 	(or (research-completed ri-arbalest)
@@ -40971,7 +41031,7 @@
 )
 
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age >= imperial-age)
 	(research-completed ri-two-handed-swordsman)
 	(can-train militiaman-line)
@@ -40983,7 +41043,7 @@
 
 #load-if-defined BURMESE-CIV
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
 	(or (research-completed ri-cavalier)
@@ -41049,7 +41109,7 @@
 
 #load-if-defined BYZANTINE-CIV
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
 	(or (research-completed ri-cavalier)
@@ -41116,7 +41176,7 @@
 
 #load-if-defined CELTIC-CIV
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
 	(or (research-completed ri-cavalier)
@@ -41180,7 +41240,7 @@
 
 #load-if-defined DRAVIDIANS-CIV
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
 	(or (research-completed ri-elite-elephant-archer)
@@ -41246,7 +41306,7 @@
 
 #load-if-defined FRANKISH-CIV
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
 	(or (research-completed ri-paladin)
@@ -41312,7 +41372,7 @@
 #load-if-defined GOTHIC-CIV
 
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
 	(players-unit-type-count focus-player militiaman-line >= 6)
@@ -41381,7 +41441,7 @@
 
 #load-if-defined JAPANESE-CIV
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
 	(or (research-completed ri-cavalier)
@@ -41448,7 +41508,7 @@
 
 #load-if-defined MALIAN-CIV
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
 	(or (research-completed ri-cavalier)
@@ -41515,7 +41575,7 @@
 
 #load-if-defined ROMANS-CIV
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
 =>
@@ -41563,7 +41623,7 @@
 
 #load-if-defined SARACEN-CIV
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
 	(or (research-completed ri-heavy-cavalry-archer)
@@ -41628,7 +41688,7 @@
 
 #load-if-defined SICILIANS-CIV
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
 	(or (research-completed ri-cavalier)
@@ -41694,7 +41754,7 @@
 
 #load-if-defined SLAVIC-CIV
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
 	(or (research-completed ri-cavalier)
@@ -41759,7 +41819,7 @@
 
 #load-if-defined SPANISH-CIV
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
 	(or (research-completed ri-paladin)
@@ -41824,7 +41884,7 @@
 
 #load-if-defined TEUTONIC-CIV
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
 	(or (research-completed ri-paladin)
@@ -41889,7 +41949,7 @@
 
 #load-if-defined VIKING-CIV
 (defrule
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 	(current-age >= imperial-age)
 	(can-research ri-man-at-arms)
 =>
@@ -43134,7 +43194,6 @@
 	(building-type-count-total town-center == 0)
 	(building-type-count-total monastery == 0)
 	(unit-type-count-total monk == 0)
-	(building-type-count-total market == 0)
 =>
 	(up-jump-rule 6)
 )
@@ -43380,7 +43439,7 @@
 	(timer-triggered 17)
 	(military-population >= 8)
 	(up-compare-goal gl-local-total >= 1) ;did we find military units within 60 tiles to help?
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 =>
 	(disable-timer 17)
 	(set-goal gl-helping-ally 2)
@@ -43406,7 +43465,7 @@
 (defrule
 	(up-compare-goal gl-helping-ally != 0)
 	(or (up-compare-goal gl-local-total < 1)
-	(goal strategy-goal sg-boom-imp))
+	(goal strategy-goal sg-fast-imp))
 =>
 	(set-goal gl-helping-ally 0)
 )
@@ -43423,7 +43482,7 @@
 	(or (military-population < 8)
 	(or (town-under-attack)
 	(or (up-compare-goal gl-local-total < 1)
-	(goal strategy-goal sg-boom-imp))))
+	(goal strategy-goal sg-fast-imp))))
 =>
 	(acknowledge-taunt this-any-ally 48)
 	(chat-to-allies "I can't help you at the moment, sorry.")
@@ -43602,7 +43661,7 @@
 	(up-compare-goal gl-garrison-tc != -1)
     (up-compare-goal gl-set-tc-garrison < 1) 	
 	(up-set-target-object search-local c: 0)
-	(up-object-data object-data-hitpoints < 450)
+	(up-object-data object-data-hitpoints < 475)
 =>
 	;(chat-to-all "TC almost down, reset garrison rules")
 	(set-goal gl-garrison-tc -1)
@@ -43826,7 +43885,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 =>
 	(up-jump-rule 4)
 )
@@ -44155,7 +44214,7 @@
 )
 
 (defrule
-	(or (goal strategy-goal sg-boom-imp)
+	(or (goal strategy-goal sg-fast-imp)
 	(or (goal strategy-goal sg-drush)
 	(goal strategy-goal sg-towerrush)))
 =>
@@ -44257,7 +44316,7 @@
 	(unit-type-count villager == 18)
 	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map == 1)
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(not(goal strategy-goal sg-drush))
 
 =>
@@ -44271,7 +44330,7 @@
 	(unit-type-count villager == 19)
 	(current-age == dark-age)
 	(up-compare-goal gl-water-on-map == 1)
-	(not(goal strategy-goal sg-boom-imp))
+	(not(goal strategy-goal sg-fast-imp))
 	(not(goal strategy-goal sg-drush))
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 32)
@@ -45630,7 +45689,7 @@
 ;Fast-Imp Build-Order
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 15)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 33)
@@ -45640,7 +45699,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 16)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 38)
@@ -45650,7 +45709,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 17)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 41)
@@ -45660,7 +45719,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 18)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 44)
@@ -45670,7 +45729,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 19)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 47)
@@ -45680,7 +45739,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 20)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 45)
@@ -45690,7 +45749,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 21)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 43)
@@ -45700,7 +45759,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 22)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 41)
@@ -45710,7 +45769,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 23)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 39)
@@ -45720,7 +45779,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 24)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 38)
@@ -45730,7 +45789,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 25)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 36)
@@ -45740,7 +45799,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 26)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 35)
@@ -45756,7 +45815,7 @@
 #load-if-not-defined UP-SCENARIO-GAME
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 27)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 33)
@@ -45766,7 +45825,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 28)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 32)
@@ -45776,7 +45835,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 29)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 31)
@@ -45786,7 +45845,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 30)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 33)
@@ -45796,7 +45855,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 31)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 29)
@@ -45806,7 +45865,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 32)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 28)
@@ -45816,7 +45875,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 33)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 39)
@@ -45826,7 +45885,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(civilian-population == 34)
 	(up-research-status c: imperial-age < research-pending)
 =>
@@ -45851,7 +45910,7 @@
 	(not (goal strategy-goal sg-fastcastle-uu))
 	(not (goal sg-fastcastle-boom YES))
 	(not (goal sg-fastcastle-boom NO))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 32)
 	(set-strategic-number sn-food-gatherer-percentage 40)
@@ -45867,7 +45926,7 @@
 	(not (goal strategy-goal sg-fastcastle-uu))
 	(not (goal sg-fastcastle-boom YES))
 	(not (goal sg-fastcastle-boom NO))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 40)
 	(set-strategic-number sn-food-gatherer-percentage 20)
@@ -45883,7 +45942,7 @@
 	(not (goal strategy-goal sg-fastcastle-uu))
 	(not (goal sg-fastcastle-boom YES))
 	(not (goal sg-fastcastle-boom NO))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 38)
 	(set-strategic-number sn-food-gatherer-percentage 39)
@@ -45899,11 +45958,11 @@
 	(not (goal strategy-goal sg-fastcastle-uu))
 	(not (goal sg-fastcastle-boom YES))
 	(not (goal sg-fastcastle-boom NO))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 29)
-	(set-strategic-number sn-food-gatherer-percentage 48)
-	(set-strategic-number sn-gold-gatherer-percentage 23)
+	(set-strategic-number sn-food-gatherer-percentage 46)
+	(set-strategic-number sn-gold-gatherer-percentage 25)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 	(chat-to-player my-player-number "Setting up economy for Castle-Age stable-unit")
 	(disable-self)
@@ -45915,7 +45974,7 @@
 	(not (goal strategy-goal sg-fastcastle-uu))
 	(not (goal sg-fastcastle-boom YES))
 	(not (goal sg-fastcastle-boom NO))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 29)
 	(set-strategic-number sn-food-gatherer-percentage 40)
@@ -45930,7 +45989,7 @@
 	(not (goal strategy-goal sg-fastcastle-uu))
 	(not (goal sg-fastcastle-boom YES))
 	(not (goal sg-fastcastle-boom NO))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 38)
 	(set-strategic-number sn-food-gatherer-percentage 20)
@@ -45945,7 +46004,7 @@
 	(not (goal strategy-goal sg-fastcastle-uu))
 	(not (goal sg-fastcastle-boom YES))
 	(not (goal sg-fastcastle-boom NO))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 35)
 	(set-strategic-number sn-food-gatherer-percentage 39)
@@ -45960,7 +46019,7 @@
 	(not (goal strategy-goal sg-fastcastle-uu))
 	(not (goal sg-fastcastle-boom YES))
 	(not (goal sg-fastcastle-boom NO))
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 29)
 	(set-strategic-number sn-food-gatherer-percentage 45)
@@ -46036,7 +46095,7 @@
 
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-bbc-hc)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 29)
@@ -46049,7 +46108,7 @@
 
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-cavalier)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 22)
@@ -46062,7 +46121,7 @@
 
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-champs)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 25)
@@ -46075,7 +46134,7 @@
 
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-condottieros)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 22)
@@ -46088,7 +46147,7 @@
 
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-eaglespam)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 22)
@@ -46101,7 +46160,7 @@
 
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-uus)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 43)
@@ -46114,7 +46173,7 @@
 
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-monks)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 22)
@@ -46126,7 +46185,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 =>
 	(up-jump-rule 27)
 )
@@ -46139,7 +46198,7 @@
 	(wood-amount < 50)
 	(goal gl-food-saving 0)
 	(building-type-count town-center < 2)
-	(up-compare-sn sn-food-gatherer-percentage c:> 20)
+	(up-compare-sn sn-food-gatherer-percentage c:> 15)
 =>	(up-modify-sn sn-food-gatherer-percentage c:- 5)
 	(up-modify-sn sn-wood-gatherer-percentage c:+ 5)
 	;(chat-to-player my-player-number "Balancing eco from food to wood")
@@ -46153,7 +46212,7 @@
 	(gold-amount < 50)
 	(goal gl-food-saving 0)
 	(building-type-count town-center < 2)
-	(up-compare-sn sn-food-gatherer-percentage c:> 20)
+	(up-compare-sn sn-food-gatherer-percentage c:> 15)
 =>	(up-modify-sn sn-food-gatherer-percentage c:- 5)
 	(up-modify-sn sn-gold-gatherer-percentage c:+ 5)
 	;(chat-to-player my-player-number "Balancing eco from food to gold")
@@ -46163,10 +46222,10 @@
 	(timer-triggered t-eco-timer)
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
-	(wood-amount > 400)
+	(wood-amount > 250)
 	(food-amount < 50)
 	(goal gl-wood-saving 0)
-	(up-compare-sn sn-wood-gatherer-percentage c:> 20)
+	(up-compare-sn sn-wood-gatherer-percentage c:> 15)
 =>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
 	(up-modify-sn sn-food-gatherer-percentage c:+ 5)	
 	;(chat-to-player my-player-number "Balancing eco from wood to food")
@@ -46176,10 +46235,10 @@
 	(timer-triggered t-eco-timer)
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
-	(wood-amount > 400)
+	(wood-amount > 250)
 	(gold-amount < 50)
 	(goal gl-wood-saving 0)
-	(up-compare-sn sn-wood-gatherer-percentage c:> 20)
+	(up-compare-sn sn-wood-gatherer-percentage c:> 15)
 =>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
 	(up-modify-sn sn-gold-gatherer-percentage c:+ 5)
 	;(chat-to-player my-player-number "Balancing eco from wood to gold")
@@ -46192,7 +46251,7 @@
 	(gold-amount > 400)
 	(food-amount < 50)
 	(goal gl-gold-saving 0)
-	(up-compare-sn sn-gold-gatherer-percentage c:> 20)
+	(up-compare-sn sn-gold-gatherer-percentage c:> 15)
 =>	(up-modify-sn sn-gold-gatherer-percentage c:- 5)
 	(up-modify-sn sn-food-gatherer-percentage c:+ 5)
 	;(chat-to-player my-player-number "Balancing eco from gold to food")
@@ -46205,7 +46264,7 @@
 	(gold-amount > 400)
 	(wood-amount < 50)
 	(goal gl-gold-saving 0)
-	(up-compare-sn sn-gold-gatherer-percentage c:> 20)
+	(up-compare-sn sn-gold-gatherer-percentage c:> 15)
 =>	(up-modify-sn sn-gold-gatherer-percentage c:- 5)
 	(up-modify-sn sn-wood-gatherer-percentage c:+ 5)
 	;(chat-to-player my-player-number "Balancing eco from gold to wood")
@@ -46258,7 +46317,7 @@
 	(food-amount > 500)
 	(wood-amount < 200)
 	(goal gl-food-saving 0)
-	(up-compare-sn sn-food-gatherer-percentage c:> 25)
+	(up-compare-sn sn-food-gatherer-percentage c:> 20)
 =>	(up-modify-sn sn-food-gatherer-percentage c:- 5)
 	(up-modify-sn sn-wood-gatherer-percentage c:+ 5)
 	;(chat-to-player my-player-number "Balancing eco from food to wood")
@@ -46270,7 +46329,7 @@
 	(food-amount > 500)
 	(gold-amount < 200)
 	(goal gl-food-saving 0)
-	(up-compare-sn sn-food-gatherer-percentage c:> 25)
+	(up-compare-sn sn-food-gatherer-percentage c:> 20)
 =>	(up-modify-sn sn-food-gatherer-percentage c:- 5)
 	(up-modify-sn sn-gold-gatherer-percentage c:+ 5)
 	;(chat-to-player my-player-number "Balancing eco from food to gold")
@@ -46279,10 +46338,10 @@
 (defrule
 	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
-	(wood-amount > 500)
+	(wood-amount > 400)
 	(food-amount < 200)
 	(goal gl-wood-saving 0)
-	(up-compare-sn sn-wood-gatherer-percentage c:> 25)
+	(up-compare-sn sn-wood-gatherer-percentage c:> 20)
 =>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
 	(up-modify-sn sn-food-gatherer-percentage c:+ 5)	
 	;(chat-to-player my-player-number "Balancing eco from wood to food")
@@ -46291,10 +46350,10 @@
 (defrule
 	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
-	(wood-amount > 500)
+	(wood-amount > 400)
 	(gold-amount < 200)
 	(goal gl-wood-saving 0)
-	(up-compare-sn sn-wood-gatherer-percentage c:> 25)
+	(up-compare-sn sn-wood-gatherer-percentage c:> 20)
 =>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
 	(up-modify-sn sn-gold-gatherer-percentage c:+ 5)
 	;(chat-to-player my-player-number "Balancing eco from wood to gold")
@@ -46877,7 +46936,7 @@
 (defrule
     (gold-amount > 1000)
 	(wood-amount < 100)
-	(not (goal strategy-goal sg-boom-imp))
+	(not (goal strategy-goal sg-fast-imp))
     (current-age >= castle-age)
     (building-type-count market >= 1)
 	(up-research-status c: imperial-age != research-pending)
@@ -46966,7 +47025,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(building-type-count-total castle < 1)
     (stone-amount >= 100)
     (building-type-count market >= 1)
@@ -46991,7 +47050,7 @@
 #end-if
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(up-research-status c: imperial-age < research-pending)
 	(unit-type-count-total villager g:>= c-villager-goal)
     (food-amount < 1000)
@@ -47003,7 +47062,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(up-research-status c: imperial-age < research-pending)
 	(unit-type-count-total villager g:>= c-villager-goal)
 	(or (building-type-count castle >= 1)
@@ -47022,7 +47081,7 @@
 )
 
 (defrule
-	(goal strategy-goal sg-boom-imp)
+	(goal strategy-goal sg-fast-imp)
 	(up-research-status c: imperial-age < research-pending)
 	(current-age == castle-age)
 	(unit-type-count-total villager g:>= c-villager-goal)
@@ -47039,7 +47098,7 @@
 ;region Cancel unit training in certain conditions =================
 
 (defrule
-	(current-age == feudal-age)
+	(current-age >= feudal-age)
 	(players-current-age focus-player >= castle-age)
 	(or (up-compare-goal gl-military-advantage <= -20)
 	(civilian-population < 24))
