@@ -32375,6 +32375,28 @@
 
 (defrule
 	(current-age == castle-age)
+	(resource-found stone)
+	(dropsite-min-distance stone < 255)
+	(can-build mining-camp)
+	(up-compare-sn sn-stone-gatherer-percentage > 0)
+	(or (and (goal sg-fastcastle-boom YES)
+		(building-type-count-total town-center >= 4))
+	(or (and (goal sg-fastcastle-boom NO)
+		(building-type-count-total town-center >= 2))
+		(and (goal sg-fastcastle-boom -1)
+		(building-type-count-total town-center >= 1))))
+=>
+	(set-strategic-number sn-allow-adjacent-dropsites 0)
+    (set-strategic-number sn-gold-dropsite-distance 200)
+    (set-strategic-number sn-stone-dropsite-distance 4)
+	(set-strategic-number sn-mule-cart-dropsite-placement mining-camp)
+	(build mining-camp)
+	(disable-self)
+	;(chat-to-player my-player-number "Mining camp 12.5")
+)
+
+(defrule
+	(current-age == castle-age)
 	(civilian-population >= 50)
 	(building-type-count-total mining-camp < 3)
 	(resource-found stone)
@@ -34288,6 +34310,22 @@
 )
 
 (defrule
+	(current-age >= castle-age)
+	(up-research-status c: ri-atonement >= research-pending)
+	(or (players-unit-type-count focus-player monk >= 3)
+	(and (civ-selected aztec)
+	(unit-type-count-total monk > 9)))
+	(building-type-count-total monastery < 2)
+	(or (not (goal strategy-goal sg-fast-imp))
+	(goal gl-fastimp-unit fi-monks))
+	(can-build monastery)
+=>
+	(up-assign-builders c: monastery c: 2)
+	(up-set-placement-data my-player-number -1 c: 9)
+    (up-build place-control 0 c: monastery)
+)
+
+(defrule
 	(not(goal strategy-goal sg-fast-imp))
 	(current-age >= feudal-age)
 	(goal gl-food-saving 12)
@@ -35024,6 +35062,8 @@
 	(goal ca-strategy gl-castleage-siege-infantry)
 	(can-train spearman-line)
 	(up-research-status c: ri-pikeman >= research-pending)
+	(or (unit-type-count-total villager g:< c-villager-goal)
+	(up-research-status c: imperial-age >= research-pending))
 	(or (unit-type-count-total spearman-line < 10)
 	(and (unit-type-count-total mangonel-line >= 2)
 	(unit-type-count-total monk >= 4)))
@@ -35078,6 +35118,8 @@
 		(and (up-research-status c: imperial-age >= research-pending)
 		(military-population >= 20)))
 	(can-train mangonel-line)
+	(or (unit-type-count-total villager g:< c-villager-goal)
+	(up-research-status c: imperial-age >= research-pending))
 	(goal ca-strategy gl-castleage-siege-infantry)
 	(unit-type-count-total infantry-class >= 10)
 =>
@@ -46058,9 +46100,9 @@
 	(goal strategy-goal sg-fastcastle-gu)
 	(goal sg-fastcastle-boom NO)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 42)
+	(set-strategic-number sn-wood-gatherer-percentage 46)
 	(set-strategic-number sn-food-gatherer-percentage 42)
-	(set-strategic-number sn-gold-gatherer-percentage 16)
+	(set-strategic-number sn-gold-gatherer-percentage 12)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 	(chat-to-player my-player-number "Setting up economy for capturing relics")
 	(disable-self)
