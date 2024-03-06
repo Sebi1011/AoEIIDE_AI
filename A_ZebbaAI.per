@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2024
 
 ;Version: 1.2.6
-;last update: 29th February 2024
+;last update: 6th Mar 2024
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -729,6 +729,8 @@
 (defconst camel-scout 1755)
 (defconst ratha-train 1759)
 (defconst elite-ratha-train 1761)
+(defconst donjon-spearman-line -227)
+(defconst donjon-serjeant-line -238)
 
 #load-if-defined ARMENIANS-CIV
 (defconst lumber-camp mule-cart)
@@ -44640,6 +44642,7 @@
 	(set-strategic-number sn-food-gatherer-percentage 46)
 	(set-strategic-number sn-gold-gatherer-percentage 17)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
+	(disable-self)
 )	
 
 #end-if
@@ -44818,6 +44821,7 @@
 (defrule
 	(goal strategy-goal sg-towerrush)
 	(civilian-population >= 34)
+	(civilian-population < 40)
 	(current-age == feudal-age)
 	(up-research-status c: castle-age < research-pending)
 =>
@@ -45713,6 +45717,7 @@
 (defrule
 	(goal strategy-goal sg-scoutrush)
 	(civilian-population >= 34)
+	(civilian-population < 40)
 	(current-age == feudal-age)
 	(up-research-status c: castle-age < research-pending)
 =>
@@ -45942,9 +45947,9 @@
 #end-if
 #end-if
 #end-if
+;endregion
 
-; general Eco-Balance
-
+;region Eco-Setup ===========================================
 
 (defrule
 	(up-research-status c: castle-age >= research-pending)
@@ -46224,6 +46229,91 @@
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 	(chat-to-player my-player-number "Setting up economy for monk rush")
 	(disable-self)
+)
+;endregion
+
+;region Auto Eco-Balance ====================================
+
+(defrule
+	(timer-triggered t-eco-timer)
+	(current-age == feudal-age)
+	(up-research-status c: castle-age < research-pending)
+	(civilian-population >= 40)
+	(food-amount > 250)
+	(wood-amount < 50)
+	(goal gl-food-saving 0)
+	(up-compare-sn sn-food-gatherer-percentage c:> 15)
+=>	(up-modify-sn sn-food-gatherer-percentage c:- 5)
+	(up-modify-sn sn-wood-gatherer-percentage c:+ 5)
+	;(chat-to-player my-player-number "Balancing eco from food to wood")
+)
+
+(defrule
+	(timer-triggered t-eco-timer)
+	(current-age == feudal-age)
+	(up-research-status c: castle-age < research-pending)
+	(civilian-population >= 40)
+	(food-amount > 250)
+	(gold-amount < 50)
+	(goal gl-food-saving 0)
+	(up-compare-sn sn-food-gatherer-percentage c:> 15)
+=>	(up-modify-sn sn-food-gatherer-percentage c:- 5)
+	(up-modify-sn sn-gold-gatherer-percentage c:+ 5)
+	;(chat-to-player my-player-number "Balancing eco from food to gold")
+)
+
+(defrule
+	(timer-triggered t-eco-timer)
+	(current-age == feudal-age)
+	(up-research-status c: castle-age < research-pending)
+	(civilian-population >= 40)
+	(wood-amount > 220)
+	(food-amount < 50)
+	(goal gl-wood-saving 0)
+	(up-compare-sn sn-wood-gatherer-percentage c:> 15)
+=>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
+	(up-modify-sn sn-food-gatherer-percentage c:+ 5)	
+	;(chat-to-player my-player-number "Balancing eco from wood to food")
+)
+
+(defrule
+	(timer-triggered t-eco-timer)
+	(current-age == feudal-age)
+	(up-research-status c: castle-age < research-pending)
+	(civilian-population >= 40)
+	(wood-amount > 220)
+	(gold-amount < 50)
+	(goal gl-wood-saving 0)
+	(up-compare-sn sn-wood-gatherer-percentage c:> 15)
+=>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
+	(up-modify-sn sn-gold-gatherer-percentage c:+ 5)
+	;(chat-to-player my-player-number "Balancing eco from wood to gold")
+)
+
+(defrule
+	(timer-triggered t-eco-timer)
+	(current-age == feudal-age)
+	(up-research-status c: castle-age < research-pending)
+	(civilian-population >= 40)
+	(gold-amount > 200)
+	(food-amount < 50)
+	(up-compare-sn sn-gold-gatherer-percentage c:> 10)
+=>	(up-modify-sn sn-gold-gatherer-percentage c:- 3)
+	(up-modify-sn sn-food-gatherer-percentage c:+ 3)
+	;(chat-to-player my-player-number "Balancing eco from gold to food")
+)
+
+(defrule
+	(timer-triggered t-eco-timer)
+	(current-age == feudal-age)
+	(up-research-status c: castle-age < research-pending)
+	(civilian-population >= 40)
+	(gold-amount > 200)
+	(wood-amount < 50)
+	(up-compare-sn sn-gold-gatherer-percentage c:> 10)
+=>	(up-modify-sn sn-gold-gatherer-percentage c:- 3)
+	(up-modify-sn sn-wood-gatherer-percentage c:+ 3)
+	;(chat-to-player my-player-number "Balancing eco from gold to wood")
 )
 
 (defrule
@@ -46578,7 +46668,6 @@
 	(up-modify-sn sn-wood-gatherer-percentage c:- 10)
 	(up-modify-sn sn-food-gatherer-percentage c:+ 10)
 )
-
 ;endregion
 
 ;region Trade ======================================================
