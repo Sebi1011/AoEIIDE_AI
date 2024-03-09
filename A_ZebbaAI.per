@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2024
 
 ;Version: 1.2.6
-;last update: 6th Mar 2024
+;last update: 9th Mar 2024
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -293,6 +293,7 @@
 (defconst scout-mirror 5)
 (defconst scout-flank 6)
 
+(defconst object-data-group-flag 73)
 ;timers 
 
 (defconst retreating-timer 1)
@@ -400,7 +401,7 @@
 (defconst retreating-goal 70)
 (defconst gl-garrison-tc 71)
 (defconst gl-garrison-tc-two 72)
-(defconst object-data-group-flag 73)
+(defconst gl-deer-hop 73)
 (defconst enemy-infantry-goal 74)
 (defconst enemy-heavy-infantry-goal 75)
 (defconst enemy-cavalry-goal 76)
@@ -566,7 +567,6 @@
 (defconst gl-castleage-rangeunit 255)
 (defconst gl-castleage-eagles 256)
 (defconst gl-castleage-siege-infantry 257)
-
 (defconst market-point-x 258)
 (defconst market-point-y 259)
 (defconst army-point-x 260)
@@ -631,6 +631,8 @@
 (defconst scout-enemy-three-y 323)
 (defconst scout-enemy-four-x 324)
 (defconst scout-enemy-four-y 325)
+(defconst gl-temp2-x 326)
+(defconst gl-temp2-y 327)
 
 (defconst gl-main-enemy 330)
 (defconst main-enemy-military-pop 331)
@@ -1663,6 +1665,7 @@
 	(set-goal gl-dead-boars 0)
 	(enable-timer gl-curr-deer-timer 1)
 	(set-goal gl-standard-townsize 20)
+	(set-goal gl-deer-hop 0)
 	(disable-self)
 )
 
@@ -3636,139 +3639,231 @@
 
 ;send all remaining sheep to the right side of the tc
 
-; (defrule ;reset sheep id
-	; (up-compare-goal g-sheep-id != -1)	
-	; (up-set-target-by-id g: g-sheep-id)		
-	; (up-object-data object-data-hitpoints < 1)
-	; (up-object-data object-data-carry < 1)
-	; (up-object-data object-data-carry > -1)
-	; ; (up-compare-goal remaining-sheep-food < 1)
-	; ; (up-compare-goal remaining-sheep-food > -1)
-; =>
-	; (set-goal g-sheep-id -1)
-	; (chat-to-player my-player-number "Sheep ID -1")
-; )
+(defrule ;reset sheep id
+	(up-compare-goal g-sheep-id != -1)	
+	(up-set-target-by-id g: g-sheep-id)		
+	(up-object-data object-data-hitpoints < 1)
+	(up-object-data object-data-carry <= 1)
+	(up-object-data object-data-carry > -1)
+	; (up-compare-goal remaining-sheep-food < 1)
+	; (up-compare-goal remaining-sheep-food > -1)
+=>
+	(set-goal g-sheep-id -1)
+	(chat-to-player my-player-number "Set Sheep ID -1")
+)
 
-; (defrule
-	; (current-age == dark-age)
-	; (unit-type-count-total livestock-class > 0)
-; =>
-	; (up-copy-point gl-temp-x gl-self-point-x)
-	; (up-modify-goal gl-temp-x c:+ 3)
-	; (up-modify-goal gl-temp-y c:+ 3)
-	; (up-full-reset-search)
-	; (up-filter-distance c: -1 c: 24)
-	; (up-find-local c: livestock-class c: 20)
-	; (up-remove-objects search-local object-data-id g:== g-sheep-id)
-	; (up-target-point gl-temp-x action-default -1 -1)
-; )
+(defrule
+	(current-age == dark-age)
+	(unit-type-count-total livestock-class > 0)
+=>
+	(up-copy-point gl-temp-x gl-self-point-x)
+	(up-modify-goal gl-temp-x c:+ 3)
+	(up-modify-goal gl-temp-y c:+ 3)
+	(up-full-reset-search)
+	(up-filter-distance c: -1 c: 24)
+	(up-find-local c: livestock-class c: 20)
+	(up-remove-objects search-local object-data-id g:== g-sheep-id)
+	(up-target-point gl-temp-x action-default -1 -1)
+)
 
-; ;check if there is a dead sheep/deer/boar under tc, check remaining food amount, then send new sheep to center of tc
+;check if there is a dead sheep/deer/boar under tc, check remaining food amount, then send new sheep to center of tc
 
-; (defrule
-	; (up-compare-goal g-sheep-id != -1)			
-	; (up-set-target-by-id g: g-sheep-id)		
-	; ;(up-object-data object-data-hitpoints < 1)
-	; (current-age == dark-age)					
-; =>	
-	; (up-full-reset-search)					
-	; (up-set-target-by-id g: g-sheep-id)					
-	; (up-get-object-data object-data-carry remaining-sheep-food) ;get amount of food the target sheep currently carries
-; ;	(up-chat-data-to-self "Sheep food remaining: %d" g: remaining-sheep-food) 
-; )
+(defrule
+	(up-compare-goal g-sheep-id != -1)			
+	(up-set-target-by-id g: g-sheep-id)		
+	;(up-object-data object-data-hitpoints < 1)
+	(current-age == dark-age)					
+=>	
+	(up-full-reset-search)					
+	(up-set-target-by-id g: g-sheep-id)					
+	(up-get-object-data object-data-carry remaining-sheep-food) ;get amount of food the target sheep currently carries
+	;(up-chat-data-to-self "Sheep food remaining: %d" g: remaining-sheep-food) 
+)
 	
-; (defrule
-	; (current-age == dark-age)
-	; (unit-type-count-total livestock-class > 0)
-	; ;(up-compare-goal gl-local-total < 1)
-	; (up-compare-goal remaining-sheep-food < 1)
-	; (up-compare-goal g-sheep-id == -1)	
-; =>
-	; (up-full-reset-search)
-	; (up-filter-distance c: -1 c: 5)
-	; (up-find-local c: livestock-class c: 1)
-; )
+(defrule
+	(current-age == dark-age)
+	(unit-type-count-total livestock-class > 0)
+	;(up-compare-goal gl-local-total < 1)
+	(up-compare-goal remaining-sheep-food <= 60)
+	(up-compare-goal g-sheep-id == -1)	
+=>
+	(up-full-reset-search)
+	(up-filter-distance c: -1 c: 2)
+	(up-find-local c: livestock-class c: 1)
+)
 
-; (defrule
-	; (current-age == dark-age)
-	; (unit-type-count-total livestock-class > 0)
-	; (up-compare-goal remaining-sheep-food < 1)
-	; (up-compare-goal g-sheep-id == -1)	
-	; (up-set-target-object search-local c: 0)
-; =>
-	; (up-get-object-data object-data-id g-sheep-id)
-	; (up-get-object-data object-data-class test-goal)
-	; (up-chat-data-to-self "New sheep id: %d" g: g-sheep-id) 
-	; (up-chat-data-to-player my-player-number "class: %d" g: test-goal)
-; )
+(defrule
+	(current-age == dark-age)
+	(unit-type-count-total livestock-class > 0)
+	(up-compare-goal remaining-sheep-food <= 60)
+	(up-compare-goal g-sheep-id == -1)	
+	(up-set-target-object search-local c: 0)
+=>
+	(up-get-object-data object-data-id g-sheep-id)
+	;(up-get-object-data object-data-class test-goal)
+	;(up-chat-data-to-self "New sheep id: %d" g: g-sheep-id) 
+	;(up-chat-data-to-player my-player-number "class: %d" g: test-goal)
+)
 
-; (defrule
-	; (current-age == dark-age)
-	; (unit-type-count-total livestock-class > 0)
-; =>
-	; (up-full-reset-search)
-	; (up-filter-distance c: -1 c: 2)
-	; (up-find-local c: livestock-class c: 20)
-	; (up-get-search-state gl-local-total)
-	; ;(up-chat-data-to-self "sheeps under tc: %d" g: gl-local-total)
-	; ;(up-chat-data-to-self "Curr sheep id: %d" g: g-sheep-id) 
-	; ;(up-chat-data-to-self "remaining-sheep-food: %d" g: remaining-sheep-food)
-; )
+(defrule
+	(current-age == dark-age)
+	(unit-type-count-total livestock-class > 0)
+=>
+	(up-full-reset-search)
+	(up-filter-distance c: -1 c: 2)
+	(up-find-local c: livestock-class c: 20)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-self "sheeps under tc: %d" g: gl-local-total)
+	;(up-chat-data-to-self "Curr sheep id: %d" g: g-sheep-id) 
+	;(up-chat-data-to-self "remaining-sheep-food: %d" g: remaining-sheep-food)
+)
 
-; (defrule
-	; (current-age == dark-age)
-	; (unit-type-count-total livestock-class > 0)
-	; (up-compare-goal gl-local-total < 1)
-	; (up-compare-goal remaining-sheep-food <= 30)
-; =>
-	; (up-full-reset-search)
-	; (up-filter-distance c: -1 c: 5)
-	; (up-find-local c: livestock-class c: 1)
-	; ;(up-remove-objects search-local object-data-id g:== g-sheep-id)
-	; (up-get-search-state gl-local-total)
-; )
+(defrule
+	(current-age == dark-age)
+	(unit-type-count-total livestock-class > 0)
+	(up-compare-goal gl-local-total < 1)
+	(up-compare-goal remaining-sheep-food <= 60)
+=>
+	(up-full-reset-search)
+	;(up-set-target-point gl-starting-tc-x)
+	(up-filter-distance c: -1 c: 5)
+	(up-find-local c: livestock-class c: 10)
+	(up-clean-search search-local -1 search-order-asc)
+	(up-remove-objects search-local object-data-index > 0)
+	;(up-remove-objects search-local object-data-id g:== g-sheep-id)
+	(up-get-search-state gl-local-total)
+)
 
-; (defrule
-	; (current-age == dark-age)
-	; (unit-type-count-total livestock-class > 0)
-	; (up-compare-goal remaining-sheep-food <= 30)
-	; (up-compare-goal gl-local-total >= 1)
-	; (up-set-target-object search-local c: 0)
-; =>
-	; (up-copy-point gl-temp-x gl-self-point-x)
-	; (up-modify-goal gl-temp-x c:- 1)
-	; (up-modify-goal gl-temp-y c:+ 1)
-	; (up-target-point gl-temp-x action-default -1 -1)
-	; ;(chat-to-player my-player-number "No sheep under tc, send next one")
-; )
+(defrule
+	(current-age == dark-age)
+	(unit-type-count-total livestock-class > 0)
+	(up-compare-goal remaining-sheep-food <= 60)
+	(up-compare-goal gl-local-total >= 1)
+	(up-set-target-object search-local c: 0)
+=>
+	(up-copy-point gl-temp-x gl-self-point-x)
+	(up-modify-goal gl-temp-x c:- 1)
+	(up-modify-goal gl-temp-y c:+ 1)
+	(up-target-point gl-temp-x action-default -1 -1)
+	;(chat-to-player my-player-number "No sheep under tc, send next one")
+)
 
-; ;assign villagers to the next sheep
+;assign villagers to the next sheep
 
-; (defrule
-	; (current-age == dark-age)
-	; (unit-type-count-total livestock-class > 0)
-	; (unit-type-count villager-shepherd > 0)
-	; (up-compare-goal g-sheep-id != -1)	
-; =>
-	; (up-full-reset-search)
-	; (up-find-local c: 590 c: 40) ;female shepherd
-	; (up-find-local c: 592 c: 40) ;male shepherd
-	; (up-get-search-state gl-local-total)
-	; ;(up-chat-data-to-self "vils found: %d" g: gl-local-total)
-; )
+(defrule
+	(current-age == dark-age)
+	(unit-type-count-total livestock-class > 0)
+	(unit-type-count villager-shepherd > 0)
+	(up-compare-goal g-sheep-id != -1)	
+=>
+	(up-full-reset-search)
+	(up-find-local c: 590 c: 40) ;female shepherd
+	(up-find-local c: 592 c: 40) ;male shepherd
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-self "vils found: %d" g: gl-local-total)
+)
 
-; (defrule
-	; (current-age == dark-age)
-	; (unit-type-count-total livestock-class > 0)
-	; (up-compare-goal gl-local-total > 0)
-	; (up-set-target-object search-local c: 0)
-	; (unit-type-count villager-shepherd > 0)
-	; (up-compare-goal g-sheep-id != -1)	
-; =>	
-	; (up-set-target-by-id g: g-sheep-id)	
-	; (up-target-objects 1 action-default -1 -1)
-	; ;(chat-to-player my-player-number "Task vils to sheep")
-; )
+(defrule
+	(current-age == dark-age)
+	(unit-type-count-total livestock-class > 0)
+	(up-compare-goal gl-local-total > 0)
+	(up-set-target-object search-local c: 0)
+	(unit-type-count villager-shepherd > 0)
+	(up-compare-goal g-sheep-id != -1)	
+=>	
+	(up-set-target-by-id g: g-sheep-id)	
+	(up-target-objects 1 action-default -1 -1)
+	;(chat-to-player my-player-number "Task vils to sheep")
+)
+
+;villager micro to dead boar or deer
+
+(defrule
+	(current-age == dark-age)
+=>
+	(up-full-reset-search)
+	(up-modify-sn sn-focus-player-number c:= 0)
+	(up-filter-distance c: -1 c: 4)
+	(up-filter-status c: status-gather c: list-inactive)
+	(up-find-status-remote c: boar-class c: 40) ;find a nearby berry bush
+	(up-remove-objects search-remote object-data-hitpoints >= 1)
+	(up-remove-objects search-remote object-data-tasks-count >= 8)
+	(up-remove-objects search-remote -1 > 0)
+	(up-get-search-state gl-local-total)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	;(up-chat-data-to-player my-player-number "Amount of dead boars: %d" g: gl-remote-total)
+)
+
+(defrule
+	(current-age == dark-age)
+	(unit-type-count villager-shepherd > 0)
+	(up-compare-goal gl-remote-total > 0)
+	(up-set-target-object search-remote c: 0)
+=>
+	(up-reset-search 1 1 0 0)
+	(up-filter-distance c: -1 c: 5)
+	(up-find-local c: 354 c: 240) ;female forager
+	(up-find-local c: 120 c: 240) ;male forager
+	(up-find-local c: 590 c: 40) ;female shepherd
+	(up-find-local c: 592 c: 40) ;male shepherd 
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-self "vils found: %d" g: gl-local-total)
+)
+
+(defrule
+	(current-age == dark-age)
+	(up-compare-goal gl-remote-total > 0)
+	(up-compare-goal gl-local-total > 0)
+	(up-set-target-object search-local c: 0)
+	(unit-type-count villager-shepherd > 0)
+=>	
+	(up-target-objects 0 action-default -1 -1)
+	(chat-to-player my-player-number "Task shepherds to dead boar")
+)
+
+(defrule
+	(current-age == dark-age)
+=>
+	(up-full-reset-search)
+	(up-modify-sn sn-focus-player-number c:= 0)
+	(up-filter-distance c: -1 c: 4)
+	(up-filter-status c: status-gather c: list-inactive)
+	(up-find-status-remote c: deer-class c: 40) ;find a nearby berry bush
+	(up-remove-objects search-remote object-data-hitpoints >= 1)
+	(up-remove-objects search-remote object-data-tasks-count >= 6)
+	(up-remove-objects search-remote -1 > 0)
+	(up-get-search-state gl-local-total)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	;(up-chat-data-to-player my-player-number "Amount of dead deers: %d" g: gl-remote-total)
+)
+
+(defrule
+	(current-age == dark-age)
+	(unit-type-count villager-shepherd > 0)
+	(up-compare-goal gl-remote-total > 0)
+	(up-set-target-object search-remote c: 0)
+=>
+	(up-reset-search 1 1 0 0)
+	(up-filter-distance c: -1 c: 5)
+	(up-find-local c: 354 c: 240) ;female forager
+	(up-find-local c: 120 c: 240) ;male forager
+	(up-find-local c: 590 c: 40) ;female shepherd
+	(up-find-local c: 592 c: 40) ;male shepherd 
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-self "vils found: %d" g: gl-local-total)
+)
+
+(defrule
+	(current-age == dark-age)
+	(up-compare-goal gl-remote-total > 0)
+	(up-compare-goal gl-local-total > 0)
+	(up-set-target-object search-local c: 0)
+	(unit-type-count villager-shepherd > 0)
+=>	
+	(up-target-objects 0 action-default -1 -1)
+	(chat-to-player my-player-number "Task shepherds to dead deer")
+)
+
 
 ;endregion
 
@@ -9926,7 +10021,7 @@
 	(building-type-count castle > 0)
 	(can-train petard)
 	(unit-type-count-total petard < 1)
-	(game-time < 1200)
+	(game-time < 1500)
 =>
 	(train petard)
 )
@@ -12589,6 +12684,7 @@
 	(building-type-count town-center > 0)
 	(unit-type-count villager > 0)
 	(current-age < castle-age)
+	(up-compare-sn sn-disable-villager-garrison == 0)
 	(goal gl-garrison-tc-two 0) ;prevent that boar luring villager accidently garrisons
 =>
 	(up-full-reset-search)
@@ -12607,6 +12703,7 @@
 	(building-type-count town-center > 0)
 	(unit-type-count villager > 0)
 	(current-age < castle-age)
+	(up-compare-sn sn-disable-villager-garrison == 0)
 	(goal gl-garrison-tc-two 0)
 =>
 	(up-modify-sn sn-focus-player-number c:= my-player-number)
@@ -27438,6 +27535,8 @@
 	(up-full-reset-search)
 	(up-set-target-by-id g: g-deer-id)
 	(up-get-point position-object deer-x)
+	(up-get-object-data object-data-precise-x deer-x)	;get the precise coordinates
+	(up-get-object-data object-data-precise-y deer-y)
 	;(chat-to-player my-player-number "Getting current deer location")
 )
 
@@ -27475,10 +27574,17 @@
 	(goal gl-collect-sheep NO)
 	(current-age == dark-age)
 =>
+	(up-copy-point gl-temp2-x gl-starting-tc-x)
+	(up-modify-goal gl-temp2-x c:* 100)
+	(up-modify-goal gl-temp2-y c:* 100)
+	(set-strategic-number sn-target-point-adjustment 6)	;set to enable precise targetting
 	(up-full-reset-search)
 	(up-set-group search-local c: 1)
-	(up-lerp-tiles deer-x gl-starting-tc-x c: -1) ;get point behind deer
+	;(up-lerp-tiles deer-x gl-starting-tc-x c: -1) ;get point behind deer
+	(up-lerp-tiles deer-x gl-temp2-x c: -75) ;get point behind deer
+	(up-bound-precise-point deer-x 1 c: 50)
 	(up-target-point deer-x action-move -1 -1) ;follow deer with scout
+	(set-strategic-number sn-target-point-adjustment 0)	;reset
 	;(chat-to-player my-player-number "Send scout to deer")
 )
 
@@ -27582,7 +27688,39 @@
 	(up-set-group search-local c: 4)
 	(up-set-target-by-id g: g-deer-id)
 	(up-target-objects 1 action-default -1 -1)
+	(set-goal gl-deer-hop 1)
 	;(chat-to-player my-player-number "Kill the deer")
+)
+
+(defrule
+	(up-compare-goal g-deer-id != -1)
+	(goal gl-push-deer YES) ;now check if deer is close to tc#
+	(current-age == dark-age)
+	(goal gl-garrison-tc-two 0)
+	(goal gl-deer-hop 1)
+	(up-compare-sn sn-disable-villager-garrison == 0)
+=>
+	(up-modify-sn sn-focus-player-number c:= my-player-number)
+	(set-goal gl-deer-hop 2)
+	(up-find-remote c: town-center c: 1)
+	(up-target-objects 0 action-garrison -1 -1)
+	(chat-local-to-self "quick tc hop")
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+)
+
+(defrule
+	(up-compare-goal g-deer-id != -1)
+	(goal gl-push-deer YES) ;now check if deer is close to tc#
+	(current-age == dark-age)
+	(goal gl-garrison-tc-two 0)
+	(goal gl-deer-hop 2)
+	(up-compare-sn sn-disable-villager-garrison == 0)
+=>
+	(up-full-reset-search)
+	(up-find-local c: town-center c: 1)
+	(up-set-target-by-id g: g-deer-id)
+	(up-target-objects 1 action-gather -1 -1)
+	(up-target-point 0 action-work -1 -1)
 )
 
 (defrule
@@ -27595,8 +27733,9 @@
 	)
 =>
 	(set-goal g-deer-id -1)
+	(set-goal gl-deer-hop 0)
 	;(up-set-timer c: gl-curr-deer-timer c: -1)
-	;(chat-to-player my-player-number "Resetting deer id")
+	;(chat-to-player my-player-number "Reset deer id")
 )
 
 ;endregion
@@ -46355,7 +46494,7 @@
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
 	(wood-amount > 250)
-	(food-amount < 50)
+	(food-amount < 500)
 	(goal gl-wood-saving 0)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 15)
 =>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
@@ -46368,7 +46507,7 @@
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
 	(wood-amount > 250)
-	(gold-amount < 50)
+	(gold-amount < 250)
 	(goal gl-wood-saving 0)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 15)
 =>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
@@ -46471,7 +46610,7 @@
 	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
 	(wood-amount > 400)
-	(food-amount < 200)
+	(food-amount < 400)
 	(goal gl-wood-saving 0)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 20)
 =>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
@@ -46483,7 +46622,7 @@
 	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
 	(wood-amount > 400)
-	(gold-amount < 200)
+	(gold-amount < 250)
 	(goal gl-wood-saving 0)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 20)
 =>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
