@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2024
 
 ;Version: 1.2.6
-;last update: 9th Mar 2024
+;last update: 10th Mar 2024
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -646,6 +646,11 @@
 (defconst gl-civ-uu-cost 355)
 (defconst gl-ressaving-notification 356)
 (defconst gl-camp-distance-setter 358)
+
+(defconst g-num-lc 260)
+(defconst g-num-lj 261)
+(defconst g-opt-num-lj 262)
+
 
 (defconst amnt-archers 400)
 (defconst amnt-skirmishers 401)
@@ -3684,7 +3689,7 @@
 	(current-age == dark-age)
 	(unit-type-count-total livestock-class > 0)
 	;(up-compare-goal gl-local-total < 1)
-	(up-compare-goal remaining-sheep-food <= 60)
+	(up-compare-goal remaining-sheep-food <= 80)
 	(up-compare-goal g-sheep-id == -1)	
 =>
 	(up-full-reset-search)
@@ -3695,7 +3700,7 @@
 (defrule
 	(current-age == dark-age)
 	(unit-type-count-total livestock-class > 0)
-	(up-compare-goal remaining-sheep-food <= 60)
+	(up-compare-goal remaining-sheep-food <= 80)
 	(up-compare-goal g-sheep-id == -1)	
 	(up-set-target-object search-local c: 0)
 =>
@@ -3722,13 +3727,13 @@
 	(current-age == dark-age)
 	(unit-type-count-total livestock-class > 0)
 	(up-compare-goal gl-local-total < 1)
-	(up-compare-goal remaining-sheep-food <= 60)
+	(up-compare-goal remaining-sheep-food <= 80)
 =>
 	(up-full-reset-search)
 	;(up-set-target-point gl-starting-tc-x)
 	(up-filter-distance c: -1 c: 5)
 	(up-find-local c: livestock-class c: 10)
-	(up-clean-search search-local -1 search-order-asc)
+	(up-clean-search search-local 0 search-order-asc)
 	(up-remove-objects search-local object-data-index > 0)
 	;(up-remove-objects search-local object-data-id g:== g-sheep-id)
 	(up-get-search-state gl-local-total)
@@ -3737,7 +3742,7 @@
 (defrule
 	(current-age == dark-age)
 	(unit-type-count-total livestock-class > 0)
-	(up-compare-goal remaining-sheep-food <= 60)
+	(up-compare-goal remaining-sheep-food <= 80)
 	(up-compare-goal gl-local-total >= 1)
 	(up-set-target-object search-local c: 0)
 =>
@@ -3819,6 +3824,7 @@
 =>	
 	(up-target-objects 0 action-default -1 -1)
 	(chat-to-player my-player-number "Task shepherds to dead boar")
+	(up-jump-rule 3)
 )
 
 (defrule
@@ -4677,6 +4683,255 @@
 
 ;region Lumberjack DUC =============================================
 
+(defrule ;Find nr of LCs & save into goal
+	(current-age == dark-age)
+	(building-type-count-total lumber-camp > 1)
+=>
+	(up-full-reset-search)
+	(up-find-local c: lumber-camp c: 2)
+	(up-get-search-state gl-local-total)
+	(up-modify-goal g-num-lc g:= gl-local-total)
+	;(up-chat-data-to-player my-player-number "num lc %d" g: g-num-lc)
+)
+
+(defrule ;Find nr of LJs & save into goal
+	(current-age == dark-age)
+	(up-compare-goal g-num-lc > 1)
+=>
+	(up-full-reset-search)
+	(up-find-local c: 218 c: 10) ;female lj
+	(up-find-local c: 123 c: 10) ;male lj
+	(up-get-search-state gl-local-total)
+	(up-modify-goal g-num-lj g:= gl-local-total)
+	;(up-chat-data-to-player my-player-number "num lj %d" g: g-num-lj)
+)
+
+(defrule ;LJs/LCs = optimal nr of LJs on 1 LC
+	(current-age == dark-age)
+	(up-compare-goal g-num-lc > 1)
+	(up-compare-goal g-num-lj > 7)
+=>
+	(up-modify-goal g-opt-num-lj g:= g-num-lj)
+	(up-modify-goal g-opt-num-lj g:/ g-num-lc)
+	(up-chat-data-to-player my-player-number "g-opt-num-lj %d" g: g-opt-num-lj)
+)
+
+(defrule ;Setup for search for nr of LJs around each LC
+	(current-age == dark-age)
+	(up-compare-goal g-num-lc > 1)
+	(up-compare-goal g-num-lj > 7)
+	(up-compare-goal g-opt-num-lj > 0)
+=>
+	(set-goal gl-loop-counter 0)
+)
+
+(defrule ;Search for nr of LJs around each LC
+	(current-age == dark-age)
+	(up-compare-goal g-num-lc > 1)
+	(up-compare-goal g-num-lj > 7)
+	(up-compare-goal g-opt-num-lj > 0)
+=>
+	(up-full-reset-search)
+	(up-find-local c: lumber-camp c: 2)
+	(up-clean-search search-local 0 search-order-asc) ;to keep the list order consistent
+	(up-chat-data-to-player my-player-number "curr focus lc %d" g: gl-loop-counter)
+)
+
+(defrule ;Search for nr of LJs around each LC
+	(current-age == dark-age)
+	(up-compare-goal g-num-lc > 1)
+	(up-compare-goal g-num-lj > 7)
+	(up-compare-goal g-opt-num-lj > 0)
+	(up-set-target-object search-local g: gl-loop-counter)
+=>
+	(up-get-point position-object object-point-x)
+	(up-reset-search 1 1 0 0)
+	(up-set-target-point object-point-x)
+	(up-filter-distance c: -1 c: 3)
+	(up-find-local c: 218 c: 10) ;female lj
+	(up-find-local c: 123 c: 10) ;male lj
+	(up-get-search-state gl-local-total)
+	(up-chat-data-to-player my-player-number "number of ljs on curr lc %d" g: gl-local-total)
+)
+
+(defrule ;pick LC with the higher nr of LJs around it
+	(current-age == dark-age)
+	(up-compare-goal g-num-lc > 1)
+	(up-compare-goal g-num-lj > 7)
+	(up-compare-goal g-opt-num-lj > 0)
+=>
+	(up-modify-goal temp-goal-one g:= gl-local-total)
+	(up-modify-goal temp-goal-one g:- g-opt-num-lj)
+	(up-chat-data-to-player my-player-number "temp-goal-one %d" g: temp-goal-one)
+)
+;nr of LJs around - optimal nr of LJs = nr of LJs to retask to different LC
+(defrule ;LJs are distributed equally, no actions required
+	(current-age == dark-age)
+	(up-compare-goal g-num-lc > 1)
+	(up-compare-goal g-num-lj > 7)
+	(up-compare-goal g-opt-num-lj > 0)
+	(up-compare-goal temp-goal-one <= 1)
+	(up-compare-goal temp-goal-one >= -1)
+	(up-compare-goal gl-loop-counter g:< g-num-lc)
+=>
+	(chat-to-player my-player-number "LJs equally distributed")
+	(up-reset-search 1 1 0 0)
+	(up-set-target-point gl-starting-tc-x)
+	(up-filter-distance c: -1 c: 5)
+	(up-find-local c: 218 c: 5) ;lumberjack (male & female)
+	(up-find-local c: 123 c: 5)
+	(up-get-search-state gl-local-total)
+	(up-chat-data-to-player my-player-number "nr ljs under tc %d" g: gl-local-total)
+	(up-reset-group c: 4)
+	(up-create-group 0 0 c: 4) 
+	(up-modify-group-flag 1 c: 4)
+	(up-jump-rule 2)
+)
+
+(defrule ;target LC has more LJs than optimal --> pick LJs that should be sent to other LC
+	(current-age == dark-age)
+	(up-compare-goal g-num-lc > 1)
+	(up-compare-goal g-num-lj > 7)
+	(up-compare-goal g-opt-num-lj > 0)
+	(up-compare-goal temp-goal-one > 1)
+	(up-compare-goal gl-loop-counter g:< g-num-lc)
+=>
+	(chat-to-player my-player-number "too many LJs")
+	(up-remove-objects search-local object-data-index g:>= temp-goal-one) 
+	(up-reset-group c: 4)
+	(up-create-group 0 0 c: 4) 
+	(up-modify-group-flag 1 c: 4)
+	(up-jump-rule 1)
+)
+
+(defrule ;target LC has less LJs than optimal --> skip
+	(current-age == dark-age)
+	(up-compare-goal g-num-lc > 1)
+	(up-compare-goal g-num-lj > 7)
+	(up-compare-goal g-opt-num-lj > 0)
+	(up-compare-goal temp-goal-one < -1)
+	(up-compare-goal gl-loop-counter g:< g-num-lc)
+=>
+	(chat-to-player my-player-number "too few LJs")
+	(up-modify-goal gl-loop-counter c:+ 1)
+	(up-jump-rule -6)
+)
+
+(defrule ;pick LC with fewer nr of LJs around it
+	(current-age == dark-age)
+	(up-compare-goal g-num-lc > 1)
+	(up-compare-goal g-num-lj > 7)
+	(up-compare-goal g-opt-num-lj > 0)
+	;(up-compare-goal temp-goal-one > 1)
+	(up-compare-goal gl-loop-counter == 0)
+	(up-group-size c: 4 > 0)
+=>
+	(up-modify-goal gl-loop-counter c:+ 1)
+	(up-reset-search 1 1 0 0)
+	(up-find-local c: lumber-camp c: 2)
+	(up-clean-search search-local 0 search-order-asc)
+	(up-jump-rule 1)
+)
+
+(defrule ;find target LC
+	(current-age == dark-age)
+	(up-compare-goal g-num-lc > 1)
+	(up-compare-goal g-num-lj > 7)
+	(up-compare-goal g-opt-num-lj > 0)
+	;(up-compare-goal temp-goal-one > 1)
+	(up-compare-goal gl-loop-counter == 1)
+	(up-group-size c: 4 > 0)
+=>
+	(up-modify-goal gl-loop-counter c:- 1)
+	(up-reset-search 1 1 0 0)
+	(up-find-local c: lumber-camp c: 2)
+	(up-clean-search search-local 0 search-order-asc)
+)
+
+(defrule ;search for trees near target LC
+	(current-age == dark-age)
+	(up-compare-goal g-num-lc > 1)
+	(up-compare-goal g-num-lj > 7)
+	(up-compare-goal g-opt-num-lj > 0)
+	;(up-compare-goal temp-goal-one > 1)
+	(up-set-target-object search-local g: gl-loop-counter)
+	(up-group-size c: 4 > 0)
+=>
+	(up-get-point position-object gl-camp-x)
+	(set-goal gl-loop-counter 0)
+)
+
+(defrule ;search for trees near target LC
+	(current-age == dark-age)
+	(up-compare-goal g-num-lc > 1)
+	(up-compare-goal g-num-lj > 7)
+	(up-compare-goal g-opt-num-lj > 0)
+	;(up-compare-goal temp-goal-one > 1)
+	;(up-set-target-object search-local g: gl-loop-counter)
+	(up-group-size c: 4 > 0)
+	(timer-triggered t-3-sec)
+=>
+	(up-full-reset-search)
+	(up-set-target-point gl-camp-x)
+	(up-filter-distance c: -1 c: 3)
+	(up-find-resource c: wood c: 10)
+	(up-remove-objects search-remote object-data-tasks-count > 1) ;remove trees that are already being chopped
+	(up-clean-search search-remote object-data-distance search-order-asc) ;get closest tree
+	(up-remove-objects search-remote object-data-index > 0) ;reduce list to 1 tree
+	(up-get-search-state gl-local-total)
+	(up-chat-data-to-player my-player-number "nr trees found %d" g: gl-remote-total)
+)
+;loop through retasked LJs & assign a tree to each LJ
+(defrule ;task selected LJs to other LC trees
+	(current-age == dark-age)
+	(up-compare-goal g-num-lc > 1)
+	(up-compare-goal g-num-lj > 7)
+	;(up-compare-goal temp-goal-one > 1)
+	(up-compare-goal g-opt-num-lj > 0)
+	(up-compare-goal gl-remote-total > 0)
+	(up-compare-goal gl-loop-counter g:< temp-goal-one)
+	(up-set-target-object search-remote c: 0)
+	(up-group-size c: 4 > 0)
+	(timer-triggered t-3-sec)
+=>
+	(up-chat-data-to-player my-player-number "curr retasked vil %d" g: gl-loop-counter)
+	(up-reset-search 1 1 0 0)
+	(up-set-group search-local c: 4)
+	(up-clean-search search-local 0 search-order-asc)
+	(up-set-target-object search-local g: gl-loop-counter)
+	(up-remove-objects search-local object-data-index g:!= gl-loop-counter)
+	(up-target-objects 0 action-default -1 -1)
+	(up-modify-goal gl-loop-counter c:+ 1)
+	(up-send-flare object-point-x)
+	(chat-local-to-self "Retask LJ to other LC")
+	(up-jump-rule -2)
+)
+
+; (defrule ;loop management
+	; (current-age == dark-age)
+	; (up-compare-goal g-num-lc > 1)
+	; (up-compare-goal g-num-lj > 7)
+	; (up-compare-goal temp-goal-one > 0)
+	; (up-compare-goal g-opt-num-lj > 0)
+	; (up-compare-goal gl-remote-total > 0)
+	; (up-compare-goal gl-loop-counter g:< temp-goal-one)
+	; (up-set-target-object search-remote c: 0)
+	; (up-group-size c: 4 > 0)
+; =>
+	; (up-reset-search 1 1 0 0)
+	; (up-set-group search-local c: 4)
+	; (up-remove-objects search-local object-data-index == 0)
+	; (up-reset-group c: 4)
+	; (up-create-group 0 0 c: 4)
+	; (up-modify-group-flag 1 c: 4)
+	; (up-modify-goal gl-loop-counter c:+ 1)
+	; (up-jump-rule -3)
+; )
+
+
+
+
+
 #load-if-not-defined UP-SCENARIO-GAME
 ; (defrule
 	; (building-type-count lumber-camp >= 1)
@@ -4748,7 +5003,9 @@
 	(up-filter-distance c: -1 c: 3)
 	(up-filter-status c: status-ready c: list-active)
 	(up-find-resource c: tree-class c: 40)
-	(up-clean-search search-remote object-data-distance search-order-desc)
+	(up-remove-objects search-remote object-data-tasks-count > 1) 
+	(up-clean-search search-remote object-data-distance search-order-asc) ;get closest tree
+	(up-remove-objects search-remote object-data-index > 0)
 	(up-get-search-state gl-local-total)
 	;(up-chat-data-to-self "Trees found: %d" g: gl-remote-total)
 )
@@ -4768,6 +5025,7 @@
 	(up-filter-distance c: -1 c: 6)
 	(up-find-local c: 218 c: 5) ;lumberjack (male & female)
 	(up-find-local c: 123 c: 5)
+	(up-remove-objects search-local object-data-group-flag == 4)
 	(up-get-search-state gl-local-total)
 	;(up-chat-data-to-self "Villager found: %d" g: gl-local-total)
 )
@@ -4845,7 +5103,9 @@
 	(up-filter-distance c: -1 c: 4)
 	(up-modify-sn sn-focus-player-number c:= 0)
 	(up-find-remote c: forage-class c: 40) ;find a nearby berry bush
-	(up-remove-objects search-remote -1 > 0)
+	(up-remove-objects search-remote object-data-tasks-count > 1)
+	(up-clean-search search-remote object-data-distance search-order-asc)
+	(up-remove-objects search-remote object-data-index > 0)
 	(up-get-search-state gl-local-total)
 	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 	;(up-chat-data-to-player my-player-number "Amount of berry-bushes: %d" g: gl-remote-total)
@@ -4919,52 +5179,6 @@
 	(up-target-objects 0 action-default -1 -1) ; send idle villagers to idle farms
 	;(chat-local-to-self "Sending foragers to farms")
 )
-
-; ;task foragers to boar (not safe, needs better conditions)
-
-; (defrule ;find foragers
-	; (unit-type-count villager-forager > 4)
-; =>
-	; (up-full-reset-search)
-	; ; (up-get-point position-self gl-self-x) ; finds home TC
-	; ; (up-set-target-point gl-self-x)
-	; (up-find-local c: 354 c: 240) ;female forager
-	; (up-find-local c: 120 c: 240) ;male forager
-	; (up-remove-objects search-local object-data-index > 3)
-	; (up-get-search-state gl-local-total)
-	; ;(up-chat-data-to-player my-player-number "Amount of foragers: %d" g: gl-local-total)
-; )
-
-; (defrule; find idle farms
-	; (up-compare-goal gl-local-total <= 4)
-	; (up-compare-goal gl-local-total > 0)
-	; (unit-type-count villager-forager > 4)
-; =>
-	; (up-modify-sn sn-focus-player-number c: 0)
-	; (up-filter-distance c: -1 c: 10) ; only finds dead boars within 10 tiles of home TC
-	; (up-filter-status c: status-gather c: list-inactive)
-	; (up-find-status-remote c: boar-class c: 1)
-	; (up-find-status-remote c: livestock-class c: 1)
-	; ;(up-remove-objects search-remote 32 > 6)
-	; (up-remove-objects search-remote 16 < 80) ;remove boars with less than 80 food on them
-	; (up-remove-objects search-remote -1 > 0) ;select only one object
-	; (up-clean-search search-remote 44 1) ; sort free farms closest to home TC
-	; (up-get-search-state gl-local-total)
-	; ;(up-chat-data-to-player my-player-number "Amount of dead boars: %d" g: gl-remote-total)
-; )
-
-; (defrule
-	; (up-compare-goal gl-local-total <= 4)
-	; (up-compare-goal gl-local-total > 0)
-	; (up-compare-goal gl-remote-total > 0); is there a free farm?
-	; ;(up-compare-goal gl-remote-total g:>= gl-local-total) ;are there more or equal free farms than foragers?
-	; (unit-type-count villager-forager > 4)
-; =>
-	; (up-remove-objects search-remote -1 g:>= gl-local-total) ; removes any excess idle farms
-	; (up-remove-objects search-local -1 g:>= gl-remote-total) ; removes any excess foragers
-	; (up-target-objects 0 action-default -1 -1) ; send idle villagers to idle farms
-	; (chat-local-to-self "Microing foragers to boar")
-; )
 
 ;endregion
 
@@ -24617,7 +24831,8 @@
 	(up-filter-distance c: -1 c: 22)
 	(up-filter-status c: status-ready c: list-active)
 	(up-modify-sn sn-focus-player-number c:= 0)
-	(up-find-remote c: livestock-class c: 1)
+	(up-find-remote c: livestock-class c: 8)
+	(up-clean-search search-remote object-data-distance search-order-asc)
 	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 )
 
@@ -27692,28 +27907,28 @@
 	;(chat-to-player my-player-number "Kill the deer")
 )
 
-(defrule
+(defrule ;if we have tasked vills on the deer, and we're not hunting boar at the same time, garrison & ungarrison the vils on the deer
 	(up-compare-goal g-deer-id != -1)
-	(goal gl-push-deer YES) ;now check if deer is close to tc#
+	(goal gl-push-deer YES) 
 	(current-age == dark-age)
-	(goal gl-garrison-tc-two 0)
 	(goal gl-deer-hop 1)
+	(goal gl-garrison-tc-two 0)
 	(up-compare-sn sn-disable-villager-garrison == 0)
 =>
 	(up-modify-sn sn-focus-player-number c:= my-player-number)
-	(set-goal gl-deer-hop 2)
 	(up-find-remote c: town-center c: 1)
 	(up-target-objects 0 action-garrison -1 -1)
 	(chat-local-to-self "quick tc hop")
-	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number) ;reset focus player
+	(set-goal gl-deer-hop 2)
 )
 
 (defrule
 	(up-compare-goal g-deer-id != -1)
-	(goal gl-push-deer YES) ;now check if deer is close to tc#
+	(goal gl-push-deer YES) 
 	(current-age == dark-age)
-	(goal gl-garrison-tc-two 0)
 	(goal gl-deer-hop 2)
+	(goal gl-garrison-tc-two 0)
 	(up-compare-sn sn-disable-villager-garrison == 0)
 =>
 	(up-full-reset-search)
@@ -27727,7 +27942,7 @@
 	(current-age == dark-age)
 	(up-compare-goal g-deer-id != -1)
 	(or (goal gl-scout-map YES)
-		(and (goal gl-push-deer YES) ;now check if deer is close to tc#
+		(and (goal gl-push-deer YES) 
 		(and (up-set-target-by-id g: g-deer-id)
 		(up-object-data object-data-hitpoints < 1)))
 	)
