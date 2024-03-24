@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2024
 
 ;Version: 1.2.6
-;last update: 16th Mar 2024
+;last update: 24th Mar 2024
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -596,6 +596,7 @@
 (defconst boar-hunting 284)
 (defconst sheep-food-amount 285) ;used in calculating number of total livestock scouted
 (defconst remaining-sheep-food 286) ;current amount of remaining food on sheep with given sheep-id
+(defconst remaining-deer-food 287)
 (defconst gl-distance-temp 289)
 (defconst gl-distance-temp-one 290)
 (defconst gl-distance-temp-two 291)
@@ -634,7 +635,8 @@
 (defconst scout-enemy-four-y 325)
 (defconst gl-temp2-x 326)
 (defconst gl-temp2-y 327)
-
+(defconst gl-standard-deer-x 328)
+(defconst gl-standard-deer-y 329)
 (defconst gl-main-enemy 330)
 (defconst main-enemy-military-pop 331)
 (defconst gl-military-advantage2 332)
@@ -648,9 +650,9 @@
 (defconst gl-ressaving-notification 356)
 (defconst gl-camp-distance-setter 358)
 
-(defconst g-num-lc 260)
-(defconst g-num-lj 261)
-(defconst g-opt-num-lj 262)
+(defconst g-num-lc 360)
+(defconst g-num-lj 361)
+(defconst g-opt-num-lj 362)
 
 
 (defconst amnt-archers 400)
@@ -796,8 +798,8 @@
 	(set-strategic-number sn-gather-idle-soldiers-at-center 0)
 	(set-strategic-number sn-livestock-to-town-center 1)
 	(set-strategic-number sn-allow-capturing-gaia-units 1)
-	(set-strategic-number sn-dropsite-separation-distance 5)
-	(set-strategic-number sn-camp-max-distance 16)
+	(set-strategic-number sn-dropsite-separation-distance 6)
+	(set-strategic-number sn-camp-max-distance 12)
 	(set-strategic-number sn-minimum-water-body-size-for-dock 100)
 	(set-strategic-number sn-number-civilian-militia 9)
 	(set-strategic-number sn-enable-training-queue 1)
@@ -2154,6 +2156,10 @@
 #load-if-defined GIANT-MAP
     (defconst HALF-MAP-SIZE 120)
     (defconst FULL-MAP-SIZE 240)
+#end-if
+#load-if-defined LUDICROUS-MAP
+    (defconst HALF-MAP-SIZE 240)
+    (defconst FULL-MAP-SIZE 480)
 #end-if
 #load-if-defined UP-SCENARIO-GAME
 	(defconst HALF-MAP-SIZE 128)
@@ -3639,7 +3645,7 @@
 
 ;endregion
 
-;region Sheep scouting and villager to sheep micro =================
+;region Sheep micro and villager to sheep micro =================
 
 ;sheep scouting
 
@@ -3731,6 +3737,8 @@
 	;(up-chat-data-to-self "remaining-sheep-food: %d" g: remaining-sheep-food)
 )
 
+;todo: if no sheep under tc, send villagers under tc & wait until a sheep is under the tc again
+
 (defrule
 	(current-age == dark-age)
 	(unit-type-count-total livestock-class > 0)
@@ -3739,7 +3747,7 @@
 =>
 	(up-full-reset-search)
 	;(up-set-target-point gl-starting-tc-x)
-	(up-filter-distance c: -1 c: 5)
+	(up-filter-distance c: -1 c: 6)
 	(up-find-local c: livestock-class c: 10)
 	;(up-clean-search search-local 0 search-order-asc)
 	(up-remove-objects search-local object-data-index > 0)
@@ -3753,6 +3761,7 @@
 	(up-compare-goal remaining-sheep-food <= 80)
 	(up-compare-goal gl-local-total >= 1)
 	(up-set-target-object search-local c: 0)
+	;(timer-triggered t-3-sec)
 =>
 	(up-copy-point gl-temp-x gl-self-point-x)
 	(up-modify-goal gl-temp-x c:- 1)
@@ -3790,6 +3799,32 @@
 	;(chat-to-player my-player-number "Task vils to sheep")
 )
 
+(defrule
+	(current-age == dark-age)
+	(unit-type-count-total livestock-class > 0)
+=>
+	(up-full-reset-search)
+	(up-filter-distance c: -1 c: 2)
+	(up-find-local c: livestock-class c: 20)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-self "sheeps under tc: %d" g: gl-local-total)
+	;(up-chat-data-to-self "Curr sheep id: %d" g: g-sheep-id) 
+	;(up-chat-data-to-self "remaining-sheep-food: %d" g: remaining-sheep-food)
+)
+
+(defrule
+	(current-age == dark-age)
+	(unit-type-count-total livestock-class > 0)
+	(up-compare-goal gl-local-total < 1)
+	(up-compare-goal remaining-sheep-food < 1)
+=>
+	(up-full-reset-search)
+	(up-filter-distance c: -1 c: 4)
+	(up-find-local c: 590 c: 6) ;female shepherd
+	(up-find-local c: 592 c: 6) ;male shepherd
+	(up-target-point gl-starting-tc-x action-move -1 -1)
+)
+
 ;villager micro to dead boar or deer
 
 (defrule
@@ -3816,10 +3851,11 @@
 =>
 	(up-reset-search 1 1 0 0)
 	(up-filter-distance c: -1 c: 5)
-	(up-find-local c: 354 c: 240) ;female forager
-	(up-find-local c: 120 c: 240) ;male forager
+	(up-find-local c: 354 c: 40) ;female forager
+	(up-find-local c: 120 c: 40) ;male forager
 	(up-find-local c: 590 c: 40) ;female shepherd
 	(up-find-local c: 592 c: 40) ;male shepherd 
+	(up-remove-objects search-local object-data-index > 2)
 	(up-get-search-state gl-local-total)
 	;(up-chat-data-to-self "vils found: %d" g: gl-local-total)
 )
@@ -3860,10 +3896,11 @@
 =>
 	(up-reset-search 1 1 0 0)
 	(up-filter-distance c: -1 c: 5)
-	(up-find-local c: 354 c: 240) ;female forager
-	(up-find-local c: 120 c: 240) ;male forager
+	(up-find-local c: 354 c: 40) ;female forager
+	(up-find-local c: 120 c: 40) ;male forager
 	(up-find-local c: 590 c: 40) ;female shepherd
 	(up-find-local c: 592 c: 40) ;male shepherd 
+	(up-remove-objects search-local object-data-index > 2)
 	(up-get-search-state gl-local-total)
 	;(up-chat-data-to-self "vils found: %d" g: gl-local-total)
 )
@@ -4111,6 +4148,13 @@
 	;(up-send-flare scout-base-four-x)
 	;(chat-to-player my-player-number "Adjusting y4")
 )
+
+; (defrule
+	; (true)
+; =>
+	; (up-chat-data-to-player my-player-number "full map size goal: %d" g: FULL-MAP-SIZE)
+	; (up-chat-data-to-player my-player-number "full map size constant: %d" c: FULL-MAP-SIZE)
+; )
 
 (defrule 
 	(game-time > 10)
@@ -4692,229 +4736,237 @@
 
 ;region Lumberjack DUC =============================================
 
-(defrule ;Find nr of LCs & save into goal
-	(current-age == dark-age)
-	(building-type-count-total lumber-camp > 1)
-=>
-	(up-full-reset-search)
-	(up-find-local c: lumber-camp c: 2)
-	(up-get-search-state gl-local-total)
-	(up-modify-goal g-num-lc g:= gl-local-total)
-	;(up-chat-data-to-player my-player-number "num lc %d" g: g-num-lc)
-)
+; (defrule ;Find nr of LCs & save into goal
+	; (current-age == dark-age)
+	; (building-type-count-total lumber-camp > 1)
+; =>
+	; (up-full-reset-search)
+	; (up-find-local c: lumber-camp c: 2)
+	; (up-get-search-state gl-local-total)
+	; (up-modify-goal g-num-lc g:= gl-local-total)
+	; ;(up-chat-data-to-player my-player-number "num lc %d" g: g-num-lc)
+; )
 
-(defrule ;Find nr of LJs & save into goal
-	(current-age == dark-age)
-	(up-compare-goal g-num-lc > 1)
-=>
-	(up-full-reset-search)
-	(up-find-local c: 218 c: 10) ;female lj
-	(up-find-local c: 123 c: 10) ;male lj
-	(up-get-search-state gl-local-total)
-	(up-modify-goal g-num-lj g:= gl-local-total)
-	;(up-chat-data-to-player my-player-number "num lj %d" g: g-num-lj)
-)
+; (defrule ;Find nr of LJs & save into goal
+	; (current-age == dark-age)
+	; (up-compare-goal g-num-lc > 1)
+; =>
+	; (up-full-reset-search)
+	; (up-find-local c: 218 c: 10) ;female lj
+	; (up-find-local c: 123 c: 10) ;male lj
+	; (up-get-search-state gl-local-total)
+	; (up-modify-goal g-num-lj g:= gl-local-total)
+	; ;(up-chat-data-to-player my-player-number "num lj %d" g: g-num-lj)
+; )
 
-(defrule ;LJs/LCs = optimal nr of LJs on 1 LC
-	(current-age == dark-age)
-	(up-compare-goal g-num-lc > 1)
-	(up-compare-goal g-num-lj > 7)
-=>
-	(up-modify-goal g-opt-num-lj g:= g-num-lj)
-	(up-modify-goal g-opt-num-lj g:/ g-num-lc)
-	(up-chat-data-to-player my-player-number "g-opt-num-lj %d" g: g-opt-num-lj)
-)
+; (defrule ;LJs/LCs = optimal nr of LJs on 1 LC
+	; (current-age == dark-age)
+	; (up-compare-goal g-num-lc > 1)
+	; (up-compare-goal g-num-lj > 7)
+; =>
+	; (up-modify-goal g-opt-num-lj g:= g-num-lj)
+	; (up-modify-goal g-opt-num-lj g:/ g-num-lc)
+	; (up-chat-data-to-player my-player-number "g-opt-num-lj %d" g: g-opt-num-lj)
+; )
 
-(defrule ;Setup for search for nr of LJs around each LC
-	(current-age == dark-age)
-	(up-compare-goal g-num-lc > 1)
-	(up-compare-goal g-num-lj > 7)
-	(up-compare-goal g-opt-num-lj > 0)
-=>
-	(set-goal gl-loop-counter 0)
-)
+; (defrule ;Setup for search for nr of LJs around each LC
+	; (current-age == dark-age)
+	; (up-compare-goal g-num-lc > 1)
+	; (up-compare-goal g-num-lj > 7)
+	; (up-compare-goal g-opt-num-lj > 0)
+; =>
+	; (set-goal gl-loop-counter 0)
+; )
 
-(defrule ;Search for nr of LJs around each LC
-	(current-age == dark-age)
-	(up-compare-goal g-num-lc > 1)
-	(up-compare-goal g-num-lj > 7)
-	(up-compare-goal g-opt-num-lj > 0)
-=>
-	(up-full-reset-search)
-	(up-find-local c: lumber-camp c: 2)
-	(up-clean-search search-local 0 search-order-asc) ;to keep the list order consistent
-	(up-chat-data-to-player my-player-number "curr focus lc %d" g: gl-loop-counter)
-)
+; (defrule ;Search for nr of LJs around each LC
+	; (current-age == dark-age)
+	; (up-compare-goal g-num-lc > 1)
+	; (up-compare-goal g-num-lj > 7)
+	; (up-compare-goal g-opt-num-lj > 0)
+; =>
+	; (up-full-reset-search)
+	; (up-find-local c: lumber-camp c: 2)
+	; (up-clean-search search-local 0 search-order-asc) ;to keep the list order consistent
+	; (up-chat-data-to-player my-player-number "curr focus lc %d" g: gl-loop-counter)
+; )
 
-(defrule ;Search for nr of LJs around each LC
-	(current-age == dark-age)
-	(up-compare-goal g-num-lc > 1)
-	(up-compare-goal g-num-lj > 7)
-	(up-compare-goal g-opt-num-lj > 0)
-	(up-set-target-object search-local g: gl-loop-counter)
-=>
-	(up-get-point position-object object-point-x)
-	(up-reset-search 1 1 0 0)
-	(up-set-target-point object-point-x)
-	(up-filter-distance c: -1 c: 4)
-	(up-find-local c: 218 c: 10) ;female lj
-	(up-find-local c: 123 c: 10) ;male lj
-	(up-get-search-state gl-local-total)
-	(up-chat-data-to-player my-player-number "number of ljs on curr lc %d" g: gl-local-total)
-)
+; (defrule ;Search for nr of LJs around each LC
+	; (current-age == dark-age)
+	; (up-compare-goal g-num-lc > 1)
+	; (up-compare-goal g-num-lj > 7)
+	; (up-compare-goal g-opt-num-lj > 0)
+	; (up-set-target-object search-local g: gl-loop-counter)
+; =>
+	; (up-get-point position-object object-point-x)
+	; (up-reset-search 1 1 0 0)
+	; (up-set-target-point object-point-x)
+	; (up-filter-distance c: -1 c: 4)
+	; (up-find-local c: 218 c: 10) ;female lj
+	; (up-find-local c: 123 c: 10) ;male lj
+	; (up-get-search-state gl-local-total)
+	; (up-chat-data-to-player my-player-number "number of ljs on curr lc %d" g: gl-local-total)
+; )
 
-(defrule ;pick LC with the higher nr of LJs around it
-	(current-age == dark-age)
-	(up-compare-goal g-num-lc > 1)
-	(up-compare-goal g-num-lj > 7)
-	(up-compare-goal g-opt-num-lj > 0)
-=>
-	(up-modify-goal temp-goal-one g:= gl-local-total)
-	(up-modify-goal temp-goal-one g:- g-opt-num-lj)
-	(up-chat-data-to-player my-player-number "temp-goal-one %d" g: temp-goal-one)
-)
-;nr of LJs around - optimal nr of LJs = nr of LJs to retask to different LC
-(defrule ;LJs are distributed equally, no actions required
-	(current-age == dark-age)
-	(up-compare-goal g-num-lc > 1)
-	(up-compare-goal g-num-lj > 7)
-	(up-compare-goal g-opt-num-lj > 0)
-	(up-compare-goal temp-goal-one <= 1)
-	(up-compare-goal temp-goal-one >= -1)
-	(up-compare-goal gl-loop-counter g:< g-num-lc)
-=>
-	(chat-to-player my-player-number "LJs equally distributed")
-	(up-reset-search 1 1 0 0)
-	(up-set-target-point gl-starting-tc-x)
-	(up-filter-distance c: -1 c: 5)
-	(up-find-local c: 218 c: 5) ;lumberjack (male & female)
-	(up-find-local c: 123 c: 5)
-	(up-get-search-state gl-local-total)
-	(up-chat-data-to-player my-player-number "nr ljs under tc %d" g: gl-local-total)
-	(up-reset-group c: 4)
-	(up-create-group 0 0 c: 4) 
-	(up-modify-group-flag 1 c: 4)
-	(up-jump-rule 2)
-)
+; (defrule ;pick LC with the higher nr of LJs around it
+	; (current-age == dark-age)
+	; (up-compare-goal g-num-lc > 1)
+	; (up-compare-goal g-num-lj > 7)
+	; (up-compare-goal g-opt-num-lj > 0)
+; =>
+	; (up-modify-goal temp-goal-one g:= gl-local-total)
+	; (up-modify-goal temp-goal-one g:- g-opt-num-lj)
+	; (up-chat-data-to-player my-player-number "temp-goal-one %d" g: temp-goal-one)
+; )
+; ;nr of LJs around - optimal nr of LJs = nr of LJs to retask to different LC
+; (defrule ;LJs are distributed equally, no actions required
+	; (current-age == dark-age)
+	; (up-compare-goal g-num-lc > 1)
+	; (up-compare-goal g-num-lj > 7)
+	; (up-compare-goal g-opt-num-lj > 0)
+	; (up-compare-goal temp-goal-one <= 1)
+	; (up-compare-goal temp-goal-one >= -1)
+	; (up-compare-goal gl-loop-counter g:< g-num-lc)
+; =>
+	; (chat-to-player my-player-number "LJs equally distributed")
+	; (up-reset-search 1 1 0 0)
+	; (up-set-target-point gl-starting-tc-x)
+	; (up-filter-distance c: -1 c: 5)
+	; (up-find-local c: 218 c: 5) ;lumberjack (male & female)
+	; (up-find-local c: 123 c: 5)
+	; (up-get-search-state gl-local-total)
+	; (up-chat-data-to-player my-player-number "nr ljs under tc %d" g: gl-local-total)
+	; (up-reset-group c: 4)
+	; (up-create-group 0 0 c: 4) 
+	; (up-modify-group-flag 1 c: 4)
+	; (up-jump-rule 2)
+; )
 
-(defrule ;target LC has more LJs than optimal --> pick LJs that should be sent to other LC
-	(current-age == dark-age)
-	(up-compare-goal g-num-lc > 1)
-	(up-compare-goal g-num-lj > 7)
-	(up-compare-goal g-opt-num-lj > 0)
-	(up-compare-goal temp-goal-one > 1)
-	(up-compare-goal gl-loop-counter g:< g-num-lc)
-=>
-	(chat-to-player my-player-number "too many LJs")
-	(up-remove-objects search-local object-data-index g:>= temp-goal-one) 
-	(up-reset-group c: 4)
-	(up-create-group 0 0 c: 4) 
-	(up-modify-group-flag 1 c: 4)
-	(up-jump-rule 1)
-)
+; (defrule ;target LC has more LJs than optimal --> pick LJs that should be sent to other LC
+	; (current-age == dark-age)
+	; (up-compare-goal g-num-lc > 1)
+	; (up-compare-goal g-num-lj > 7)
+	; (up-compare-goal g-opt-num-lj > 0)
+	; (up-compare-goal temp-goal-one > 1)
+	; (up-compare-goal gl-loop-counter g:< g-num-lc)
+; =>
+	; (chat-to-player my-player-number "too many LJs")
+	; (up-remove-objects search-local object-data-index g:>= temp-goal-one) 
+	; (up-reset-group c: 4)
+	; (up-create-group 0 0 c: 4) 
+	; (up-modify-group-flag 1 c: 4)
+	; (up-jump-rule 1)
+; )
 
-(defrule ;target LC has less LJs than optimal --> skip
-	(current-age == dark-age)
-	(up-compare-goal g-num-lc > 1)
-	(up-compare-goal g-num-lj > 7)
-	(up-compare-goal g-opt-num-lj > 0)
-	(up-compare-goal temp-goal-one < -1)
-	(up-compare-goal gl-loop-counter g:< g-num-lc)
-=>
-	(chat-to-player my-player-number "too few LJs")
-	(up-modify-goal gl-loop-counter c:+ 1)
-	(up-jump-rule -6)
-)
+; (defrule ;target LC has less LJs than optimal --> skip
+	; (current-age == dark-age)
+	; (up-compare-goal g-num-lc > 1)
+	; (up-compare-goal g-num-lj > 7)
+	; (up-compare-goal g-opt-num-lj > 0)
+	; (up-compare-goal temp-goal-one < -1)
+	; (up-compare-goal gl-loop-counter g:< g-num-lc)
+; =>
+	; (chat-to-player my-player-number "too few LJs")
+	; (up-modify-goal gl-loop-counter c:+ 1)
+	; (up-jump-rule -6)
+; )
 
-(defrule ;pick LC with fewer nr of LJs around it
-	(current-age == dark-age)
-	(up-compare-goal g-num-lc > 1)
-	(up-compare-goal g-num-lj > 7)
-	(up-compare-goal g-opt-num-lj > 0)
-	;(up-compare-goal temp-goal-one > 1)
-	(up-compare-goal gl-loop-counter == 0)
-	(up-group-size c: 4 > 0)
-=>
-	(up-modify-goal gl-loop-counter c:+ 1)
-	(up-reset-search 1 1 0 0)
-	(up-find-local c: lumber-camp c: 2)
-	(up-clean-search search-local 0 search-order-asc)
-	(up-jump-rule 1)
-)
+; (defrule ;pick LC with fewer nr of LJs around it
+	; (current-age == dark-age)
+	; (up-compare-goal g-num-lc > 1)
+	; (up-compare-goal g-num-lj > 7)
+	; (up-compare-goal g-opt-num-lj > 0)
+	; ;(up-compare-goal temp-goal-one > 1)
+	; (up-compare-goal gl-loop-counter == 0)
+	; (up-group-size c: 4 > 0)
+; =>
+	; (up-modify-goal gl-loop-counter c:+ 1)
+	; (up-reset-search 1 1 0 0)
+	; (up-find-local c: lumber-camp c: 2)
+	; (up-clean-search search-local 0 search-order-asc)
+	; (chat-to-all "set focus to 2nd lc")
+	; (up-get-search-state gl-local-total)
+	; (up-chat-data-to-player my-player-number "focus lumber-camps: %d" g: gl-local-total)
+	; (up-jump-rule 1)
+; )
 
-(defrule ;find target LC
-	(current-age == dark-age)
-	(up-compare-goal g-num-lc > 1)
-	(up-compare-goal g-num-lj > 7)
-	(up-compare-goal g-opt-num-lj > 0)
-	;(up-compare-goal temp-goal-one > 1)
-	(up-compare-goal gl-loop-counter == 1)
-	(up-group-size c: 4 > 0)
-=>
-	(up-modify-goal gl-loop-counter c:- 1)
-	(up-reset-search 1 1 0 0)
-	(up-find-local c: lumber-camp c: 2)
-	(up-clean-search search-local 0 search-order-asc)
-)
+; (defrule ;find target LC
+	; (current-age == dark-age)
+	; (up-compare-goal g-num-lc > 1)
+	; (up-compare-goal g-num-lj > 7)
+	; (up-compare-goal g-opt-num-lj > 0)
+	; ;(up-compare-goal temp-goal-one > 1)
+	; (up-compare-goal gl-loop-counter == 1)
+	; (up-group-size c: 4 > 0)
+; =>
+	; (up-modify-goal gl-loop-counter c:- 1)
+	; (up-reset-search 1 1 0 0)
+	; (up-find-local c: lumber-camp c: 2)
+	; (up-clean-search search-local 0 search-order-asc)
+	; (chat-to-all "set focus to 1st lc")
+	; (up-get-search-state gl-local-total)
+	; (up-chat-data-to-player my-player-number "focus lumber-camps: %d" g: gl-local-total)
+; )
 
-(defrule ;search for trees near target LC
-	(current-age == dark-age)
-	(up-compare-goal g-num-lc > 1)
-	(up-compare-goal g-num-lj > 7)
-	(up-compare-goal g-opt-num-lj > 0)
-	;(up-compare-goal temp-goal-one > 1)
-	(up-set-target-object search-local g: gl-loop-counter)
-	(up-group-size c: 4 > 0)
-=>
-	(up-get-point position-object gl-camp-x)
-	(set-goal gl-loop-counter 0)
-)
+; (defrule ;search for trees near target LC
+	; (current-age == dark-age)
+	; (up-compare-goal g-num-lc > 1)
+	; (up-compare-goal g-num-lj > 7)
+	; (up-compare-goal g-opt-num-lj > 0)
+	; ;(up-compare-goal temp-goal-one > 1)
+	; (up-set-target-object search-local g: gl-loop-counter)
+	; (up-group-size c: 4 > 0)
+; =>
+	; (up-get-point position-object gl-camp-x)
+	; (up-send-flare gl-camp-x)
+	; (set-goal gl-loop-counter 0)
+; )
 
-(defrule ;search for trees near target LC
-	(current-age == dark-age)
-	(up-compare-goal g-num-lc > 1)
-	(up-compare-goal g-num-lj > 7)
-	(up-compare-goal g-opt-num-lj > 0)
-	;(up-compare-goal temp-goal-one > 1)
-	;(up-set-target-object search-local g: gl-loop-counter)
-	(up-group-size c: 4 > 0)
-	(timer-triggered t-3-sec)
-=>
-	(up-full-reset-search)
-	(up-set-target-point gl-camp-x)
-	(up-filter-distance c: -1 c: 3)
-	(up-find-resource c: wood c: 10)
-	(up-remove-objects search-remote object-data-tasks-count > 1) ;remove trees that are already being chopped
-	(up-clean-search search-remote object-data-distance search-order-asc) ;get closest tree
-	(up-remove-objects search-remote object-data-index > 0) ;reduce list to 1 tree
-	(up-get-search-state gl-local-total)
-	(up-chat-data-to-player my-player-number "nr trees found %d" g: gl-remote-total)
-)
-;loop through retasked LJs & assign a tree to each LJ
-(defrule ;task selected LJs to other LC trees
-	(current-age == dark-age)
-	(up-compare-goal g-num-lc > 1)
-	(up-compare-goal g-num-lj > 7)
-	;(up-compare-goal temp-goal-one > 1)
-	(up-compare-goal g-opt-num-lj > 0)
-	(up-compare-goal gl-remote-total > 0)
-	(up-compare-goal gl-loop-counter g:< temp-goal-one)
-	(up-set-target-object search-remote c: 0)
-	(up-group-size c: 4 > 0)
-	(timer-triggered t-3-sec)
-=>
-	(up-chat-data-to-player my-player-number "curr retasked vil %d" g: gl-loop-counter)
-	(up-reset-search 1 1 0 0)
-	(up-set-group search-local c: 4)
-	(up-clean-search search-local 0 search-order-asc)
-	(up-set-target-object search-local g: gl-loop-counter)
-	(up-remove-objects search-local object-data-index g:!= gl-loop-counter)
-	(up-target-objects 0 action-default -1 -1)
-	(up-modify-goal gl-loop-counter c:+ 1)
-	(up-send-flare object-point-x)
-	(chat-local-to-self "Retask LJ to other LC")
-	(up-jump-rule -2)
-)
+; (defrule ;search for trees near target LC
+	; (current-age == dark-age)
+	; (up-compare-goal g-num-lc > 1)
+	; (up-compare-goal g-num-lj > 7)
+	; (up-compare-goal g-opt-num-lj > 0)
+	; ;(up-compare-goal temp-goal-one > 1)
+	; ;(up-set-target-object search-local g: gl-loop-counter)
+	; (up-group-size c: 4 > 0)
+	; (timer-triggered t-3-sec)
+; =>
+	; (up-full-reset-search)
+	; (up-set-target-point gl-camp-x)
+	; (up-filter-distance c: -1 c: 3)
+	; (up-find-resource c: wood c: 10)
+	; (up-remove-objects search-remote object-data-tasks-count > 1) ;remove trees that are already being chopped
+	; (up-clean-search search-remote object-data-distance search-order-asc) ;get closest tree
+	; (up-remove-objects search-remote object-data-index > 0) ;reduce list to 1 tree
+	; (up-get-search-state gl-local-total)
+	; (up-chat-data-to-player my-player-number "nr trees found %d" g: gl-remote-total)
+; )
+
+; ;loop through retasked LJs & assign a tree to each LJ
+; (defrule ;task selected LJs to other LC trees
+	; (current-age == dark-age)
+	; (up-compare-goal g-num-lc > 1)
+	; (up-compare-goal g-num-lj > 7)
+	; ;(up-compare-goal temp-goal-one > 1)
+	; (up-compare-goal g-opt-num-lj > 0)
+	; (up-compare-goal gl-loop-counter g:< temp-goal-one)
+	; (up-compare-goal gl-remote-total > 0)
+	; (up-set-target-object search-remote c: 0)
+	; (up-group-size c: 4 > 0)
+	; (timer-triggered t-3-sec)
+; =>
+	; (up-chat-data-to-player my-player-number "curr retasked vil %d" g: gl-loop-counter)
+	; (up-reset-search 1 1 0 0)
+	; (up-set-group search-local c: 4)
+	; (up-clean-search search-local 0 search-order-asc)
+	; (up-set-target-object search-local g: gl-loop-counter)
+	; (up-remove-objects search-local object-data-index g:!= gl-loop-counter)
+	; (up-target-objects 0 action-default -1 -1)
+	; (up-modify-goal gl-loop-counter c:+ 1)
+	; ;(up-send-flare gl-camp-x)
+	; (chat-local-to-self "Retask LJ to other LC")
+	; (up-jump-rule -2)
+; )
 
 ; (defrule ;loop management
 	; (current-age == dark-age)
@@ -4936,10 +4988,6 @@
 	; (up-modify-goal gl-loop-counter c:+ 1)
 	; (up-jump-rule -3)
 ; )
-
-
-
-
 
 #load-if-not-defined UP-SCENARIO-GAME
 ; (defrule
@@ -5143,7 +5191,7 @@
 
 ;prevent overgathering of berries if farms are available
 
-;task foragers to farms
+;task foragers/shepherds to farms
 
 (defrule ;find foragers
 	(idle-farm-count > 0)
@@ -5160,11 +5208,27 @@
 	;(up-chat-data-to-player my-player-number "Amount of foragers: %d" g: gl-local-total)
 )
 
+(defrule ;find shepherds
+	(idle-farm-count > 0)
+	(unit-type-count villager-shepherd > 8)
+=>
+	(up-full-reset-search)
+	; (up-get-point position-self gl-self-x) ; finds home TC
+	; (up-set-target-point gl-self-x)
+	(up-find-local c: 590 c: 240) ;female forager
+	(up-find-local c: 592 c: 240) ;male forager
+	(up-clean-search search-local object-data-hitpoints search-order-desc)
+	(up-remove-objects search-local object-data-index > 0)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-player my-player-number "Amount of foragers: %d" g: gl-local-total)
+)
+
 (defrule; find idle farms
 	(up-compare-goal gl-local-total <= 4)
 	(up-compare-goal gl-local-total > 0)
 	(idle-farm-count > 0)
-	(unit-type-count villager-forager > 4)
+	(or (unit-type-count villager-forager > 4)
+	(unit-type-count villager-shepherd > 4))
 =>
 	(up-modify-sn sn-focus-player-number c:= my-player-number)
 	;(up-filter-distance c: -1 c: 40) ; only finds farms within 40 tiles of home TC, you may want to remove this
@@ -5181,7 +5245,8 @@
 	(up-compare-goal gl-remote-total > 0); is there a free farm?
 	;(up-compare-goal gl-remote-total g:>= gl-local-total) ;are there more or equal free farms than foragers?
 	(idle-farm-count > 0)
-	(unit-type-count villager-forager > 4)
+	(or (unit-type-count villager-forager > 4)
+	(unit-type-count villager-shepherd > 4))
 =>
 	(up-remove-objects search-remote -1 g:>= gl-local-total) ; removes any excess idle farms
 	(up-remove-objects search-local -1 g:>= gl-remote-total) ; removes any excess foragers
@@ -5680,7 +5745,7 @@
 	(up-compare-goal scout-enemy-one-x >= FULL-MAP-SIZE)
 	(goal gl-curr-point 1)
 =>
-	(up-modify-goal scout-enemy-one-x g: FULL-MAP-SIZE)
+	(up-modify-goal scout-enemy-one-x c: FULL-MAP-SIZE)
 	(up-modify-goal scout-enemy-one-x c:- 1)
 	;(up-send-flare scout-enemy-one-x)
 	;(chat-to-player my-player-number "Adjusting x1")
@@ -5695,7 +5760,7 @@
 	(up-compare-goal scout-enemy-one-y >= FULL-MAP-SIZE)
 	(goal gl-curr-point 1)
 =>
-	(up-modify-goal scout-enemy-one-y g: FULL-MAP-SIZE)
+	(up-modify-goal scout-enemy-one-y c: FULL-MAP-SIZE)
 	(up-modify-goal scout-enemy-one-y c:- 1)
 	;(up-send-flare scout-enemy-one-x)
 	;(chat-to-player my-player-number "Adjusting y1")
@@ -5710,7 +5775,7 @@
 	(game-time > 10)
 	(goal gl-curr-point 1)
 =>
-	(up-modify-goal scout-enemy-two-x g: FULL-MAP-SIZE)
+	(up-modify-goal scout-enemy-two-x c: FULL-MAP-SIZE)
 	(up-modify-goal scout-enemy-two-x c:- 1)
 	;(up-send-flare scout-enemy-two-x)
 	;(chat-to-player my-player-number "Adjusting x2")
@@ -5725,7 +5790,7 @@
 	(game-time > 10)
 	(goal gl-curr-point 1)
 =>
-	(up-modify-goal scout-enemy-two-y g: FULL-MAP-SIZE)
+	(up-modify-goal scout-enemy-two-y c: FULL-MAP-SIZE)
 	(up-modify-goal scout-enemy-two-y c:- 1)
 	;(up-send-flare scout-enemy-two-x)
 	;(chat-to-player my-player-number "Adjusting y2")
@@ -5740,7 +5805,7 @@
 	(game-time > 10)
 	(goal gl-curr-point 1)
 =>
-	(up-modify-goal scout-enemy-three-x g: FULL-MAP-SIZE)
+	(up-modify-goal scout-enemy-three-x c: FULL-MAP-SIZE)
 	(up-modify-goal scout-enemy-three-x c:- 1)
 	;(up-send-flare scout-enemy-three-x)
 	;(chat-to-player my-player-number "Adjusting x3")
@@ -5755,7 +5820,7 @@
 	(game-time > 10)
 	(goal gl-curr-point 1)
 =>
-	(up-modify-goal scout-enemy-three-y g: FULL-MAP-SIZE)
+	(up-modify-goal scout-enemy-three-y c: FULL-MAP-SIZE)
 	(up-modify-goal scout-enemy-three-y c:- 1)
 	;(up-send-flare scout-enemy-three-x)
 	;(chat-to-player my-player-number "Adjusting y3")
@@ -5770,7 +5835,7 @@
 	(game-time > 10)
 	(goal gl-curr-point 1)
 =>
-	(up-modify-goal scout-enemy-four-x g: FULL-MAP-SIZE)
+	(up-modify-goal scout-enemy-four-x c: FULL-MAP-SIZE)
 	(up-modify-goal scout-enemy-four-x c:- 1)
 	;(up-send-flare scout-enemy-four-x)
 	;(chat-to-player my-player-number "Adjusting x4")
@@ -5785,7 +5850,7 @@
 	(game-time > 10)
 	(goal gl-curr-point 1)
 =>
-	(up-modify-goal scout-enemy-four-y g: FULL-MAP-SIZE)
+	(up-modify-goal scout-enemy-four-y c: FULL-MAP-SIZE)
 	(up-modify-goal scout-enemy-four-y c:- 1)
 	;(up-send-flare scout-enemy-four-x)
 	;(chat-to-player my-player-number "Adjusting y4")
@@ -7154,7 +7219,7 @@
 	(up-modify-goal civ-cavalry-s c: 6)
 	(up-modify-goal civ-siege-s c: 7)
 	(up-modify-goal civ-uu-s c: 9)
-	(set-goal ca-strategy gl-castleage-stableunit)
+	(set-goal ca-strategy gl-castleage-siege-infantry)
 	(set-goal gl-fastimp-unit fi-monks)	
 	(disable-self)
 )
@@ -8821,6 +8886,7 @@
 #load-if-defined ARENA-MAP
 
 (defrule
+	(current-age <= feudal-age)
 	(goal strategy-goal sg-fastcastle-gu)
 	(up-research-status c: castle-age >= research-pending)
 	(goal sg-fastcastle-boom -1)
@@ -8830,6 +8896,7 @@
 )
 
 (defrule
+	(current-age <= feudal-age)
 	(goal strategy-goal sg-fastcastle-gu)
 	(game-time > 60)
 	(goal sg-fastcastle-boom -1)
@@ -8841,6 +8908,7 @@
 )
 
 (defrule
+	(current-age <= feudal-age)
 	(goal strategy-goal sg-fastcastle-gu)
 	(game-time > 60)
 	(goal sg-fastcastle-boom -1)
@@ -10245,7 +10313,7 @@
 	(building-type-count castle > 0)
 	(can-train petard)
 	(unit-type-count-total petard < 1)
-	(game-time < 1500)
+	(game-time < 1260)
 =>
 	(train petard)
 )
@@ -10680,6 +10748,8 @@
 (defrule
 	(current-age == castle-age)
 	(can-train coustillier-line)
+	(or (unit-type-count knight-line < 5)
+	(unit-type-count coustillier-line < 5))
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 =>
@@ -10706,6 +10776,7 @@
 	(current-age == imperial-age)
 	(can-train coustillier-line)
 	(unit-type-count coustillier-line < 5)
+	(unit-type-count knight-line < 5)
 	(not (research-completed ri-elite-coustillier))
 	(or (up-compare-goal gl-number-trebs >= 1)
 	(up-compare-goal gl-military-advantage < -4))
@@ -10716,6 +10787,7 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train coustillier-line)
+	(unit-type-count knight-line < 5)
 	(up-research-status c: ri-elite-coustillier >= research-pending)
 	(or (up-compare-goal gl-number-trebs >= 1)
 	(up-compare-goal gl-military-advantage < -4))
@@ -11365,6 +11437,7 @@
 (defrule
 	(current-age == castle-age)
 	(can-train tarkan-line)
+	(unit-type-count knight-line < 5)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 =>
@@ -11391,6 +11464,7 @@
 	(current-age == imperial-age)
 	(can-train tarkan-line)
 	(unit-type-count tarkan-line < 5)
+	(unit-type-count knight-line < 5)
 	(not (research-completed ri-elite-tarkan))
 	(or (up-compare-goal gl-number-trebs >= 1)
 	(up-compare-goal gl-military-advantage < -4))
@@ -11401,6 +11475,7 @@
 (defrule
 	(current-age == imperial-age)
 	(can-train tarkan-line)
+	(unit-type-count knight-line < 5)
 	(up-research-status c: ri-elite-tarkan >= research-pending)
 	(or (up-compare-goal gl-number-trebs >= 1)
 	(up-compare-goal gl-military-advantage < -4))
@@ -12857,9 +12932,9 @@
 #load-if-not-defined UP-SCENARIO-GAME
 (defrule
 	(game-time > 2700)
-	(or (up-compare-goal gl-military-advantage >= 20)
-	(military-population >= 30))
-	(civilian-population >= 80)
+	(or (up-compare-goal gl-military-advantage >= 30)
+	(military-population >= 60))
+	(up-compare-goal gl-strategic-position == 1)
 	(current-age >= imperial-age)
 	(not (town-under-attack))
 	(or (building-type-count-total gate-class > 0)
@@ -12937,6 +13012,13 @@
     ; ;(set-strategic-number sn-cap-civilian-builders 0) 
 ; )
 
+; (defrule
+	; (can-build lumber-camp)
+	; (building-type-count-total lumber-camp < 1)
+; =>
+	; (build lumber-camp)
+; )
+
 (defrule
 	(current-age == dark-age)
 	(or (building-type-count-total lumber-camp > 0)
@@ -12954,8 +13036,8 @@
 	(up-find-status-local c: mill c: 1)
 	(up-remove-objects search-local object-data-index > 0)
 	(up-get-search-state gl-local-total)
-	(up-chat-data-to-all "Amount of pending drop-off buildings: %d" g: gl-local-total)
-	(up-chat-data-to-all "temp-id: %d" g: gl-temp-id)
+	;(up-chat-data-to-all "Amount of pending drop-off buildings: %d" g: gl-local-total)
+	;(up-chat-data-to-all "temp-id: %d" g: gl-temp-id)
 )
 
 (defrule
@@ -12976,10 +13058,10 @@
 	(up-filter-distance c: -1 c: 3)
 	(up-find-local c: 212 c: 1) ;female builder
 	(up-find-local c: 118 c: 1) ;male builder
-	(up-remove-objects search-local object-data-id g:== gl-temp-id)
+	;(up-remove-objects search-local object-data-id g:== gl-temp-id)
 	(up-remove-objects search-local object-data-index > 0)
 	(up-get-search-state gl-local-total)
-	(up-chat-data-to-all "Amount of builder villagers: %d" g: gl-local-total)
+	;(up-chat-data-to-all "Amount of builder villagers: %d" g: gl-local-total)
 )	
 
 (defrule ;wood
@@ -13002,8 +13084,8 @@
 	(up-remove-objects search-remote object-data-tasks-count > 1)
 	(up-clean-search search-remote object-data-distance search-order-asc)
 	(up-get-search-state gl-local-total)
-	(up-chat-data-to-all  "curr-unit-id: %d" g: gl-temp-id)
-	(up-chat-data-to-all "Amount of trees nearby: %d" g: gl-remote-total)
+	;(up-chat-data-to-all  "curr-unit-id: %d" g: gl-temp-id)
+	;(up-chat-data-to-all "Amount of trees nearby: %d" g: gl-remote-total)
 )
 
 (defrule ;gold
@@ -13020,7 +13102,8 @@
 	(up-point-contains gl-temp-x c: mining-camp)
 	(not (goal strategy-goal sg-towerrush))
 	(or (not (goal strategy-goal sg-fastcastle-uu))
-	    (unit-type-count-total villager != 23))
+	    (and (unit-type-count-total villager != 23)
+		(unit-type-count-total villager != 24)))
 =>	
 	(up-get-object-data object-data-id gl-temp-id)
 	(up-set-target-point gl-temp-x)
@@ -13032,7 +13115,7 @@
 	(up-remove-objects search-remote object-data-tasks-count > 1)
 	(up-clean-search search-remote object-data-distance search-order-asc)
 	(up-get-search-state gl-local-total)
-	(up-chat-data-to-all  "Amount of goldmines nearby: %d" g: gl-remote-total)
+	;(up-chat-data-to-all  "Amount of goldmines nearby: %d" g: gl-remote-total)
 	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 )
 
@@ -13050,18 +13133,19 @@
 	(up-point-contains gl-temp-x c: mining-camp)
 	(or (goal strategy-goal sg-towerrush)
 		(and(goal strategy-goal sg-fastcastle-uu)
-			(unit-type-count-total villager == 23))
+			(or (unit-type-count-total villager == 23)
+			(unit-type-count-total villager == 24)))
 	)
 =>	
 	(up-get-object-data object-data-id gl-temp-id)
 	(up-set-target-point gl-temp-x)
 	(up-filter-distance c: -1 c: 4)
 	(up-modify-sn sn-focus-player-number c:= 0)
-	(up-find-remote c: gold-mine-class c: 6)
+	(up-find-remote c: stone-mine-class c: 6)
 	(up-remove-objects search-remote object-data-tasks-count > 1)
 	(up-clean-search search-remote object-data-distance search-order-asc)
 	(up-get-search-state gl-local-total)
-	(up-chat-data-to-all  "Amount of stonemines nearby: %d" g: gl-remote-total)
+	;(up-chat-data-to-all  "Amount of stonemines nearby: %d" g: gl-remote-total)
 	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 )
 
@@ -13082,11 +13166,13 @@
 	(up-get-object-data object-data-id gl-temp-id)
 	(up-set-target-point gl-temp-x)
 	(up-filter-distance c: -1 c: 3)
+	(up-modify-sn sn-focus-player-number c:= 0)
 	(up-find-remote c: forage-class c: 6)
 	(up-remove-objects search-remote object-data-tasks-count > 1)
 	(up-clean-search search-remote object-data-distance search-order-asc)
 	(up-get-search-state gl-local-total)
-	(up-chat-data-to-all  "Amount of berry bushes nearby: %d" g: gl-remote-total)
+	;(up-chat-data-to-all  "Amount of berry bushes nearby: %d" g: gl-remote-total)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 )
 
 (defrule
@@ -13104,7 +13190,7 @@
 =>
 	(set-strategic-number sn-keystates 1)
 	(up-target-objects 0 action-default -1 -1)
-	(chat-to-player my-player-number "Tasking builder to resource")
+	;(chat-to-player my-player-number "Tasking builder to resource")
 	(set-strategic-number sn-keystates 0)
 )
 
@@ -13138,6 +13224,25 @@
 )
 
 (defrule
+	(building-type-count town-center == 1)
+	(building-type-count mining-camp >= 1)
+	(or (unit-type-count villager-gold >= 1)
+	(unit-type-count villager-stone >= 1))
+	(up-compare-sn sn-disable-villager-garrison == 0)
+	(goal gl-garrison-tc-two 0) ;prevent garrisoning during boar-hunting
+=>
+	(up-full-reset-search)
+	(up-set-target-point gl-starting-tc-x)
+	(up-filter-distance c: -1 c: 3)
+	(up-find-local c: 581 c: 4);female gold miner
+	(up-find-local c: 579 c: 4);male gold miner
+	(up-find-local c: 220 c: 4);female stone miner
+	(up-find-local c: 124 c: 4);male stone miner
+	(up-remove-objects search-local object-data-carry < 5)
+	(up-get-search-state gl-local-total)
+)
+
+(defrule
 	(up-compare-goal gl-local-total > 0)
 	(up-set-target-object search-local c: 0)
 	(building-type-count town-center > 0)
@@ -13153,8 +13258,65 @@
 	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 )	
 
+;endregion
 
+;region Defend relics on Arena =====================================
 
+;spread scouts to all relics
+;don't spam move-command for scouts in case of other threats 
+
+#load-if-defined UP-2-PLAYER-GAME
+#load-if-defined ARENA-MAP
+
+(defrule
+	(unit-type-count scout-cavalry-line >= 1)
+	(up-research-status c: castle-age >= research-pending)
+=>
+	(up-full-reset-search)
+	(up-modify-sn sn-focus-player-number c:= 0)
+	(up-find-remote c: relic-class c: 10)
+	(up-clean-search search-remote object-data-distance search-order-desc)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-all "Amount of relics found: %d" g: gl-remote-total)
+)
+
+(defrule
+	(unit-type-count scout-cavalry-line >= 1)
+	(up-research-status c: castle-age >= research-pending)
+	(up-compare-goal gl-remote-total >= 1)
+=>
+	(up-set-target-object search-remote c: 0)
+	(up-get-point position-object gl-temp-x)
+)	
+
+(defrule
+	(unit-type-count scout-cavalry-line >= 1)
+	(up-research-status c: castle-age >= research-pending)
+	(up-point-contains gl-temp-x c: relic-class)
+=>
+	(up-full-reset-search)
+	(up-set-target-point gl-starting-tc-x)
+	(up-filter-distance c: -1 c: 24)
+	(up-find-local c: scout-cavalry-line c: 8)
+	(up-clean-search search-local object-data-id search-order-desc)
+	(up-remove-objects search-local -1 > 0)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-all "Scouts: %d" g: gl-local-total)
+)
+
+(defrule
+	(unit-type-count scout-cavalry-line >= 1)
+	(up-research-status c: castle-age >= research-pending)
+	(up-point-contains gl-temp-x c: relic-class)
+	(up-compare-goal gl-local-total >= 1)
+=>
+	(up-target-point gl-temp-x action-move -1 -1)
+	;(up-send-flare gl-temp-x)
+)
+
+#end-if
+#end-if
 
 ;endregion
 
@@ -14938,6 +15100,7 @@
 (defrule
 	(current-age >= feudal-age)
 	(town-under-attack)
+	(players-military-population focus-player >= 2)
 	(can-build-with-escrow barracks)
 	(building-type-count-total barracks < 1)
 	(building-type-count-total town-center >= 1)
@@ -14946,18 +15109,6 @@
 	;(set-strategic-number sn-placement-zone-size 0)
 	(up-set-placement-data my-player-number -1 c: 10)
     (up-build place-control 0 c: barracks)
-	;(chat-to-player my-player-number "Baue Kaserne zur Verteidigung")
-)
-
-(defrule
-	(current-age >= feudal-age)
-	(town-under-attack)
-	(can-build-with-escrow barracks)
-	(building-type-count-total barracks < 1)
-	(building-type-count-total town-center >= 1)
-=>
-	(up-modify-escrow wood c:- 175)
-	(build barracks)
 	;(chat-to-player my-player-number "Baue Kaserne zur Verteidigung")
 )
 
@@ -16974,6 +17125,20 @@
 	;(chat-to-player my-player-number "Produziere Kamelreiter gegen Ber. Bogenschuetzen")
 )
 
+
+(defrule
+	(or (and (current-age == castle-age)
+		(building-type-count-total archery-range < 2))
+		(and (current-age == imperial-age)
+		(building-type-count-total archery-range < 3)))
+	(can-build archery-range)
+	(or (goal enemy-infantry-goal 1)
+	(goal enemy-heavy-infantry-goal 1))
+=>
+	(up-set-placement-data my-player-number -1 c: 13)
+    (up-build place-control 0 c: archery-range)
+)
+
 (defrule
 	(current-age == castle-age)
 	(can-train slinger)
@@ -17914,11 +18079,9 @@
 	(current-age == castle-age)
 	(players-unit-type-count focus-player organ-gun-line >= 6)
 	(can-train mangonel-line)
-	(building-type-count-total siege-workshop > 0)
 =>
 	(train mangonel-line)
 )
-
 
 (defrule
 	(current-age >= castle-age)
@@ -17926,6 +18089,9 @@
 	(building-available stable)
 	(can-build-with-escrow stable)
 	(building-type-count-total stable < 2)
+	(or (unit-available knight-line)
+		(and (current-age == imperial-age)
+		(unit-available camel-line)))
 =>
 	(up-modify-escrow wood c:- 175)
 	(build stable)
@@ -17935,19 +18101,8 @@
 	(current-age == castle-age)
 	(players-unit-type-count focus-player organ-gun-line >= 6)
 	(can-train knight-line)
-	(building-type-count-total stable > 0)
 =>
 	(train knight-line)
-)
-
-(defrule
-	(current-age == castle-age)
-	(players-unit-type-count focus-player organ-gun-line >= 6)
-	(not (unit-available knight-line))
-	(can-train camel-line)
-	(building-type-count-total stable > 0)
-=>
-	(train camel-line)
 )
 
 (defrule
@@ -17956,7 +18111,6 @@
 	(not (research-available ri-cavalier))
 	(research-available ri-heavy-camel)
 	(can-research ri-heavy-camel)
-	(building-type-count-total stable > 0)
 =>
 	(research ri-heavy-camel)
 )
@@ -17966,7 +18120,6 @@
 	(players-unit-type-count focus-player organ-gun-line >= 6)
 	(research-available ri-cavalier)
 	(can-research ri-cavalier)
-	(building-type-count-total stable > 0)
 =>
 	(research ri-cavalier)
 )
@@ -18004,7 +18157,6 @@
 	(current-age == castle-age)
 	(players-unit-type-count focus-player conquistador-line >= 6)
 	(can-train monk)
-	(building-type-count-total monastery > 0)
 	(or (not (goal strategy-goal sg-fast-imp))
 	(up-research-status c: imperial-age >= research-pending))
 =>
@@ -23930,7 +24082,6 @@
 	(up-remove-objects search-local object-data-upgrade-type == siege-ram)
 	(up-remove-objects search-local object-data-type == armored-elephant)
 	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
-	(up-remove-objects search-local object-data-type == eagle-warrior)
 	(up-remove-objects search-local object-data-upgrade-type == heavy-eagle-warrior)
 	(up-remove-objects search-local object-data-upgrade-type == elite-eagle-warrior)
 	(up-remove-objects search-local object-data-type == huskarl)
@@ -23975,7 +24126,6 @@
 	(up-remove-objects search-local object-data-upgrade-type == siege-ram)
 	(up-remove-objects search-local object-data-type == armored-elephant)
 	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
-	(up-remove-objects search-local object-data-type == eagle-warrior)
 	(up-remove-objects search-local object-data-upgrade-type == heavy-eagle-warrior)
 	(up-remove-objects search-local object-data-upgrade-type == elite-eagle-warrior)
 	(up-remove-objects search-local object-data-type == huskarl)
@@ -25314,6 +25464,8 @@
 (defrule
 	(can-research ri-loom)
 	(not (goal sg-fastcastle-boom NO))
+	(or (not (goal sg-fastcastle-boom YES))
+	(building-type-count-total town-center >= 4))
 	(nor(civ-selected mayan)
 		(civ-selected chinese))
 	(current-age >= castle-age)
@@ -26277,7 +26429,7 @@
 )
 
 (defrule
-	(game-time > 3000)
+	(game-time > 2700)
 	(unit-type-count villager > 100)
 	(population >= 195)
 	(current-age >= imperial-age)
@@ -27919,18 +28071,57 @@
 	(not (up-set-target-object search-remote c: 0))
 	(up-compare-goal gl-remote-total < 1)
 	(current-age == dark-age)
+	(dropsite-min-distance deer-hunting < 32)
 =>
 	(set-goal gl-push-deer NO)
 	(set-goal gl-scout-map YES)
-	;(chat-to-player my-player-number "No deer found, finish deer pushing")
+	(chat-to-player my-player-number "No deer found, finish deer pushing")
 )
+
+#load-if-defined ARENA-MAP
+
+(defrule
+	(goal gl-scout-base NO)
+	(goal gl-push-deer NO)
+	(goal gl-scout-map YES)
+	(up-compare-goal g-deer-id == -1) ;find new deer
+	(current-age == dark-age)
+=>
+	(up-full-reset-search)
+	(up-modify-sn sn-focus-player-number c:= 0)
+	(up-set-target-point gl-starting-tc-x)
+	(up-filter-distance c: -1 c: 20)
+	(up-find-remote c: deer-class c: 10)
+	(up-remove-objects search-remote object-data-carry < 1)
+	(up-clean-search search-remote object-data-distance search-order-asc) ;get the closest deer first
+	(up-get-search-state gl-local-total)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	;(up-chat-data-to-player my-player-number "Amount of deer: %d" g: gl-remote-total)
+)
+
+(defrule
+	(goal gl-scout-base NO)
+	(goal gl-push-deer NO)
+	(goal gl-scout-map YES)
+	(up-compare-goal g-deer-id == -1) 
+	;(timer-triggered gl-curr-deer-timer)
+	(up-set-target-object search-remote c: 0)
+	(up-compare-goal gl-remote-total >= 1)
+	(current-age == dark-age)
+=>
+	(set-goal gl-push-deer YES)
+	(set-goal gl-scout-map NO)
+	(chat-to-player my-player-number "Deer found in my base, resume deer pushing")
+)
+
+#end-if
 
 (defrule
 	(goal gl-scout-base NO)
 	(goal gl-push-deer YES)
 	(goal gl-scout-map NO)
 	(up-compare-goal g-deer-id != -1) 
-	(up-compare-goal deer-x < 0)
+	(up-compare-goal gl-standard-deer-x < 1)
 =>
 	(set-goal deer-x 1)
 )
@@ -27940,7 +28131,7 @@
 	(goal gl-push-deer YES)
 	(goal gl-scout-map NO)
 	(up-compare-goal g-deer-id != -1)
-	(up-compare-goal deer-y < 0)
+	(up-compare-goal gl-standard-deer-y < 1)
 =>
 	(set-goal deer-y 1)
 )
@@ -27950,10 +28141,11 @@
 	(goal gl-push-deer YES)
 	(goal gl-scout-map NO)
 	(up-compare-goal g-deer-id != -1)
-	(up-compare-goal deer-x > FULL-MAP-SIZE)
+	(up-compare-goal gl-standard-deer-x > FULL-MAP-SIZE)
 =>
 	(set-goal deer-x FULL-MAP-SIZE)
-	(up-modify-goal deer-x c: -1)
+	(up-modify-goal deer-x c:* 100)
+	(up-modify-goal deer-x c: -25)
 )
 
 (defrule
@@ -27961,10 +28153,11 @@
 	(goal gl-push-deer YES)
 	(goal gl-scout-map NO)
 	(up-compare-goal g-deer-id != -1)
-	(up-compare-goal deer-y > FULL-MAP-SIZE)
+	(up-compare-goal gl-standard-deer-x > FULL-MAP-SIZE)
 =>
 	(set-goal deer-y FULL-MAP-SIZE)
-	(up-modify-goal deer-y c: -1)
+	(up-modify-goal deer-y c:* 100)
+	(up-modify-goal deer-y c: -25)
 )
 
 (defrule
@@ -27977,36 +28170,38 @@
 	(up-full-reset-search)
 	(up-set-target-by-id g: g-deer-id)
 	(up-get-point position-object deer-x)
+	(up-modify-goal gl-standard-deer-x g:= deer-x)
+	(up-modify-goal gl-standard-deer-y g:= deer-y)
 	(up-get-object-data object-data-precise-x deer-x)	;get the precise coordinates
 	(up-get-object-data object-data-precise-y deer-y)
 	;(chat-to-player my-player-number "Getting current deer location")
 )
 
-(defrule ;prevent sending scout outside of them map
-	(up-compare-goal deer-x < 1)
-=>
-	(set-goal deer-x 2)
-)
+; (defrule ;prevent sending scout outside of the map
+	; (up-compare-goal deer-x < 1)
+; =>
+	; (set-goal deer-x 2)
+; )
 
-(defrule ;prevent sending scout outside of them map
-	(up-compare-goal deer-y < 1)
-=>
-	(set-goal deer-y 2)
-)
+; (defrule
+	; (up-compare-goal deer-y < 1)
+; =>
+	; (set-goal deer-y 2)
+; )
 
-(defrule ;prevent sending scout outside of them map
-	(up-compare-goal deer-x > FULL-MAP-SIZE)
-=>
-	(up-modify-goal deer-x g: FULL-MAP-SIZE)
-	(up-modify-goal deer-x c:- 2)
-)
+; (defrule 
+	; (up-compare-goal deer-x > FULL-MAP-SIZE)
+; =>
+	; (up-modify-goal deer-x c: FULL-MAP-SIZE)
+	; (up-modify-goal deer-x c:- 2)
+; )
 
-(defrule ;prevent sending scout outside of them map
-	(up-compare-goal deer-y > FULL-MAP-SIZE)
-=>
-	(up-modify-goal deer-y g: FULL-MAP-SIZE)
-	(up-modify-goal deer-y c:- 2)
-)
+; (defrule 
+	; (up-compare-goal deer-y > FULL-MAP-SIZE)
+; =>
+	; (up-modify-goal deer-y c: FULL-MAP-SIZE)
+	; (up-modify-goal deer-y c:- 2)
+; )
 
 (defrule
 	(up-compare-goal g-deer-id != -1)	
@@ -28023,7 +28218,7 @@
 	(up-full-reset-search)
 	(up-set-group search-local c: 1)
 	;(up-lerp-tiles deer-x gl-starting-tc-x c: -1) ;get point behind deer
-	(up-lerp-tiles deer-x gl-temp2-x c: -75) ;get point behind deer
+	(up-lerp-tiles deer-x gl-temp2-x c: -80) ;get point behind deer
 	(up-bound-precise-point deer-x 1 c: 50)
 	(up-target-point deer-x action-move -1 -1) ;follow deer with scout
 	(set-strategic-number sn-target-point-adjustment 0)	;reset
@@ -28111,13 +28306,15 @@
 	(up-full-reset-search)
 	(up-modify-sn sn-focus-player-number c:= 0)
 	(up-set-target-point gl-starting-tc-x)
-	(up-filter-distance c: -1 c: 4)
+	(up-filter-distance c: -1 c: 3)
 	(up-find-remote c: deer-class c: 1)
 	(up-set-target-object search-remote c: 0)
 	(up-get-search-state gl-local-total)
 	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 	;(up-chat-data-to-player my-player-number "deers nearby: %d" g: gl-remote-total)
 )
+
+#load-if-not-defined ARENA-MAP
 
 (defrule
 	(up-compare-goal g-deer-id != -1)
@@ -28133,6 +28330,54 @@
 	(set-goal gl-deer-hop 1)
 	;(chat-to-player my-player-number "Kill the deer")
 )
+#end-if
+
+#load-if-defined ARENA-MAP
+
+(defrule
+	(up-compare-goal g-deer-id != -1)
+	(goal gl-push-deer YES) ;now check if deer is close to tc#
+	(up-compare-goal remaining-deer-food < 20)
+	(up-set-target-object search-remote c: 0)
+	(up-compare-goal gl-remote-total > 0)
+	(current-age == dark-age)
+=>
+	(up-reset-search 1 1 0 0)
+	(up-set-group search-local c: 4)
+	(up-set-target-by-id g: g-deer-id)
+	(up-target-objects 1 action-default -1 -1)
+	(set-goal gl-deer-hop 1)
+	;(chat-to-player my-player-number "Kill the deer")
+)
+
+(defrule
+	(goal gl-push-deer YES)
+	(current-age == dark-age)
+=>
+	(up-full-reset-search)
+	(up-set-target-point gl-starting-tc-x)
+	(up-filter-distance c: -1 c: 4)
+	(up-filter-status c: status-gather c: list-inactive)
+	(up-modify-sn sn-focus-player-number c:= 0)
+	(up-find-status-remote c: deer-class c: 2)
+	(up-remove-objects search-remote object-data-hitpoints >= 1)
+	(up-clean-search search-remote object-data-carry search-order-asc)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-player my-player-number "deers nearby: %d" g: gl-remote-total)
+)
+
+(defrule
+	(goal gl-push-deer YES)
+	(current-age == dark-age)
+	(up-compare-goal gl-remote-total >= 2)
+=>
+	(up-set-target-object search-remote c: 0)
+	(up-get-object-data object-data-carry remaining-deer-food)
+	;(up-chat-data-to-player my-player-number "deer-food2: %d" g: remaining-deer-food)
+)
+
+#end-if
 
 (defrule ;if we have tasked vills on the deer, and we're not hunting boar at the same time, garrison & ungarrison the vils on the deer
 	(up-compare-goal g-deer-id != -1)
@@ -28142,6 +28387,8 @@
 	(goal gl-garrison-tc-two 0)
 	(up-compare-sn sn-disable-villager-garrison == 0)
 =>
+	(up-full-reset-search)
+	(up-set-group search-local c: 4)
 	(up-modify-sn sn-focus-player-number c:= my-player-number)
 	(up-find-remote c: town-center c: 1)
 	(up-target-objects 0 action-garrison -1 -1)
@@ -28746,7 +28993,7 @@
         (building-type-count-total mining-camp >= 4))
 =>
     (set-strategic-number sn-camp-max-distance HALF-MAP-SIZE)
-	;(chat-local-to-self "Camp distance half of the map size.")
+	(chat-local-to-self "Camp distance half of the map size.")
     (disable-self)
 )
 			
@@ -28757,11 +29004,9 @@
         (population >= 120))
 =>
     (set-strategic-number sn-camp-max-distance FULL-MAP-SIZE)
-	;(chat-local-to-self "Camp distance full map size.")
+	(chat-local-to-self "Camp distance full map size.")
 	(disable-self)
 )
-
-
 
 (defrule
 	(true)
@@ -28775,7 +29020,7 @@
 (defrule
 	(up-gaia-type-count c: gold-mine-class < 1)
 =>
-	(up-jump-rule 4)
+	(up-jump-rule 3)
 )
 
 (defrule
@@ -28784,8 +29029,6 @@
 =>
 	(up-full-reset-search)
 	(up-set-target-point gl-starting-tc-x)
-	(up-reset-search 0 0 1 1)
-	(up-reset-filters)
 	(up-filter-distance c: -1 s: sn-camp-max-distance)
 	(up-filter-status c: status-ready c: list-active)
 	(up-find-resource c: gold c: 1)
@@ -28795,41 +29038,25 @@
 )
 
 (defrule
+	(current-age <= castle-age)
 	(building-type-count-total town-center >= 1)
 	(not (up-set-target-object search-remote c: 0))
 	(up-compare-sn sn-camp-max-distance < 50)
-	(current-age <= castle-age)
 	(game-time > 5)
 =>
 	(up-modify-sn sn-camp-max-distance c:+ 1)
-	;(up-chat-data-to-self "Gold-camp distance: %d" s: sn-camp-max-distance)
+	(up-chat-data-to-self "Gold-camp distance: %d" s: sn-camp-max-distance)
 )
 
 (defrule
-	(building-type-count-total town-center >= 1)
-	(game-time > 5)
-=>
-	(up-full-reset-search)
-	(up-set-target-point gl-starting-tc-x)
-	(up-reset-search 0 0 1 1)
-	(up-reset-filters)
-	(up-filter-distance c: -1 s: sn-camp-max-distance)
-	(up-filter-status c: status-ready c: list-active)
-	(up-find-resource c: gold c: 1)
-	(up-filter-status c: status-resource c: list-active)
-	(up-find-resource c: gold c: 1)
-	(up-get-search-state gl-local-total)
-)
-
-(defrule
+	(current-age > castle-age)
 	(building-type-count-total town-center >= 1)
 	(up-compare-goal gl-remote-total < 1)
 	(up-compare-sn sn-camp-max-distance < 255)
-	(current-age > castle-age)
 	(game-time > 5)
 =>
 	(up-modify-sn sn-camp-max-distance c:+ 1)
-	;(up-chat-data-to-self "Gold-camp distance: %d" s: sn-camp-max-distance)
+	(up-chat-data-to-self "Gold-camp distance: %d" s: sn-camp-max-distance)
 )
 
 ;wood
@@ -28837,7 +29064,7 @@
 (defrule
 	(up-gaia-type-count c: tree-class < 1)
 =>
-	(up-jump-rule 4)
+	(up-jump-rule 3)
 )
 
 (defrule
@@ -28846,8 +29073,6 @@
 =>
 	(up-full-reset-search)
 	(up-set-target-point gl-starting-tc-x)
-	(up-reset-search 0 0 1 1)
-	(up-reset-filters)
 	(up-filter-distance c: -1 s: sn-camp-max-distance)
 	(up-filter-status c: status-ready c: list-active)
 	(up-find-resource c: wood c: 1)
@@ -28857,41 +29082,25 @@
 )
 
 (defrule
+	(current-age <= castle-age)
 	(building-type-count-total town-center >= 1)
 	(not (up-set-target-object search-remote c: 0))
 	(up-compare-sn sn-camp-max-distance < 50)
-	(current-age <= castle-age)
 	(game-time > 5)
 =>
 	(up-modify-sn sn-camp-max-distance c:+ 1)
-	;(up-chat-data-to-self "Lumbercamp distance: %d" s: sn-camp-max-distance)
+	(up-chat-data-to-self "Lumbercamp distance: %d" s: sn-camp-max-distance)
 )
 
 (defrule
-	(building-type-count-total town-center >= 1)
-	(game-time > 5)
-=>
-	(up-full-reset-search)
-	(up-set-target-point gl-starting-tc-x)
-	(up-reset-search 0 0 1 1)
-	(up-reset-filters)
-	(up-filter-distance c: -1 s: sn-camp-max-distance)
-	(up-filter-status c: status-ready c: list-active)
-	(up-find-resource c: wood c: 1)
-	(up-filter-status c: status-resource c: list-active)
-	(up-find-resource c: wood c: 1)
-	(up-get-search-state gl-local-total)
-)
-
-(defrule
+	(current-age > castle-age)
 	(building-type-count-total town-center >= 1)
 	(up-compare-goal gl-remote-total < 1)
-	(current-age > castle-age)
 	(up-compare-sn sn-camp-max-distance < 255)
 	(game-time > 5)
 =>
 	(up-modify-sn sn-camp-max-distance c:+ 1)
-	;(up-chat-data-to-self "Lumbercamp distance: %d" s: sn-camp-max-distance)
+	(up-chat-data-to-self "Lumbercamp distance: %d" s: sn-camp-max-distance)
 )
 
 ;stone
@@ -28899,7 +29108,7 @@
 (defrule
 	(up-gaia-type-count c: stone-mine-class < 1)
 =>
-	(up-jump-rule 4)
+	(up-jump-rule 3)
 )
 
 (defrule
@@ -28908,8 +29117,6 @@
 =>
 	(up-full-reset-search)
 	(up-set-target-point gl-starting-tc-x)
-	(up-reset-search 0 0 1 1)
-	(up-reset-filters)
 	(up-filter-distance c: -1 s: sn-camp-max-distance)
 	(up-filter-status c: status-ready c: list-active)
 	(up-find-resource c: stone c: 1)
@@ -28919,41 +29126,25 @@
 )
 
 (defrule
+	(current-age <= castle-age)
 	(building-type-count-total town-center >= 1)
 	(not (up-set-target-object search-remote c: 0))
 	(up-compare-sn sn-camp-max-distance < 50)
-	(current-age <= castle-age)
 	(game-time > 5)
 =>
 	(up-modify-sn sn-camp-max-distance c:+ 1)
-	;(up-chat-data-to-self "Stone-camp distance: %d" s: sn-camp-max-distance)
+	(up-chat-data-to-self "Stone-camp distance: %d" s: sn-camp-max-distance)
 )
 
 (defrule
-	(building-type-count-total town-center >= 1)
-	(game-time > 5)
-=>
-	(up-full-reset-search)
-	(up-set-target-point gl-starting-tc-x)
-	(up-reset-search 0 0 1 1)
-	(up-reset-filters)
-	(up-filter-distance c: -1 s: sn-camp-max-distance)
-	(up-filter-status c: status-ready c: list-active)
-	(up-find-resource c: stone c: 1)
-	(up-filter-status c: status-resource c: list-active)
-	(up-find-resource c: stone c: 1)
-	(up-get-search-state gl-local-total)
-)
-
-(defrule
+	(current-age > castle-age)
 	(building-type-count-total town-center >= 1)
 	(up-compare-goal gl-remote-total < 1)
-	(current-age > castle-age)
 	(up-compare-sn sn-camp-max-distance < 255)
 	(game-time > 5)
 =>
 	(up-modify-sn sn-camp-max-distance c:+ 1)
-	;(up-chat-data-to-self "Stone-camp distance: %d" s: sn-camp-max-distance)
+	(up-chat-data-to-self "Stone-camp distance: %d" s: sn-camp-max-distance)
 )
 
 ;selecting follow up for drush
@@ -32014,7 +32205,7 @@
 
 (defrule
 	(current-age >= feudal-age)
-	(up-compare-goal gl-military-advantage <= -1)
+	(up-compare-goal gl-military-advantage >= -1)
 	(up-compare-sn sn-enable-boar-hunting == 2)
 =>
 	(set-strategic-number sn-enable-boar-hunting 1)
@@ -32022,7 +32213,7 @@
 
 (defrule
 	(current-age >= feudal-age)
-	(up-compare-goal gl-military-advantage > -1)
+	(up-compare-goal gl-military-advantage < -1)
 	(up-compare-sn sn-enable-boar-hunting != 2)
 =>
 	(set-strategic-number sn-enable-boar-hunting 2)
@@ -32199,16 +32390,43 @@
 	(set-strategic-number sn-enable-training-queue 1)
 )
 
-(defrule ;release escrow for vil production while wheelbarrow is not researched yet
+(defrule
+	(can-research-with-escrow imperial-age)
+	(or (unit-type-count-total villager g:>= c-villager-goal)
+	(or (unit-type-count-total villager >= 70)
+	(population >= 195)))
+	(goal gl-food-saving 23)
+	(goal gl-gold-saving 23)
+=>
+	(release-escrow food)
+	(release-escrow gold)
+	(set-escrow-percentage food 0)
+	(set-escrow-percentage gold 0)
+	(research imperial-age)
+	(chat-to-allies "Going to Imperial-Age")
+	(set-goal gl-food-saving 0)
+	(set-goal gl-gold-saving 0)
+)
+
+(defrule
+	(can-research-with-escrow imperial-age)
+	(or (unit-type-count-total villager g:>= c-villager-goal)
+	(or (unit-type-count-total villager >= 70)
+	(population >= 195)))
+=>
+	(up-modify-escrow food c:- 1000)
+	(up-modify-escrow gold c:- 800)
+	(research imperial-age)
+	(chat-to-allies "Going to Imperial-Age")
+)
+
+(defrule ;release escrow for vil production when fast-imping
 	(current-age == castle-age)
 	(can-train-with-escrow villager)
 	(or (unit-type-count-total villager g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
-	(unit-type-count-total villager < 130)
-	(food-amount >= 300)
-	(not (goal strategy-goal sg-fast-imp))
-	(not (research-completed ri-wheel-barrow))
-	(not (can-research-with-escrow ri-wheel-barrow))
+	(unit-type-count-total villager < 40)
+	(goal strategy-goal sg-fast-imp)
 =>
 	(up-modify-escrow food c:- 50)
 	(train villager)
@@ -32221,8 +32439,12 @@
 	(can-train-with-escrow villager)
 	(or (unit-type-count-total villager g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
-	(unit-type-count-total villager < 40)
-	(goal strategy-goal sg-fast-imp)
+	(unit-type-count-total villager < 130)
+	(food-amount >= 300)
+	(not (goal strategy-goal sg-fast-imp))
+	(not (research-completed ri-wheel-barrow))
+	(not (can-research-with-escrow ri-wheel-barrow))
+	(up-compare-goal gl-military-advantage >= -10)
 =>
 	(up-modify-escrow food c:- 50)
 	(train villager)
@@ -32240,6 +32462,7 @@
 	(food-amount >= 300)
 	(or (goal strategy-goal sg-fast-imp)
 	(up-research-status c: ri-wheel-barrow >= research-pending))
+	(up-compare-goal gl-military-advantage >= -10)
 =>
 	(up-modify-escrow food c:- 50)
 	(train villager)
@@ -32247,22 +32470,38 @@
 	;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
 )
 
-(defrule ;normal vil training rules when not behind in military
+(defrule ;normal vil training rules when not behind in military and not going for a push
 	(current-age == castle-age)
 	(can-train villager)
 	(or (unit-type-count-total villager g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 	(unit-type-count-total villager < 130)
 	(food-amount < 300)
-	(or (up-compare-goal gl-military-advantage >= -15)
+	(or (up-compare-goal gl-military-advantage >= -10)
 	(civilian-population < 60))
+	(not (goal sg-fastcastle-boom -1))
 =>
 	(train villager)
 	(up-get-fact civilian-population 0 civilian-pop) 
 	;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
 )
 
-(defrule
+(defrule ;vil training rules when going for a push
+	(current-age == castle-age)
+	(can-train villager)
+	(or (unit-type-count-total villager g:< c-villager-goal)
+	(up-research-status c: imperial-age == research-pending))
+	(unit-type-count-total villager < 130)
+	(or (food-amount >= 150)
+	(civilian-population < 50))
+	(goal sg-fastcastle-boom -1)
+=>
+	(train villager)
+	(up-get-fact civilian-population 0 civilian-pop) 
+	;(up-chat-data-to-all "Anzahl Dorfbewohner: %d" g: civilian-pop)
+)
+
+(defrule ;release escrow when we are booming
 	(current-age == castle-age)
 	(can-train-with-escrow villager)
 	(not (goal strategy-goal sg-fast-imp))
@@ -32282,7 +32521,6 @@
 	(players-current-age focus-player < castle-age)
 	(not(goal sg-fastcastle-boom NO))
 	(not(goal strategy-goal sg-fast-imp))
-	(building-type-count stable > 0)
 	(can-train knight-line)
 =>
 	(train knight-line)
@@ -32301,7 +32539,6 @@
 	(or (players-unit-type-count focus-player camel-line >= 4)
 	(players-unit-type-count focus-player battle-elephant-line >= 2)))
 	(not(goal strategy-goal sg-fast-imp))
-	(building-type-count barracks > 0)
 	(can-train spearman-line)
 =>
 	(train spearman-line)
@@ -32411,7 +32648,12 @@
 
 (defrule
 	(current-age >= castle-age)
-	(building-type-count-total town-center >= 3)
+	(or (and (goal sg-fastcastle-boom YES)
+		(building-type-count-total town-center >= 4))
+	(or (and (goal sg-fastcastle-boom NO)
+		(building-type-count-total town-center >= 2))
+		(and (goal sg-fastcastle-boom -1)
+		(building-type-count-total town-center >= 1))))
 	(building-type-count-total outpost < 7)	
 	(up-compare-goal gl-military-advantage >= 0)
 	(can-build outpost)
@@ -33020,7 +33262,7 @@
 	(can-research ri-town-watch)
 	(up-compare-goal gl-military-advantage >= -3)
 	(or (civilian-population g:< c-villager-goal)
-	(up-research-status c: imperial-age == research-pending))
+	(up-research-status c: imperial-age >= research-pending))
 =>
 	(research ri-town-watch)
 )
@@ -33638,20 +33880,26 @@
     (up-build place-control 0 c: siege-workshop)
 )
 
-; (defrule	
-	; (current-age == castle-age)
-	; (players-military-population focus-player >= 18)
-	; (can-build siege-workshop)
-	; (building-type-count-total siege-workshop < 1)
-	; (building-type-count-total town-center >= 1)
-	; (or (military-population < 10)
-	; (up-compare-goal gl-military-advantage < 12))
-; =>
-	; (up-assign-builders c: siege-workshop c: 2)
-	; ; (set-strategic-number sn-placement-zone-size 0)
-	; (up-set-placement-data my-player-number -1 c: 10)
-    ; (up-build place-control 0 c: siege-workshop)
-; )
+#load-if-defined ARENA-MAP
+
+(defrule ;build siege-workshop on arena to be able to break through enemy walls
+	(current-age == castle-age)
+	(or (goal sg-fastcastle-boom -1)
+	(up-research-status c: imperial-age >= research-pending))
+	(not (goal strategy-goal sg-fast-imp))
+	(can-build-with-escrow siege-workshop)
+	(building-type-count-total siege-workshop < 1)
+	(building-type-count-total castle < 1)
+	(not (town-under-attack))
+	(or (up-compare-goal gl-military-advantage >= -12)
+	(military-population >= 10))
+=>
+	(up-set-placement-data my-player-number -1 c: 14)
+	(up-modify-escrow wood c:- 200)
+    (up-build place-control with-escrow c: siege-workshop)
+)
+
+#end-if
 
 (defrule	
 	(current-age == castle-age)
@@ -34566,17 +34814,17 @@
 ; #end-if
 ; #end-if
 
-(defrule
-	(current-age >= castle-age)
-	(civilian-population >= 55)
-	(building-type-count-total university == 0)
-	(building-type-count-total town-center >= 2)
-	(can-build-with-escrow university)
-=>
-	(up-modify-escrow wood c:- 200)
-	(up-set-placement-data my-player-number lumber-camp c: -2)
-    (up-build place-control 0 c: university)
-)
+; (defrule
+	; (current-age >= castle-age)
+	; (civilian-population >= 55)
+	; (building-type-count-total university == 0)
+	; (building-type-count-total town-center >= 2)
+	; (can-build-with-escrow university)
+; =>
+	; (up-modify-escrow wood c:- 200)
+	; (up-set-placement-data my-player-number lumber-camp c: -2)
+    ; (up-build place-control 0 c: university)
+; )
 
 (defrule
 	(current-age >= castle-age)
@@ -34665,6 +34913,7 @@
 	(current-age >= castle-age)
 	(can-research ri-fortified-wall)
 	(up-compare-goal gl-military-advantage <= -15)
+	(not (goal strategy-goal sg-fast-imp))
 =>
 	(research ri-fortified-wall)
 )
@@ -35573,7 +35822,7 @@
 	(current-age == castle-age)
 	(goal ca-strategy gl-castleage-stableunit)
 	(not (goal strategy-goal sg-fast-imp))
-	(not (goal sg-fastcastle-boom NO))
+	(goal sg-fastcastle-boom -1)
 	(civ-selected bengalis)
 	(can-build monastery)
 	(building-type-count-total monastery < 2)
@@ -36277,7 +36526,7 @@
 )
 
 (defrule
-	(unit-type-count-total skirmisher-line >= 3)
+	(unit-type-count-total skirmisher-line >= 6)
 	(up-research-status c: ri-elite-skirmisher >= research-pending)
 	(up-research-status c: ri-bodkin-arrow >= research-pending)
 	(can-research ri-thumb-ring)
@@ -38288,36 +38537,6 @@
 	(research ri-forging)
 )
 
-(defrule
-	(can-research-with-escrow imperial-age)
-	(or (unit-type-count-total villager g:>= c-villager-goal)
-	(or (unit-type-count-total villager >= 70)
-	(population >= 195)))
-	(goal gl-food-saving 23)
-	(goal gl-gold-saving 23)
-=>
-	(release-escrow food)
-	(release-escrow gold)
-	(set-escrow-percentage food 0)
-	(set-escrow-percentage gold 0)
-	(research imperial-age)
-	(chat-to-allies "Going to Imperial-Age")
-	(set-goal gl-food-saving 0)
-	(set-goal gl-gold-saving 0)
-)
-
-(defrule
-	(can-research-with-escrow imperial-age)
-	(or (unit-type-count-total villager g:>= c-villager-goal)
-	(or (unit-type-count-total villager >= 70)
-	(population >= 195)))
-=>
-	(up-modify-escrow food c:- 1000)
-	(up-modify-escrow gold c:- 800)
-	(research imperial-age)
-	(chat-to-allies "Going to Imperial-Age")
-)
-
 ;endregion
 
 ;region Build Order Imperial =======================================
@@ -38329,6 +38548,17 @@
     ; (set-strategic-number sn-maximum-town-size 55)
 ; )
 ; #end-if
+
+(defrule
+	(current-age == imperial-age)
+=>
+	(set-strategic-number sn-percent-enemy-sighted-response 10)
+	(set-strategic-number sn-enemy-sighted-response-distance 6)
+	(set-strategic-number sn-local-targeting-mode 0)
+	(disable-self)
+)
+
+
 
 (defrule
 	(current-age == imperial-age)
@@ -38615,6 +38845,16 @@
 	(current-age == imperial-age)
 	(can-research ri-onager)
 	(unit-type-count-total mangonel-line >= 1)
+	(or (up-research-status c: ri-cavalier >= research-pending)
+	(or (up-research-status c: ri-heavy-camel >= research-pending)
+	(or (up-research-status c: ri-elite-battle-elephant >= research-pending)
+	(or (up-research-status c: ri-elite-steppe-lancer >= research-pending)
+	(or (up-research-status c: ri-arbalest >= research-pending)
+	(or (up-research-status c: ri-heavy-cavalry-archer >= research-pending)
+	(or (up-research-status c: my-unique-unit-upgrade >= research-pending)
+	(or (up-research-status c: ri-elite-eagle-warrior >= research-pending)
+	(or (up-research-status c: ri-champion >= research-pending)
+	(up-research-status c: ri-halberdier >= research-pending))))))))))
 =>
 	(research ri-onager)
 )
@@ -39378,7 +39618,7 @@
 
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
-	(building-type-count-total archery-range < 4)
+	(building-type-count-total archery-range < 3)
 	(building-type-count-total town-center >= 1)
 	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-bbc-hc)
@@ -39391,7 +39631,7 @@
 
 (defrule
 	(up-research-status c: imperial-age >= research-pending)
-	(building-type-count-total stable < 4)
+	(building-type-count-total stable < 3)
 	(building-type-count-total town-center >= 1)
 	(goal strategy-goal sg-fast-imp)
 	(goal gl-fastimp-unit fi-cavalier)
@@ -39797,6 +40037,8 @@
 	(unit-type-count-total battle-elephant-line < 6)
 	(unit-type-count knight-line < 5)
 	(civilian-population g:< c-villager-goal)
+	(or (players-unit-type-count focus-player monk < 10)
+	(research-completed ri-heresy))
 =>
 	(train battle-elephant-line)
 )
@@ -39809,6 +40051,9 @@
 	(not (research-completed ri-elite-battle-elephant))
 	(unit-type-count battle-elephant-line < 5)
 	(unit-type-count knight-line < 5)
+	(or (players-unit-type-count focus-player monk < 10)
+	(or (research-completed ri-faith)
+	(research-completed ri-heresy)))
 =>
 	(train battle-elephant-line)
 )
@@ -39819,6 +40064,9 @@
 	(can-train battle-elephant-line)
 	(up-research-status c: ri-elite-battle-elephant >= research-pending)
 	(unit-type-count knight-line < 5)
+	(or (players-unit-type-count focus-player monk < 10)
+	(or (research-completed ri-faith)
+	(research-completed ri-heresy)))
 =>
 	(train battle-elephant-line)
 )
@@ -39826,6 +40074,9 @@
 (defrule
 	(current-age == imperial-age)
 	(unit-type-count battle-elephant-line >= 3)
+	(or (players-unit-type-count focus-player monk < 10)
+	(or (research-completed ri-faith)
+	(research-completed ri-heresy)))
 =>
 	(research ri-elite-battle-elephant)
 )
@@ -40580,6 +40831,9 @@
 	(up-research-status c: ri-elite-elephant-archer >= research-pending)
 	(unit-type-count archer-line < 5)
 	(unit-type-count camel-line < 5)
+	(or (players-unit-type-count focus-player monk < 10)
+	(or (research-completed ri-faith)
+	(research-completed ri-heresy)))
 =>
 	(train elephant-archer-line)
 )
@@ -40592,6 +40846,9 @@
 	(unit-type-count elephant-archer-line < 5)
 	(unit-type-count archer-line < 5)
 	(unit-type-count camel-line < 5)
+	(or (players-unit-type-count focus-player monk < 10)
+	(or (research-completed ri-faith)
+	(research-completed ri-heresy)))
 =>
 	(train elephant-archer-line)
 )
@@ -40601,6 +40858,9 @@
 	(not (goal strategy-goal sg-fast-imp))
 	(unit-type-count elephant-archer-line >= 3)
 	(can-research ri-elite-elephant-archer)
+	(or (players-unit-type-count focus-player monk < 10)
+	(or (research-completed ri-faith)
+	(research-completed ri-heresy)))
 =>
 	(research ri-elite-elephant-archer)
 )
@@ -40612,18 +40872,16 @@
 (defrule
 	(current-age == castle-age)
 	(can-train camel-line)
-	(unit-type-count-total camel-line < 6)
-	(or (up-compare-goal gl-cavalry-archer-units >= 8)
-	(unit-type-count-total knight-line >= 8))
-	(or (up-compare-goal gl-cavalry-archer-units < 20)
-	(unit-type-count-total knight-line < 20))
+	(unit-type-count-total camel-line < 4)
+	(unit-type-count-total knight-line >= 8)
+	(unit-type-count-total knight-line < 20)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 	(or 
-		(nor (players-unit-type-count focus-player spearman-line >= 15) 
-		(or (players-unit-type-count focus-player monk >= 3) 
-		(players-unit-type-count focus-player archer-line >= 8)))
-		(or (unit-type-count-total skirmisher-line < 3)
+		(and (players-unit-type-count focus-player spearman-line < 15) 
+		(and (players-unit-type-count focus-player monk < 3) 
+		(players-unit-type-count focus-player archer-line < 8)))
+		(or (unit-type-count-total skirmisher-line < 6)
 		(unit-type-count-total monk < 2))
 	)
 =>
@@ -40633,17 +40891,15 @@
 (defrule
 	(current-age == castle-age)
 	(can-train camel-line)
-	(or (up-compare-goal gl-cavalry-archer-units < 8)
-	(unit-type-count-total knight-line < 8))
-	(or (up-compare-goal gl-cavalry-archer-units >= 20)
-	(unit-type-count-total knight-line >= 20))
+	(unit-type-count-total knight-line < 8)
+	(unit-type-count-total knight-line >= 20)
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age == research-pending))
 	(or 
-		(nor (players-unit-type-count focus-player spearman-line >= 15) 
-		(or (players-unit-type-count focus-player monk >= 3) 
-		(players-unit-type-count focus-player archer-line >= 8)))
-		(or (unit-type-count-total skirmisher-line >= 3)
+		(and (players-unit-type-count focus-player spearman-line < 15) 
+		(and (players-unit-type-count focus-player monk < 3) 
+		(players-unit-type-count focus-player archer-line < 8)))
+		(or (unit-type-count-total skirmisher-line >= 6)
 		(unit-type-count-total monk >= 2))
 	)
 =>
@@ -40897,7 +41153,7 @@
 )
 
 (defrule
-	(current-age == castle-age)
+	(current-age >= castle-age)
 	(can-research ri-eagle-warrior)
 	(unit-type-count-total eagle-warrior-line >= 4)
 =>
@@ -43243,6 +43499,12 @@
 )
 
 (defrule
+	(civilian-population < 30)
+=>
+	(up-jump-rule 8)
+)
+
+(defrule
 	(building-type-count town-center >= 1)
 =>
 	(up-get-rule-id gl-rule-jump-id)
@@ -44146,10 +44408,10 @@
 ;region Garrison villagers in TC (Thanks to FireBall37 for the code basis)
 
 (defrule    ;only try to shoot units before imperial-age
-    (players-current-age every-enemy > castle-age)
+    ;(players-current-age every-enemy > castle-age)
 	(up-compare-goal gl-attack-ram > 0) ; don't garrison if enemy rams are nearby
 =>
-    (up-jump-rule 14)    ;skips the next 14 defrules
+    (up-jump-rule 14)    ;skips the next 14 rules
 )
 
 ;SEARCH
@@ -46723,12 +46985,27 @@
 	(current-age == castle-age)
 	(goal strategy-goal sg-fastcastle-gu)
 	(goal sg-fastcastle-boom YES)
+	(unit-type-count villager < 60)
+=>
+	(set-strategic-number sn-wood-gatherer-percentage 48)
+	(set-strategic-number sn-food-gatherer-percentage 45)
+	(set-strategic-number sn-gold-gatherer-percentage 7)
+	(set-strategic-number sn-stone-gatherer-percentage 0)
+	(chat-to-player my-player-number "Setting up economy for a Castle-Age Boom")
+	(disable-self)
+)
+
+(defrule
+	(current-age == castle-age)
+	(goal strategy-goal sg-fastcastle-gu)
+	(goal sg-fastcastle-boom YES)
+	(unit-type-count villager >= 60)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 45)
 	(set-strategic-number sn-food-gatherer-percentage 42)
 	(set-strategic-number sn-gold-gatherer-percentage 7)
 	(set-strategic-number sn-stone-gatherer-percentage 6)
-	(chat-to-player my-player-number "Setting up economy for a Castle-Age Boom")
+	(chat-to-player my-player-number "Booming phase finished, transition to stone")
 	(disable-self)
 )
 
@@ -47835,8 +48112,8 @@
 ;region Cancel unit training in certain conditions =================
 
 (defrule
-	(current-age >= feudal-age)
-	(players-current-age focus-player >= castle-age)
+	(current-age == feudal-age)
+	(players-current-age focus-player == castle-age)
 	(or (up-compare-goal gl-military-advantage <= -20)
 	(civilian-population < 24))
 	(or (up-pending-objects c: infantry-class > 0)
