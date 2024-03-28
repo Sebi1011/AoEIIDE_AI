@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2024
 
 ;Version: 1.2.6
-;last update: 24th Mar 2024
+;last update: 28th Mar 2024
 
 ;region Chats at match-start =======================================
 ;#load-if-defined UP-2-PLAYER-GAME
@@ -1634,6 +1634,7 @@
 	(set-goal vil-loom-hp 40)
 	(set-goal gl-loop-counter 0)
 	(enable-timer t-3-sec 3)
+	(enable-timer t-eco-timer 3)
 	(enable-timer tc-boar-shooting-timer 1)
 	(set-goal temp-goal-one 0)
 	(set-goal gl-wall-counter 0)
@@ -1826,7 +1827,7 @@
 	(set-goal gl-min-amnt-boars 3)
 	(set-goal gl-min-amnt-food-sources 18)
 	(set-goal gl-layer-one-base-dist 10)
-	(set-goal gl-layer-two-base-dist 14)
+	(set-goal gl-layer-two-base-dist 15)
 	;(chat-to-player my-player-number "Playing on Arena")
 	(disable-self)
 )
@@ -3844,7 +3845,7 @@
 (defrule
 	(current-age == dark-age)
 	(or (unit-type-count villager-shepherd > 0)
-	(unit-type-count villager-forager > 0))
+	(unit-type-count villager-forager > 4))
 	(up-compare-goal gl-remote-total > 0)
 	(up-set-target-object search-remote c: 0)
 =>
@@ -3865,7 +3866,7 @@
 	(up-compare-goal gl-local-total > 0)
 	(up-set-target-object search-local c: 0)
 	(or (unit-type-count villager-shepherd > 0)
-	(unit-type-count villager-forager > 0))
+	(unit-type-count villager-forager > 4))
 =>	
 	(up-target-objects 0 action-default -1 -1)
 	(chat-to-player my-player-number "Task shepherds to dead boar")
@@ -3890,8 +3891,23 @@
 
 (defrule
 	(current-age == dark-age)
-	(or (unit-type-count villager-shepherd > 0)
-	(unit-type-count villager-forager > 0))
+	(unit-type-count villager-shepherd > 0)
+	(up-compare-goal gl-remote-total > 0)
+	(up-set-target-object search-remote c: 0)
+=>
+	(up-reset-search 1 1 0 0)
+	(up-filter-distance c: -1 c: 6)
+	(up-find-local c: 590 c: 40) ;female shepherd
+	(up-find-local c: 592 c: 40) ;male shepherd 
+	(up-remove-objects search-local object-data-index > 2)
+	(up-get-search-state gl-local-total)
+	;(up-chat-data-to-self "vils found: %d" g: gl-local-total)
+	(up-jump-rule 1)
+)
+
+(defrule
+	(current-age == dark-age)
+	(unit-type-count villager-forager > 4)
 	(up-compare-goal gl-remote-total > 0)
 	(up-set-target-object search-remote c: 0)
 =>
@@ -3899,8 +3915,6 @@
 	(up-filter-distance c: -1 c: 6)
 	(up-find-local c: 354 c: 40) ;female forager
 	(up-find-local c: 120 c: 40) ;male forager
-	(up-find-local c: 590 c: 40) ;female shepherd
-	(up-find-local c: 592 c: 40) ;male shepherd 
 	(up-remove-objects search-local object-data-index > 2)
 	(up-get-search-state gl-local-total)
 	;(up-chat-data-to-self "vils found: %d" g: gl-local-total)
@@ -3912,7 +3926,7 @@
 	(up-compare-goal gl-local-total > 0)
 	(up-set-target-object search-local c: 0)
 	(or (unit-type-count villager-shepherd > 0)
-	(unit-type-count villager-forager > 0))
+	(unit-type-count villager-forager > 4))
 =>	
 	(up-target-objects 0 action-default -1 -1)
 	(chat-to-player my-player-number "Task shepherds to dead deer")
@@ -5134,9 +5148,11 @@
 	(up-set-target-object search-local c: 0)
 	(up-get-point position-object gl-temp-x)
 	(up-reset-search 1 1 0 0)
-	(up-find-local c: 354 c: 240) ;female forager
-	(up-find-local c: 120 c: 240) ;male forager
-	(up-remove-objects search-local -1 > 0) ;find one shepherd
+	(up-find-local c: 590 c: 240) ;female shepherd
+	(up-find-local c: 592 c: 240) ;male shepherd
+	(up-find-local c: 216 c: 240) ;female hunter
+	(up-find-local c: 122 c: 240) ;male hunter
+	(up-remove-objects search-local -1 > 0) ;find one shepherd/hunter
 	(up-get-search-state gl-local-total)
 ;	(up-chat-data-to-player my-player-number "Amount of shepherds: %d" g: gl-local-total)
 )
@@ -8962,6 +8978,16 @@
 =>
 	(set-goal sg-fastcastle-boom -1)
 	(chat-local-to-self "I am behind, I will stop booming and go for army")
+)
+
+(defrule
+	(current-age >= castle-age)
+	(goal strategy-goal sg-fastcastle-gu)
+	(goal sg-fastcastle-boom YES)
+	(up-research-status c: imperial-age == research-pending)
+=>
+	(set-goal sg-fastcastle-boom -1)
+	(chat-local-to-self "Finish booming, I will go for army")
 )
 
 (defrule
@@ -12934,13 +12960,14 @@
 #load-if-not-defined UP-SCENARIO-GAME
 (defrule
 	(game-time > 2700)
-	(or (up-compare-goal gl-military-advantage >= 30)
-	(military-population >= 60))
+	(or (up-compare-goal gl-military-advantage >= 35)
+	(military-population >= 70))
 	(up-compare-goal gl-strategic-position == 1)
 	(current-age >= imperial-age)
 	(not (town-under-attack))
 	(or (building-type-count-total gate-class > 0)
 	(building-type-count-total wall-class > 0))
+	(not (goal strategy-goal sg-fast-imp))
 =>
 	(up-delete-objects c: wall-class c: 32767)
 	(up-delete-objects c: gate-class c: 32767)
@@ -13246,6 +13273,8 @@
 	(up-modify-sn sn-focus-player-number c:= 0)
 	(up-find-remote c: relic-class c: 10)
 	(up-clean-search search-remote object-data-distance search-order-desc)
+	(up-remove-objects search-remote object-data-index > 2)
+	(up-clean-search search-remote -1 0)
 	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 	(up-get-search-state gl-local-total)
 	;(up-chat-data-to-all "Amount of relics found: %d" g: gl-remote-total)
@@ -16972,17 +17001,18 @@
 )
 
 (defrule
-	(current-age == castle-age)
+	(current-age >= castle-age)
 	(goal enemy-infantry-goal 1)
 	(not (research-completed ri-crossbow))
 	(can-research ri-crossbow)
+	(unit-type-count-total archery-class < 10)
 =>
 	(research ri-crossbow)
 	;(chat-to-player my-player-number "Entwickle Armbrustschuetzen gegen feindliche Infanterie")
 )
 
 (defrule
-	(current-age == castle-age)
+	(current-age >= castle-age)
 	(goal enemy-infantry-goal 1)
 	(up-research-status c: ri-crossbow >= research-pending)
 	(up-research-status c: ri-thumb-ring >= research-pending)
@@ -16995,6 +17025,7 @@
 (defrule
 	(current-age == imperial-age)
 	(goal enemy-infantry-goal 1)
+	(goal enemy-heavy-infantry-goal 0)
 	(not (research-completed ri-arbalest))
 	(can-research ri-arbalest)
 =>
@@ -17005,6 +17036,7 @@
 (defrule
 	(current-age == imperial-age)
 	(goal enemy-infantry-goal 1)
+	(goal enemy-heavy-infantry-goal 0)
 	(can-train archer-line)
 	(up-research-status c: ri-arbalest >= research-pending)
 =>
@@ -27358,6 +27390,18 @@
 
 (defrule
 	(current-age == feudal-age)
+	(goal strategy-goal sg-fastcastle-gu)
+	(wood-amount < 175)
+	(or (building-type-count-total market < 1)
+	(building-type-count-total blacksmith < 1))
+	(up-research-status c: castle-age != research-pending)
+=>
+	;(chat-local-to-self "Forced drop")
+	(up-drop-resources wood c: 4)
+)
+
+(defrule
+	(current-age == feudal-age)
 	(goal strategy-goal sg-scoutrush)
 	(unit-type-count-total villager < 32)
 	(food-amount < 80)
@@ -31983,7 +32027,14 @@
 
 (defrule
 	(civ-selected burgundians)
-	(civilian-population >= 10)
+	(or 
+		(or (and (goal strategy-goal sg-fastcastle-gu)
+			(up-research-status c: castle-age >= research-pending))
+			(and (goal strategy-goal sg-fastcastle-uu)
+			(up-research-status c: castle-age >= research-pending)))
+		(and(not (goal strategy-goal sg-fastcastle-gu))
+		(and(not (goal strategy-goal sg-fastcastle-uu))
+			(civilian-population >= 10))))
 	(can-research-with-escrow ri-double-bit-axe)
 	(goal gl-wood-saving 1)
 	(goal gl-food-saving 1)
@@ -33234,7 +33285,9 @@
 	(not(goal strategy-goal sg-fast-imp))
 	(current-age >= castle-age)
 	(can-research ri-town-watch)
-	(up-compare-goal gl-military-advantage >= -3)
+	(or (up-compare-goal gl-military-advantage < -3)
+		(and (civilian-population > 75)
+		(building-type-count-total town-center > 1)))
 	(or (civilian-population g:< c-villager-goal)
 	(up-research-status c: imperial-age >= research-pending))
 =>
@@ -33804,8 +33857,8 @@
 	(current-age == imperial-age)
 	(building-type-count-total lumber-camp > 0)
 	(or (not (goal gl-fastimp-unit fi-monks))
-	(building-type-count-total farm < 12))
-	(up-pending-objects c: farm < 8)
+	(building-type-count-total farm < 8))
+	(up-pending-objects c: farm < 2)
 	(idle-farm-count < 2)
 	(wood-amount > 125)
 	(can-build farm)
@@ -33816,11 +33869,12 @@
 
 (defrule
 	(goal strategy-goal sg-fast-imp)
+    (not (goal gl-fastimp-unit fi-monks))
 	(current-age == imperial-age)
 	(building-type-count-total lumber-camp > 0)
 	(up-pending-objects c: farm < 16)
 	(idle-farm-count < 10)
-	(wood-amount > 125)
+	(wood-amount > 235)
 	(can-build farm)
 	(military-population >= 16)
 =>
@@ -34810,6 +34864,7 @@
 =>
 	(up-modify-escrow wood c:- 200)
 	(up-set-placement-data my-player-number lumber-camp c: -2)
+	(up-assign-builders c: university c: 3)
     (up-build place-control 0 c: university)
 )
 
@@ -34822,6 +34877,7 @@
 =>
 	(up-modify-escrow wood c:- 200)
 	(up-set-placement-data my-player-number -1 c: 12)
+	(up-assign-builders c: siege-workshop c: 3)
     (up-build place-control 0 c: siege-workshop)
 )
 
@@ -34835,7 +34891,7 @@
 	(not (civ-selected georgians))
 =>
 	(up-modify-escrow wood c:- 175)
-	(up-assign-builders c: monastery c: 2)
+	(up-assign-builders c: monastery c: 3)
 	(up-set-placement-data my-player-number -1 c: 9)
     (up-build place-control 0 c: monastery)
 )
@@ -34850,7 +34906,7 @@
 	(civ-selected georgians))
 =>
 	(up-modify-escrow wood c:- 200)
-	(up-assign-builders c: monastery c: 2)
+	(up-assign-builders c: monastery c: 3)
 	(up-set-placement-data my-player-number lumber-camp c: 4)
     (up-build place-control 0 c: monastery)
 )
@@ -34889,6 +34945,7 @@
 	(can-research ri-fortified-wall)
 	(up-compare-goal gl-military-advantage <= -15)
 	(not (goal strategy-goal sg-fast-imp))
+	(game-time < 3000)
 =>
 	(research ri-fortified-wall)
 )
@@ -38913,7 +38970,6 @@
 	(can-train archer-line)
 	(unit-type-count-total archer-line < 5)
 	(wood-amount > 75)
-	(research-available ri-arbalest)
 	(not (research-completed ri-arbalest))
 	(research-available ri-arbalest)
 	(unit-type-count cavalry-archer-line < 5)
@@ -38930,6 +38986,7 @@
 	(can-train archer-line)
 	(wood-amount > 75)
 	(up-research-status c: ri-arbalest >= research-pending)
+	(up-research-status c: ri-thumb-ring >= research-pending)
 	(unit-type-count cavalry-archer-line < 5)
 	(unit-type-count elephant-archer-line < 5)
 	(nand (players-unit-type-count focus-player skirmisher-line >= 20) 
@@ -38940,7 +38997,7 @@
 )
 
 (defrule
-	(unit-type-count-total archer-line >= 3)
+	(unit-type-count-total archer-line >= 5)
 	(can-research-with-escrow ri-arbalest)
 	(goal gl-food-saving 9)
 	(goal gl-gold-saving 9)
@@ -38955,7 +39012,7 @@
 )
 
 (defrule
-	(unit-type-count-total archer-line >= 3)
+	(unit-type-count-total archer-line >= 5)
 	(can-research ri-arbalest)
 =>
 	(research ri-arbalest)
@@ -40454,7 +40511,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(building-type-count-total farm > 32)
+	(building-type-count-total farm > 30)
 	(building-type-count-total mill < 2)
 	(can-build mill)
 	(up-pending-objects c: mill < 1)
@@ -40465,7 +40522,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(building-type-count-total farm > 40)
+	(building-type-count-total farm > 38)
 	(building-type-count-total mill < 3)
 	(can-build mill)
 	(up-pending-objects c: mill < 1)
@@ -40476,7 +40533,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(building-type-count-total farm > 48)
+	(building-type-count-total farm > 46)
 	(building-type-count-total mill < 4)
 	(can-build mill)
 	(up-pending-objects c: mill < 1)
@@ -41063,6 +41120,8 @@
 	(up-research-status c: castle-age >= research-pending)
 	(can-train eagle-warrior-line)
 	(up-compare-goal gl-military-advantage < 16)
+	(not (goal strategy-goal sg-fast-imp))
+	(goal sg-fastcastle-boom -1)
 =>
 	(train eagle-warrior-line)
 )
@@ -41303,8 +41362,10 @@
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
 		(or (players-unit-type-count focus-player scorpion-line >= 3)
-		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
-		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player camel-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player huskarl-line >= 8) 			
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
 	)
@@ -41346,8 +41407,10 @@
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
 		(or (players-unit-type-count focus-player scorpion-line >= 3)
-		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
-		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player camel-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player huskarl-line >= 8) 			
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
 	)
@@ -41383,8 +41446,10 @@
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
 		(or (players-unit-type-count focus-player scorpion-line >= 3)
-		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
-		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player camel-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player huskarl-line >= 8) 			
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
 	)
@@ -41436,8 +41501,10 @@
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
 		(or (players-unit-type-count focus-player scorpion-line >= 3)
-		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
-		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player camel-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player huskarl-line >= 8) 			
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
 	)
@@ -41471,8 +41538,10 @@
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
 		(or (players-unit-type-count focus-player scorpion-line >= 3)
-		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
-		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player camel-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player huskarl-line >= 8) 			
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
 	)
@@ -41508,8 +41577,10 @@
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
 		(or (players-unit-type-count focus-player scorpion-line >= 3)
-		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
-		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player camel-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player huskarl-line >= 8) 			
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
 	)
@@ -41546,8 +41617,10 @@
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
 		(or (players-unit-type-count focus-player scorpion-line >= 3)
-		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
-		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player camel-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player huskarl-line >= 8) 			
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
 	)
@@ -41582,8 +41655,10 @@
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
 		(or (players-unit-type-count focus-player scorpion-line >= 3)
-		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
-		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player camel-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player huskarl-line >= 8) 			
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
 	)
@@ -41618,8 +41693,10 @@
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
 		(or (players-unit-type-count focus-player scorpion-line >= 3)
-		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
-		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player camel-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player huskarl-line >= 8) 			
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
 	)
@@ -41654,8 +41731,10 @@
 	(or 
 		(nor (players-unit-type-count focus-player skirmisher-line >= 15) 
 		(or (players-unit-type-count focus-player scorpion-line >= 3)
-		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 		
-		(players-unit-type-count focus-player eagle-warrior-line >= 8))))
+		(or (players-unit-type-count focus-player elephant-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player camel-archer-line >= 4) 	
+		(or (players-unit-type-count focus-player huskarl-line >= 8) 			
+		(players-unit-type-count focus-player eagle-warrior-line >= 8))))))
 		(or (unit-type-count-total cavalry-class >= 3)
 		(unit-type-count-total siege-weapon-class >= 2))
 	)
@@ -47000,9 +47079,9 @@
 	(goal sg-fastcastle-boom YES)
 	(unit-type-count villager >= 60)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 45)
+	(set-strategic-number sn-wood-gatherer-percentage 40)
 	(set-strategic-number sn-food-gatherer-percentage 42)
-	(set-strategic-number sn-gold-gatherer-percentage 7)
+	(set-strategic-number sn-gold-gatherer-percentage 12)
 	(set-strategic-number sn-stone-gatherer-percentage 6)
 	(chat-to-player my-player-number "Booming phase finished, transition to stone")
 	(disable-self)
@@ -47206,6 +47285,7 @@
 
 (defrule
 	(timer-triggered t-eco-timer)
+	;(goal sg-fastcastle-boom -1)
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
 	(food-amount > 400)
@@ -47213,6 +47293,7 @@
 	(goal gl-food-saving 0)
 	(building-type-count town-center < 2)
 	(up-compare-sn sn-food-gatherer-percentage c:> 15)
+	(up-compare-sn sn-wood-gatherer-percentage c:< 50)
 =>	(up-modify-sn sn-food-gatherer-percentage c:- 5)
 	(up-modify-sn sn-wood-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from food to wood")
@@ -47220,6 +47301,7 @@
 
 (defrule
 	(timer-triggered t-eco-timer)
+	(goal sg-fastcastle-boom -1)
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
 	(food-amount > 400)
@@ -47227,6 +47309,7 @@
 	(goal gl-food-saving 0)
 	(building-type-count town-center < 2)
 	(up-compare-sn sn-food-gatherer-percentage c:> 15)
+	(up-compare-sn sn-gold-gatherer-percentage c:< 33)
 =>	(up-modify-sn sn-food-gatherer-percentage c:- 5)
 	(up-modify-sn sn-gold-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from food to gold")
@@ -47234,12 +47317,14 @@
 
 (defrule
 	(timer-triggered t-eco-timer)
+	;(goal sg-fastcastle-boom -1)
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
 	(wood-amount > 250)
 	(food-amount < 500)
 	(goal gl-wood-saving 0)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 15)
+	(up-compare-sn sn-food-gatherer-percentage c:< 60)
 =>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
 	(up-modify-sn sn-food-gatherer-percentage c:+ 5)	
 	(chat-to-player my-player-number "Balancing eco from wood to food")
@@ -47247,12 +47332,14 @@
 
 (defrule
 	(timer-triggered t-eco-timer)
+	(goal sg-fastcastle-boom -1)
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
-	(wood-amount > 250)
-	(gold-amount < 250)
+	(wood-amount > 300)
+	(gold-amount < 200)
 	(goal gl-wood-saving 0)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 15)
+	(up-compare-sn sn-gold-gatherer-percentage c:< 33)
 =>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
 	(up-modify-sn sn-gold-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from wood to gold")
@@ -47260,12 +47347,14 @@
 
 (defrule
 	(timer-triggered t-eco-timer)
+	(goal sg-fastcastle-boom -1)
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
 	(gold-amount > 400)
 	(food-amount < 50)
 	(goal gl-gold-saving 0)
 	(up-compare-sn sn-gold-gatherer-percentage c:> 15)
+	(up-compare-sn sn-food-gatherer-percentage c:< 60)
 =>	(up-modify-sn sn-gold-gatherer-percentage c:- 5)
 	(up-modify-sn sn-food-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from gold to food")
@@ -47273,12 +47362,14 @@
 
 (defrule
 	(timer-triggered t-eco-timer)
+	(goal sg-fastcastle-boom -1)
 	(current-age == castle-age)
 	;(up-research-status c: imperial-age != research-pending)
 	(gold-amount > 400)
 	(wood-amount < 50)
 	(goal gl-gold-saving 0)
 	(up-compare-sn sn-gold-gatherer-percentage c:> 15)
+	(up-compare-sn sn-wood-gatherer-percentage c:< 50)
 =>	(up-modify-sn sn-gold-gatherer-percentage c:- 5)
 	(up-modify-sn sn-wood-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from gold to wood")
@@ -47302,6 +47393,7 @@
 	(and(not (goal strategy-goal sg-fastcastle-uu))
 		(current-age == castle-age))
 	(current-age >= castle-age)
+	(goal gl-stone-saving 38)
 	(stone-amount < 100)
 	(building-type-count-total castle < 1)
 	(up-compare-sn sn-stone-gatherer-percentage c:< 6)
@@ -47332,6 +47424,7 @@
 	(wood-amount < 200)
 	(goal gl-food-saving 0)
 	(up-compare-sn sn-food-gatherer-percentage c:> 20)
+	(up-compare-sn sn-wood-gatherer-percentage c:< 50)
 =>	(up-modify-sn sn-food-gatherer-percentage c:- 5)
 	(up-modify-sn sn-wood-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from food to wood")
@@ -47344,6 +47437,7 @@
 	(gold-amount < 200)
 	(goal gl-food-saving 0)
 	(up-compare-sn sn-food-gatherer-percentage c:> 20)
+	(up-compare-sn sn-gold-gatherer-percentage c:< 33)
 =>	(up-modify-sn sn-food-gatherer-percentage c:- 5)
 	(up-modify-sn sn-gold-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from food to gold")
@@ -47356,6 +47450,7 @@
 	(food-amount < 400)
 	(goal gl-wood-saving 0)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 20)
+	(up-compare-sn sn-food-gatherer-percentage c:< 60)
 =>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
 	(up-modify-sn sn-food-gatherer-percentage c:+ 5)	
 	(chat-to-player my-player-number "Balancing eco from wood to food")
@@ -47364,10 +47459,11 @@
 (defrule
 	(timer-triggered t-eco-timer)
 	(current-age == imperial-age)
-	(wood-amount > 400)
-	(gold-amount < 250)
+	(wood-amount > 500)
+	(gold-amount < 200)
 	(goal gl-wood-saving 0)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 20)
+	(up-compare-sn sn-gold-gatherer-percentage c:< 33)
 =>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
 	(up-modify-sn sn-gold-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from wood to gold")
@@ -47380,6 +47476,7 @@
 	(food-amount < 500)
 	(goal gl-gold-saving 0)
 	(up-compare-sn sn-gold-gatherer-percentage c:> 15)
+	(up-compare-sn sn-food-gatherer-percentage c:< 60)
 =>	(up-modify-sn sn-gold-gatherer-percentage c:- 5)
 	(up-modify-sn sn-food-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from gold to food")
@@ -47392,6 +47489,7 @@
 	(wood-amount < 500)
 	(goal gl-gold-saving 0)
 	(up-compare-sn sn-gold-gatherer-percentage c:> 15)
+	(up-compare-sn sn-wood-gatherer-percentage c:< 50)
 =>	(up-modify-sn sn-gold-gatherer-percentage c:- 5)
 	(up-modify-sn sn-wood-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from gold to wood")
@@ -47404,6 +47502,7 @@
 	(wood-amount < 500)
 	(goal gl-stone-saving 0)
 	(up-compare-sn sn-stone-gatherer-percentage c:> 12)
+	(up-compare-sn sn-wood-gatherer-percentage c:< 50)
 =>	(up-modify-sn sn-stone-gatherer-percentage c:- 5)
 	(up-modify-sn sn-wood-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from stone to wood")
@@ -47416,6 +47515,7 @@
 	(food-amount < 500)
 	(goal gl-stone-saving 0)
 	(up-compare-sn sn-stone-gatherer-percentage c:> 12)
+	(up-compare-sn sn-food-gatherer-percentage c:< 60)
 =>	(up-modify-sn sn-stone-gatherer-percentage c:- 5)
 	(up-modify-sn sn-food-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from stone to food")
@@ -47428,6 +47528,7 @@
 	(gold-amount < 500)
 	(goal gl-stone-saving 0)
 	(up-compare-sn sn-stone-gatherer-percentage c:> 12)
+	(up-compare-sn sn-gold-gatherer-percentage c:< 33)
 =>	(up-modify-sn sn-stone-gatherer-percentage c:- 5)
 	(up-modify-sn sn-gold-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from stone to gold")
@@ -47442,6 +47543,7 @@
 	(wood-amount < 500)
 	(goal gl-stone-saving 0)
 	(up-compare-sn sn-stone-gatherer-percentage c:> 5)
+	(up-compare-sn sn-wood-gatherer-percentage c:< 50)
 =>	(up-modify-sn sn-stone-gatherer-percentage c:- 3)
 	(up-modify-sn sn-wood-gatherer-percentage c:+ 3)
 	(chat-to-player my-player-number "Balancing eco from stone to wood")
@@ -47456,6 +47558,7 @@
 	(food-amount < 500)
 	(goal gl-stone-saving 0)
 	(up-compare-sn sn-stone-gatherer-percentage c:> 5)
+	(up-compare-sn sn-food-gatherer-percentage c:< 60)
 =>	(up-modify-sn sn-stone-gatherer-percentage c:- 3)
 	(up-modify-sn sn-food-gatherer-percentage c:+ 3)
 	(chat-to-player my-player-number "Balancing eco from stone to food")
@@ -47470,6 +47573,7 @@
 	(gold-amount < 500)
 	(goal gl-stone-saving 0)
 	(up-compare-sn sn-stone-gatherer-percentage c:> 5)
+	(up-compare-sn sn-gold-gatherer-percentage c:< 33)
 =>	(up-modify-sn sn-stone-gatherer-percentage c:- 3)
 	(up-modify-sn sn-gold-gatherer-percentage c:+ 3)
 	(chat-to-player my-player-number "Balancing eco from stone to gold")
@@ -47482,8 +47586,9 @@
 	(gold-amount > 800)
 	(goal gl-gold-saving 0)
 	(up-compare-sn sn-gold-gatherer-percentage c:> 15)
-=>	(up-modify-sn sn-stone-gatherer-percentage c:+ 5)
-	(up-modify-sn sn-gold-gatherer-percentage c:- 5)
+	(up-compare-sn sn-stone-gatherer-percentage c:< 50)
+=>	(up-modify-sn sn-gold-gatherer-percentage c:- 5)
+	(up-modify-sn sn-stone-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from gold to stone")
 )
 
@@ -47494,8 +47599,9 @@
 	(wood-amount > 800)
 	(goal gl-wood-saving 0)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 25)
-=>	(up-modify-sn sn-stone-gatherer-percentage c:+ 5)
-	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
+	(up-compare-sn sn-stone-gatherer-percentage c:< 50)
+=>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
+	(up-modify-sn sn-stone-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from wood to stone")
 )
 
@@ -47506,8 +47612,8 @@
 	(food-amount > 800)
 	(goal gl-food-saving 0)
 	(up-compare-sn sn-food-gatherer-percentage c:> 25)
-=>	
-	(up-modify-sn sn-food-gatherer-percentage c:- 5)
+	(up-compare-sn sn-stone-gatherer-percentage c:< 50)
+=>	(up-modify-sn sn-food-gatherer-percentage c:- 5)
 	(up-modify-sn sn-stone-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from food to stone")
 )
@@ -47519,8 +47625,7 @@
 	(goal gl-stone-saving 7)
 	(up-compare-sn sn-food-gatherer-percentage c:> 15)
 	(up-compare-sn sn-stone-gatherer-percentage c:== 0)
-=>
-	(up-modify-sn sn-food-gatherer-percentage c:- 5)
+=>  (up-modify-sn sn-food-gatherer-percentage c:- 5)
 	(up-modify-sn sn-stone-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from food to stone")
 )
@@ -47532,8 +47637,7 @@
 	(goal gl-stone-saving 7)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 15)
 	(up-compare-sn sn-stone-gatherer-percentage c:== 0)
-=>
-	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
+=>  (up-modify-sn sn-wood-gatherer-percentage c:- 5)
 	(up-modify-sn sn-stone-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from wood to stone")
 )
@@ -47545,8 +47649,8 @@
 	(food-amount < 1000)
 	(goal gl-wood-saving 0)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 20)
-=>
-	(up-modify-sn sn-wood-gatherer-percentage c:- 10)
+	(up-compare-sn sn-food-gatherer-percentage c:< 60)
+=>  (up-modify-sn sn-wood-gatherer-percentage c:- 10)
 	(up-modify-sn sn-food-gatherer-percentage c:+ 10)
 	(chat-to-player my-player-number "Balancing eco from wood to food")
 )
@@ -47835,7 +47939,8 @@
 )
 
 (defrule
-    (gold-amount >= 200)
+	(can-buy-commodity food)
+	(commodity-buying-price food < 160)
 	(food-amount < 50)
 	(up-compare-goal gl-gold-saving == 0)
     (current-age == castle-age)
