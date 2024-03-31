@@ -1,9 +1,25 @@
 ;ZebbaAI - Created by Zebba 2021 - 2024
 
 ;Version: 1.2.6
-;last update: 28th Mar 2024
+;last update: 31th Mar 2024
 
 ;region Chats at match-start =======================================
+
+; (defconst gl-elapsed 444)
+; (defconst gl-previous-game-time 445)
+; (defconst gl-current-game-time 446)
+
+; (defrule
+    ; (true)
+; =>
+    ; (up-modify-goal gl-previous-game-time g:= gl-current-game-time)
+    ; (up-set-timer c: 50 c: 0)
+    ; (up-get-timer c: 50 gl-current-game-time)
+    ; (up-modify-goal gl-elapsed g:= gl-current-game-time)
+    ; (up-modify-goal gl-elapsed g:- gl-previous-game-time)
+    ; (up-chat-data-to-all "Time between passes: %d" g: gl-elapsed)
+; )
+
 ;#load-if-defined UP-2-PLAYER-GAME
 
 (defrule
@@ -49,24 +65,18 @@
 ;what's up next:
 
 ; - fast imp strategies need to include unit blacksmith upgrades
-; - change static build order in feudal-age to dynamic after initial villager goal has been reached
 ; - improve defensive tower placement: get the most exposed camp and place tower next to it
 ; - retreat with ls and knights from tcs if armor upgrades are not researched yet
 ; - add ability for villagers to attack enemy scouts in dark-age when they are next to them
-; - fix boar-hunting bugs: - not enough villagers around the tc, but alternative boar-hunting mode does not trigger.
 
 ; - implement more precise conditions for imperial age units (champions/knights/camels/archers/steppe-lancers/eagles/halbs/hc/siege/uu/cav-archers)
 ; - fix fc-uu bo before going up to castle-age (testing)
-; - fix non-preferation of enemy monks (no solution found yet)
 
 ; - generally improve speed to kill a player when in advantage
-; - improve drush into feudal rush build order to reduce idle time (idea: reduce amount of wood-escrow savings to get more farms?)
 
 ; - remake towerrush due to several numbers of bugs
-; - add ability to garrison low-hp villagers under attack in the next tc
 ; - implement and test sn-special-attack-type2
 ; - improve dark-age builder selection for building resource drop-off points
-; - Eat only one sheep at a time 
 ; - decrease d-villager-goal for mongols by 1 when scout/archer-rushing, in addition to that changes need to be made to 
 ; constructions of buildings connected to villager count
 
@@ -413,6 +423,7 @@
 (defconst gl-cost-wood 82)
 (defconst gl-cost-stone 83)
 (defconst gl-cost-gold 84)
+(defconst gl-enemy-forwarding 85)
 (defconst preferred-target-player 86)
 (defconst temp-focus-player 87)
 (defconst TowerGarrisonGoal 88)
@@ -1687,6 +1698,7 @@
 	(set-goal enemy-archery-goal 0)
 	(set-goal enemy-cavarcher-goal 0)
 	(set-goal enemy-siege-goal 0)
+	(set-goal gl-enemy-forwarding NO)
 	(disable-self)
 )
 
@@ -2669,6 +2681,7 @@
 	(up-compare-goal gl-military-advantage <= -15)
 	(up-compare-goal gl-military-advantage > -25)
 	(military-population < 15)
+	(goal gl-enemy-forwarding NO)
 =>
 	(set-goal gl-strategic-position -1)
 	(up-modify-sn sn-camp-max-distance c:= 30)
@@ -2683,6 +2696,7 @@
 	(up-compare-goal gl-strategic-position != 0)
 	(up-compare-goal gl-military-advantage <= 5)
 	(up-compare-goal gl-military-advantage >= -5)
+	(goal gl-enemy-forwarding NO)
 =>
 	(set-goal gl-strategic-position 0)
 	(up-modify-sn sn-camp-max-distance g:= gl-standard-townsize)
@@ -2696,6 +2710,7 @@
 	(up-compare-goal gl-strategic-position != 1)
 	(up-compare-goal gl-military-advantage >= 15)
 	(military-population >= 15)
+	(goal gl-enemy-forwarding NO)
 =>
 	(set-goal gl-strategic-position 1)
 	(up-modify-sn sn-camp-max-distance c:+ 20)
@@ -2721,22 +2736,22 @@
 (defrule
 	; (current-age <= castle-age)
 	; (goal enemy-infantry-goal 0)
-	(or (players-unit-type-count focus-player militiaman-line >= 6)
-	(or (players-unit-type-count focus-player condottiero >= 6)
-	(or (players-unit-type-count focus-player spearman-line >= 6)
-	(or (players-unit-type-count focus-player jaguar-man-line >= 6)
-	(or (players-unit-type-count focus-player woad-raider-line >= 6)
-	(or (players-unit-type-count focus-player urumi-swordsman-line >= 6)
-	(or (players-unit-type-count focus-player shotel-line >= 6)
-	(or (players-unit-type-count focus-player throwing-axeman-line >= 6)
-	(or (players-unit-type-count focus-player kamayuk-line >= 6)
-	(or (players-unit-type-count focus-player samurai-line >= 6)
-	(or (players-unit-type-count focus-player karambit-warrior-line >= 6)
-	(or (players-unit-type-count focus-player gbeto-line >= 6)
-	(or (players-unit-type-count focus-player obuch-line >= 6)
-	(or (players-unit-type-count focus-player serjeant-line >= 6)
-	(or (players-unit-type-count focus-player teutonic-knight-line >= 6)
-	(players-unit-type-count focus-player berserk-line >= 6))))))))))))))))
+	(or (players-unit-type-count focus-player militiaman-line >= 8)
+	(or (players-unit-type-count focus-player condottiero >= 8)
+	(or (players-unit-type-count focus-player spearman-line >= 8)
+	(or (players-unit-type-count focus-player jaguar-man-line >= 8)
+	(or (players-unit-type-count focus-player woad-raider-line >= 8)
+	(or (players-unit-type-count focus-player urumi-swordsman-line >= 8)
+	(or (players-unit-type-count focus-player shotel-line >= 8)
+	(or (players-unit-type-count focus-player throwing-axeman-line >= 8)
+	(or (players-unit-type-count focus-player kamayuk-line >= 8)
+	(or (players-unit-type-count focus-player samurai-line >= 8)
+	(or (players-unit-type-count focus-player karambit-warrior-line >= 8)
+	(or (players-unit-type-count focus-player gbeto-line >= 8)
+	(or (players-unit-type-count focus-player obuch-line >= 8)
+	(or (players-unit-type-count focus-player serjeant-line >= 8)
+	(or (players-unit-type-count focus-player teutonic-knight-line >= 8)
+	(players-unit-type-count focus-player berserk-line >= 8))))))))))))))))
 =>
 	(set-goal enemy-infantry-goal 1)
 )	
@@ -2744,7 +2759,7 @@
 (defrule
 	; (current-age <= castle-age)
 	; (goal enemy-infantry-goal 0)
-	(players-unit-type-count focus-player warrior-priest >= 6)
+	(players-unit-type-count focus-player warrior-priest >= 5)
 =>
 	(set-goal enemy-infantry-goal 1)
 )	
@@ -2759,29 +2774,29 @@
 (defrule
 	; (current-age <= castle-age)
 	; (goal enemy-infantry-goal 1)
-	(players-unit-type-count focus-player militiaman-line < 6)
-	(players-unit-type-count focus-player warrior-priest < 6)
-	(players-unit-type-count focus-player condottiero < 6)
-	(players-unit-type-count focus-player spearman-line < 6)
-	(players-unit-type-count focus-player jaguar-man-line < 6)
-	(players-unit-type-count focus-player woad-raider-line < 6)
-	(players-unit-type-count focus-player urumi-swordsman-line < 6)
-	(players-unit-type-count focus-player shotel-line < 6)
-	(players-unit-type-count focus-player throwing-axeman-line < 6)
+	(players-unit-type-count focus-player militiaman-line < 8)
+	(players-unit-type-count focus-player warrior-priest < 5)
+	(players-unit-type-count focus-player condottiero < 8)
+	(players-unit-type-count focus-player spearman-line < 8)
+	(players-unit-type-count focus-player jaguar-man-line < 8)
+	(players-unit-type-count focus-player woad-raider-line < 8)
+	(players-unit-type-count focus-player urumi-swordsman-line < 8)
+	(players-unit-type-count focus-player shotel-line < 8)
+	(players-unit-type-count focus-player throwing-axeman-line < 8)
 =>
 	(set-goal split-rule-goal 100)
 )	
 
 (defrule
 	(goal split-rule-goal 100)
-	(players-unit-type-count focus-player kamayuk-line < 6)
-	(players-unit-type-count focus-player samurai-line < 6)
-	(players-unit-type-count focus-player karambit-warrior-line < 6)
-	(players-unit-type-count focus-player gbeto-line < 6)
-	(players-unit-type-count focus-player obuch-line < 6)
-	(players-unit-type-count focus-player serjeant-line < 6)
-	(players-unit-type-count focus-player teutonic-knight-line < 6)
-	(players-unit-type-count focus-player berserk-line < 6)
+	(players-unit-type-count focus-player kamayuk-line < 8)
+	(players-unit-type-count focus-player samurai-line < 8)
+	(players-unit-type-count focus-player karambit-warrior-line < 8)
+	(players-unit-type-count focus-player gbeto-line < 8)
+	(players-unit-type-count focus-player obuch-line < 8)
+	(players-unit-type-count focus-player serjeant-line < 8)
+	(players-unit-type-count focus-player teutonic-knight-line < 8)
+	(players-unit-type-count focus-player berserk-line < 8)
 =>
 	(set-goal enemy-infantry-goal 0)
 )	
@@ -2866,9 +2881,9 @@
 (defrule
 	(current-age <= castle-age)
 	(goal enemy-heavy-infantry-goal 0)
-	(or (players-unit-type-count focus-player huskarl-line >= 6)
-	(or (players-unit-type-count focus-player ghulam-line >= 6)
-	(players-unit-type-count focus-player eagle-warrior-line >= 6)))
+	(or (players-unit-type-count focus-player huskarl-line >= 8)
+	(or (players-unit-type-count focus-player ghulam-line >= 8)
+	(players-unit-type-count focus-player eagle-warrior-line >= 8)))
 =>
 	(set-goal enemy-heavy-infantry-goal 1)
 )	
@@ -2876,9 +2891,9 @@
 (defrule
 	(current-age <= castle-age)
 	(goal enemy-heavy-infantry-goal 1)
-	(players-unit-type-count focus-player huskarl-line < 6)
-	(players-unit-type-count focus-player ghulam-line < 6)
-	(players-unit-type-count focus-player eagle-warrior-line < 6)
+	(players-unit-type-count focus-player huskarl-line < 8)
+	(players-unit-type-count focus-player ghulam-line < 8)
+	(players-unit-type-count focus-player eagle-warrior-line < 8)
 =>
 	(set-goal enemy-heavy-infantry-goal 0)
 )	
@@ -2914,28 +2929,28 @@
 (defrule
 	; (current-age <= castle-age)
 	; (goal enemy-cavalry-goal 0)
-	(or (players-unit-type-count focus-player scout-cavalry-line >= 6)
-	(or (players-unit-type-count focus-player shrivamsha-rider-line >= 6)
-	(or (players-unit-type-count focus-player camel-line >= 6)
-	(or (players-unit-type-count focus-player steppe-lancer-line >= 6)
-	(or (players-unit-type-count focus-player battle-elephant-line >= 6)
-	(or (players-unit-type-count focus-player konnik-line >= 6)
-	(or (players-unit-type-count focus-player krepost-konnik-line >= 6)
-	(or (players-unit-type-count focus-player coustillier-line >= 6)
-	(or (players-unit-type-count focus-player tarkan-line >= 6)
-	(or (players-unit-type-count focus-player leitis-line >= 6)
-	(or (players-unit-type-count focus-player magyar-huszar-line >= 6)
-	(or (players-unit-type-count focus-player centurion-line >= 6)
-	(or (players-unit-type-count focus-player mameluke-line >= 6)
-	(or (players-unit-type-count focus-player boyar-line >= 6)
-	(or (players-unit-type-count focus-player keshik-line >= 6)
-	(players-unit-type-count focus-player knight-line >= 6))))))))))))))))
+	(or (players-unit-type-count focus-player scout-cavalry-line >= 8)
+	(or (players-unit-type-count focus-player shrivamsha-rider-line >= 8)
+	(or (players-unit-type-count focus-player camel-line >= 8)
+	(or (players-unit-type-count focus-player steppe-lancer-line >= 8)
+	(or (players-unit-type-count focus-player battle-elephant-line >= 8)
+	(or (players-unit-type-count focus-player konnik-line >= 8)
+	(or (players-unit-type-count focus-player krepost-konnik-line >= 8)
+	(or (players-unit-type-count focus-player coustillier-line >= 8)
+	(or (players-unit-type-count focus-player tarkan-line >= 8)
+	(or (players-unit-type-count focus-player leitis-line >= 8)
+	(or (players-unit-type-count focus-player magyar-huszar-line >= 8)
+	(or (players-unit-type-count focus-player centurion-line >= 8)
+	(or (players-unit-type-count focus-player mameluke-line >= 8)
+	(or (players-unit-type-count focus-player boyar-line >= 8)
+	(or (players-unit-type-count focus-player keshik-line >= 8)
+	(players-unit-type-count focus-player knight-line >= 8))))))))))))))))
 =>
 	(set-goal enemy-cavalry-goal 1)
 )	
 
 (defrule
-	(players-unit-type-count focus-player monaspa-line >= 6)
+	(players-unit-type-count focus-player monaspa-line >= 8)
 =>
 	(set-goal enemy-cavalry-goal 1)
 )	
@@ -2948,28 +2963,28 @@
 )
 
 (defrule
-	(players-unit-type-count focus-player leitis-line < 6)
-	(players-unit-type-count focus-player magyar-huszar-line < 6)
-	(players-unit-type-count focus-player centurion-line < 6)
-	(players-unit-type-count focus-player mameluke-line < 6)
-	(players-unit-type-count focus-player boyar-line < 6)
-	(players-unit-type-count focus-player keshik-line < 6)
-	(players-unit-type-count focus-player monaspa-line < 6)
-	(players-unit-type-count focus-player knight-line < 6)
+	(players-unit-type-count focus-player leitis-line < 8)
+	(players-unit-type-count focus-player magyar-huszar-line < 8)
+	(players-unit-type-count focus-player centurion-line < 8)
+	(players-unit-type-count focus-player mameluke-line < 8)
+	(players-unit-type-count focus-player boyar-line < 8)
+	(players-unit-type-count focus-player keshik-line < 8)
+	(players-unit-type-count focus-player monaspa-line < 8)
+	(players-unit-type-count focus-player knight-line < 8)
 =>
 	(set-goal split-rule-goal 102)
 )	
 
 (defrule
 	(goal split-rule-goal 102)
-	(players-unit-type-count focus-player leitis-line < 6)
-	(players-unit-type-count focus-player magyar-huszar-line < 6)
-	(players-unit-type-count focus-player centurion-line < 6)
-	(players-unit-type-count focus-player mameluke-line < 6)
-	(players-unit-type-count focus-player boyar-line < 6)
-	(players-unit-type-count focus-player keshik-line < 6)
-	(players-unit-type-count focus-player monaspa-line < 6)
-	(players-unit-type-count focus-player knight-line < 6)
+	(players-unit-type-count focus-player leitis-line < 8)
+	(players-unit-type-count focus-player magyar-huszar-line < 8)
+	(players-unit-type-count focus-player centurion-line < 8)
+	(players-unit-type-count focus-player mameluke-line < 8)
+	(players-unit-type-count focus-player boyar-line < 8)
+	(players-unit-type-count focus-player keshik-line < 8)
+	(players-unit-type-count focus-player monaspa-line < 8)
+	(players-unit-type-count focus-player knight-line < 8)
 =>
 	(set-goal enemy-cavalry-goal 0)
 )	
@@ -3049,17 +3064,17 @@
 (defrule
 	(current-age <= castle-age)
 	(goal enemy-archery-goal 0)
-	(or (players-unit-type-count focus-player archer-line >= 6)
-	(or (players-unit-type-count focus-player slinger >= 6)
-	(or (players-unit-type-count focus-player hand-cannoneer >= 6)
-	(or (players-unit-type-count focus-player longbowman-line >= 6)
-	(or (players-unit-type-count focus-player chu-ko-nu-line >= 6)
-	(or (players-unit-type-count focus-player longbowman-line >= 6)
-	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 6)
-	(or (players-unit-type-count focus-player plumed-archer-line >= 6)
-	(or (players-unit-type-count focus-player janissary-line >= 6)
-	(or (players-unit-type-count focus-player composite-bowman-line >= 6)
-	(players-unit-type-count focus-player rattan-archer-line >= 6)))))))))))
+	(or (players-unit-type-count focus-player archer-line >= 8)
+	(or (players-unit-type-count focus-player slinger >= 8)
+	(or (players-unit-type-count focus-player hand-cannoneer >= 8)
+	(or (players-unit-type-count focus-player longbowman-line >= 8)
+	(or (players-unit-type-count focus-player chu-ko-nu-line >= 8)
+	(or (players-unit-type-count focus-player longbowman-line >= 8)
+	(or (players-unit-type-count focus-player genoese-crossbowman-line >= 8)
+	(or (players-unit-type-count focus-player plumed-archer-line >= 8)
+	(or (players-unit-type-count focus-player janissary-line >= 8)
+	(or (players-unit-type-count focus-player composite-bowman-line >= 8)
+	(players-unit-type-count focus-player rattan-archer-line >= 8)))))))))))
 =>
 	(set-goal enemy-archery-goal 1)
 )	
@@ -3067,17 +3082,17 @@
 (defrule
 	(current-age <= castle-age)
 	(goal enemy-archery-goal 1)
-	(players-unit-type-count focus-player archer-line < 6)
-	(players-unit-type-count focus-player slinger < 6)
-	(players-unit-type-count focus-player hand-cannoneer < 6)
-	(players-unit-type-count focus-player longbowman-line < 6)
-	(players-unit-type-count focus-player chu-ko-nu-line < 6)
-	(players-unit-type-count focus-player longbowman-line < 6)
-	(players-unit-type-count focus-player genoese-crossbowman-line < 6)
-	(players-unit-type-count focus-player plumed-archer-line < 6)
-	(players-unit-type-count focus-player janissary-line < 6)
-	(players-unit-type-count focus-player composite-bowman-line < 6)
-	(players-unit-type-count focus-player rattan-archer-line < 6)
+	(players-unit-type-count focus-player archer-line < 8)
+	(players-unit-type-count focus-player slinger < 8)
+	(players-unit-type-count focus-player hand-cannoneer < 8)
+	(players-unit-type-count focus-player longbowman-line < 8)
+	(players-unit-type-count focus-player chu-ko-nu-line < 8)
+	(players-unit-type-count focus-player longbowman-line < 8)
+	(players-unit-type-count focus-player genoese-crossbowman-line < 8)
+	(players-unit-type-count focus-player plumed-archer-line < 8)
+	(players-unit-type-count focus-player janissary-line < 8)
+	(players-unit-type-count focus-player composite-bowman-line < 8)
+	(players-unit-type-count focus-player rattan-archer-line < 8)
 =>
 	(set-goal enemy-archery-goal 0)
 )	
@@ -3122,16 +3137,16 @@
 (defrule
 	(current-age <= castle-age)
 	(goal enemy-cavarcher-goal 0)
-	(or (players-unit-type-count focus-player ratha-ranged-line >= 6)
-	(or (players-unit-type-count focus-player ratha-melee-line >= 6)
-	(or (players-unit-type-count focus-player cavalry-archer-line >= 6)
-	(or (players-unit-type-count focus-player elephant-archer-line >= 6)
-	(or (players-unit-type-count focus-player camel-archer-line >= 6)
-	(or (players-unit-type-count focus-player arambai-line >= 6)
-	(or (players-unit-type-count focus-player kipchak-line >= 6)
-	(or (players-unit-type-count focus-player war-wagon-line >= 6)
-	(or (players-unit-type-count focus-player mangudai-line >= 6)
-	(players-unit-type-count focus-player conquistador-line >= 6))))))))))
+	(or (players-unit-type-count focus-player ratha-ranged-line >= 8)
+	(or (players-unit-type-count focus-player ratha-melee-line >= 8)
+	(or (players-unit-type-count focus-player cavalry-archer-line >= 8)
+	(or (players-unit-type-count focus-player elephant-archer-line >= 8)
+	(or (players-unit-type-count focus-player camel-archer-line >= 8)
+	(or (players-unit-type-count focus-player arambai-line >= 8)
+	(or (players-unit-type-count focus-player kipchak-line >= 8)
+	(or (players-unit-type-count focus-player war-wagon-line >= 8)
+	(or (players-unit-type-count focus-player mangudai-line >= 8)
+	(players-unit-type-count focus-player conquistador-line >= 8))))))))))
 =>
 	(set-goal enemy-cavarcher-goal 1)
 )	
@@ -3139,16 +3154,16 @@
 (defrule
 	(current-age <= castle-age)
 	(goal enemy-cavarcher-goal 1)
-	(players-unit-type-count focus-player ratha-ranged-line < 6)
-	(players-unit-type-count focus-player ratha-melee-line < 6)
-	(players-unit-type-count focus-player cavalry-archer-line < 6)
-	(players-unit-type-count focus-player elephant-archer-line < 6)
-	(players-unit-type-count focus-player camel-archer-line < 6)
-	(players-unit-type-count focus-player arambai-line < 6)
-	(players-unit-type-count focus-player kipchak-line < 6)
-	(players-unit-type-count focus-player war-wagon-line < 6)
-	(players-unit-type-count focus-player mangudai-line < 6)
-	(players-unit-type-count focus-player conquistador-line < 6)
+	(players-unit-type-count focus-player ratha-ranged-line < 8)
+	(players-unit-type-count focus-player ratha-melee-line < 8)
+	(players-unit-type-count focus-player cavalry-archer-line < 8)
+	(players-unit-type-count focus-player elephant-archer-line < 8)
+	(players-unit-type-count focus-player camel-archer-line < 8)
+	(players-unit-type-count focus-player arambai-line < 8)
+	(players-unit-type-count focus-player kipchak-line < 8)
+	(players-unit-type-count focus-player war-wagon-line < 8)
+	(players-unit-type-count focus-player mangudai-line < 8)
+	(players-unit-type-count focus-player conquistador-line < 8)
 =>
 	(set-goal enemy-cavarcher-goal 0)
 )	
@@ -3622,14 +3637,115 @@
 
 ;endregion
 
+;region Check if enemy is forwarding ===============================
+
+(defrule
+	(current-age < imperial-age)
+	(game-time < 1800)
+	(goal gl-enemy-forwarding NO)
+	(building-type-count-total town-center >= 1)
+=>
+	(up-full-reset-search)
+	(up-set-target-point gl-starting-tc-x)
+	(up-filter-distance c: 12 c: 40)
+	(up-filter-status c: status-pending c: list-active)
+	(up-find-status-remote c: castle c: 1)
+	(up-find-status-remote c: krepost c: 1)
+	(up-find-status-remote c: watch-tower-line c: 1)
+	(up-get-search-state gl-local-total)
+)
+
+(defrule
+	(current-age < imperial-age)
+	(game-time < 1800)
+	(goal gl-enemy-forwarding NO)
+	(building-type-count-total town-center >= 1)
+	(up-compare-goal gl-remote-total >= 1)
+=>
+	(up-set-target-object search-remote c: 0)
+	(up-get-point position-object gl-temp-x)
+	(up-set-target-point gl-temp-x)
+	(up-filter-distance c: 8 c: 72) 
+	(up-filter-include cmdid-military -1 -1 -1)
+	(up-find-local c: all-units-class c: 40)
+	(up-get-search-state gl-local-total)
+)
+
+(defrule
+	(current-age < imperial-age)
+	(game-time < 1800)
+	(goal gl-enemy-forwarding NO)
+	(building-type-count-total town-center >= 1)
+	(up-compare-goal gl-remote-total >= 1)
+	(can-train-with-escrow scout-cavalry-line)
+=>
+	(up-modify-escrow food c:- 80)
+	(train scout-cavalry-line)
+)
+
+(defrule
+	(current-age < imperial-age)
+	(game-time < 1800)
+	(goal gl-enemy-forwarding NO)
+	(building-type-count-total town-center >= 1)
+	(up-compare-goal gl-remote-total >= 1)
+	(can-train-with-escrow eagle-warrior-line)
+=>
+	(up-modify-escrow food c:- 20)
+	(up-modify-escrow gold c:- 50)
+	(train eagle-warrior-line)
+)
+
+(defrule
+	(current-age < imperial-age)
+	(game-time < 1800)
+	(goal gl-enemy-forwarding NO)
+	(building-type-count-total town-center >= 1)
+	(up-compare-goal gl-remote-total >= 1)
+	(up-compare-goal gl-local-total >= 1)
+=>
+	(up-target-objects 0 action-attack-move -1 stance-aggressive)
+)
+
+(defrule
+	(current-age < imperial-age)
+	(game-time < 1800)
+	(goal gl-enemy-forwarding NO)
+	(building-type-count-total town-center >= 1)
+=>
+	(up-full-reset-search)
+	(up-set-target-point gl-starting-tc-x)
+	(up-filter-distance c: 12 c: 40)
+	(up-find-remote c: castle c: 1)
+	(up-find-remote c: krepost c: 1)
+	(up-find-remote c: watch-tower-line c: 1)
+	(up-get-search-state gl-local-total)
+)
+
+(defrule
+	(current-age < imperial-age)
+	(game-time < 1800)
+	(goal gl-enemy-forwarding NO)
+	(building-type-count-total town-center >= 1)
+	(up-compare-goal gl-remote-total >= 1)
+=>
+	(set-goal gl-enemy-forwarding YES)
+	(set-strategic-number sn-maximum-town-size 20)
+	(set-goal strategy-goal sg-fastcastle-gu)
+	(set-goal sg-fastcastle-boom -1)
+	(chat-to-player my-player-number "Getting forwarded, preparing defense")
+)
+
+;endregion
+
 ;region Check if map is a water-map ================================
 
 (defrule
 	(game-time > 20)
 	(current-age < castle-age)
-	(up-gaia-type-count c: ocean-fish-class > 0)
-	(or (up-gaia-type-count c: shore-fish-class > 3)
-	(up-gaia-type-count c: ocean-fish-class > 2))
+	(up-gaia-type-count-total c: ocean-fish-class > 0)
+	(or (up-gaia-type-count-total c: shore-fish-class > 3)
+	(up-gaia-type-count-total c: ocean-fish-class > 2))
 =>
 	(set-goal gl-water-on-map 1)
 	(chat-to-player my-player-number "Playing on a water-map")
@@ -3639,7 +3755,7 @@
 
 (defrule
 	(goal gl-nomad-map YES)
-	(up-gaia-type-count c: ocean-fish-class > 0)
+	(up-gaia-type-count-total c: ocean-fish-class > 0)
 =>
 	(set-goal gl-water-on-map 1)
 )
@@ -3648,7 +3764,7 @@
 
 ;region Sheep micro and villager to sheep micro =================
 
-;sheep scouting
+;todo: sheep scouting
 
 ;send all remaining sheep to the right side of the tc
 
@@ -3656,7 +3772,7 @@
 	(current-age == dark-age)
 	(civ-selected gurjaras)
 =>
-	(up-jump-rule 10)
+	(up-jump-rule 12)
 )	
 
 (defrule ;reset sheep id
@@ -3669,6 +3785,7 @@
 	; (up-compare-goal remaining-sheep-food > -1)
 =>
 	(set-goal g-sheep-id -1)
+	(set-goal remaining-sheep-food 0)
 	(chat-to-player my-player-number "Set Sheep ID -1")
 )
 
@@ -3748,10 +3865,11 @@
 	;(up-set-target-point gl-starting-tc-x)
 	(up-filter-distance c: -1 c: 6)
 	(up-find-local c: livestock-class c: 10)
-	;(up-clean-search search-local 0 search-order-asc)
+	(up-clean-search search-local object-data-precise-distance search-order-asc)
 	(up-remove-objects search-local object-data-index > 0)
 	;(up-remove-objects search-local object-data-id g:== g-sheep-id)
 	(up-get-search-state gl-local-total)
+	;(set-goal split-rule-goal 100)
 )
 
 (defrule
@@ -3761,12 +3879,14 @@
 	(up-compare-goal gl-local-total >= 1)
 	(up-set-target-object search-local c: 0)
 	;(timer-triggered t-3-sec)
+	;(goal split-rule-goal 100)
 =>
 	(up-copy-point gl-temp-x gl-self-point-x)
 	(up-modify-goal gl-temp-x c:- 1)
 	(up-modify-goal gl-temp-y c:+ 1)
 	(up-target-point gl-temp-x action-default -1 -1)
 	;(chat-to-player my-player-number "No sheep under tc, send next one")
+	;(set-goal split-rule-goal 0)
 )
 
 ;assign villagers to the next sheep
@@ -3801,6 +3921,7 @@
 (defrule
 	(current-age == dark-age)
 	(unit-type-count-total livestock-class > 0)
+	(unit-type-count villager-shepherd > 0)
 =>
 	(up-full-reset-search)
 	(up-filter-distance c: -1 c: 2)
@@ -3815,13 +3936,15 @@
 	(current-age == dark-age)
 	(unit-type-count-total livestock-class > 0)
 	(up-compare-goal gl-local-total < 1)
-	(up-compare-goal remaining-sheep-food < 1)
+	(up-compare-goal remaining-sheep-food <= 1)
+	(unit-type-count villager-shepherd > 0)
 =>
 	(up-full-reset-search)
-	(up-filter-distance c: -1 c: 4)
-	(up-find-local c: 590 c: 6) ;female shepherd
-	(up-find-local c: 592 c: 6) ;male shepherd
+	(up-filter-distance c: -1 c: 3)
+	(up-find-local c: 590 c: 8) ;female shepherd
+	(up-find-local c: 592 c: 8) ;male shepherd
 	(up-target-point gl-starting-tc-x action-move -1 -1)
+	(chat-to-player my-player-number "Waiting for next sheep")
 )
 
 ;villager micro to dead boar or deer
@@ -4295,7 +4418,6 @@
 ; =>
 	; (up-chat-data-to-self "curr point: %d" g: gl-curr-point)
 ; )
-
 (defrule
 	(goal gl-scout-base YES)
 	(timer-triggered t-3-sec)
@@ -4313,20 +4435,6 @@
 	;(chat-to-player my-player-number "Sending scout to 1st point")
 )
 
-(defrule
-	(goal gl-scout-base YES)
-	(current-age == dark-age)
-	(up-group-size c: 1 >= 1)
-	(or (goal gl-curr-point 1)
-	(goal gl-curr-point 7))
-	(or (timer-triggered scout-base-point-timer)
-	(up-point-explored scout-base-one-x == explored-active))
-=>
-	(up-modify-goal gl-curr-point c:+ 1)
-	(disable-timer scout-base-point-timer)
-	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
-	;(chat-to-player my-player-number "Send scout to 2nd point")
-)
 	
 (defrule
 	(goal gl-scout-base YES)
@@ -4343,21 +4451,6 @@
 	;(up-set-target-point scout-base-two-x)
 	(up-target-point scout-base-two-x action-move -1 -1)
 	;(chat-to-player my-player-number "Sending scout to 2nd point")
-)
-
-(defrule
-	(goal gl-scout-base YES)
-	(current-age == dark-age)
-	(up-group-size c: 1 >= 1)
-	(or (goal gl-curr-point 2)
-	(goal gl-curr-point 8))
-	(or (timer-triggered scout-base-point-timer)
-	(up-point-explored scout-base-two-x == explored-active))
-=>
-	(up-modify-goal gl-curr-point c:+ 1)
-	(disable-timer scout-base-point-timer)
-	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
-	;(chat-to-player my-player-number "Send scout to 3rd point")
 )
 
 (defrule
@@ -4379,21 +4472,6 @@
 
 (defrule
 	(goal gl-scout-base YES)
-	(current-age == dark-age)
-	(up-group-size c: 1 >= 1)
-	(or (goal gl-curr-point 3)
-	(goal gl-curr-point 9))
-	(or (timer-triggered scout-base-point-timer)
-	(up-point-explored scout-base-three-x == explored-active))
-=>
-	(up-modify-goal gl-curr-point c:+ 1)
-	(disable-timer scout-base-point-timer)
-	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
-	;(chat-to-player my-player-number "Send scout to 4th point")
-)
-
-(defrule
-	(goal gl-scout-base YES)
 	(timer-triggered t-3-sec)
 	(current-age == dark-age)
 	(up-group-size c: 1 >= 1)
@@ -4407,21 +4485,6 @@
 	;(up-set-target-point scout-base-one-x)
 	(up-target-point scout-base-four-x action-move -1 -1)
 	;(chat-to-player my-player-number "Sending scout to 4th point")
-)
-
-(defrule
-	(goal gl-scout-base YES)
-	(current-age == dark-age)
-	(up-group-size c: 1 >= 1)
-	(or (goal gl-curr-point 4)
-	(goal gl-curr-point 10))
-	(or (timer-triggered scout-base-point-timer)
-	(up-point-explored scout-base-four-x == explored-active))
-=>
-	(up-modify-goal gl-curr-point c:+ 1)
-	(disable-timer scout-base-point-timer)
-	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
-	;(chat-to-player my-player-number "Send scout back to 1st point")
 )
 
 (defrule
@@ -4440,6 +4503,135 @@
 	(up-target-point scout-base-one-x action-move -1 -1)
 	;(chat-to-player my-player-number "Sending scout back to 1st point")
 )
+
+#load-if-not-defined ARENA-MAP
+
+(defrule
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(or (goal gl-curr-point 1)
+	(goal gl-curr-point 7))
+	(or (timer-triggered scout-base-point-timer)
+	(up-point-explored scout-base-one-x == explored-active))
+=>
+	(up-modify-goal gl-curr-point c:+ 1)
+	(disable-timer scout-base-point-timer)
+	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
+	;(chat-to-player my-player-number "Send scout to 2nd point")
+)
+
+(defrule
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(or (goal gl-curr-point 2)
+	(goal gl-curr-point 8))
+	(or (timer-triggered scout-base-point-timer)
+	(up-point-explored scout-base-two-x == explored-active))
+=>
+	(up-modify-goal gl-curr-point c:+ 1)
+	(disable-timer scout-base-point-timer)
+	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
+	;(chat-to-player my-player-number "Send scout to 3rd point")
+)
+
+(defrule
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(or (goal gl-curr-point 3)
+	(goal gl-curr-point 9))
+	(or (timer-triggered scout-base-point-timer)
+	(up-point-explored scout-base-three-x == explored-active))
+=>
+	(up-modify-goal gl-curr-point c:+ 1)
+	(disable-timer scout-base-point-timer)
+	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
+	;(chat-to-player my-player-number "Send scout to 4th point")
+)
+
+(defrule
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(or (goal gl-curr-point 4)
+	(goal gl-curr-point 10))
+	(or (timer-triggered scout-base-point-timer)
+	(up-point-explored scout-base-four-x == explored-active))
+=>
+	(up-modify-goal gl-curr-point c:+ 1)
+	(disable-timer scout-base-point-timer)
+	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
+	;(chat-to-player my-player-number "Send scout back to 1st point")
+)
+
+#end-if 
+
+#load-if-defined ARENA-MAP
+
+
+(defrule
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(or (goal gl-curr-point 1)
+	(goal gl-curr-point 7))
+	(or (timer-triggered scout-base-point-timer)
+	(up-point-contains scout-base-one-x c: scout-type))
+=>
+	(up-modify-goal gl-curr-point c:+ 1)
+	(disable-timer scout-base-point-timer)
+	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
+	;(chat-to-player my-player-number "Send scout to 2nd point")
+)
+
+(defrule
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(or (goal gl-curr-point 2)
+	(goal gl-curr-point 8))
+	(or (timer-triggered scout-base-point-timer)
+	(up-point-contains scout-base-two-x c: scout-type))
+=>
+	(up-modify-goal gl-curr-point c:+ 1)
+	(disable-timer scout-base-point-timer)
+	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
+	;(chat-to-player my-player-number "Send scout to 3rd point")
+)
+
+(defrule
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(or (goal gl-curr-point 3)
+	(goal gl-curr-point 9))
+	(or (timer-triggered scout-base-point-timer)
+	(up-point-contains scout-base-three-x c: scout-type))
+=>
+	(up-modify-goal gl-curr-point c:+ 1)
+	(disable-timer scout-base-point-timer)
+	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
+	;(chat-to-player my-player-number "Send scout to 4th point")
+)
+
+(defrule
+	(goal gl-scout-base YES)
+	(current-age == dark-age)
+	(up-group-size c: 1 >= 1)
+	(or (goal gl-curr-point 4)
+	(goal gl-curr-point 10))
+	(or (timer-triggered scout-base-point-timer)
+	(up-point-contains scout-base-four-x c: scout-type))
+=>
+	(up-modify-goal gl-curr-point c:+ 1)
+	(disable-timer scout-base-point-timer)
+	(up-set-timer c: scout-base-point-timer g: gl-curr-layer-timer)
+	;(chat-to-player my-player-number "Send scout back to 1st point")
+)
+
+#end-if
 
 (defrule
 	(goal gl-scout-base YES)
@@ -4465,7 +4657,7 @@
 		(and
 			(and(up-compare-goal gl-amnt-food-sources g:>= gl-min-amnt-food-sources)
 				(up-compare-goal gl-number-boars g:>= gl-min-amnt-boars))
-			(up-gaia-type-count c: deer-class > 0)
+			(up-gaia-type-count-total c: deer-class > 0)
 		)
 	(or	
 		(and (goal gl-curr-point 12)
@@ -5141,7 +5333,7 @@
 		(and (unit-type-count villager >= 16)
 		(unit-type-count villager-forager < 4)))))
 	(building-type-count mill > 0)
-	(up-gaia-type-count c: forage-class > 0)
+	(up-gaia-type-count-total c: forage-class > 0)
 =>
 	(up-full-reset-search)
 	(up-find-local c: mill c: 1)
@@ -5152,6 +5344,7 @@
 	(up-find-local c: 592 c: 240) ;male shepherd
 	(up-find-local c: 216 c: 240) ;female hunter
 	(up-find-local c: 122 c: 240) ;male hunter
+	(up-remove-objects search-local object-data-group-flag == 3) ;not the boar luring villager
 	(up-remove-objects search-local -1 > 0) ;find one shepherd/hunter
 	(up-get-search-state gl-local-total)
 ;	(up-chat-data-to-player my-player-number "Amount of shepherds: %d" g: gl-local-total)
@@ -5172,7 +5365,7 @@
 		(and (unit-type-count villager >= 16)
 		(unit-type-count villager-forager < 4)))))	
 	(building-type-count mill > 0)
-	(up-gaia-type-count c: forage-class > 0)
+	(up-gaia-type-count-total c: forage-class > 0)
 =>
 	(up-set-target-point gl-temp-x)
 	(up-filter-distance c: -1 c: 4)
@@ -5201,7 +5394,7 @@
 		(and (unit-type-count villager >= 16)
 		(unit-type-count villager-forager < 4)))))	
 	(building-type-count mill > 0)
-	(up-gaia-type-count c: forage-class > 0)
+	(up-gaia-type-count-total c: forage-class > 0)
 =>
 	(up-target-objects 0 action-default -1 -1)
 	;(chat-local-to-self "Sending villager to berries")
@@ -5228,7 +5421,7 @@
 
 (defrule ;find shepherds
 	(idle-farm-count > 0)
-	(unit-type-count villager-shepherd > 8)
+	(unit-type-count villager-shepherd > 6)
 =>
 	(up-full-reset-search)
 	; (up-get-point position-self gl-self-x) ; finds home TC
@@ -5246,7 +5439,7 @@
 	(up-compare-goal gl-local-total > 0)
 	(idle-farm-count > 0)
 	(or (unit-type-count villager-forager > 4)
-	(unit-type-count villager-shepherd > 8))
+	(unit-type-count villager-shepherd > 6))
 =>
 	(up-modify-sn sn-focus-player-number c:= my-player-number)
 	;(up-filter-distance c: -1 c: 40) ; only finds farms within 40 tiles of home TC, you may want to remove this
@@ -5264,7 +5457,7 @@
 	;(up-compare-goal gl-remote-total g:>= gl-local-total) ;are there more or equal free farms than foragers?
 	(idle-farm-count > 0)
 	(or (unit-type-count villager-forager > 4)
-	(unit-type-count villager-shepherd > 8))
+	(unit-type-count villager-shepherd > 6))
 =>
 	(up-remove-objects search-remote -1 g:>= gl-local-total) ; removes any excess idle farms
 	(up-remove-objects search-local -1 g:>= gl-remote-total) ; removes any excess foragers
@@ -8370,7 +8563,7 @@
 (defrule
 	(up-compare-goal strategy-goal == -1)
 	(random-number > 0)
-	(random-number <= 60)
+	(random-number <= 100)
 =>
 	(set-goal strategy-goal sg-fastcastle-gu)	
 	(set-goal d-villager-goal 26)
@@ -8381,35 +8574,35 @@
 	(disable-self)
 )
 
-(defrule
-	(up-compare-goal strategy-goal == -1)
-	(random-number > 60)
-	(random-number <= 80)
-=>
-	(set-goal strategy-goal sg-fastcastle-uu)	
-	(set-goal d-villager-goal 26)
-	(set-goal f-villager-goal 28)
-	(set-goal c-villager-goal 100)
-	(chat-to-player my-player-number "Going for a Fast-Castle UU")
-	;(chat-to-all "Going for a Fast-Castle UU")
-	(disable-self)
-)
+; (defrule
+	; (up-compare-goal strategy-goal == -1)
+	; (random-number > 60)
+	; (random-number <= 80)
+; =>
+	; (set-goal strategy-goal sg-fastcastle-uu)	
+	; (set-goal d-villager-goal 26)
+	; (set-goal f-villager-goal 28)
+	; (set-goal c-villager-goal 100)
+	; (chat-to-player my-player-number "Going for a Fast-Castle UU")
+	; ;(chat-to-all "Going for a Fast-Castle UU")
+	; (disable-self)
+; )
 
-(defrule
-	(up-compare-goal strategy-goal == -1)
-	(random-number > 80)
-	(random-number <= 100)
-=>
-	(set-goal strategy-goal sg-fast-imp)	
-	(set-goal d-villager-goal 30)
-	(set-goal f-villager-goal 32)
-	(set-goal c-villager-goal 34)
-	(chat-to-allies "I'll go Fast Imp")
-	(chat-to-player my-player-number "I'll go Fast Imp")
-	(up-chat-data-to-self "My fast-imp strategy will be %d" g: gl-fastimp-unit)
-	;(chat-local-using-id "My fast-imp strategy will be %d" g: gl-fastimp-unit)
-	(disable-self)
-)
+; (defrule
+	; (up-compare-goal strategy-goal == -1)
+	; (random-number > 80)
+	; (random-number <= 100)
+; =>
+	; (set-goal strategy-goal sg-fast-imp)	
+	; (set-goal d-villager-goal 30)
+	; (set-goal f-villager-goal 32)
+	; (set-goal c-villager-goal 34)
+	; (chat-to-allies "I'll go Fast Imp")
+	; (chat-to-player my-player-number "I'll go Fast Imp")
+	; (up-chat-data-to-self "My fast-imp strategy will be %d" g: gl-fastimp-unit)
+	; ;(chat-local-using-id "My fast-imp strategy will be %d" g: gl-fastimp-unit)
+	; (disable-self)
+; )
 
 #end-if
 
@@ -8913,28 +9106,41 @@
 	(disable-self)
 )
 
-(defrule
-	(current-age <= feudal-age)
-	(goal strategy-goal sg-fastcastle-gu)
-	(game-time > 60)
-	(goal sg-fastcastle-boom -1)
-	(random-number >= 50)
-=>	
-	(set-goal sg-fastcastle-boom YES)
-	(chat-local-to-self "I will go for a boom")
-	(disable-self)
-)
+; (defrule
+	; (current-age <= feudal-age)
+	; (goal strategy-goal sg-fastcastle-gu)
+	; (game-time > 60)
+	; (goal sg-fastcastle-boom -1)
+	; (random-number < 50)
+; =>	
+	; (set-goal sg-fastcastle-boom NO)
+	; (up-set-offense-priority c: monk-with-relic-class c: 11)
+	; (chat-local-to-self "I will go for the relics")
+	; (disable-self)
+; )
+
+; (defrule
+	; (current-age <= feudal-age)
+	; (goal strategy-goal sg-fastcastle-gu)
+	; (game-time > 60)
+	; (goal sg-fastcastle-boom -1)
+	; (random-number >= 50)
+; =>	
+	; (set-goal sg-fastcastle-boom YES)
+	; (chat-local-to-self "I will go for a boom")
+	; (disable-self)
+; )
+
 
 (defrule
 	(current-age <= feudal-age)
 	(goal strategy-goal sg-fastcastle-gu)
 	(game-time > 60)
 	(goal sg-fastcastle-boom -1)
-	(random-number < 50)
+	(random-number <= 100)
 =>	
-	(set-goal sg-fastcastle-boom NO)
-	(up-set-offense-priority c: monk-with-relic-class c: 11)
-	(chat-local-to-self "I will go for the relics")
+	(set-goal sg-fastcastle-boom -1)
+	(chat-local-to-self "I will go for a push")
 	(disable-self)
 )
 
@@ -8994,7 +9200,7 @@
 	(goal strategy-goal sg-fastcastle-gu)
 	(current-age >= castle-age)
 	(goal sg-fastcastle-boom NO)
-	(or (and (up-gaia-type-count c: relic-class < 1)
+	(or (and (up-gaia-type-count-total c: relic-class < 1)
 		(game-time > 1200))
 	(game-time > 1500))
 =>
@@ -13257,7 +13463,7 @@
 
 ;endregion
 
-;region Defend relics on Arena =====================================
+;region Relic defense on Arena =====================================
 
 ;spread scouts to all relics
 ;don't spam move-command for scouts in case of other threats 
@@ -13266,8 +13472,10 @@
 #load-if-defined ARENA-MAP
 
 (defrule
-	(unit-type-count scout-cavalry-line >= 1)
+	(or (unit-type-count scout-cavalry-line >= 1)
+	(unit-type-count eagle-warrior-line >= 1))
 	(up-research-status c: castle-age >= research-pending)
+	(not (goal sg-fastcastle-boom -1))
 =>
 	(up-full-reset-search)
 	(up-modify-sn sn-focus-player-number c:= 0)
@@ -13280,24 +13488,59 @@
 	;(up-chat-data-to-all "Amount of relics found: %d" g: gl-remote-total)
 )
 
-(defrule
-	(unit-type-count scout-cavalry-line >= 1)
+(defrule ;furthest relic
+	(or
+		(and (unit-type-count scout-cavalry-line >= 1)
+			 (unit-type-count scout-cavalry-line <= 2))
+		(and (unit-type-count eagle-warrior-line >= 1)
+			 (unit-type-count eagle-warrior-line <= 2))
+	)
 	(up-research-status c: castle-age >= research-pending)
 	(up-compare-goal gl-remote-total >= 1)
+	(not (goal sg-fastcastle-boom -1))
 =>
 	(up-set-target-object search-remote c: 0)
+	(up-get-point position-object gl-temp-x)
+)
+
+(defrule ;2nd furthest relic
+	(or
+		(and (unit-type-count scout-cavalry-line > 2)
+			 (unit-type-count scout-cavalry-line <= 4))
+		(and (unit-type-count eagle-warrior-line > 2)
+			 (unit-type-count eagle-warrior-line <= 4))
+	)
+	(up-research-status c: castle-age >= research-pending)
+	(up-compare-goal gl-remote-total >= 1)
+	(not (goal sg-fastcastle-boom -1))
+=>
+	(up-set-target-object search-remote c: 1)
+	(up-get-point position-object gl-temp-x)
+)	
+
+(defrule ;3rd furthest relic
+	(or (unit-type-count scout-cavalry-line > 4)
+	(unit-type-count eagle-warrior-line > 4))
+	(up-research-status c: castle-age >= research-pending)
+	(up-compare-goal gl-remote-total >= 1)
+	(not (goal sg-fastcastle-boom -1))
+=>
+	(up-set-target-object search-remote c: 2)
 	(up-get-point position-object gl-temp-x)
 )	
 
 (defrule
-	(unit-type-count scout-cavalry-line >= 1)
+	(or (unit-type-count scout-cavalry-line >= 1)
+	(unit-type-count eagle-warrior-line >= 1))
 	(up-research-status c: castle-age >= research-pending)
 	(up-point-contains gl-temp-x c: relic-class)
+	(not (goal sg-fastcastle-boom -1))
 =>
 	(up-full-reset-search)
 	(up-set-target-point gl-starting-tc-x)
 	(up-filter-distance c: -1 c: 24)
 	(up-find-local c: scout-cavalry-line c: 8)
+	(up-find-local c: eagle-warrior-line c: 8)
 	(up-clean-search search-local object-data-id search-order-desc)
 	(up-remove-objects search-local -1 > 0)
 	(up-get-search-state gl-local-total)
@@ -13305,10 +13548,12 @@
 )
 
 (defrule
-	(unit-type-count scout-cavalry-line >= 1)
+	(or (unit-type-count scout-cavalry-line >= 1)
+	(unit-type-count eagle-warrior-line >= 1))
 	(up-research-status c: castle-age >= research-pending)
 	(up-point-contains gl-temp-x c: relic-class)
 	(up-compare-goal gl-local-total >= 1)
+	(not (goal sg-fastcastle-boom -1))
 =>
 	(up-target-point gl-temp-x action-move -1 -1)
 	;(up-send-flare gl-temp-x)
@@ -15355,6 +15600,7 @@
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 2)
 	(building-type-count-total castle < 1)
+	(building-type-count-total town-center < 3)
 	(not (goal gl-stone-saving 7))
 =>
 	(up-modify-escrow wood c:- 50)
@@ -15376,6 +15622,7 @@
 	(can-build-with-escrow donjon)
 	(building-type-count-total donjon < 2)
 	(building-type-count-total castle < 1)
+	(building-type-count-total town-center < 3)
 	(not (goal gl-stone-saving 7))
 =>
 	(up-modify-escrow wood c:- 75)
@@ -15397,6 +15644,7 @@
 	(can-build-with-escrow watch-tower)
 	(building-type-count-total watch-tower < 4)
 	(building-type-count-total castle < 1)
+	(building-type-count-total town-center < 3)
 	(not (goal gl-stone-saving 7))
 =>
 	(up-modify-escrow wood c:- 50)
@@ -15419,6 +15667,7 @@
 	(can-build-with-escrow donjon)
 	(building-type-count-total tower-class < 4)
 	(building-type-count-total castle < 1)
+	(building-type-count-total town-center < 3)
 	(not (goal gl-stone-saving 7))
 =>
 	(up-modify-escrow wood c:- 75)
@@ -15646,13 +15895,12 @@
 
 (defrule
 	(current-age == castle-age)
-	(unit-type-count-total skirmisher-line < 60)
 	(players-unit-type-count focus-player archer-line >= 8)
 	(can-train skirmisher-line)
 	(not (research-completed ri-elite-skirmisher))
 	(research-available ri-elite-skirmisher)
 	(not (unit-available genitour-line))
-	(unit-type-count skirmisher-line <= 5)
+	(unit-type-count skirmisher-line <= 4)
 	(unit-type-count eagle-warrior-line <= 5)
 	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
@@ -15664,14 +15912,13 @@
 
 (defrule
 	(current-age == castle-age)
-	(unit-type-count-total skirmisher-line < 60)
 	(or (players-unit-type-count focus-player spearman-line >= 8)
 	(players-unit-type-count focus-player hand-cannoneer >= 5))
 	(can-train skirmisher-line)
 	(not (research-completed ri-elite-skirmisher))
 	(research-available ri-elite-skirmisher)
 	(not (unit-available genitour-line))
-	(unit-type-count skirmisher-line <= 5)
+	(unit-type-count skirmisher-line <= 4)
 	(unit-type-count archer-line <= 5)
 	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
@@ -15858,7 +16105,7 @@
 
 (defrule
 	(current-age >= castle-age)
-	(unit-type-count-total skirmisher-line < 10)
+	(unit-type-count-total skirmisher-line < 5)
 	(goal enemy-cavarcher-goal 1)
 	(not (civ-selected turkish))
 	(can-train-with-escrow skirmisher-line)
@@ -16000,8 +16247,8 @@
 	(or (players-unit-type-count focus-player archer-line >= 10)
 	(players-unit-type-count focus-player hand-cannoneer >= 6))
 	(can-train skirmisher-line)
-	(not (research-completed ri-elite-skirmisher))
-	(unit-type-count-total skirmisher-line < 6)
+	(up-research-status c: ri-elite-skirmisher < research-pending)
+	(unit-type-count-total skirmisher-line < 5)
 	(not (unit-available genitour-line))
 	(or (not (goal strategy-goal sg-fast-imp))
 		(and (up-research-status c: imperial-age >= research-pending)
@@ -16030,8 +16277,8 @@
 	(current-age == imperial-age)
 	(players-unit-type-count focus-player spearman-line >= 12)
 	(can-train skirmisher-line)
-	(not (research-completed ri-elite-skirmisher))
-	(unit-type-count-total skirmisher-line < 6)
+	(up-research-status c: ri-elite-skirmisher < research-pending)
+	(unit-type-count-total skirmisher-line < 5)
 	(unit-type-count-total archer-line < 6)
 	(not (unit-available genitour-line))
 	(or (not (goal strategy-goal sg-fast-imp))
@@ -17477,7 +17724,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(players-unit-type-count focus-player coustillier-line >= 6)
+	(players-unit-type-count focus-player coustillier-line >= 8)
 	(research-available ri-heavy-camel)
 	(can-research ri-heavy-camel)
 	(building-type-count-total stable > 0)
@@ -17487,7 +17734,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(players-unit-type-count focus-player coustillier-line >= 6)
+	(players-unit-type-count focus-player coustillier-line >= 8)
 	(can-train camel-line)
 	(up-research-status c: ri-heavy-camel >= research-pending)
 =>
@@ -18350,7 +18597,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(players-unit-type-count focus-player ratha-set >= 6)
+	(players-unit-type-count focus-player ratha-set >= 8)
 	(not (research-available ri-cavalier))
 	(research-available ri-heavy-camel)
 	(can-research ri-heavy-camel)
@@ -18361,7 +18608,7 @@
 
 (defrule
 	(current-age >= imperial-age)
-	(players-unit-type-count focus-player ratha-set >= 6)
+	(players-unit-type-count focus-player ratha-set >= 8)
 	(can-train camel-line)
 	(up-research-status c: ri-heavy-camel >= research-pending)
 =>
@@ -22576,7 +22823,7 @@
 	;(chat-to-player my-player-number "Spare nicht mehr auf UU-Upgrade 3")
 )
 
-(defrule
+(defrule ;fc-uu
 	(up-research-status c: castle-age >= research-pending)
 	(goal gl-stone-saving 0)
 	(goal strategy-goal sg-fastcastle-uu)
@@ -22600,177 +22847,68 @@
 	;(chat-to-player my-player-number "Spare nicht mehr auf Burg")
 )
 
+;forward castles
 (defrule
-	(current-age == castle-age)
+	(up-research-status c: castle-age >= research-pending)
 	(goal gl-stone-saving 0)
-	(not (goal strategy-goal sg-fastcastle-uu))
-	(nor(civ-selected bulgarians)
-	(civ-selected slavic))
-=>
-	(set-escrow-percentage stone 75)
-	(set-goal gl-stone-saving 38)
-	(enable-timer 9 1)
-	;(chat-to-player my-player-number "Spare auf Burg")
-)
-
-; (defrule
-	; (current-age == castle-age)
-	; (goal gl-stone-saving 38)
-	; (not (civ-selected bulgarians)
-	; (civ-selected slavic))
-; =>
-	; (set-escrow-percentage stone 0)
-	; (set-goal gl-stone-saving 0)
-	; ;(chat-to-player my-player-number "Spare nicht mehr auf Burg")
-; )
-
-(defrule
-	(current-age == castle-age)
-	(goal gl-stone-saving 0)
-	(civ-selected bulgarians)
 	(building-type-count-total castle < 1)
-	(not (goal strategy-goal sg-fastcastle-uu))
+	(building-type-count-total krepost < 1)
+	(up-compare-goal gl-military-advantage >= 15)
 =>
-	(set-escrow-percentage stone 75)
+	(set-escrow-percentage stone 100)
 	(set-goal gl-stone-saving 38)
 	(enable-timer 9 1)
 	;(chat-to-player my-player-number "Spare auf Burg")
 )
 
 (defrule
-	(current-age == castle-age)
+	(up-research-status c: castle-age >= research-pending)
 	(goal gl-stone-saving 38)
-	(civ-selected bulgarians)
-	(building-type-count-total castle >= 1)
-=>
-	(release-escrow stone)
-	(set-escrow-percentage stone 0)
-	(set-goal gl-stone-saving 0)
-	;(chat-to-player my-player-number "Spare nicht mehr auf Burg")
-)
-
-(defrule
-	(current-age == castle-age)
-	(goal gl-stone-saving 0)
-	(goal gl-wood-saving 0)
-	(civ-selected slavic)
-	(research-completed my-second-unique-research)
-=>
-	(set-escrow-percentage stone 75)
-	(set-escrow-percentage wood 25)
-	(set-goal gl-stone-saving 38)
-	(set-goal gl-wood-saving 38)
-	(enable-timer 9 1)
-	;(chat-to-player my-player-number "Spare auf Burg")
-)
-
-(defrule
-	(current-age == castle-age)
-	(goal gl-stone-saving 38)
-	(goal gl-wood-saving 38)
-	(civ-selected slavic)
 	(or (building-type-count-total castle >= 1)
-	(not (research-completed my-second-unique-research)))
+	(or (building-type-count-total krepost >= 1)
+	(up-compare-goal gl-military-advantage < 5)))
 =>
 	(release-escrow stone)
-	(release-escrow wood)
 	(set-escrow-percentage stone 0)
-	(set-escrow-percentage wood 0)
 	(set-goal gl-stone-saving 0)
-	(set-goal gl-wood-saving 0)
 	;(chat-to-player my-player-number "Spare nicht mehr auf Burg")
 )
 
+;defensive castles
 (defrule
-	(current-age == castle-age)
+	(up-research-status c: castle-age >= research-pending)
 	(goal gl-stone-saving 0)
-	(civ-selected slavic)
-	(not (research-completed my-second-unique-research))
+	(building-type-count-total castle < 1)
+	(building-type-count-total krepost < 1)
+	(or (up-compare-goal gl-military-advantage < -15)
+	(goal gl-enemy-forwarding YES))
+	(not (goal strategy-goal sg-fast-imp))
+	(building-type-count-total town-center >= 1)
 =>
-	(set-escrow-percentage stone 75)
-	(set-goal gl-stone-saving 38)
-	(enable-timer 9 1)
-	;(chat-to-player my-player-number "Spare auf Burg")
-)
-
-(defrule
-	(current-age == castle-age)
-	(goal gl-stone-saving 38)
-	(goal gl-wood-saving 38)
-	(civ-selected slavic)
-	(or (building-type-count-total castle >= 1)
-	(research-completed my-second-unique-research))
-=>
-	(release-escrow stone)
-	(release-escrow wood)
-	(set-escrow-percentage stone 0)
-	(set-escrow-percentage wood 0)
-	(set-goal gl-stone-saving 0)
-	(set-goal gl-wood-saving 0)
-	;(chat-to-player my-player-number "Spare nicht mehr auf Burg")
-)
-
-(defrule
-	(current-age == castle-age)
-	(goal gl-stone-saving 0)
-	(building-type-count-total castle >= 1)
-	(civ-selected bulgarians)
-=>
-	(set-escrow-percentage stone 75)
+	(set-escrow-percentage stone 100)
+	(up-modify-sn sn-stone-gatherer-percentage c:+ 21)
+	(up-modify-sn sn-food-gatherer-percentage c:- 7)
+	(up-modify-sn sn-wood-gatherer-percentage c:- 7)
+	(up-modify-sn sn-gold-gatherer-percentage c:- 7)
 	(set-goal gl-stone-saving 39)
 	(enable-timer 9 1)
-	;(chat-to-player my-player-number "Spare auf Krepost")
+	(chat-to-player my-player-number "Saving for a defensive castle")
 )
 
 (defrule
-	(current-age == castle-age)
+	(up-research-status c: castle-age >= research-pending)
 	(goal gl-stone-saving 39)
-	(building-type-count-total castle < 1)
-	(civ-selected bulgarians)
-=>
-	(release-escrow stone)
-	(set-escrow-percentage stone 0)
-	(set-goal gl-stone-saving 0)
-	;(chat-to-player my-player-number "Spare nicht mehr auf Krepost")
-)
-
-(defrule
-	(current-age >= castle-age)
-	(goal gl-stone-saving 39)
-	(building-type-count-total castle < 1)
-	(civ-selected bulgarians)
-=>
-	(release-escrow stone)
-	(set-escrow-percentage stone 0)
-	(set-goal gl-stone-saving 0)
-	;(chat-to-player my-player-number "Spare nicht mehr auf Krepost")
-)
-
-(defrule
-	(current-age >= castle-age)
-	(goal gl-stone-saving 38)
-=>
-	(release-escrow stone)
-	(set-escrow-percentage stone 0)
-	(set-goal gl-stone-saving 0)
-	;(chat-to-player my-player-number "Spare nicht mehr auf Burg")
-)
-
-(defrule
-	(current-age >= castle-age)
-	(goal gl-stone-saving 38)
-	(goal gl-wood-saving 38)
-	(civ-selected slavic)
 	(or (building-type-count-total castle >= 1)
-	(research-completed my-second-unique-research))
+	(or (building-type-count-total krepost >= 1)
+		(and (up-compare-goal gl-military-advantage >= 0)
+		(goal gl-enemy-forwarding NO))))
+	(not (goal strategy-goal sg-fast-imp))
+	(building-type-count-total town-center >= 1)
 =>
 	(release-escrow stone)
-	(release-escrow wood)
 	(set-escrow-percentage stone 0)
-	(set-escrow-percentage wood 0)
 	(set-goal gl-stone-saving 0)
-	(set-goal gl-wood-saving 0)
-	;(chat-to-player my-player-number "Spare nicht mehr auf Burg")
+	(chat-to-player my-player-number "Stop saving for a defensive castle")
 )
 
 (defrule
@@ -23485,15 +23623,9 @@
 )
 
 (defrule
-	(goal gl-stone-saving 38)
+	(or (goal gl-stone-saving 38)
+	(goal gl-stone-saving 39))
 	(escrow-amount stone > 660)
-=>
-	(up-modify-escrow stone c:- 10)
-)
-
-(defrule
-	(goal gl-stone-saving 39)
-	(escrow-amount stone > 360)
 =>
 	(up-modify-escrow stone c:- 10)
 )
@@ -24245,7 +24377,13 @@
 		(up-compare-goal gl-military-advantage >= 50)
 	)
 =>
-	(up-jump-rule 6)
+	(up-jump-rule 8)
+)
+
+(defrule ;castle-age rules
+	(players-current-age focus-player == imperial-age)	
+=>	
+	(up-jump-rule 3)
 )
 
 (defrule
@@ -24259,7 +24397,83 @@
 	(up-reset-search 1 1 0 0)
 	(up-reset-filters)	
 	(up-set-target-point enemy-castle-point-x)
-	(up-filter-distance c: -1 c: 14)
+	(up-filter-distance c: 1 c: 14)
+	(up-find-local c: monk c: 40)
+	(up-filter-include cmdid-military -1 -1 -1)
+	(up-find-local c: -1 c: 40)	
+	(up-remove-objects search-local object-data-type == feudal-battering-ram)
+	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
+	(up-remove-objects search-local object-data-upgrade-type == siege-ram)
+	(up-remove-objects search-local object-data-type == armored-elephant)
+	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
+	;(up-remove-objects search-local object-data-type == eagle-warrior)
+	(up-remove-objects search-local object-data-upgrade-type == heavy-eagle-warrior)
+	(up-remove-objects search-local object-data-type == huskarl)
+	;(up-remove-objects search-local object-data-class == cavalry-class)
+	(set-goal split-rule-goal 3)
+)
+
+(defrule	
+	(goal split-rule-goal 3)
+	(up-set-target-object search-local c: 0)
+=>
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object object-point-x)
+	(up-lerp-tiles object-point-x enemy-castle-point-x c: -9)
+	(up-cross-tiles object-point-x enemy-castle-point-x c: 5)
+	(up-bound-point object-point-x object-point-x)	
+	(set-goal retreating-goal YES)
+	(enable-timer retreating-timer 5)
+	(set-goal split-rule-goal 4)
+)
+
+(defrule
+	(goal split-rule-goal 4)
+=>	
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)	
+	(up-set-target-point enemy-castle-point-x)
+	(up-filter-distance c: 1 c: 14)
+	(up-find-local c: monk c: 40)
+	(up-filter-include cmdid-military -1 -1 -1)
+	(up-find-local c: -1 c: 40)	
+	(up-remove-objects search-local object-data-type == feudal-battering-ram)
+	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-remove-objects search-local object-data-upgrade-type == capped-ram)
+	(up-remove-objects search-local object-data-upgrade-type == siege-ram)
+	(up-remove-objects search-local object-data-type == armored-elephant)
+	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
+	;(up-remove-objects search-local object-data-type == eagle-warrior)
+	(up-remove-objects search-local object-data-upgrade-type == heavy-eagle-warrior)
+	(up-remove-objects search-local object-data-type == huskarl)
+	;(up-remove-objects search-local object-data-class == cavalry-class)
+	;(set-strategic-number sn-disable-attack-groups 1)
+	(up-target-point object-point-x action-move -1 stance-no-attack)
+	;(up-target-point object-point-x action-move formation-line stance-no-attack)
+	;(up-target-point object-point-x action-move formation-line stance-stand-ground)
+	(enable-timer split-stance-timer 5)
+)
+
+(defrule ;imperial-age rules
+	(players-current-age focus-player < imperial-age)
+=>	
+	(up-jump-rule 3)
+)
+
+(defrule
+	(or (players-building-type-count focus-player castle >= 1)
+	(players-building-type-count focus-player krepost >= 1))
+	(goal split-rule-goal 0)
+	(or (up-point-contains enemy-castle-point-x c: castle)
+	(up-point-contains enemy-castle-point-x c: krepost))
+=>
+	;(up-full-reset-search)
+	(up-reset-search 1 1 0 0)
+	(up-reset-filters)	
+	(up-set-target-point enemy-castle-point-x)
+	(up-filter-distance c: 1 c: 16)
 	(up-find-local c: monk c: 40)
 	(up-filter-include cmdid-military -1 -1 -1)
 	(up-find-local c: -1 c: 40)	
@@ -24284,8 +24498,8 @@
 =>
 	(up-set-target-object search-local c: 0)
 	(up-get-point position-object object-point-x)
-	(up-lerp-tiles object-point-x enemy-castle-point-x c: -5)
-	(up-cross-tiles object-point-x enemy-castle-point-x c: 9)
+	(up-lerp-tiles object-point-x enemy-castle-point-x c: -9)
+	(up-cross-tiles object-point-x enemy-castle-point-x c: 5)
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
 	(enable-timer retreating-timer 5)
@@ -24299,7 +24513,7 @@
 	(up-reset-search 1 1 0 0)
 	(up-reset-filters)	
 	(up-set-target-point enemy-castle-point-x)
-	(up-filter-distance c: -1 c: 14)
+	(up-filter-distance c: 1 c: 16)
 	(up-find-local c: monk c: 40)
 	(up-filter-include cmdid-military -1 -1 -1)
 	(up-find-local c: -1 c: 40)	
@@ -24839,7 +25053,9 @@
 ;retreat with scouts from enemy threats
 
 (defrule
-	(current-age < castle-age)
+	(or (current-age < castle-age)
+		(and (current-age == castle-age)
+		(game-time < 1500)))
 	(not (enemy-buildings-in-town))
 	(or (unit-type-count scout-cavalry-line >= 1)
 	(or (unit-type-count eagle-warrior-line >= 1)
@@ -24862,7 +25078,9 @@
 (defrule
 	;(up-set-target-object search-local c: 0)
 	(up-group-size c: 0 > 0)
-	(current-age < castle-age)
+	(or (current-age < castle-age)
+		(and (current-age == castle-age)
+		(game-time < 1500)))
 	(not (enemy-buildings-in-town))
 	(or (unit-type-count scout-cavalry-line >= 1)
 	(or (unit-type-count eagle-warrior-line >= 1)
@@ -24873,7 +25091,9 @@
 )
 
 (defrule
-	(current-age < castle-age)
+	(or (current-age < castle-age)
+		(and (current-age == castle-age)
+		(game-time < 1500)))
 	(or (unit-type-count scout-cavalry-line >= 1)
 	(or (unit-type-count eagle-warrior-line >= 1)
 	(unit-type-count camel-scout >= 1)))
@@ -24899,7 +25119,9 @@
 )
 
 (defrule
-	(current-age < castle-age)
+	(or (current-age < castle-age)
+		(and (current-age == castle-age)
+		(game-time < 1500)))
 	;(not (timer-triggered retreating-timer))
 	(or (unit-type-count scout-cavalry-line >= 1)
 	(or (unit-type-count eagle-warrior-line >= 1)
@@ -24937,7 +25159,9 @@
 )
 
 (defrule
-	(current-age < castle-age)
+	(or (current-age < castle-age)
+		(and (current-age == castle-age)
+		(game-time < 1500)))
 	(not (enemy-buildings-in-town))
 	(or (unit-type-count scout-cavalry-line >= 1)
 	(or (unit-type-count eagle-warrior-line >= 1)
@@ -26277,8 +26501,8 @@
 	(civilian-population >= 12)
 	(building-type-count town-center >= 1)
 	(building-type-count-total dock < 1)
-	(or (up-gaia-type-count c: ocean-fish-class > 0)
-	(up-gaia-type-count c: shore-fish-class > 0))
+	(or (up-gaia-type-count-total c: ocean-fish-class > 0)
+	(up-gaia-type-count-total c: shore-fish-class > 0))
 =>
 	(build dock)
 	;(chat-to-player my-player-number "Baue einen Hafen")
@@ -30334,6 +30558,7 @@
 		(and (goal sg-fastcastle-boom -1)
 		(building-type-count-total town-center >= 1))))
 	(building-type-count-total lumber-camp < 3)
+	(unit-type-count-total villager >= 50)
 	(resource-found wood)
 	;(dropsite-min-distance wood > 4)
 	(dropsite-min-distance wood < 255)
@@ -30356,6 +30581,7 @@
 		(building-type-count-total town-center >= 2))
 		(and (goal sg-fastcastle-boom -1)
 		(building-type-count-total town-center >= 1))))
+	(unit-type-count-total villager >= 70)
 	(resource-found wood)
 	;(dropsite-min-distance wood > 4)
 	(dropsite-min-distance wood < 255)
@@ -30370,6 +30596,7 @@
 	(current-age == imperial-age)
 	(not(goal strategy-goal sg-fast-imp))
 	(building-type-count-total lumber-camp < 6)
+	(unit-type-count-total villager >= 80)
 	(resource-found wood)
 	;(dropsite-min-distance wood > 4)
 	(dropsite-min-distance wood < 255)
@@ -32246,6 +32473,8 @@
 
 (defrule
 	(current-age == castle-age)
+	(goal gl-enemy-forwarding NO)
+	(up-compare-goal gl-strategic-position >= 0)
 =>
     (set-strategic-number sn-maximum-town-size 30)
 	(up-modify-goal gl-standard-townsize c:= 30)
@@ -32260,6 +32489,8 @@
 	(current-age >= castle-age)
 	(or (civilian-population >= 70)
 	(building-type-count-total town-center == 2))
+	(goal gl-enemy-forwarding NO)
+	(up-compare-goal gl-strategic-position >= 0)
 =>
     (up-modify-sn sn-maximum-town-size c:+ 6)
 	(up-modify-goal gl-standard-townsize c:+ 6)
@@ -32285,6 +32516,8 @@
 	(current-age <= castle-age)
 	(civilian-population < 90)
 	(building-type-count-total town-center < 3)
+	(goal gl-enemy-forwarding NO)
+	(up-compare-goal gl-strategic-position >= 0)
 =>
     (set-strategic-number sn-maximum-town-size 20)
 	(up-modify-goal gl-standard-townsize c:= 20)
@@ -32297,6 +32530,8 @@
 	(or (civilian-population >= 90)
 	(building-type-count-total town-center == 3))
 	(not (goal sg-fastcastle-boom YES))
+	(goal gl-enemy-forwarding NO)
+	(up-compare-goal gl-strategic-position >= 0)
 =>
     (up-modify-sn sn-maximum-town-size c:+ 9)
 	(up-modify-goal gl-standard-townsize c:+ 9)
@@ -32309,6 +32544,8 @@
 	(or (civilian-population >= 90)
 	(building-type-count-total town-center > 3))
 	(goal sg-fastcastle-boom YES)
+	(goal gl-enemy-forwarding NO)
+	(up-compare-goal gl-strategic-position >= 0)
 =>
     (up-modify-sn sn-maximum-town-size c:+ 9)
 	(up-modify-goal gl-standard-townsize c:+ 9)
@@ -32323,6 +32560,8 @@
 	(or (civilian-population >= 90)
 	(building-type-count-total town-center == 3))
 	(not (goal sg-fastcastle-boom YES))
+	(goal gl-enemy-forwarding NO)
+	(up-compare-goal gl-strategic-position >= 0)
 =>
     (up-modify-sn sn-maximum-town-size c:+ 6)
 	(up-modify-goal gl-standard-townsize c:+ 6)
@@ -32335,6 +32574,8 @@
 	(or (civilian-population >= 90)
 	(building-type-count-total town-center >= 4))
 	(goal sg-fastcastle-boom YES)
+	(goal gl-enemy-forwarding NO)
+	(up-compare-goal gl-strategic-position >= 0)
 =>
     (up-modify-sn sn-maximum-town-size c:+ 6)
 	(up-modify-goal gl-standard-townsize c:+ 6)
@@ -32346,6 +32587,8 @@
 	(current-age >= castle-age)
 	(civilian-population >= 110)
 	(up-compare-goal gl-military-advantage >= 5)
+	(goal gl-enemy-forwarding NO)
+	(up-compare-goal gl-strategic-position >= 0)
 =>
     (up-modify-sn sn-maximum-town-size c:+ 3)
 	(up-modify-goal gl-standard-townsize c:+ 3)
@@ -32357,6 +32600,7 @@
 	(current-age >= castle-age)
 	(civilian-population >= 125)
 	(up-compare-goal gl-military-advantage >= 10)
+	(goal gl-enemy-forwarding NO)
 =>
     (up-modify-sn sn-maximum-town-size c:+ 4)
 	(up-modify-goal gl-standard-townsize c:+ 4)
@@ -32377,6 +32621,7 @@
 	(current-age >= imperial-age)
 	(building-type-count town-center == 5)
 	(up-compare-goal gl-military-advantage >= 5)
+	(up-compare-goal gl-strategic-position >= 0)
 =>
     (up-modify-sn sn-maximum-town-size c:+ 3)
 	(up-modify-goal gl-standard-townsize c:+ 3)
@@ -32388,6 +32633,7 @@
 	(current-age >= imperial-age)
 	(building-type-count town-center == 6)
 	(up-compare-goal gl-military-advantage >= 5)
+	(up-compare-goal gl-strategic-position >= 0)
 =>
     (up-modify-sn sn-maximum-town-size c:+ 4)
 	(up-modify-goal gl-standard-townsize c:+ 4)
@@ -32397,23 +32643,36 @@
 
 (defrule ;when booming, prevent that AI queues villagers in working TC, leaving other TCs idle
 	(current-age >= castle-age)
-	(up-compare-sn sn-enable-training-queue == 1)
+	(up-compare-sn sn-enable-training-queue == 0)
 	(goal sg-fastcastle-boom YES)
 	(building-type-count-total town-center >= 2)
 	(up-pending-objects c: villager g:> gl-selfs)
 =>
+	(set-strategic-number sn-enable-training-queue 1)
+	;(up-chat-data-to-player my-player-number "Queue: 1, Nr TCs: %d" g: gl-selfs)
+)
+
+(defrule ;when booming, prevent that AI queues villagers in working TC, leaving other TCs idle
+	(current-age >= castle-age)
+	(up-compare-sn sn-enable-training-queue == 1)
+	(goal sg-fastcastle-boom YES)
+	(building-type-count-total town-center >= 2)
+	(up-pending-objects c: villager g:<= gl-selfs)
+=>
 	(set-strategic-number sn-enable-training-queue 0)
+	;(up-chat-data-to-player my-player-number "Queue: 0, Nr TCs: %d" g: gl-selfs)
 )
 
 (defrule ;when booming, prevent that AI queues villagers in working TC, leaving other TCs idle
 	(current-age >= castle-age)
 	(up-compare-sn sn-enable-training-queue == 0)
-	(goal sg-fastcastle-boom YES)
-	(building-type-count-total town-center >= 2)
-	(up-pending-objects c: villager g:<= gl-selfs)
+	(not (goal sg-fastcastle-boom YES))
 =>
 	(set-strategic-number sn-enable-training-queue 1)
+	(disable-self)
 )
+
+
 
 (defrule
 	(can-research-with-escrow imperial-age)
@@ -33928,6 +34187,34 @@
     (up-build place-control with-escrow c: siege-workshop)
 )
 
+(defrule
+	(current-age == castle-age)
+	(goal sg-fastcastle-boom -1)
+	(not (goal strategy-goal sg-fast-imp))
+	(can-train-with-escrow battering-ram-line)
+	(unit-type-count-total battering-ram-line < 2)
+	(or (up-compare-goal gl-military-advantage >= -12)
+	(military-population >= 10))
+=>
+	(up-modify-escrow wood c:- 160)
+	(up-modify-escrow gold c:- 75)
+	(train battering-ram-line)
+)
+
+(defrule
+	(current-age == castle-age)
+	(goal sg-fastcastle-boom -1)
+	(not (goal strategy-goal sg-fast-imp))
+	(can-train-with-escrow armored-elephant-line)
+	(unit-type-count-total armored-elephant-line < 2)
+	(or (up-compare-goal gl-military-advantage >= -12)
+	(military-population >= 10))
+=>
+	(up-modify-escrow food c:- 120)
+	(up-modify-escrow gold c:- 95)
+	(train armored-elephant-line)
+)
+	
 #end-if
 
 (defrule	
@@ -34136,7 +34423,6 @@
 	(can-build-with-escrow castle)
 	(civ-selected slavic)
 	(goal gl-stone-saving 38)
-	(goal gl-wood-saving 38)
 	(research-completed my-second-unique-research)
 	(not (town-under-attack))
 =>
@@ -34159,7 +34445,6 @@
 	(can-build-with-escrow castle)
 	(civ-selected slavic)
 	(goal gl-stone-saving 38)
-	(goal gl-wood-saving 38)
 	(research-completed my-second-unique-research)
 	(not (town-under-attack))
 	(building-type-count-total castle >= 1)
@@ -34185,7 +34470,6 @@
 	(can-build-with-escrow castle)
 	(civ-selected slavic)
 	(goal gl-stone-saving 38)
-	(goal gl-wood-saving 38)
 	(research-completed my-second-unique-research)
 	(not (town-under-attack))
 	(building-type-count-total castle < 1)
@@ -34338,6 +34622,7 @@
 	;(build-forward castle)
 	;	(chat-to-player my-player-number "castle 16.2")
 )
+
 (defrule	
 	(current-age == castle-age)
 	(or (military-population < 10)
@@ -34345,13 +34630,45 @@
 	(can-build-with-escrow krepost)
 	(not (goal strategy-goal sg-fastcastle-uu))
 	(building-type-count-total castle >= 1)
-	(goal gl-stone-saving 39)
+	(goal gl-stone-saving 38)
 	(not (town-under-attack))
 =>
 	(release-escrow stone)
 	(set-escrow-percentage stone 0)
 	(up-assign-builders c: krepost c: 6)
 	(build krepost)
+	(set-goal gl-stone-saving 0)
+)
+
+(defrule	
+	(current-age == castle-age)
+	(or (up-compare-goal gl-military-advantage < -15)
+	(goal gl-enemy-forwarding YES))
+	(can-build-with-escrow castle)
+	(building-type-count-total castle < 1)
+	(goal gl-stone-saving 39)
+=>
+	(release-escrow stone)
+	(set-escrow-percentage stone 0)
+	(up-assign-builders c: castle c: 10)
+	(up-set-placement-data my-player-number -1 c: 6)
+    (up-build place-control 0 c: castle)
+	(set-goal gl-stone-saving 0)
+)
+
+(defrule	
+	(current-age == castle-age)
+	(or (up-compare-goal gl-military-advantage < -15)
+	(goal gl-enemy-forwarding YES))
+	(can-build-with-escrow krepost)
+	(building-type-count-total krepost < 1)
+	(goal gl-stone-saving 39)
+=>
+	(release-escrow stone)
+	(set-escrow-percentage stone 0)
+	(up-assign-builders c: krepost c: 10)
+	(up-set-placement-data my-player-number -1 c: 6)
+    (up-build place-control 0 c: krepost)
 	(set-goal gl-stone-saving 0)
 )
 
@@ -34363,7 +34680,7 @@
 	(up-compare-goal gl-military-advantage < 10))
 	(can-build-with-escrow krepost)
 	(goal strategy-goal sg-fastcastle-uu)
-	(goal gl-stone-saving 39)
+	(goal gl-stone-saving 38)
 	(not (town-under-attack))
 =>
 	(release-escrow stone)
@@ -34379,7 +34696,7 @@
 	(up-compare-goal gl-military-advantage >= 10)
 	(can-build-with-escrow krepost)
 	(goal strategy-goal sg-fastcastle-uu)
-	(goal gl-stone-saving 39)
+	(goal gl-stone-saving 38)
 	(not (town-under-attack))
 =>
 	(release-escrow stone)
@@ -35462,6 +35779,7 @@
 =>
 	; (set-strategic-number sn-placement-zone-size 0)
 	(up-set-placement-data my-player-number -1 c: 14)
+	(up-assign-builders c: stable c: 2)
     (up-build place-control 0 c: stable)
 )
 
@@ -35471,7 +35789,7 @@
 	(up-research-status c: castle-age >= research-pending)
 	(building-type-count-total stable >= 1)
 	(can-train scout-cavalry-line)
-	(or (unit-type-count-total scout-cavalry-line < 5)
+	(or (unit-type-count-total scout-cavalry-line < 6)
 	(or (players-unit-type-count focus-player scout-cavalry-line >= 5)
 	(players-unit-type-count focus-player eagle-warrior-line >= 5)))
 =>
@@ -35484,7 +35802,7 @@
 	(up-research-status c: castle-age >= research-pending)
 	(building-type-count-total barracks >= 1)
 	(can-train spearman-line)
-	(unit-type-count-total spearman-line < 5)
+	(unit-type-count-total spearman-line < 6)
 =>
 	(train spearman-line)
 )
@@ -35948,7 +36266,8 @@
 	(goal sg-fastcastle-boom -1)
 	(not (goal strategy-goal sg-fast-imp))
 	(can-train spearman-line)
-	(up-research-status c: ri-pikeman >= research-pending)
+	(or (unit-type-count-total spearman-line < 2)
+	(up-research-status c: ri-pikeman >= research-pending))
 	(or (unit-type-count-total villager g:< c-villager-goal)
 	(up-research-status c: imperial-age >= research-pending))
 	(or (unit-type-count-total spearman-line < 10)
@@ -40299,6 +40618,8 @@
 (defrule
 	(can-build lumber-camp)
 	(current-age == feudal-age)
+	(or (goal strategy-goal sg-archerrush)
+	(goal strategy-goal sg-scoutrush))
 	(up-compare-sn sn-wood-gatherer-percentage > 50)
 	(building-type-count-total lumber-camp < 3)
 	(building-type-count-total farm >= 4)
@@ -40323,6 +40644,7 @@
 		(building-type-count-total town-center >= 2))
 		(and (goal sg-fastcastle-boom -1)
 		(building-type-count-total town-center >= 1))))
+	(unit-type-count-total villager >= 80)
 	(resource-found wood)
 	;(dropsite-min-distance wood > 4)
 	(dropsite-min-distance wood < 255)
@@ -40339,6 +40661,7 @@
 	(current-age == imperial-age)
 	(up-compare-sn sn-wood-gatherer-percentage > 40)
 	(building-type-count-total lumber-camp < 5)
+	(unit-type-count-total villager >= 80)
 	(resource-found wood)
 	;(dropsite-min-distance wood > 4)
 	(dropsite-min-distance wood < 255)
@@ -40923,7 +41246,7 @@
 
 ;region CAMELS =====================================================
 
-(defrule
+(defrule ;limited camel-production when going knights
 	(current-age == castle-age)
 	(can-train camel-line)
 	(unit-type-count-total camel-line < 4)
@@ -40952,7 +41275,7 @@
 	(up-research-status c: imperial-age == research-pending))
 	(or 
 		(and (players-unit-type-count focus-player spearman-line < 15) 
-		(and (players-unit-type-count focus-player monk < 3) 
+		(and (players-unit-type-count focus-player monk < 4) 
 		(players-unit-type-count focus-player archer-line < 8)))
 		(or (unit-type-count-total skirmisher-line >= 6)
 		(unit-type-count-total monk >= 2))
@@ -46904,6 +47227,7 @@
 	(not (goal sg-fastcastle-boom YES))
 	(not (goal sg-fastcastle-boom NO))
 	(not (goal strategy-goal sg-fast-imp))
+	(goal gl-enemy-forwarding NO)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 32)
 	(set-strategic-number sn-food-gatherer-percentage 40)
@@ -46920,6 +47244,7 @@
 	(not (goal sg-fastcastle-boom YES))
 	(not (goal sg-fastcastle-boom NO))
 	(not (goal strategy-goal sg-fast-imp))
+	(goal gl-enemy-forwarding NO)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 40)
 	(set-strategic-number sn-food-gatherer-percentage 20)
@@ -46936,6 +47261,7 @@
 	(not (goal sg-fastcastle-boom YES))
 	(not (goal sg-fastcastle-boom NO))
 	(not (goal strategy-goal sg-fast-imp))
+	(goal gl-enemy-forwarding NO)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 38)
 	(set-strategic-number sn-food-gatherer-percentage 39)
@@ -46952,10 +47278,11 @@
 	(not (goal sg-fastcastle-boom YES))
 	(not (goal sg-fastcastle-boom NO))
 	(not (goal strategy-goal sg-fast-imp))
+	(goal gl-enemy-forwarding NO)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 29)
-	(set-strategic-number sn-food-gatherer-percentage 46)
-	(set-strategic-number sn-gold-gatherer-percentage 25)
+	(set-strategic-number sn-wood-gatherer-percentage 33)
+	(set-strategic-number sn-food-gatherer-percentage 47)
+	(set-strategic-number sn-gold-gatherer-percentage 20)
 	(set-strategic-number sn-stone-gatherer-percentage 0)
 	(chat-to-player my-player-number "Setting up economy for Castle-Age stable-unit")
 	(disable-self)
@@ -46964,59 +47291,81 @@
 (defrule
 	(current-age == castle-age)
 	(goal ca-strategy gl-castleage-eagles)
+	(civilian-population < 50)
 	(not (goal strategy-goal sg-fastcastle-uu))
 	(not (goal sg-fastcastle-boom YES))
 	(not (goal sg-fastcastle-boom NO))
 	(not (goal strategy-goal sg-fast-imp))
+	(goal gl-enemy-forwarding NO)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 29)
-	(set-strategic-number sn-food-gatherer-percentage 40)
-	(set-strategic-number sn-gold-gatherer-percentage 25)
-	(set-strategic-number sn-stone-gatherer-percentage 6)
+	(set-strategic-number sn-food-gatherer-percentage 42)
+	(set-strategic-number sn-gold-gatherer-percentage 29)
+	(set-strategic-number sn-stone-gatherer-percentage 0)
 	(disable-self)
 )
 
 (defrule
 	(current-age == castle-age)
 	(goal ca-strategy gl-castleage-siege-infantry)
+	(civilian-population < 50)
 	(not (goal strategy-goal sg-fastcastle-uu))
 	(not (goal sg-fastcastle-boom YES))
 	(not (goal sg-fastcastle-boom NO))
 	(not (goal strategy-goal sg-fast-imp))
+	(goal gl-enemy-forwarding NO)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 38)
-	(set-strategic-number sn-food-gatherer-percentage 20)
+	(set-strategic-number sn-wood-gatherer-percentage 40)
+	(set-strategic-number sn-food-gatherer-percentage 22)
 	(set-strategic-number sn-gold-gatherer-percentage 38)
-	(set-strategic-number sn-stone-gatherer-percentage 4)
+	(set-strategic-number sn-stone-gatherer-percentage 0)
 	(disable-self)
 )
 
 (defrule
 	(current-age == castle-age)
 	(goal ca-strategy gl-castleage-rangeunit)
+	(civilian-population < 50)
 	(not (goal strategy-goal sg-fastcastle-uu))
 	(not (goal sg-fastcastle-boom YES))
 	(not (goal sg-fastcastle-boom NO))
 	(not (goal strategy-goal sg-fast-imp))
+	(goal gl-enemy-forwarding NO)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 35)
-	(set-strategic-number sn-food-gatherer-percentage 39)
-	(set-strategic-number sn-gold-gatherer-percentage 20)
-	(set-strategic-number sn-stone-gatherer-percentage 6)
+	(set-strategic-number sn-wood-gatherer-percentage 40)
+	(set-strategic-number sn-food-gatherer-percentage 38)
+	(set-strategic-number sn-gold-gatherer-percentage 22)
+	(set-strategic-number sn-stone-gatherer-percentage 0)
 	(disable-self)
 )
 
 (defrule
 	(current-age == castle-age)
 	(goal ca-strategy gl-castleage-stableunit)
+	(civilian-population < 50)
 	(not (goal strategy-goal sg-fastcastle-uu))
 	(not (goal sg-fastcastle-boom YES))
 	(not (goal sg-fastcastle-boom NO))
 	(not (goal strategy-goal sg-fast-imp))
+	(goal gl-enemy-forwarding NO)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 29)
-	(set-strategic-number sn-food-gatherer-percentage 45)
-	(set-strategic-number sn-gold-gatherer-percentage 20)
+	(set-strategic-number sn-wood-gatherer-percentage 32)
+	(set-strategic-number sn-food-gatherer-percentage 46)
+	(set-strategic-number sn-gold-gatherer-percentage 22)
+	(set-strategic-number sn-stone-gatherer-percentage 0)
+	(disable-self)
+)
+
+(defrule
+	(current-age == castle-age)
+	(goal sg-fastcastle-boom -1)
+	(not (goal strategy-goal sg-fast-imp))
+	(goal gl-enemy-forwarding NO)
+	(civilian-population >= 50)
+=>
+	(set-strategic-number sn-wood-gatherer-percentage 28)
+	(set-strategic-number sn-food-gatherer-percentage 40)
+	(set-strategic-number sn-gold-gatherer-percentage 26)
 	(set-strategic-number sn-stone-gatherer-percentage 6)
 	(disable-self)
 )
@@ -47064,6 +47413,7 @@
 	(goal strategy-goal sg-fastcastle-gu)
 	(goal sg-fastcastle-boom YES)
 	(unit-type-count villager < 60)
+	(goal gl-enemy-forwarding NO)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 48)
 	(set-strategic-number sn-food-gatherer-percentage 45)
@@ -47079,9 +47429,9 @@
 	(goal sg-fastcastle-boom YES)
 	(unit-type-count villager >= 60)
 =>
-	(set-strategic-number sn-wood-gatherer-percentage 40)
-	(set-strategic-number sn-food-gatherer-percentage 42)
-	(set-strategic-number sn-gold-gatherer-percentage 12)
+	(set-strategic-number sn-wood-gatherer-percentage 36)
+	(set-strategic-number sn-food-gatherer-percentage 48)
+	(set-strategic-number sn-gold-gatherer-percentage 10)
 	(set-strategic-number sn-stone-gatherer-percentage 6)
 	(chat-to-player my-player-number "Booming phase finished, transition to stone")
 	(disable-self)
@@ -47091,6 +47441,7 @@
 	(current-age == castle-age)
 	(goal strategy-goal sg-fastcastle-gu)
 	(goal sg-fastcastle-boom NO)
+	(goal gl-enemy-forwarding NO)
 =>
 	(set-strategic-number sn-wood-gatherer-percentage 42)
 	(set-strategic-number sn-food-gatherer-percentage 42)
@@ -47278,7 +47629,8 @@
 )
 
 (defrule
-	(goal strategy-goal sg-fast-imp)
+	(or (goal strategy-goal sg-fast-imp)
+	(civilian-population < 30))
 =>
 	(up-jump-rule 27)
 )
@@ -47309,7 +47661,7 @@
 	(goal gl-food-saving 0)
 	(building-type-count town-center < 2)
 	(up-compare-sn sn-food-gatherer-percentage c:> 15)
-	(up-compare-sn sn-gold-gatherer-percentage c:< 33)
+	(up-compare-sn sn-gold-gatherer-percentage c:< 28)
 =>	(up-modify-sn sn-food-gatherer-percentage c:- 5)
 	(up-modify-sn sn-gold-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from food to gold")
@@ -47339,7 +47691,7 @@
 	(gold-amount < 200)
 	(goal gl-wood-saving 0)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 15)
-	(up-compare-sn sn-gold-gatherer-percentage c:< 33)
+	(up-compare-sn sn-gold-gatherer-percentage c:< 28)
 =>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
 	(up-modify-sn sn-gold-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from wood to gold")
@@ -47423,7 +47775,7 @@
 	(food-amount > 500)
 	(wood-amount < 200)
 	(goal gl-food-saving 0)
-	(up-compare-sn sn-food-gatherer-percentage c:> 20)
+	(up-compare-sn sn-food-gatherer-percentage c:> 28)
 	(up-compare-sn sn-wood-gatherer-percentage c:< 50)
 =>	(up-modify-sn sn-food-gatherer-percentage c:- 5)
 	(up-modify-sn sn-wood-gatherer-percentage c:+ 5)
@@ -47436,8 +47788,8 @@
 	(food-amount > 500)
 	(gold-amount < 200)
 	(goal gl-food-saving 0)
-	(up-compare-sn sn-food-gatherer-percentage c:> 20)
-	(up-compare-sn sn-gold-gatherer-percentage c:< 33)
+	(up-compare-sn sn-food-gatherer-percentage c:> 28)
+	(up-compare-sn sn-gold-gatherer-percentage c:< 28)
 =>	(up-modify-sn sn-food-gatherer-percentage c:- 5)
 	(up-modify-sn sn-gold-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from food to gold")
@@ -47463,7 +47815,7 @@
 	(gold-amount < 200)
 	(goal gl-wood-saving 0)
 	(up-compare-sn sn-wood-gatherer-percentage c:> 20)
-	(up-compare-sn sn-gold-gatherer-percentage c:< 33)
+	(up-compare-sn sn-gold-gatherer-percentage c:< 28)
 =>	(up-modify-sn sn-wood-gatherer-percentage c:- 5)
 	(up-modify-sn sn-gold-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from wood to gold")
@@ -47528,7 +47880,7 @@
 	(gold-amount < 500)
 	(goal gl-stone-saving 0)
 	(up-compare-sn sn-stone-gatherer-percentage c:> 12)
-	(up-compare-sn sn-gold-gatherer-percentage c:< 33)
+	(up-compare-sn sn-gold-gatherer-percentage c:< 28)
 =>	(up-modify-sn sn-stone-gatherer-percentage c:- 5)
 	(up-modify-sn sn-gold-gatherer-percentage c:+ 5)
 	(chat-to-player my-player-number "Balancing eco from stone to gold")
@@ -47573,7 +47925,7 @@
 	(gold-amount < 500)
 	(goal gl-stone-saving 0)
 	(up-compare-sn sn-stone-gatherer-percentage c:> 5)
-	(up-compare-sn sn-gold-gatherer-percentage c:< 33)
+	(up-compare-sn sn-gold-gatherer-percentage c:< 28)
 =>	(up-modify-sn sn-stone-gatherer-percentage c:- 3)
 	(up-modify-sn sn-gold-gatherer-percentage c:+ 3)
 	(chat-to-player my-player-number "Balancing eco from stone to gold")
@@ -47611,7 +47963,7 @@
 	(stone-amount < 100)
 	(food-amount > 800)
 	(goal gl-food-saving 0)
-	(up-compare-sn sn-food-gatherer-percentage c:> 25)
+	(up-compare-sn sn-food-gatherer-percentage c:> 28)
 	(up-compare-sn sn-stone-gatherer-percentage c:< 50)
 =>	(up-modify-sn sn-food-gatherer-percentage c:- 5)
 	(up-modify-sn sn-stone-gatherer-percentage c:+ 5)
@@ -47654,6 +48006,26 @@
 	(up-modify-sn sn-food-gatherer-percentage c:+ 10)
 	(chat-to-player my-player-number "Balancing eco from wood to food")
 )
+
+(defrule
+	(civilian-population < 30)
+	(current-age >= castle-age)
+	(game-time > 1800)
+	(up-compare-sn sn-wood-gatherer-percentage c:!= 35)
+	(up-compare-sn sn-food-gatherer-percentage c:!= 55)
+=>
+	(set-strategic-number sn-wood-gatherer-percentage 35)
+	(set-strategic-number sn-food-gatherer-percentage 55)
+	(set-strategic-number sn-gold-gatherer-percentage 0)
+	(set-strategic-number sn-stone-gatherer-percentage 10)
+	(set-goal gl-gold-saving 0)
+	(set-goal gl-food-saving 0)
+	(set-goal gl-wood-saving 0)
+	(release-escrow gold)
+	(set-escrow-percentage gold 0)
+	(chat-to-player my-player-number "Setting up emergency eco")
+)
+	
 ;endregion
 
 ;region Trade ======================================================
