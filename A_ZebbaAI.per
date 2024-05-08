@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2024
 
 ;Version: 1.2.6
-;last update: 1st May 2024
+;last update: 8th May 2024
 
 ;region Chats at match-start =======================================
 
@@ -15620,15 +15620,17 @@
 	(goal attack-now-goal 1)
 	(goal retreat-now-goal 0)
 =>
-	(up-find-remote c: unpacked-trebuchet-class c: 1)
+	(up-find-remote c: unpacked-trebuchet-class c: 10)
 	(up-find-remote c: castle c: 10)
 	(up-find-remote c: krepost c: 10)
+	(up-find-remote c: bombard-tower c: 10)
 	(up-find-remote c: watch-tower c: 10)
 	(up-find-remote c: donjon c: 10)
 	(up-find-remote c: town-center c: 10)
 	(up-find-remote c: gate-class c: 10)
+	(up-find-remote c: feitoria c: 5)
 	(up-clean-search search-remote object-data-distance search-order-asc)
-	(up-find-remote c: siege-workshop c: 10)
+	(up-find-remote c: siege-workshop c: 6)
 	(up-find-remote c: monastery c: 10)
 	(up-find-remote c: stable c: 10)
 	(up-remove-objects search-remote object-data-index > 0)
@@ -15649,16 +15651,19 @@
 	(up-find-remote c: unpacked-trebuchet-class c: 10)
 	(up-find-remote c: bombard-cannon-line c: 10)	
 	(up-find-remote c: mangonel-line c: 10)	
+	(up-find-remote c: siege-weapon-class c: 10)	
 	(up-find-remote c: battering-ram-line c: 10)
 	(up-find-remote c: armored-elephant-line c: 10)
 	(up-find-remote c: castle c: 10)
 	(up-find-remote c: krepost c: 10)
+	(up-find-remote c: bombard-tower c: 10)
 	(up-find-remote c: watch-tower c: 10)
 	(up-find-remote c: donjon c: 10)
 	(up-find-remote c: town-center c: 10)
 	(up-find-remote c: gate-class c: 10)
+	(up-find-remote c: feitoria c: 5)
 	(up-clean-search search-remote object-data-distance search-order-asc)
-	(up-find-remote c: siege-workshop c: 10)
+	(up-find-remote c: siege-workshop c: 6)
 	(up-find-remote c: monastery c: 10)
 	(up-find-remote c: stable c: 10)
 	(up-remove-objects search-remote object-data-index > 0)
@@ -19950,9 +19955,9 @@
 )
 
 (defrule
-	(goal strategy-goal sg-fastcastle-uu)
-	(current-age == castle-age)
-	(up-pending-objects c: tower-type < 1)
+	(current-age >= castle-age)
+	(up-pending-objects c: castle < 1)
+	(building-type-count-total castle < 1)
 	(stone-amount > 570)
 	(stone-amount < 650)
 =>
@@ -38480,7 +38485,7 @@
 	(up-add-object-by-id search-remote g: gl-gate-id)
 	(up-target-objects 0 action-default -1 -1)
 	;(up-send-flare gl-temp-x)
-	;(chat-to-player my-player-number "ram micro test")
+	(chat-to-player my-player-number "ram micro test")
 )
 
 (defrule
@@ -38490,8 +38495,8 @@
 	(game-time > 5)
 =>
 	(set-goal gl-gate-id -1)
-	(set-strategic-number sn-wall-targeting-mode 1)
-	;(chat-to-player my-player-number "Gate ID -1")
+	(set-strategic-number sn-wall-targeting-mode 0)
+	(chat-to-player my-player-number "Gate ID -1")
 )
 
 (defrule
