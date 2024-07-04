@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2024
 
 ;Version: 1.2.6
-;last update: 8th May 2024
+;last update: 4th July 2024
 
 ;region Chats at match-start =======================================
 
@@ -1965,16 +1965,26 @@
 
 #end-if
 
-#load-if-defined YUCATAN-MAP
+#load-if-defined FORTRESS-MAP
 
 (defrule
 	(true)
 =>
-	(set-goal gl-min-amnt-boars 3)
-	(set-goal gl-min-amnt-food-sources 18)
-	(set-goal gl-layer-one-base-dist 12)
-	(set-goal gl-layer-two-base-dist 20)
-	;(chat-to-player my-player-number "Playing on Yucatan")
+	(chat-local-to-self "Playing on Fortress")
+	(disable-self)
+)
+
+#end-if
+
+#load-if-defined GOLD-RUSH-MAP
+
+(defrule
+	(true)
+=>
+	;(set-strategic-number sn-wood-dropsite-distance 20)
+	(set-strategic-number sn-maximum-town-size 20)
+	(up-modify-goal gl-standard-townsize c:= 20)
+	(chat-local-to-self "Playing on Gold Rush")
 	(disable-self)
 )
 
@@ -1987,32 +1997,7 @@
 =>
 	(set-goal gl-min-amnt-boars 1)
 	(set-goal gl-min-amnt-food-sources 9)
-	;(chat-to-player my-player-number "Playing on Land Madness")
-	(disable-self)
-)
-
-#end-if
-
-
-#load-if-not-defined REVEAL-NORMAL
-
-(defrule
-	(true)
-=>
-	(set-strategic-number sn-unexplored-construction 1)
-	(chat-local-to-self "Playing on an explored map")
-	(disable-self)
-)
-
-#end-if
-
-#load-if-defined UP-NOMAD-STYLE
-
-(defrule
-	(true)
-=>
-	(set-goal gl-nomad-map YES)
-	(chat-local-to-self "Playing on a nomadic map")
+	(chat-to-player my-player-number "Playing on Land Madness")
 	(disable-self)
 )
 
@@ -2054,16 +2039,46 @@
 
 #end-if
 
-#load-if-defined FORTRESS-MAP
+#load-if-defined YUCATAN-MAP
 
 (defrule
 	(true)
 =>
-	;(chat-local-to-self "Playing on Fortress")
+	(set-goal gl-min-amnt-boars 3)
+	(set-goal gl-min-amnt-food-sources 18)
+	(set-goal gl-layer-one-base-dist 12)
+	(set-goal gl-layer-two-base-dist 20)
+	(chat-to-player my-player-number "Playing on Yucatan")
 	(disable-self)
 )
 
 #end-if
+
+#load-if-not-defined REVEAL-NORMAL
+
+(defrule
+	(true)
+=>
+	(set-strategic-number sn-unexplored-construction 1)
+	(chat-local-to-self "Playing on an explored map")
+	(disable-self)
+)
+
+#end-if
+
+#load-if-defined UP-NOMAD-STYLE
+
+(defrule
+	(true)
+=>
+	(set-goal gl-nomad-map YES)
+	(chat-local-to-self "Playing on a nomadic map")
+	(disable-self)
+)
+
+#end-if
+
+
 
 #load-if-not-defined UP-NOMAD-STYLE
 #load-if-not-defined LAND-NOMAD-MAP
@@ -5667,20 +5682,20 @@
 
 #load-if-defined ARABIA-MAP
 
-(defrule ;always active for testing purposes
-	(or (civ-selected gothic)
-	(or (civ-selected korean)
-	(civ-selected berbers))) ;mongols? 
-	(goal gl-lame-enemy -1)
-=>
-	(set-goal gl-lame-enemy YES)
-	(set-goal gl-lame-boar YES)
-	(set-goal gl-lame-deer NO)
-	(set-goal gl-lame-berries NO)
-	(set-goal gl-scout-base NO)
-	(chat-to-player my-player-number "I will forward my opponent")
-	(disable-self)
-)
+; (defrule ;always active for testing purposes
+	; (or (civ-selected gothic)
+	; (or (civ-selected korean)
+	; (civ-selected berbers))) ;mongols? 
+	; (goal gl-lame-enemy -1)
+; =>
+	; (set-goal gl-lame-enemy YES)
+	; (set-goal gl-lame-boar YES)
+	; (set-goal gl-lame-deer NO)
+	; (set-goal gl-lame-berries NO)
+	; (set-goal gl-scout-base NO)
+	; (chat-to-player my-player-number "I will forward my opponent")
+	; (disable-self)
+; )
 
 ; (defrule
 	; (or (civ-selected gothic)
@@ -8596,6 +8611,7 @@
 #load-if-defined UP-2-PLAYER-GAME
 #load-if-not-defined FORTRESS-MAP
 #load-if-not-defined ARENA-MAP
+#load-if-not-defined GOLD-RUSH-MAP
 
 (defrule
 	(up-compare-goal strategy-goal == -1)
@@ -8673,14 +8689,15 @@
 	(random-number > 100)
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)	
-	(set-goal d-villager-goal 26)
-	(set-goal f-villager-goal 28)
+	(set-goal d-villager-goal 25)
+	(set-goal f-villager-goal 27)
 	(set-goal c-villager-goal 100)
 	(chat-to-player my-player-number "Going for a Fast-Castle UU")
 	;(chat-to-all "Going for a Fast-Castle UU")
 	(disable-self)
 )
 
+#end-if
 #end-if
 #end-if
 
@@ -8728,47 +8745,6 @@
 	(disable-self)
 )
 
-(defrule
-	(game-time < 10)
-	(goal strategy-goal sg-fast-imp)
-	(not (goal gl-fastimp-unit fi-monks))
-	(not (civ-selected turkish))
-=>
-	(set-goal strategy-goal sg-fastcastle-gu)
-	(set-goal sg-fastcastle-boom -1)
-	(set-goal d-villager-goal 26)
-	(set-goal f-villager-goal 28)
-	(set-goal c-villager-goal 100)
-	(chat-to-player my-player-number "No fast imp strategy for this civ existing, going for a castle-age push instead")
-	(disable-self)
-)
-
-(defrule
-	(game-time < 10)
-	(not (goal strategy-goal sg-fast-imp))
-	(civ-selected turkish)
-=>
-	(set-goal strategy-goal sg-fast-imp)
-	(set-goal d-villager-goal 28)
-	(set-goal f-villager-goal 30)
-	(set-goal c-villager-goal 32)
-	(chat-to-player my-player-number "I'm Turks on Arena, so I must be going Fast Imp, am I wrong?")
-	(disable-self)
-)
-
-(defrule
-	(game-time < 10)
-	(not (goal strategy-goal sg-fast-imp))
-	(civ-selected aztec)
-=>
-	(set-goal strategy-goal sg-fast-imp)
-	(set-goal d-villager-goal 28)
-	(set-goal f-villager-goal 30)
-	(set-goal c-villager-goal 32)
-	(chat-to-player my-player-number "I'm Aztec on Arena, so I must Monk Rush right?")
-	(disable-self)
-)
-
 #end-if
 
 #load-if-defined FORTRESS-MAP
@@ -8799,6 +8775,38 @@
 	(chat-to-allies "I'll go Fast Imp")
 	(chat-to-player my-player-number "I'll go Fast Imp")
 	(up-chat-data-to-self "My fast-imp strategy will be %d" g: gl-fastimp-unit)
+	(disable-self)
+)
+
+#end-if
+
+#load-if-defined GOLD-RUSH-MAP
+
+(defrule
+	(up-compare-goal strategy-goal == -1)
+	(random-number >= 0)
+	(random-number < 50)
+=>
+	(set-goal strategy-goal sg-scoutrush)	
+	(set-goal d-villager-goal 20)
+	(set-goal f-villager-goal 34)
+	(set-goal c-villager-goal 100)
+	(chat-to-player my-player-number "Going for a Scoutrush")
+	;(chat-to-all "Going for a Scoutrush")
+	(disable-self)
+)
+
+(defrule
+	(up-compare-goal strategy-goal == -1)
+	(random-number >= 50)
+	(random-number <= 100)
+=>
+	(set-goal strategy-goal sg-fastcastle-gu)	
+	(set-goal d-villager-goal 26)
+	(set-goal f-villager-goal 28)
+	(set-goal c-villager-goal 100)
+	(chat-to-player my-player-number "Going for a Fast-Castle")
+	;(chat-to-all "Going for a Fast-Castle")
 	(disable-self)
 )
 
@@ -8877,8 +8885,8 @@
 	(random-number <= 100)
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)	
-	(set-goal d-villager-goal 26)
-	(set-goal f-villager-goal 28)
+	(set-goal d-villager-goal 25)
+	(set-goal f-villager-goal 27)
 	(set-goal c-villager-goal 100)
 	(chat-to-allies "I'll go Fastcastle UU")
 	(chat-to-player my-player-number "I'll go Fastcastle UU")
@@ -8907,8 +8915,8 @@
 	(random-number < 0)
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)	
-	(set-goal d-villager-goal 26)
-	(set-goal f-villager-goal 28)
+	(set-goal d-villager-goal 25)
+	(set-goal f-villager-goal 27)
 	(set-goal c-villager-goal 100)
 	(chat-to-allies "I'll go Fastcastle UU")
 	(chat-to-player my-player-number "I'll go Fastcastle UU")
@@ -8969,8 +8977,8 @@
 	(random-number < 40)
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)	
-	(set-goal d-villager-goal 26)
-	(set-goal f-villager-goal 28)
+	(set-goal d-villager-goal 25)
+	(set-goal f-villager-goal 27)
 	(set-goal c-villager-goal 100)
 	(chat-to-allies "I'll go for a castle")
 	(chat-to-player my-player-number "I'll go for a castle")
@@ -9079,8 +9087,8 @@
 	(random-number < 50)
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)	
-	(set-goal d-villager-goal 26)
-	(set-goal f-villager-goal 28)
+	(set-goal d-villager-goal 25)
+	(set-goal f-villager-goal 27)
 	(set-goal c-villager-goal 100)
 	(chat-to-allies "Gehe auf Fast-Castle UU")
 	(disable-self)
@@ -9135,8 +9143,8 @@
 	(random-number < 47)
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)	
-	(set-goal d-villager-goal 26)
-	(set-goal f-villager-goal 28)
+	(set-goal d-villager-goal 25)
+	(set-goal f-villager-goal 27)
 	(set-goal c-villager-goal 100)
 	(chat-to-allies "Gehe auf Fast-Castle UU")
 	(disable-self)
@@ -9254,8 +9262,8 @@
 			(building-type-count krepost >= 1))))
 =>
 	(set-goal strategy-goal sg-fastcastle-gu)
-	(set-goal sg-fastcastle-boom YES)
-	(chat-local-to-self "I have my castles, proceeding to boom")
+	(set-goal sg-fastcastle-boom -1)
+	(chat-local-to-self "I have my castles, proceeding to push")
 )
 
 #load-if-defined ARENA-MAP
@@ -9265,19 +9273,71 @@
 	(goal gl-enemy-forwarding YES))
 	(current-age <= castle-age)
 =>
-	(set-goal strategy-goal sg-fastcastle-uu)
+	(set-goal strategy-goal sg-fastcastle-gu)
 	(set-goal sg-fastcastle-boom -1)
+	(set-goal f-villager-goal 28)
+	(set-goal c-villager-goal 100)
 	(chat-local-to-self "Castle drop too risky, switching from castle-drop to defensive behavior")
 )
 
-#end-if
+(defrule
+	(game-time < 10)
+	(goal strategy-goal sg-fast-imp)
+	(not (goal gl-fastimp-unit fi-monks))
+	(not (civ-selected turkish))
+=>
+	(set-goal strategy-goal sg-fastcastle-gu)
+	(set-goal sg-fastcastle-boom -1)
+	(set-goal d-villager-goal 26)
+	(set-goal f-villager-goal 28)
+	(set-goal c-villager-goal 100)
+	(chat-to-player my-player-number "No fast imp strategy for this civ existing, going for a castle-age push instead")
+	(disable-self)
+)
 
-#load-if-defined ARENA-MAP
+(defrule
+	(not (goal strategy-goal sg-fast-imp))
+	(civ-selected turkish)
+	(random-number < 50)
+=>
+	(set-goal strategy-goal sg-fast-imp)
+	(set-goal d-villager-goal 28)
+	(set-goal f-villager-goal 30)
+	(set-goal c-villager-goal 32)
+	(chat-to-player my-player-number "I'm Turks on Arena, so I must be going Fast Imp, am I wrong?")
+	(disable-self)
+)
+
+(defrule
+	(not (goal strategy-goal sg-fastcastle-uu))
+	(civ-selected turkish)
+	(random-number >= 50)
+=>
+	(set-goal strategy-goal sg-fastcastle-uu)
+	(set-goal d-villager-goal 25)
+	(set-goal f-villager-goal 27)
+	(set-goal c-villager-goal 100)
+	(chat-to-player my-player-number "I'm Turks on Arena, so I must be going Fast Imp? Let's switch it up a bit")
+	(disable-self)
+)
+
+(defrule
+	(game-time < 10)
+	(not (goal strategy-goal sg-fast-imp))
+	(civ-selected aztec)
+=>
+	(set-goal strategy-goal sg-fast-imp)
+	(set-goal d-villager-goal 28)
+	(set-goal f-villager-goal 30)
+	(set-goal c-villager-goal 32)
+	(chat-to-player my-player-number "I'm Aztec on Arena, so I must Monk Rush right?")
+	(disable-self)
+)
 
 (defrule
 	(current-age <= feudal-age)
 	(goal strategy-goal sg-fastcastle-gu)
-	(up-research-status c: castle-age >= research-pending)
+	(game-time > 60)
 	(goal sg-fastcastle-boom -1)
 =>
 	(generate-random-number 100)
@@ -9442,6 +9502,43 @@
 )
 	
 #end-if
+#end-if
+
+#load-if-not-defined UP-ALLY-IN-GAME
+(defrule
+	(goal strategy-goal sg-fastcastle-gu)
+	;(up-research-status c: castle-age >= research-pending)
+	(game-time > 60)
+	(current-age < imperial-age)
+	(goal sg-fastcastle-boom -1)
+=>
+	(generate-random-number 100)
+	(disable-self)
+)
+
+(defrule
+	(goal strategy-goal sg-fastcastle-gu)
+	;(up-research-status c: castle-age >= research-pending)
+	(game-time > 60)
+	(current-age < imperial-age)
+	(random-number <= 50)
+=>	
+	(set-goal sg-fastcastle-boom YES)
+	(chat-to-allies "I will go for a boom")
+	(disable-self)
+)
+
+(defrule
+	(goal strategy-goal sg-fastcastle-gu)
+	;(up-research-status c: castle-age >= research-pending)
+	(game-time > 60)
+	(current-age < imperial-age)
+	(random-number > 50)
+=>	
+	(set-goal sg-fastcastle-boom -1)
+	(chat-to-allies "I will support with army")
+	(disable-self)
+)
 #end-if
 #end-if
 
@@ -13799,7 +13896,6 @@
 ;spread scouts to all relics
 ;don't spam move-command for scouts in case of other threats 
 
-#load-if-defined UP-2-PLAYER-GAME
 #load-if-defined ARENA-MAP
 
 (defrule
@@ -13890,7 +13986,6 @@
 	;(up-send-flare gl-temp-x)
 )
 
-#end-if
 #end-if
 
 ;endregion
@@ -15700,7 +15795,7 @@
 	(set-strategic-number sn-focus-player-number my-player-number)
 	(up-find-remote c: castle c: 10)
 	(up-find-remote c: krepost c: 10)
-	(up-remove-objects search-remote object-data-hitpoints > 2400)
+	(up-remove-objects search-remote object-data-hitpoints > 2700)
 	(up-remove-objects search-remote object-data-attacker-count < 1)
 	(up-get-search-state gl-local-total)
 	;(up-chat-data-to-self "Castles under attack: %d" g: gl-remote-total)
@@ -15750,6 +15845,136 @@
 	
 ;endregion
 
+;region Drush Micro ===================================================
+
+(defrule
+	(current-age < castle-age)
+	(or (unit-type-count militia-line > 0)
+	(unit-type-count spearman-line > 0))
+	(or (unit-type-count scout-cavalry-line > 0)
+	(or (unit-type-count eagle-warrior-line > 0)
+	(unit-type-count camel-scout > 0)))
+	(up-compare-goal gl-military-advantage > -5)
+	(goal attack-now-goal 1)
+	(goal retreat-now-goal 0)
+=>
+	(up-full-reset-search)
+	(up-find-local c: militia-line c: 40)
+	(up-find-local c: spearman-line c: 40)
+	(up-get-search-state gl-local-total)
+   ; (up-chat-data-to-all "Ranged units found: %d" g: gl-local-total)
+)
+
+(defrule
+	(current-age < castle-age)
+	(or (unit-type-count militia-line > 0)
+	(unit-type-count spearman-line > 0))
+	(or (unit-type-count scout-cavalry-line > 0)
+	(or (unit-type-count eagle-warrior-line > 0)
+	(unit-type-count camel-scout > 0)))
+	(up-compare-goal gl-military-advantage > -5)
+	(goal attack-now-goal 1)
+	(goal retreat-now-goal 0)
+	(up-compare-goal gl-local-total > 0)
+=>
+	(set-strategic-number sn-focus-player-number my-player-number)
+	(up-find-remote c: scout-type c: 16)
+	(up-clean-search search-remote object-data-distance search-order-desc)
+	(up-get-search-state gl-local-total)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	;(up-chat-data-to-all "Rams found: %d" g: gl-remote-total)
+)
+
+(defrule
+	(current-age < castle-age)
+	(or (unit-type-count militia-line > 0)
+	(unit-type-count spearman-line > 0))
+	(or (unit-type-count scout-cavalry-line > 0)
+	(or (unit-type-count eagle-warrior-line > 0)
+	(unit-type-count camel-scout > 0)))
+	(up-compare-goal gl-military-advantage > -5)
+	(goal attack-now-goal 1)
+	(goal retreat-now-goal 0)
+	(up-compare-goal gl-local-total > 0)
+	(up-compare-goal gl-remote-total > 0)
+	(timer-triggered t-6-sec)
+	(goal retreating-goal NO)
+=>
+	(up-target-objects 0 action-guard -1 -1)
+	;(chat-to-player my-player-number "Guarding Scout with militias")
+)
+
+;endregion
+
+;region Archers, Skirms & Scouts Micro ================================
+
+(defrule
+	(current-age < castle-age)
+	(or (unit-type-count archer-line > 0)
+	(unit-type-count skirmisher-line > 0))
+	(or (unit-type-count scout-cavalry-line > 0)
+	(or (unit-type-count eagle-warrior-line > 0)
+	(or (unit-type-count spearman-line > 0)
+	(or (unit-type-count militia-line > 0)
+	(unit-type-count camel-scout > 0)))))
+	(up-compare-goal gl-military-advantage > -5)
+	(goal attack-now-goal 1)
+	(goal retreat-now-goal 0)
+=>
+	(up-full-reset-search)
+	(up-find-local c: archer-line c: 40)
+	(up-find-local c: skirmisher-line c: 40)
+	(up-get-search-state gl-local-total)
+   ; (up-chat-data-to-all "Ranged units found: %d" g: gl-local-total)
+)
+
+(defrule
+	(current-age < castle-age)
+	(or (unit-type-count archer-line > 0)
+	(unit-type-count skirmisher-line > 0))
+	(or (unit-type-count scout-cavalry-line > 0)
+	(or (unit-type-count eagle-warrior-line > 0)
+	(or (unit-type-count spearman-line > 0)
+	(or (unit-type-count militia-line > 0)
+	(unit-type-count camel-scout > 0)))))
+	(up-compare-goal gl-military-advantage > -5)
+	(goal attack-now-goal 1)
+	(goal retreat-now-goal 0)
+	(up-compare-goal gl-local-total > 0)
+=>
+	(set-strategic-number sn-focus-player-number my-player-number)
+	(up-find-remote c: scout-type c: 10)
+	(up-find-remote c: militia-line c: 10)
+	(up-find-remote c: spearman-line c: 10)
+	(up-clean-search search-remote object-data-distance search-order-desc)
+	(up-get-search-state gl-local-total)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	;(up-chat-data-to-all "Rams found: %d" g: gl-remote-total)
+)
+
+(defrule
+	(current-age < castle-age)
+	(or (unit-type-count archer-line > 0)
+	(unit-type-count skirmisher-line > 0))
+	(or (unit-type-count scout-cavalry-line > 0)
+	(or (unit-type-count eagle-warrior-line > 0)
+	(or (unit-type-count spearman-line > 0)
+	(or (unit-type-count militia-line > 0)
+	(unit-type-count camel-scout > 0)))))
+	(up-compare-goal gl-military-advantage > -5)
+	(goal attack-now-goal 1)
+	(goal retreat-now-goal 0)
+	(up-compare-goal gl-local-total > 0)
+	(up-compare-goal gl-remote-total > 0)
+	(timer-triggered t-6-sec)
+	(goal retreating-goal NO)
+=>
+	(up-target-objects 0 action-guard -1 -1)
+	;(chat-to-player my-player-number "Guarding melee-units with ranged-units")
+)
+
+;endregion
+
 ;region Fast Castle Push Micro ========================================
 
 (defrule
@@ -15770,7 +15995,13 @@
 	(up-full-reset-search)
 	(up-find-local c: hand-cannoneer c: 40)
 	(up-find-local c: archer-line c: 40)
+	(up-find-local c: skirmisher-line c: 40)
+	(up-find-local c: knight-line c: 40)
 	(up-find-local c: cavalry-archer-line c: 40)
+	(up-find-local c: cavalry-archer-class c: 40)
+	(up-find-local c: cavalry-class c: 40)
+	(up-find-local c: archery-class c: 40)
+	(up-clean-search search-local -1 -1)
 	(up-get-search-state gl-local-total)
    ; (up-chat-data-to-all "Ranged units found: %d" g: gl-local-total)
 )
@@ -15819,7 +16050,7 @@
 	(up-compare-goal gl-remote-total > 0)
 	(timer-triggered t-6-sec)
 	(goal retreating-goal NO)
-	(game-time < 2100)
+	(game-time < 2400)
 =>
 	(up-target-objects 0 action-guard -1 -1)
 	;(chat-to-player my-player-number "Guarding Rams with ranged-units")
@@ -17073,8 +17304,7 @@
 
 (defrule
 	(current-age >= feudal-age)
-	(or (enemy-buildings-in-town)
-	(up-compare-goal gl-military-advantage > 0))
+	(enemy-buildings-in-town)
 	(players-building-type-count focus-player watch-tower-line >= 1)
 	(can-build-with-escrow siege-workshop)
 	(building-type-count-total siege-workshop < 1)
@@ -17088,8 +17318,7 @@
 
 (defrule
 	(current-age == feudal-age)
-	(or (enemy-buildings-in-town)
-	(up-compare-goal gl-military-advantage > 0))
+	(enemy-buildings-in-town)
 	(players-building-type-count focus-player watch-tower-line >= 1)
 	(can-train-with-escrow battering-ram-line)
 	(unit-type-count-total battering-ram-line < 2)
@@ -17129,9 +17358,9 @@
 	;(chat-to-player my-player-number "Making rams against enemy fortifications")
 )
 
-
 (defrule
 	(current-age >= castle-age)
+	(enemy-buildings-in-town)
 	(players-building-type-count focus-player watch-tower-line >= 1)
 	(can-build-with-escrow siege-workshop)
 	(building-type-count-total siege-workshop < 1)
@@ -19843,6 +20072,8 @@
 	))
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)
+	(set-goal f-villager-goal 27)
+	(set-goal c-villager-goal 100)
 	(set-goal gl-wall-tower 0)
 	(set-strategic-number sn-percent-building-cancellation 35)
 	(chat-to-player my-player-number "bad towerrush conditions, stop towerrushing")
@@ -19855,6 +20086,8 @@
 	(building-type-count-total donjon < 1)
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)
+	(set-goal f-villager-goal 27)
+	(set-goal c-villager-goal 100)
 	(set-goal gl-wall-tower 0)
 	(set-strategic-number sn-percent-building-cancellation 35)
 	(chat-to-player my-player-number "bad towerrush conditions, stop towerrushing")
@@ -19878,6 +20111,8 @@
 	(set-goal gl-wall-tower 0)
 	(chat-to-player my-player-number "disable tower-walling and delete pending towers")
 	(set-goal strategy-goal sg-fastcastle-uu)
+	(set-goal f-villager-goal 27)
+	(set-goal c-villager-goal 100)
 	(disable-self)
 )
 	
@@ -25063,6 +25298,7 @@
 	(up-find-local c: -1 c: 40)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-remove-objects search-local object-data-attack-stance == stance-no-attack)
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-total-number-units g:= gl-local-total)
 	(up-create-group 0 0 c: 0)
@@ -25090,6 +25326,7 @@
 	(up-reset-filters)
 	(up-set-group search-local c: 0)
 	(up-remove-objects search-local object-data-index != 0)
+	(up-remove-objects search-local object-data-attack-stance == stance-no-attack)
 	(up-set-target-object search-local c: 0)
 	;(up-set-target-object search-local g: gl-curr-local-unit)
 	(up-get-object-data object-data-id gl-curr-unit-id)
@@ -25168,6 +25405,7 @@
 	(up-find-local c: -1 c: 40)
 	(up-remove-objects search-local object-data-type == feudal-battering-ram)
 	(up-remove-objects search-local object-data-type == battering-ram)
+	(up-remove-objects search-local object-data-attack-stance == stance-no-attack)
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-total-number-units g:= gl-local-total)
 	(up-create-group 0 0 c: 0)
@@ -25301,6 +25539,7 @@
 	(up-remove-objects search-local object-data-type == elephant-archer)
 	(up-remove-objects search-local object-data-upgrade-type == elite-elephant-archer)
 	(up-remove-objects search-local object-data-upgrade-type == long-swordsman)
+	(up-remove-objects search-local object-data-attack-stance == stance-no-attack)
 	(set-goal split-rule-goal 51)
 	;(chat-to-player my-player-number "tc retreat test 1")
 )
@@ -25347,6 +25586,7 @@
 	(up-remove-objects search-local object-data-type == elephant-archer)
 	(up-remove-objects search-local object-data-upgrade-type == elite-elephant-archer)
 	(up-remove-objects search-local object-data-upgrade-type == long-swordsman)
+	(up-remove-objects search-local object-data-attack-stance == stance-no-attack)
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
@@ -25393,6 +25633,7 @@
 	(up-remove-objects search-local object-data-upgrade-type == light-cavalry)
 	(up-remove-objects search-local object-data-upgrade-type == hussar)
 	(up-remove-objects search-local object-data-upgrade-type == winged-hussar)
+	(up-remove-objects search-local object-data-attack-stance == stance-no-attack)
 	(set-goal split-rule-goal 53)
 	;(chat-to-player my-player-number "tc retreat test 4")
 )
@@ -25439,6 +25680,7 @@
 	(up-remove-objects search-local object-data-upgrade-type == light-cavalry)
 	(up-remove-objects search-local object-data-upgrade-type == hussar)
 	(up-remove-objects search-local object-data-upgrade-type == winged-hussar)
+	(up-remove-objects search-local object-data-attack-stance == stance-no-attack)
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
@@ -25450,7 +25692,8 @@
 (defrule ;imperial-age rules
 	(or (current-age != imperial-age)	
 		(and (current-age == imperial-age)
-		(military-population >= 30)))
+		(or (military-population >= 30)
+		(up-compare-goal gl-military-advantage >= 40))))
 =>	
 	(up-jump-rule 8)
 )
@@ -25485,6 +25728,7 @@
 	(up-remove-objects search-local object-data-class == infantry-class)
 	(up-remove-objects search-local object-data-type == elephant-archer)
 	(up-remove-objects search-local object-data-upgrade-type == elite-elephant-archer)
+	(up-remove-objects search-local object-data-attack-stance == stance-no-attack)
 	(set-goal split-rule-goal 51)
 	;(chat-to-player my-player-number "tc retreat test 1")
 )
@@ -25531,6 +25775,7 @@
 	(up-remove-objects search-local object-data-type == elephant-archer)
 	(up-remove-objects search-local object-data-upgrade-type == elite-elephant-archer)
 	(up-remove-objects search-local object-data-upgrade-type == long-swordsman)
+	(up-remove-objects search-local object-data-attack-stance == stance-no-attack)
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
@@ -25577,6 +25822,7 @@
 	(up-remove-objects search-local object-data-upgrade-type == light-cavalry)
 	(up-remove-objects search-local object-data-upgrade-type == hussar)
 	(up-remove-objects search-local object-data-upgrade-type == winged-hussar)
+	(up-remove-objects search-local object-data-attack-stance == stance-no-attack)
 	(set-goal split-rule-goal 53)
 	;(chat-to-player my-player-number "tc retreat test 4")
 )
@@ -25623,6 +25869,7 @@
 	(up-remove-objects search-local object-data-upgrade-type == light-cavalry)
 	(up-remove-objects search-local object-data-upgrade-type == hussar)
 	(up-remove-objects search-local object-data-upgrade-type == winged-hussar)
+	(up-remove-objects search-local object-data-attack-stance == stance-no-attack)
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
@@ -25760,6 +26007,7 @@
 	(up-remove-objects search-local object-data-upgrade-type == heavy-eagle-warrior)
 	(up-remove-objects search-local object-data-type == huskarl)
 	;(up-remove-objects search-local object-data-class == cavalry-class)
+	(up-remove-objects search-local object-data-attack-stance == stance-no-attack)
 	(set-goal split-rule-goal 3)
 )
 
@@ -25798,6 +26046,7 @@
 	(up-remove-objects search-local object-data-upgrade-type == heavy-eagle-warrior)
 	(up-remove-objects search-local object-data-type == huskarl)
 	;(up-remove-objects search-local object-data-class == cavalry-class)
+	(up-remove-objects search-local object-data-attack-stance == stance-no-attack)
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
@@ -25838,6 +26087,7 @@
 	(up-remove-objects search-local object-data-type == huskarl)
 	(up-remove-objects search-local object-data-upgrade-type == elite-huskarl)
 	(up-remove-objects search-local object-data-class == cavalry-class)
+	(up-remove-objects search-local object-data-attack-stance == stance-no-attack)
 	(set-goal split-rule-goal 3)
 )
 
@@ -25878,6 +26128,7 @@
 	(up-remove-objects search-local object-data-type == huskarl)
 	(up-remove-objects search-local object-data-upgrade-type == elite-huskarl)
 	(up-remove-objects search-local object-data-class == cavalry-class)
+	(up-remove-objects search-local object-data-attack-stance == stance-no-attack)
 	;(set-strategic-number sn-disable-attack-groups 1)
 	(up-target-point object-point-x action-move -1 stance-no-attack)
 	;(up-target-point object-point-x action-move formation-line stance-no-attack)
@@ -25985,7 +26236,7 @@
 	(up-object-data object-data-hitpoints <= 170))
 =>
 	;(chat-to-all "Test 2")
-	(up-jump-rule 8)
+	(up-jump-rule 9)
 )	
 
 (defrule
@@ -26016,15 +26267,26 @@
 	(up-remove-objects search-local object-data-upgrade-type == elite-huskarl)
 	(up-remove-objects search-local object-data-type == armored-elephant)
 	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
-	(up-get-search-state gl-local-total)
-	(up-modify-goal gl-total-number-units g:= gl-local-total)
-	(up-create-group 0 0 c: 0)
-	(up-modify-group-flag 1 c: 0)
 	(set-goal split-rule-goal 6)
 )
 
 (defrule
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
 	(goal split-rule-goal 6)
+	(or (up-point-contains enemy-tower-point-x c: watch-tower)
+	(up-point-contains enemy-tower-point-x c: donjon))
+=>
+	(up-remove-objects search-local object-data-attack-stance == stance-no-attack)
+	(up-get-search-state gl-local-total)
+	(up-modify-goal gl-total-number-units g:= gl-local-total)
+	(up-create-group 0 0 c: 0)
+	(up-modify-group-flag 1 c: 0)
+	(set-goal split-rule-goal 7)
+)
+
+(defrule
+	(goal split-rule-goal 7)
 	(or (players-building-type-count focus-player watch-tower >= 1)
 	(players-building-type-count focus-player donjon >= 1))
 	(or (up-point-contains enemy-tower-point-x c: watch-tower)
@@ -26036,13 +26298,13 @@
 (defrule
 	;(up-set-target-object search-local c: 0)
 	(up-group-size c: 0 > 0)
-	(goal split-rule-goal 6)
+	(goal split-rule-goal 7)
 =>
 	(up-get-rule-id gl-rule-jump-id)
 )
 
 (defrule	
-	(goal split-rule-goal 6)
+	(goal split-rule-goal 7)
 	;(up-set-target-object search-local g: gl-curr-local-unit)
 	;(up-set-target-object search-local c: 0)
 	(up-group-size c: 0 > 0)
@@ -26061,11 +26323,11 @@
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
 	(enable-timer retreating-timer 2)
-	(set-goal split-rule-goal 7)
+	(set-goal split-rule-goal 8)
 )
 
 (defrule
-	(goal split-rule-goal 7)
+	(goal split-rule-goal 8)
 =>	
 	(up-full-reset-search)
 	(up-add-object-by-id search-local g: gl-curr-unit-id) 
@@ -26087,7 +26349,7 @@
 (defrule
 	(up-compare-goal gl-curr-local-unit g:< gl-total-number-units)
 	(up-compare-goal gl-rule-jump-id != -1)
-	(goal split-rule-goal 7)
+	(goal split-rule-goal 8)
 =>
 	(set-goal split-rule-goal 6)
 	;(up-modify-goal gl-curr-local-unit c:+ 1)
@@ -26139,15 +26401,26 @@
 	(up-remove-objects search-local object-data-upgrade-type == elite-huskarl)
 	(up-remove-objects search-local object-data-type == armored-elephant)
 	(up-remove-objects search-local object-data-upgrade-type == siege-elephant)
+	(set-goal split-rule-goal 9)
+)
+
+(defrule
+	(or (players-building-type-count focus-player watch-tower >= 1)
+	(players-building-type-count focus-player donjon >= 1))
+	(goal split-rule-goal 9)
+	(or (up-point-contains enemy-tower-point-x c: watch-tower)
+	(up-point-contains enemy-tower-point-x c: donjon))
+=>
+	(up-remove-objects search-local object-data-attack-stance == stance-no-attack)
 	(up-get-search-state gl-local-total)
 	(up-modify-goal gl-total-number-units g:= gl-local-total)
 	(up-create-group 0 0 c: 0)
 	(up-modify-group-flag 1 c: 0)
-	(set-goal split-rule-goal 8)
+	(set-goal split-rule-goal 10)
 )
 
 (defrule
-	(goal split-rule-goal 8)
+	(goal split-rule-goal 10)
 	(or (players-building-type-count focus-player watch-tower >= 1)
 	(players-building-type-count focus-player donjon >= 1))
 	(or (up-point-contains enemy-tower-point-x c: watch-tower)
@@ -26159,13 +26432,13 @@
 (defrule
 	;(up-set-target-object search-local c: 0)
 	(up-group-size c: 0 > 0)
-	(goal split-rule-goal 8)
+	(goal split-rule-goal 10)
 =>
 	(up-get-rule-id gl-rule-jump-id)
 )
 
 (defrule	
-	(goal split-rule-goal 8)
+	(goal split-rule-goal 10)
 	;(up-set-target-object search-local g: gl-curr-local-unit)
 	;(up-set-target-object search-local c: 0)
 	(up-group-size c: 0 > 0)
@@ -26184,11 +26457,11 @@
 	(up-bound-point object-point-x object-point-x)	
 	(set-goal retreating-goal YES)
 	(enable-timer retreating-timer 2)
-	(set-goal split-rule-goal 9)
+	(set-goal split-rule-goal 11)
 )
 
 (defrule
-	(goal split-rule-goal 9)
+	(goal split-rule-goal 11)
 =>	
 	;(up-full-reset-search)
 	(up-reset-search 1 1 0 0)
@@ -26212,9 +26485,9 @@
 (defrule
 	(up-compare-goal gl-curr-local-unit g:< gl-total-number-units)
 	(up-compare-goal gl-rule-jump-id != -1)
-	(goal split-rule-goal 9)
+	(goal split-rule-goal 11)
 =>
-	(set-goal split-rule-goal 8)
+	(set-goal split-rule-goal 9)
 	;(up-modify-goal gl-curr-local-unit c:+ 1)
 	(up-jump-direct g: gl-rule-jump-id)
 )
@@ -31078,8 +31351,8 @@
 	(goal gl-house 0)
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)
-	(set-goal d-villager-goal 26)
-	(set-goal f-villager-goal 28)
+	(set-goal d-villager-goal 25)
+	(set-goal f-villager-goal 26)
 	(set-goal c-villager-goal 100)
 	(up-modify-goal gl-feudalage-safe g:= f-villager-goal)
 	(up-modify-goal gl-feudalage-safe c:- 2)
@@ -34074,6 +34347,7 @@
 
 (defrule
 	(up-research-status c: feudal-age == research-pending)
+	(up-compare-sn sn-maximum-town-size < 15)
 =>
     (set-strategic-number sn-maximum-town-size 15)
 	(up-modify-goal gl-standard-townsize c:= 15)
@@ -34517,7 +34791,8 @@
 (defrule
 	(or (civ-selected lithuanians)
 	(or (civ-selected aztec)
-	(civ-selected burgundians)))
+	(or (civ-selected bohemians)
+	(civ-selected burgundians))))
 	(up-compare-goal gl-military-advantage >= -5)
 	(or (not (goal strategy-goal sg-fast-imp))
 	(building-type-count castle >= 1))
@@ -34747,13 +35022,12 @@
 #end-if
 
 #load-if-defined ARENA-MAP
-#load-if-defined UP-2-PLAYER-GAME
+#load-if-not-defined UP-POCKET-POSITION
 
 (defrule
 	(up-research-status c: castle-age >= research-pending)
 	(goal strategy-goal sg-fastcastle-uu)
 	(up-group-size c: 5 < 8)
-	(not (town-under-attack))
 =>
 	(up-full-reset-search)
 	(up-reset-group c: 5)
@@ -34776,7 +35050,7 @@
 =>
 	(up-create-group 0 0 c: 5)
 	(up-modify-group-flag 1 c: 5)
-	;(chat-to-player my-player-number "setting up group of villagers for castle drop")
+	(chat-to-player my-player-number "setting up group of villagers for castle drop")
 )
 
 (defrule
@@ -34838,7 +35112,8 @@
 		(up-compare-goal gl-military-advantage >= -5))
 	(players-building-type-count focus-player castle < 1)
 	(not (enemy-buildings-in-town))
-	(not (town-under-attack))
+	(or (not (town-under-attack))
+	(up-compare-goal gl-military-advantage >= -8))
 =>
 	(up-full-reset-search)
 	(up-filter-status c: status-pending c: list-active)
@@ -34925,7 +35200,8 @@
 		(up-compare-goal gl-military-advantage >= -5))
 	(players-building-type-count focus-player castle < 1)
 	(not (enemy-buildings-in-town))
-	(not (town-under-attack))
+	(or (not (town-under-attack))
+	(up-compare-goal gl-military-advantage >= -8))
 =>
 	(up-full-reset-search)
 	(up-filter-status c: status-pending c: list-active)
@@ -35009,7 +35285,8 @@
 		(up-compare-goal gl-military-advantage >= -5))
 	(players-building-type-count focus-player castle < 1)
 	(not (enemy-buildings-in-town))
-	(not (town-under-attack))
+	(or (not (town-under-attack))
+	(up-compare-goal gl-military-advantage >= -8))
 =>
 	(up-full-reset-search)
 	(up-filter-status c: status-pending c: list-active)
@@ -35103,7 +35380,8 @@
 		(up-compare-goal gl-military-advantage >= -5))
 	(players-building-type-count focus-player castle < 1)
 	(not (enemy-buildings-in-town))
-	(not (town-under-attack))
+	(or (not (town-under-attack))
+	(up-compare-goal gl-military-advantage >= -8))
 =>
 	(up-full-reset-search)
 	(up-filter-status c: status-pending c: list-active)
@@ -35791,10 +36069,26 @@
 	(current-age == castle-age)
 	(game-time >= 2400)
 	(can-build town-center)
+	(not (goal sg-fastcastle-boom YES))
 	(not (goal strategy-goal sg-fast-imp))
 	(building-type-count-total town-center == 3)
 	(up-compare-goal gl-military-advantage >= -12)
 =>
+	(set-strategic-number sn-town-center-placement lumber-camp)
+	(up-assign-builders c: town-center-foundation c: 6)
+	(up-assign-builders c: town-center c: 6)
+	(build town-center)
+)
+
+(defrule
+	(current-age == castle-age)
+	(can-build-with-escrow town-center)
+	(goal strategy-goal sg-fastcastle-gu)
+	(goal sg-fastcastle-boom YES)
+	(building-type-count-total town-center == 3)
+=>
+	(up-modify-escrow wood c:- 275)
+	(up-modify-escrow stone c:- 100)
 	(set-strategic-number sn-town-center-placement lumber-camp)
 	(up-assign-builders c: town-center-foundation c: 6)
 	(up-assign-builders c: town-center c: 6)
@@ -35837,10 +36131,12 @@
 (defrule
 	(current-age == castle-age)
 	(goal sg-fastcastle-boom YES)
-	(can-build town-center)
+	(can-build-with-escrow town-center)
 	(building-type-count-total town-center == 3)
 	(building-type-count-total town-center < 4)
 =>
+	(up-modify-escrow wood c:- 275)
+	(up-modify-escrow stone c:- 100)
 	(set-strategic-number sn-town-center-placement lumber-camp)
 	(up-assign-builders c: town-center-foundation c: 6)
 	(up-assign-builders c: town-center c: 6)
@@ -35996,20 +36292,6 @@
 	(build-forward siege-workshop)
 	;(up-set-placement-data my-player-number -1 c: 34)
   ;  (up-build place-control 0 c: siege-workshop)
-)
-
-(defrule	
-	(current-age == castle-age)
-	(can-build siege-workshop)
-	(building-type-count-total siege-workshop < 1)
-	(military-population >= 10)
-	(or (players-current-age focus-player < castle-age)
-	(up-compare-goal gl-military-advantage >= 12))
-=>
-	(up-assign-builders c: siege-workshop c: 2)
-	;(build-forward siege-workshop)
-	(up-set-placement-data my-player-number -1 c: 34)
-    (up-build place-control 0 c: siege-workshop)
 )
 
 #load-if-defined ARENA-MAP
@@ -38462,7 +38744,7 @@
 	(up-get-object-data object-data-id gl-gate-id)
 	(up-get-point position-object gl-temp-x)
 	;(chat-to-all "set target building id")
-	(set-strategic-number sn-wall-targeting-mode 0)
+	;(set-strategic-number sn-wall-targeting-mode 0)
 	;(disable-self)
 )
 
@@ -38715,6 +38997,8 @@
 
 (defrule
 	(up-compare-goal gl-archery-class-units > 5)
+	(or (civilian-population g:< f-villager-goal)
+	(up-research-status c: castle-age >= research-pending))
 	(up-research-status c: ri-fletching >= research-pending)
 	(can-research ri-padded-archer-armor)
 =>
@@ -38878,6 +39162,8 @@
 
 (defrule
 	(unit-type-count-total archer-line >= 3)
+	(or (civilian-population g:< f-villager-goal)
+	(up-research-status c: castle-age >= research-pending))
 	(up-research-status c: ri-fletching >= research-pending)
 	(can-research ri-padded-archer-armor)
 =>
@@ -39026,6 +39312,8 @@
 
 (defrule
 	(unit-type-count-total skirmisher-line >= 3)
+	(or (civilian-population g:< f-villager-goal)
+	(up-research-status c: castle-age >= research-pending))
 	(up-research-status c: ri-fletching >= research-pending)
 	(can-research ri-padded-archer-armor)
 =>
