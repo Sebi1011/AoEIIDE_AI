@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2024
 
 ;Version: 1.2.6
-;last update: 4th July 2024
+;last update: 5th July 2024
 
 ;region Chats at match-start =======================================
 
@@ -9424,6 +9424,8 @@
 	(research ri-loom)
 )
 
+#end-if
+
 #load-if-not-defined UP-ALLY-IN-GAME
 
 (defrule
@@ -9459,7 +9461,6 @@
 	(chat-local-to-self "Stop going for relics, starting to boom")
 )
 
-#end-if
 #end-if
 
 #load-if-not-defined ARENA-MAP
@@ -9521,10 +9522,10 @@
 	;(up-research-status c: castle-age >= research-pending)
 	(game-time > 60)
 	(current-age < imperial-age)
-	(random-number <= 50)
+	(random-number <= 40)
 =>	
-	(set-goal sg-fastcastle-boom YES)
-	(chat-to-allies "I will go for a boom")
+	(set-goal sg-fastcastle-boom NO)
+	(chat-to-player my-player-number "I will go for the relics")
 	(disable-self)
 )
 
@@ -9533,10 +9534,23 @@
 	;(up-research-status c: castle-age >= research-pending)
 	(game-time > 60)
 	(current-age < imperial-age)
-	(random-number > 50)
+	(random-number > 40)
+	(random-number <= 80)
 =>	
 	(set-goal sg-fastcastle-boom -1)
-	(chat-to-allies "I will support with army")
+	(chat-to-player my-player-number "I will go for a push")
+	(disable-self)
+)
+
+(defrule
+	(goal strategy-goal sg-fastcastle-gu)
+	;(up-research-status c: castle-age >= research-pending)
+	(game-time > 60)
+	(current-age < imperial-age)
+	(random-number > 80)
+=>	
+	(set-goal sg-fastcastle-boom -1)
+	(chat-to-player my-player-number "I will go for a boom")
 	(disable-self)
 )
 #end-if
@@ -13885,7 +13899,7 @@
 	(up-modify-sn sn-focus-player-number c:= my-player-number)
 	(up-find-remote c: town-center c: 2)
 	(up-target-objects 0 action-garrison -1 -1)
-	(chat-local-to-self "Saving villager to TC")
+	(chat-local-to-self "Garrison villager in TC")
 	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 )	
 
@@ -26760,7 +26774,7 @@
 	(set-goal retreating-goal YES)
 	;(up-set-target-object search-local g: gl-scout-index)
 	;(up-remove-objects search-local object-data-index g:!= gl-scout-index)
-	(enable-timer scout-retreat-timer 3)
+	(enable-timer scout-retreat-timer 2)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
 	;(chat-local-to-self "retreat with scout")
 )
@@ -26891,7 +26905,7 @@
 	(set-goal retreating-goal YES)
 	;(up-set-target-object search-local g: gl-scout-index)
 	;(up-remove-objects search-local object-data-index g:!= gl-scout-index)
-	(enable-timer scout-retreat-timer 6)
+	(enable-timer scout-retreat-timer 4)
 	(up-target-point gl-starting-tc-x action-move -1 stance-no-attack)
 	;(chat-local-to-self "retreat with scout 2")
 )
@@ -27450,7 +27464,7 @@
 	(or (civ-selected hun)
 	(civ-selected chinese)))
 =>
-	(up-jump-rule 12)
+	(up-jump-rule 9)
 )
 
 (defrule
@@ -27535,55 +27549,21 @@
 =>
 	(up-get-point position-object gl-temp-x)
 	(up-set-target-point gl-temp-x)
+	;(chat-to-all "Test 1")
 	(disable-self)
 )
 
 (defrule
-	(up-compare-goal gl-temp >= 0)
-	(up-compare-goal gl-temp-two >= 0)
+	(up-point-distance gl-temp-x gl-starting-tc-x < 11)
+	(building-type-count-total house < 1)
+	(game-time < 10)
 =>
-	(up-modify-goal gl-temp-x c:+ 3)
-	(up-modify-goal gl-temp-y c:+ 3)
 	;(up-send-flare gl-temp-x)
-	;(up-chat-data-to-all "house-x: %d" g: gl-temp-x)
-	;(up-chat-data-to-all "house-y: %d" g: gl-temp-y)
-	(disable-self)
-)
-
-(defrule
-	(up-compare-goal gl-temp < 0)
-	(up-compare-goal gl-temp-two >= 0)
-=>
-	(up-modify-goal gl-temp-x c:- 3)
-	(up-modify-goal gl-temp-y c:+ 3)
+	(up-lerp-tiles gl-temp-x gl-starting-tc-x c: -1)
+	;(up-chat-data-to-all "gl-temp-x: %d" g: gl-temp-x)
+	;(up-cross-tiles gl-temp-x gl-starting-tc-x c:- 1)
 	;(up-send-flare gl-temp-x)
-	;(up-chat-data-to-all "house-x: %d" g: gl-temp-x)
-	;(up-chat-data-to-all "house-y: %d" g: gl-temp-y)
-	(disable-self)
-)
-
-(defrule
-	(up-compare-goal gl-temp >= 0)
-	(up-compare-goal gl-temp-two < 0)
-=>
-	(up-modify-goal gl-temp-x c:+ 3)
-	(up-modify-goal gl-temp-y c:- 3)
-	;(up-send-flare gl-temp-x)
-;	(up-chat-data-to-all "house-x: %d" g: gl-temp-x)
-	;(up-chat-data-to-all "house-y: %d" g: gl-temp-y)
-	(disable-self)
-)
-
-(defrule
-	(up-compare-goal gl-temp < 0)
-	(up-compare-goal gl-temp-two < 0)
-=>
-	(up-modify-goal gl-temp-x c:- 3)
-	(up-modify-goal gl-temp-y c:- 3)
-	;(up-send-flare gl-temp-x)
-;	(up-chat-data-to-all "house-x: %d" g: gl-temp-x)
-;	(up-chat-data-to-all "house-y: %d" g: gl-temp-y)
-	(disable-self)
+	(up-jump-rule -1)
 )
 
 (defrule
@@ -27594,12 +27574,16 @@
 	(population-headroom > 0)
     (can-build house)
 	(up-can-build-line 0 gl-temp-x c: house)
+	(up-point-distance gl-temp-x gl-starting-tc-x >= 11)
+	(up-point-distance gl-temp-x gl-starting-tc-x < 16)
 =>
 	(up-assign-builders c: house c: 2)
     (up-build-line gl-temp-x gl-temp-x c: house)
 	;(up-set-placement-data my-player-number town-center c: -10)
     ;(up-build place-control 0 c: house)
-	;(chat-to-player my-player-number "Building first house")
+	(up-send-flare gl-starting-tc-x)
+	(up-send-flare gl-temp-x)
+	(chat-to-player my-player-number "Building first house")
 )
 
 (defrule
@@ -27610,12 +27594,14 @@
 	(population-headroom > 0)
 	(not (up-can-build-line 0 gl-temp-x c: house))
 	(can-build house)
+	(or (up-point-distance gl-temp-x gl-starting-tc-x >= 16)
+	(game-time >= 10))
 =>
 	(up-assign-builders c: house c: 2)
     (build house)
 	;(up-set-placement-data my-player-number town-center c: -10)
     ;(up-build place-control 0 c: house)
-	;(chat-to-player my-player-number "Building first house after failed attempt")
+	(chat-to-player my-player-number "Building first house after failed attempt")
 )
 
 
@@ -27627,7 +27613,7 @@
 	(or (civ-selected hun)
 	(civ-selected chinese))))
 =>
-	(up-jump-rule 11)
+	(up-jump-rule 9)
 )
 
 (defrule
@@ -27716,51 +27702,18 @@
 )
 
 (defrule
-	(up-compare-goal gl-temp >= 0)
-	(up-compare-goal gl-temp-two >= 0)
+	(up-point-distance gl-temp-x gl-starting-tc-x < 11)
+    (building-type-count-total house < 2)
+    (up-pending-objects c: house < 2)
+	(game-time < 10)
 =>
-	(up-modify-goal gl-temp-x c:+ 3)
-	(up-modify-goal gl-temp-y c:+ 3)
-	;(up-send-flare gl-temp-x)
-	;(up-chat-data-to-all "house-x: %d" g: gl-temp-x)
-	;(up-chat-data-to-all "house-y: %d" g: gl-temp-y)
-	(disable-self)
-)
-
-(defrule
-	(up-compare-goal gl-temp < 0)
-	(up-compare-goal gl-temp-two >= 0)
-=>
-	(up-modify-goal gl-temp-x c:- 3)
-	(up-modify-goal gl-temp-y c:+ 3)
-	;(up-send-flare gl-temp-x)
-	;(up-chat-data-to-all "house-x: %d" g: gl-temp-x)
-	;(up-chat-data-to-all "house-y: %d" g: gl-temp-y)
-	(disable-self)
-)
-
-(defrule
-	(up-compare-goal gl-temp >= 0)
-	(up-compare-goal gl-temp-two < 0)
-=>
-	(up-modify-goal gl-temp-x c:+ 3)
-	(up-modify-goal gl-temp-y c:- 3)
-	;(up-send-flare gl-temp-x)
-	;(up-chat-data-to-all "house-x: %d" g: gl-temp-x)
-	;(up-chat-data-to-all "house-y: %d" g: gl-temp-y)
-	(disable-self)
-)
-
-(defrule
-	(up-compare-goal gl-temp < 0)
-	(up-compare-goal gl-temp-two < 0)
-=>
-	(up-modify-goal gl-temp-x c:- 3)
-	(up-modify-goal gl-temp-y c:- 3)
-	;(up-send-flare gl-temp-x)
-	;(up-chat-data-to-all "house-x: %d" g: gl-temp-x)
-	;(up-chat-data-to-all "house-y: %d" g: gl-temp-y)
-	(disable-self)
+	(up-send-flare gl-temp-x)
+	(up-lerp-tiles gl-temp-x gl-starting-tc-x c: -1)
+	(up-chat-data-to-all "gl-temp-x: %d" g: gl-temp-x)
+	(up-chat-data-to-all "tc-x: %d" g: gl-starting-tc-x)
+	;(up-cross-tiles gl-temp-x gl-starting-tc-x c:- 1)
+	(up-send-flare gl-temp-x)
+	(up-jump-rule -1)
 )
 
 (defrule
@@ -27771,30 +27724,36 @@
 	(population-headroom > 0)
     (can-build house)
 	(up-can-build-line 0 gl-temp-x c: house)
+	(up-point-distance gl-temp-x gl-starting-tc-x >= 11)
+	(up-point-distance gl-temp-x gl-starting-tc-x < 16)
 =>
 	(up-assign-builders c: house c: 1)
     (up-build-line gl-temp-x gl-temp-x c: house)
 	;(up-set-placement-data my-player-number town-center c: -10)
     ;(up-build place-control 0 c: house)
-	;(chat-to-player my-player-number "Building second house")
+	(up-send-flare gl-starting-tc-x)
+	(up-send-flare gl-temp-x)
+	(chat-to-player my-player-number "Building second house")
 	(disable-self)
 )
 
-; (defrule
-	; (building-type-count-total town-center >= 1)
-    ; (building-type-count-total house < 2)
-    ; (up-pending-objects c: house < 2)
-	; (housing-headroom < 3)
-	; (population-headroom > 0)
-	; (not (up-can-build-line 0 gl-temp-x c: house))
-; =>
-	; (up-assign-builders c: house c: 1)
-    ; (build house)
-	; ;(up-set-placement-data my-player-number town-center c: -10)
-    ; ;(up-build place-control 0 c: house)
-	; (chat-to-player my-player-number "Building second house after failed attempt")
-	; (disable-self)
-; )
+(defrule
+	(building-type-count-total town-center >= 1)
+    (building-type-count-total house < 2)
+    (up-pending-objects c: house < 2)
+	(housing-headroom < 3)
+	(population-headroom > 0)
+	(not (up-can-build-line 0 gl-temp-x c: house))
+	(or (up-point-distance gl-temp-x gl-starting-tc-x >= 16)
+	(game-time >= 10))
+=>
+	(up-assign-builders c: house c: 1)
+    (build house)
+	;(up-set-placement-data my-player-number town-center c: -10)
+    ;(up-build place-control 0 c: house)
+	(chat-to-player my-player-number "Building second house after failed attempt")
+	(disable-self)
+)
 
 ;end 2. house
 
@@ -28051,7 +28010,7 @@
 	(up-compare-goal gl-loop-counter g:<= gl-curr-tree)
 =>
 	(up-modify-goal gl-camp-distance-setter c:+ 4)
-	;(up-chat-data-to-player my-player-number "Curr distance: %d" g: gl-camp-distance-setter)
+	(up-chat-data-to-player my-player-number "Curr distance: %d" g: gl-camp-distance-setter)
 	(up-jump-rule -2)
 )
 
@@ -28098,7 +28057,7 @@
 => 
 	(up-lerp-tiles gl-camp-x gl-starting-tc-x c: 1)
 	;(chat-to-all "bring lc closer to tc")
-	;(up-send-flare gl-camp-x)
+	(up-send-flare gl-camp-x)
 	(up-full-reset-search)
 	(up-set-target-point gl-camp-x)
 	(up-filter-distance c: -1 c: 3)
@@ -28146,7 +28105,7 @@
 	(up-compare-goal gl-local-total < 1)
 	(up-can-build-line 0 gl-camp-x c: lumber-camp)
 =>
-	;(chat-to-all "found a spot to build")
+	(chat-to-all "found a spot to build")
 	(up-jump-rule 1)
 )
 
@@ -28233,9 +28192,9 @@
 =>
 	(set-strategic-number sn-allow-adjacent-dropsites 1)
 	(set-strategic-number sn-mule-cart-dropsite-placement lumber-camp)
-	;(up-send-flare gl-camp-x)
+	(up-send-flare gl-camp-x)
 	(up-build-line gl-camp-x gl-camp-x c: lumber-camp)
-	;(chat-to-all "build lumber-camp")
+	(chat-to-all "build lumber-camp")
 	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
 	;(build lumber-camp)
 )
@@ -31352,7 +31311,7 @@
 =>
 	(set-goal strategy-goal sg-fastcastle-uu)
 	(set-goal d-villager-goal 25)
-	(set-goal f-villager-goal 26)
+	(set-goal f-villager-goal 27)
 	(set-goal c-villager-goal 100)
 	(up-modify-goal gl-feudalage-safe g:= f-villager-goal)
 	(up-modify-goal gl-feudalage-safe c:- 2)
@@ -33140,7 +33099,7 @@
 	(not (town-under-attack))
 	(current-age == feudal-age)
 	(civilian-population g:< f-villager-goal)
-	(players-building-count focus-player > 0)
+	;(players-building-count focus-player > 0)
 	(or (military-population >= 6)
 	(up-compare-goal gl-military-advantage >= 4))
 	(up-compare-goal gl-military-advantage >= -1)
@@ -33202,7 +33161,7 @@
 	(goal meso-civ NO)
 	(current-age == feudal-age)
 	(not (town-under-attack))
-	(players-building-count focus-player > 0)
+	;(players-building-count focus-player > 0)
 	(not (up-research-status c: castle-age >= research-pending))
 	(or (military-population >= 4)
 	(up-compare-goal gl-military-advantage >= 3))
@@ -33233,7 +33192,7 @@
 	(goal meso-civ YES)
 	(current-age == feudal-age)
 	(not (town-under-attack))
-	(players-building-count focus-player > 0)
+	;(players-building-count focus-player > 0)
 	(not (up-research-status c: castle-age >= research-pending))
 	(or (military-population >= 4)
 	(up-compare-goal gl-military-advantage >= 3))
@@ -33267,7 +33226,7 @@
 	(goal meso-civ NO)
 	(current-age == feudal-age)
 	(not (town-under-attack))
-	(players-building-count focus-player > 0);!
+	;(players-building-count focus-player > 0);!
 	(up-research-status c: castle-age < research-pending)
 	(military-population >= 3)
 	(up-compare-goal gl-military-advantage >= -2);!
@@ -33296,7 +33255,7 @@
 	(goal meso-civ YES)
 	(current-age == feudal-age)
 	(not (town-under-attack))
-	(players-building-count focus-player > 0)
+	;(players-building-count focus-player > 0)
 	(up-research-status c: castle-age < research-pending)
 	(military-population >= 3)
 	(up-compare-goal gl-military-advantage >= -2)
@@ -33324,7 +33283,7 @@
 	(goal meso-civ NO)
 	(current-age == feudal-age)
 	(not (town-under-attack))
-	(players-building-count focus-player > 0)
+	;(players-building-count focus-player > 0)
 	(not (up-research-status c: castle-age >= research-pending))
 	(or (military-population >= 3)
 	(up-compare-goal gl-military-advantage >= 3))
@@ -33354,7 +33313,7 @@
 	(goal meso-civ YES)
 	(current-age == feudal-age)
 	(not (town-under-attack))
-	(players-building-count focus-player > 0)
+	;(players-building-count focus-player > 0)
 	(not (up-research-status c: castle-age >= research-pending))
 	(or (military-population >= 4)
 	(up-compare-goal gl-military-advantage >= 3))
