@@ -1,7 +1,7 @@
 ;ZebbaAI - Created by Zebba 2021 - 2024
 
 ;Version: 1.2.6
-;last update: 5th July 2024
+;last update: 13th July 2024
 
 ;region Chats at match-start =======================================
 
@@ -13590,17 +13590,18 @@
 
 ;endregion
 
-;region Building walls on Arena ====================================
+;region Villager Quickwalls ========================================
 
 ;todo:
-;- extend walls in imp
-;--- from main tc, go towards front gate
-;--- build walls & gates on height of front gate
-;- build backup-walls when being castle dropped 
-;--- get castle position
-;--- calculate wall spots
-;--- delete objects in new-wall line 
-;--- buy missing stone, sell resources if no gold
+; - search for villagers under attack
+; - get precise point of attacked villagers and attacker
+; - check if enough wood for 4 palisades is available
+; - get closest angle within a tile, towards attacker, get precise point
+; - send villager to target point
+; - build first 2 palisade walls closest to opponent, abort each palisade if it has 7hp
+; - build other 2 palisades
+; - in case a palisade gets attacked, repair palisade
+; - delete all 4 palisades after a specific amount of time if villager is not attacked anymore
 
 ;endregion
 
@@ -29732,7 +29733,7 @@
 =>
 	(set-goal boar-hunting 0)
 	(up-gather-inside c: town-center c: 0)
-	(set-strategic-number sn-enable-boar-hunting 1); enable hunting of all kinds
+	;(set-strategic-number sn-enable-boar-hunting 1); enable hunting of all kinds
 	(set-strategic-number sn-minimum-boar-hunt-group-size 1)
 	(set-strategic-number sn-minimum-number-hunters 2)
 	(set-strategic-number sn-disable-villager-garrison 0)
@@ -30072,7 +30073,7 @@
 	(up-ungarrison c: town-center)
 	(up-gather-inside c: town-center c: 0)
 	(set-goal boar-hunting 0)
-	(set-strategic-number sn-enable-boar-hunting 1); enable hunting of all kinds
+	;(set-strategic-number sn-enable-boar-hunting 1); enable hunting of all kinds
 	(set-strategic-number sn-minimum-boar-hunt-group-size 1)
 	(set-strategic-number sn-minimum-number-hunters 2)
 	(set-strategic-number sn-disable-villager-garrison 0)
@@ -34323,7 +34324,7 @@
 )
 
 (defrule
-	(current-age >= feudal-age)
+	(current-age >= castle-age)
 	(up-compare-goal gl-military-advantage >= -1)
 	(up-compare-sn sn-enable-boar-hunting == 2)
 =>
@@ -34331,7 +34332,7 @@
 )
 
 (defrule
-	(current-age >= feudal-age)
+	(current-age >= castle-age)
 	(up-compare-goal gl-military-advantage < -1)
 	(up-compare-sn sn-enable-boar-hunting != 2)
 =>
